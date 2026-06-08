@@ -1,0 +1,4 @@
+[submodule "SciAgent-toolkit"]
+	path = 01_modules/SciAgent-toolkit
+	url = git@github.com:tony-zhelonkin/SciAgent-toolkit.git
+	branch = dev
