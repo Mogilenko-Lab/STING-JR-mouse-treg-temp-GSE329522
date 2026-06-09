@@ -106,17 +106,15 @@ net_hif_core <- sum(summ$sum_contrib[summ$module %in%
 # N1 reconcile: fig3l carves the 7 heat-shock genes OUT of fig3g's 340-member
 # "other" lump (91.8%) into a named bucket, leaving a 339-member residual "other"
 # (90.7%) -- the two adjacent figures differ by construction, not by error.
-callout <- sprintf(
-  "heat-shock/stress bucket sum = %+.2f\n>> net HIF-specific core (%+.2f)\nHIF1a-selective hypoxic core = %+.2f (REPRESSED)\n(heat-shock genes carved OUT of fig3g's 91.8%% 'other' -> 90.7%% residual here)",
+# The punchline numbers ride in the subtitle (kept in the deck PNG); the carve-out
+# reconciliation note rides in the caption -- NO in-plot text box (it overlaid the
+# panel). "net HIF-specific core" = shared + feedback + hypoxic-core.
+quant_line <- sprintf(
+  "Heat-shock/stress bucket %+.2f  >>  net HIF-specific core %+.2f;  HIF1a-selective hypoxic core %+.2f (REPRESSED).",
   stress_sum, net_hif_core, core_sum)
+carve_note <- "Heat-shock genes carved out of fig3g's 91.8% 'other' -> 90.7% residual here."
 
-xr <- max(abs(plot_df$contrib)) * 1.18
-
-# Callout placed ONCE, in the top (heat-shock) facet only, in the empty left
-# (negative) region so it never overlaps the right-leaning stress lollipops.
-callout_df <- data.frame(
-  module = factor("heatshock_stress", levels = curated),
-  x = -xr, y = Inf, label = callout, stringsAsFactors = FALSE)
+xr <- max(abs(plot_df$contrib)) * 1.06
 
 fig3l <- ggplot(plot_df, aes(x = contrib, y = target, color = module)) +
   geom_vline(xintercept = 0, color = "grey55", linewidth = 0.4) +
@@ -127,17 +125,15 @@ fig3l <- ggplot(plot_df, aes(x = contrib, y = target, color = module)) +
   scale_color_manual(values = MODULE_COLORS, guide = "none") +
   scale_x_continuous(limits = c(-xr, xr),
                      expand = expansion(mult = c(0.02, 0.02))) +
-  geom_label(data = callout_df, inherit.aes = FALSE,
-             aes(x = x, y = y, label = label), hjust = 0, vjust = 1.1,
-             size = 2.8, fill = "grey96", color = "grey15") +
   labs(
     title = "Fig 3l. A heat-induced glycolytic/stress program partially overlapping HIF targets",
     subtitle = paste0(
       "Hif1a's positive WT_heat 'activity', re-bucketed by curated biological module (signed contribution = sign(mor) x t_wt,\n",
       "copied from fig3g -- no recomputation). Heat-shock/stress UP, shared/glycolytic UP, feedback UP, but the HIF1a-selective\n",
-      "hypoxic-survival core (Pdk1/Bnip3/Bnip3l/Car9) is REPRESSED (left of zero). NOT a canonical hypoxic-HIF output."),
+      "hypoxic-survival core (Pdk1/Bnip3/Bnip3l/Car9) is REPRESSED (left of zero). NOT a canonical hypoxic-HIF output.\n",
+      quant_line),
     x = "contribution to WT_heat ULM signal (signed t * mor)", y = NULL,
-    caption = cap
+    caption = paste(cap, carve_note, sep = "   |   ")
   ) +
   base_theme +
   theme(strip.text.y = element_text(angle = 0, face = "bold", size = 8, lineheight = 0.95),
