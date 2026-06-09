@@ -24,6 +24,8 @@ A secondary forensic thread explains why Hif1a's rank varies from #1 to #142 acr
 | `02_analysis/scripts/03e_heat_main_regulators_viz.R` | VIZ — reads fig3n table, no recomputation | `figures/fig3n_heat_main_regulators.pdf` |
 | `02_analysis/scripts/03f_experiment_tiers.R` | COMPUTE — hand-authored config table; NO statistics | `tables/fig3o_experiment_tiers_data.csv` |
 | `02_analysis/scripts/03f_experiment_tiers_viz.R` | VIZ — `theme_void` conceptual infographic; NO statistics | `figures/fig3o_experiment_tiers.pdf`, `deck_assets/fig3o_experiment_tiers.png` |
+| `02_analysis/scripts/03g_nonidentifiability.R` | COMPUTE — `run_ulm` on heat-MAIN t-stat vector + CollecTRI set-membership counting; no ggplot | `tables/fig3p_heatmain_ranking_data.csv`, `tables/fig3q_coregulators_data.csv`, `tables/fig3r_membership_data.csv` |
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | VIZ — reads the three fig3p/3q/3r tables, no recomputation; shared `FAMILY_COLORS` palette | `figures/fig3p_heatmain_ranking.{pdf,png}`, `figures/fig3q_coregulators.{pdf,png}`, `figures/fig3r_shared_ownership.{pdf,png}` |
 
 ---
 
@@ -53,6 +55,16 @@ NEXT STEPS ──────────▶ fig3o  (CONCEPTUAL tiered-experimen
 ```
 
 `*` fig3g = expanded viz (full ranked landscape), same underlying table `fig3g_target_decomposition_data.csv`.
+
+### Non-identifiability cluster (fig3p / fig3q / fig3r) — deck placement PENDING
+
+A three-figure triptych making one combined claim: on the heat-MAIN contrast the activation signal **cannot be attributed to Hif1a — or to any single TF — as the driver**. fig3p shows Hif1a is only #9 in a dense crowd of generic stress/immediate-early/NF-κB TFs (no clean winner); fig3q shows 92% of Hif1a's CollecTRI targets are shared by the network's most promiscuous, non-hypoxia-specific regulators; fig3r overlays the two — the same heat-driven genes populate many TFs' regulons. Deck placement is **PENDING** (the conductor will slot the cluster — likely after fig3e, whose target-sharing it generalises — but no final deck-spine position is asserted here). All three share a single `FAMILY_COLORS` palette defined in `03g_nonidentifiability_viz.R` (heat-shock = purple `#762A83`; proliferation/metabolism = magenta `#C51B7D`; HIF axis = orange; NF-κB = blue; AP-1/immediate-early = red; etc.).
+
+```
+NON-IDENTIFIABILITY ─▶ fig3p  (heat-MAIN ranking: no clean winner — Hif1a #9 in a generic-stress crowd; canonical Hsf1 far down at #50)
+   (placement PENDING)   fig3q  (Hif1a's 353 targets are 92% shared by the most promiscuous non-hypoxia regulators — Sp1/Trp53/NF-κB/AP-1/Myc)
+                         fig3r  (shared ownership: top-20 Hif1a targets × its 12 largest sharers — the contrast cannot single out any one TF)
+```
 
 ### Final wet-lab deck spine (serendipity-resolution ordering)
 
@@ -317,6 +329,51 @@ MECHANISM: A curated config table (9 rows: 3 Tier-0 arms + 4 Tier-1 arms + 2 Tie
 | Function | Hand-authored lookup table → fixed-coordinate ladder geometry (no `run_ulm`/`p.adjust`/`cor`/`prcomp`) |
 | Input | None (config table authored in the compute script) |
 | Output | `03_results/04_tf/figures/fig3o_experiment_tiers.pdf` (+ `deck_assets/` PNG), `03_results/04_tf/tables/fig3o_experiment_tiers_data.csv` |
+
+---
+
+### fig3p_heatmain_ranking.pdf  *(NEW — non-identifiability cluster, 1 of 3; deck placement PENDING)*
+
+**STATEMENT: On the heat-MAIN contrast (Temp_main) there is no clean winner. Hif1a is only #9 of 658 scored TFs (ULM score = 5.14, p = 2.8×10⁻⁷), embedded in a dense crowd of generic stress / immediate-early / NF-κB regulators separated by tiny gaps — Jun #1 (6.06), Egr1 #2 (5.54), Fos #3 (5.46), Sp1 #4 (5.29), Stat5a #5 (5.27), Rela #6 (5.25), Ncoa1 #7 (5.25), Hoxd3 #8 (5.20), then Hif1a #9 (5.14), Nfkb1 #10 (5.12), Jund #11 (5.10), Nfkb #12 (4.81). The canonical heat-shock TF Hsf1 sits far down at #50 (3.20). Hif1a's nine-place position among interchangeable promiscuous regulators, and the gap of only ~0.9 score units spanning ranks #1–#12, mean this contrast does not nominate Hif1a (or anything else) as a unique driver.**
+
+MECHANISM: `03g_nonidentifiability.R` runs `run_ulm(net_collectri, .source="source", .target="target", .mor="mor", minsize=5)` on the Temp_main limma t-statistic vector from `02_de_results.rds` (the same CollecTRI-ULM call as `03_decoupler_tf.R`), scoring 658 TFs and ranking by descending score; raw p-values stored. The viz renders a horizontal lollipop of the top ~22 TFs by score with Hsf1 appended below a visual break, each TF coloured by curated family via the shared `FAMILY_COLORS` palette (HIF axis = orange; AP-1/immediate-early = red; NF-κB = blue; heat-shock = purple `#762A83`; housekeeping/STAT/etc.). Hif1a's #9 placement is read directly off the ranked axis; no per-TF crowning — the figure's message is the crowd, not any member.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03g_nonidentifiability.R` |
+| Script (viz) | `02_analysis/scripts/03g_nonidentifiability_viz.R` |
+| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` on the Temp_main t-stat vector; `arrange(desc(score)) %>% mutate(rank = row_number())` |
+| Input | `03_results/04_tf/tables/fig3p_heatmain_ranking_data.csv` (from `03_results/objects/02_de_results.rds` + `net_collectri_mouse.rds`) |
+
+---
+
+### fig3q_coregulators.pdf  *(NEW — non-identifiability cluster, 2 of 3; deck placement PENDING)*
+
+**STATEMENT: 92% of Hif1a's 353 CollecTRI targets (≈325/353; mean 22 other TFs per target — fig3e) are also targets of the network's most promiscuous, non-hypoxia-specific regulators, so the heat-MAIN signal cannot be attributed to Hif1a alone. The largest target-sharers are generic stress/proliferation/inflammation factors, not hypoxia specialists: Sp1 shares 171/353 (48.4%), Trp53 143 (40.5%), the NF-κB family (Nfkb 127 = 36.0%, Rela 102 = 28.9%, Nfkb1 81 = 22.9%), the AP-1/immediate-early family (Jun 118 = 33.4%, Ap1 100 = 28.3%, Fos 66 = 18.7%), Myc 110 (31.2%), nuclear receptors (Esr1 96 = 27.2%, Ar 80 = 22.7%), and STATs (Stat3 90 = 25.5%). For reference the other HIF-axis member Epas1 shares only 46 (13.0%) and heat-shock Hsf1 only 24 (6.8%). This shared-target collinearity is the regulon basis for the ULM 5.11/#12 → MLM 1.13/#142 collapse documented in fig3e — the same genes credited to Hif1a are competed for by dozens of equally plausible regulators.**
+
+MECHANISM: `03g_nonidentifiability.R` performs set-membership counting of every CollecTRI regulon against the fixed 353-member Hif1a target set: for each other TF, `shared_targets` = |its regulon ∩ Hif1a's 353 targets| and `pct_of_hif1a_set` = shared_targets / 353 × 100. No statistical inference — pure set arithmetic over CollecTRI edges. The viz renders the top sharers as horizontal bars (length = shared/353), coloured by curated family via `FAMILY_COLORS`. The figure foregrounds that the heaviest sharers are non-hypoxia-specific (Sp1/Trp53/NF-κB/AP-1/Myc), establishing shared ownership of the target set rather than crowning any of them as the driver.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03g_nonidentifiability.R` |
+| Script (viz) | `02_analysis/scripts/03g_nonidentifiability_viz.R` |
+| Function | Set-membership counting: `count(target)` of each CollecTRI regulon ∩ Hif1a's 353-target set; `pct_of_hif1a_set = shared_targets / 353 * 100` |
+| Input | `03_results/04_tf/tables/fig3q_coregulators_data.csv` (from `03_results/objects/net_collectri_mouse.rds`) |
+
+---
+
+### fig3r_shared_ownership.pdf  *(NEW — non-identifiability cluster, 3 of 3; deck placement PENDING)*
+
+**STATEMENT: The same heat-driven genes populate many TFs' regulons, so the contrast cannot single out Hif1a — or any one TF — as the driver. The top-20 Hif1a targets by signed heat-MAIN contribution (Timp1 contrib = 24.92, Sdc1 22.89, Itga5 18.46, Glb1 17.39, Lgals3 16.80, Bcl2l1 16.08, Spp1 15.36, … down to Rora 10.95) are each also members of several of Hif1a's 12 largest target-sharers' regulons (Sp1, Trp53, Nfkb, Jun, Myc, Rela, Ap1, Esr1, Stat3, Egr1, Nfkb1, Ar — the heaviest sharers from fig3q). Because these high-|t| genes are jointly owned, the heat-MAIN ULM score they generate is claimed simultaneously by Hif1a and by a dozen generic regulators that all score in the same #1–#12 band (fig3p). This is the unifier of fig3e (targets shared) and fig3p (Hif1a only #9 among those same sharers): non-identifiability, not attribution.**
+
+MECHANISM: `03g_nonidentifiability.R` selects the top-20 Hif1a targets by signed contribution (`gene_contrib`, copied from fig3g — `sign(mor) × t_wt` on the heat-MAIN t-stat) and crosses them against {Hif1a + its 12 largest target-sharers from fig3q}; `in_regulon` is the CollecTRI set-membership indicator (1/0) for each gene×TF cell. Per-gene `gene_heat_t` (heat-MAIN limma t-statistic) and per-TF `tf_heatmain_score` (the fig3p heat-MAIN ULM score) are carried for the marginals. The viz renders a tile heatmap (tile = CollecTRI membership), with a LEFT marginal showing each gene's heat-MAIN t-statistic and a TOP marginal showing each TF's heat-MAIN ULM score; Hif1a is flagged orange (HIF-axis `FAMILY_COLORS`) but not privileged in the ranking — it is one column among thirteen. No statistics recomputed; all values are joins/copies of fig3g + fig3p.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03g_nonidentifiability.R` |
+| Script (viz) | `02_analysis/scripts/03g_nonidentifiability_viz.R` |
+| Function | Cross of top-20 Hif1a targets (by `gene_contrib` from fig3g) × {Hif1a + 12 largest sharers}; `in_regulon` = CollecTRI membership; marginals = `gene_heat_t`, `tf_heatmain_score` (no run_ulm) |
+| Input | `03_results/04_tf/tables/fig3r_membership_data.csv` (from `net_collectri_mouse.rds` + `02_de_results.rds` + fig3g/fig3p tables) |
 
 ---
 
