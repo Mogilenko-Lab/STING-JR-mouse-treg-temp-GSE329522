@@ -1,0 +1,21 @@
+{
+  // Python Configuration
+  "python.defaultInterpreterPath": "/opt/venvs/base/bin/python",
+  "python.terminal.launchArgs": [],
+  "python.REPL.enableREPLSmartSend": true,
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.runInDedicatedTerminal": true,
+  "terminal.integrated.bracketedPasteMode": true,
+  "python.terminal.executeInFileDir": true,
+
+  // R Configuration
+  "r.alwaysUseActiveTerminal": true,
+  "r.bracketedPaste": true,
+  "r.rterm.linux": "/opt/venvs/base/bin/radian",
+  "r.sessionWatcher": true,
+  "r.plot.useHttpgd": true,
+  "r.lsp.diagnostics": false,
+
+  // Terminal
+  "terminal.integrated.defaultProfile.linux": "bash"
+}

@@ -1,0 +1,107 @@
+services:
+  dev-core:
+    image: scdock-r-dev:v0.5.5
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    working_dir: /workspaces/STING-cGAS-GSE329522
+    env_file: .env
+    environment:
+      - CONTEXT7_API_KEY=${CONTEXT7_API_KEY}
+      - SSH_AUTH_SOCK=/ssh-agent
+      - OLLAMA_HOST=${OLLAMA_HOST}
+    # Uncomment to expose httpgd graphics server (may conflict if port already in use)
+    # ports:
+    #   - "8787:8787"
+    volumes:
+      - ${WORKSPACE_FOLDER:-.}:/workspaces/STING-cGAS-GSE329522
+      - /tmp/ssh-XXXXXXG5CpIH/agent.11801:/ssh-agent:ro
+      # Data mount STUB — raw GSE329522 data arrives later; uncomment when present:
+      # - /scratch/data/GSE329522:/workspaces/STING-cGAS-GSE329522/00_data/raw:ro
+    stdin_open: true
+    tty: true
+    tmpfs:
+      - /tmp:noexec,nodev,nosuid,mode=1777
+    # --- Optional hardening (uncomment to enable) ---
+    # read_only: true
+    # # If enabled, your home and any writable scratch must be tmpfs or named volumes:
+    # # tmpfs:
+    # #   - /tmp:noexec,nodev,nosuid,mode=1777
+    # #   - /home/devuser:exec,mode=0755,uid=${LOCAL_UID:-1000},gid=${LOCAL_GID:-1000}
+    # cap_drop: ["ALL"]
+    # cap_add: ["CHOWN", "SETUID", "SETGID", "DAC_OVERRIDE"]
+    # security_opt: ["no-new-privileges:true"]
+    # --- End optional hardening ---
+    command: /bin/bash
+    deploy:
+      resources:
+        limits:
+          cpus: '${MAX_CPUS:-50}'
+          memory: ${MAX_MEMORY:-450g}
+          pids: 4096
+        reservations:
+          cpus: '2'
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  dev-archr:
+    profiles: ["archr"]  # Only started with: docker compose --profile archr up
+    image: scdock-r-archr:v0.5.5
+    user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
+    working_dir: /workspaces/STING-cGAS-GSE329522
+    env_file: .env
+    environment:
+      - CONTEXT7_API_KEY=${CONTEXT7_API_KEY}
+      - SSH_AUTH_SOCK=/ssh-agent
+      - OLLAMA_HOST=${OLLAMA_HOST}
+    # Uncomment to expose httpgd graphics server (may conflict if port already in use)
+    # ports:
+    #   - "8787:8787"
+    volumes:
+      - ${WORKSPACE_FOLDER:-.}:/workspaces/STING-cGAS-GSE329522
+      - /tmp/ssh-XXXXXXG5CpIH/agent.11801:/ssh-agent:ro
+      # Data mount STUB — raw GSE329522 data arrives later; uncomment when present:
+      # - /scratch/data/GSE329522:/workspaces/STING-cGAS-GSE329522/00_data/raw:ro
+    stdin_open: true
+    tty: true
+    tmpfs:
+      - /tmp:noexec,nodev,nosuid,mode=1777
+    # --- Optional hardening (uncomment to enable) ---
+    # read_only: true
+    # # If enabled, your home and any writable scratch must be tmpfs or named volumes:
+    # # tmpfs:
+    # #   - /tmp:noexec,nodev,nosuid,mode=1777
+    # #   - /home/devuser:exec,mode=0755,uid=${LOCAL_UID:-1000},gid=${LOCAL_GID:-1000}
+    # cap_drop: ["ALL"]
+    # cap_add: ["CHOWN", "SETUID", "SETGID", "DAC_OVERRIDE"]
+    # security_opt: ["no-new-privileges:true"]
+    # --- End optional hardening ---
+    command: /bin/bash
+    deploy:
+      resources:
+        limits:
+          cpus: '${MAX_CPUS:-50}'
+          memory: ${MAX_MEMORY:-450g}
+          pids: 4096
+        reservations:
+          cpus: '2'
+          memory: 8G
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+# --- Optional secrets pattern (uncomment to use) ---
+# Place secrets in files outside the repo (e.g. ~/.scbio-secrets/<name>),
+# chmod 600, then mount per-service via /run/secrets/<name> with mode 0000:
+#
+# secrets:
+#   anthropic_api_key:
+#     file: ${HOME}/.scbio-secrets/anthropic_api_key
+#
+# Inside dev-core/dev-archr add:
+#   secrets:
+#     - source: anthropic_api_key
+#       target: anthropic_api_key
+#       mode: 0000

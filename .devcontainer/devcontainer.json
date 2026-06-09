@@ -1,0 +1,31 @@
+{
+  "name": "STING-cGAS-GSE329522",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev-core",
+  "workspaceFolder": "/workspaces/STING-cGAS-GSE329522",
+  "remoteUser": "devuser",
+  "updateRemoteUserUID": true,
+  "shutdownAction": "stopCompose",
+  "settings": {
+    "files.associations": {
+      "*.Rmd": "rmd"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rdebugger.r-debugger",
+        "reditorsupport.r",
+        "quarto.quarto",
+        "purocean.drawio-preview",
+        "redhat.vscode-yaml",
+        "yzhang.markdown-all-in-one",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "ms-python.python",
+        "ms-toolsai.jupyter"
+      ]
+    }
+  },
+  "postStartCommand": "bash -lc 'chmod +x .devcontainer/scripts/*.sh && .devcontainer/scripts/poststart_sanity.sh && .devcontainer/scripts/configure_pi_models.sh'"
+}
