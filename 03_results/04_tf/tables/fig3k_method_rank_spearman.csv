@@ -1,0 +1,7 @@
+"statistic","spearman_vs_ulm","n_tfs"
+"ulm",1,658
+"norm_wsum",0.9964,658
+"corr_wsum",0.9746,658
+"consensus",0.9694,658
+"wsum",0.9677,658
+"mlm",0.6189,658

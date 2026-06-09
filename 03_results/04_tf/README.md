@@ -1,0 +1,685 @@
+# 04_tf — Phase 3: TF Activity (decoupleR) + Hif1a Rank-Cascade Forensics
+
+Transcription-factor activity inferred by decoupleR (CollecTRI ULM, primary; DoRothEA-ABC ULM, comparator; CollecTRI MLM and consensus, forensics) from limma t-statistics across seven contrasts of the GSE329522 2×2 cGAS×temperature iTreg factorial design (murine iTreg, WT vs cGAS-KO × 37 °C vs 39 °C fever-heat, n=5/group). The central question this phase answers is whether the HIF/glycolytic program shows cGAS-dependent activation: the data do not support that conclusion at n=5. The IFN members Irf3/Stat2/Stat1 reach significance on the Interaction contrast (padj < 0.05), while the HIF axis (Hif1a/Epas1) is flat and non-significant on the same contrast — asymmetry, not independence.
+
+A secondary forensic thread explains why Hif1a's rank varies from #1 to #142 across inference methods and networks, and concludes that its apparent activation is substantially a heat-generic stress/glycolytic phenomenon whose rank instability is fully accounted for by regulon size, target collinearity, and consensus aggregation arithmetic. A three-figure attribution arc (fig3m → fig3g → fig3l) forms the analytical spine: mechanic (HOW ULM nominates a TF) → landscape (WHERE Hif1a's score comes from: the full ranked 353-member contribution distribution) → biology (WHAT KIND of genes and in which direction: heat-shock/stress up, HIF-selective hypoxic core down). This arc establishes that the program revealed here is **a heat-induced glycolytic/stress program partially overlapping HIF targets**, not a canonical hypoxic-HIF output.
+
+**PROVISIONAL**: sample-to-condition mapping was inferred from GEO metadata; figures carry a provisional stamp pending primary-author confirmation.
+
+---
+
+## Generating Scripts
+
+| Script | Role | Outputs |
+|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf.R` | COMPUTE — all statistics, no ggplot | `03_results/objects/03_tf_collectri.rds`, `03_results/objects/03_tf_forensics.rds`, `03_results/master/master_tf_activities.csv`, all `tables/fig3a–fig3k_*.csv` |
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | VIZ — reads tidy tables, no recomputation | `figures/fig3a–fig3i_*.pdf`; redesigned `figures/fig3g_target_decomposition.pdf` (expanded full-landscape view) |
+| `02_analysis/scripts/03b_decoupler_method_comparison.R` | COMPUTE — six-statistic method comparison, no ggplot | `tables/fig3j_allmethods_topTF_data.csv`, `tables/fig3k_method_rank_divergence_data.csv`, `tables/fig3k_method_rank_spearman.csv` |
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | VIZ — reads method-comparison tidy tables, no recomputation | `figures/fig3j_topTF_allmethods_WT_heat.pdf`, `figures/fig3j_topTF_allmethods_Interaction.pdf`, `figures/fig3k_method_rank_divergence.pdf` |
+| `02_analysis/scripts/03c_hif_program_attribution.R` | COMPUTE — join of fig3g table to curated module/isoform lookup; no new statistics | `tables/fig3l_hif_attribution_data.csv`, `tables/fig3l_module_summary.csv` |
+| `02_analysis/scripts/03c_hif_program_attribution_viz.R` | VIZ — reads fig3l tables, no recomputation | `figures/fig3l_hif_attribution.pdf` |
+| `02_analysis/scripts/03d_ulm_mechanic.R` | COMPUTE — join/copy of fig3g contributions + comparator regulon; no run_ulm | `tables/fig3m_ulm_mechanic_data.csv`, `tables/fig3m_ulm_mechanic_summary.csv` |
+| `02_analysis/scripts/03d_ulm_mechanic_viz.R` | VIZ — reads fig3m tables, no recomputation | `figures/fig3m_ulm_mechanic.pdf` |
+| `02_analysis/scripts/03e_heat_main_regulators.R` | COMPUTE — `run_ulm` on a fresh heat-MAIN t-stat matrix (same call as `03_decoupler_tf.R`); no ggplot | `tables/fig3n_heat_main_regulators_data.csv` |
+| `02_analysis/scripts/03e_heat_main_regulators_viz.R` | VIZ — reads fig3n table, no recomputation | `figures/fig3n_heat_main_regulators.pdf` |
+| `02_analysis/scripts/03f_experiment_tiers.R` | COMPUTE — hand-authored config table; NO statistics | `tables/fig3o_experiment_tiers_data.csv` |
+| `02_analysis/scripts/03f_experiment_tiers_viz.R` | VIZ — `theme_void` conceptual infographic; NO statistics | `figures/fig3o_experiment_tiers.pdf`, `deck_assets/fig3o_experiment_tiers.png` |
+
+---
+
+## Narrative deck sequence
+
+```
+AFFIRM ──────────────▶ fig3i  (real phenomenon; shared HIF/glycolytic target Vegfa up in both genotypes; IFN Ifit1 cGAS-dependent)
+                       fig3h  (provenance/hypoxia control — RELABELLED; both HIF gene lists rise; NOT thermal-HIF proof)
+
+ATTRIBUTION ARC ─────▶ fig3m  (HOW ULM nominates a TF — regulon-weighted aggregation; promiscuous vs specific)
+                       fig3g* (WHERE Hif1a's score comes from — full ranked 353-member landscape; stress genes dominate)
+                       fig3l  (WHAT KIND — module-bucketed sign-split; heat-shock/stress UP, HIF-selective hypoxic core DOWN)
+
+LIBRARY STACK ───────▶ fig3d  (WHY #1: tight DoRothEA regulon → #1; fuller CollecTRI regulon dilutes → #12)
+                       fig3e  (WHY not robust: 92% targets shared, mean 22 TFs/target; MLM re-attributes, #12 → #142)
+
+NON-IDENTIFIABLE ────▶ fig3c  (rank cascade recap #1 → #12 → #142 → #8)
+                       fig3k  (MLM lone de-confounder; reshuffles Rela, Nfkb1, Hif1a alike)
+
+TWO ARMS ────────────▶ fig3a  (IFN interaction-significant / HIF flat — asymmetry, not independence, at n=5)
+
+HSF1 GAP ────────────▶ fig3n  (heat-shock Hsf1 co-elevated on heat-MAIN; same CollecTRI-ULM estimator as fig3a/fig3c)
+
+BOUNDARY ────────────▶ [CAN/CANNOT slide — conceptual text, not a data figure; placed before fig3o]
+
+NEXT STEPS ──────────▶ fig3o  (CONCEPTUAL tiered-experiment ladder — exclude confound → is-it-HIF → isoform genetics)
+```
+
+`*` fig3g = expanded viz (full ranked landscape), same underlying table `fig3g_target_decomposition_data.csv`.
+
+### Final wet-lab deck spine (serendipity-resolution ordering)
+
+`fig3i → fig3h → fig3m → fig3g → fig3l → fig3d → fig3e → fig3c → fig3k → fig3a → fig3n → [CAN/CANNOT conceptual slide — text, not a figure] → fig3o`
+
+(affirm what's real → provenance/hypoxia control → HOW ULM nominates → WHERE the score comes from → WHAT KIND of genes + direction → **WHY #1 happened (regulon dilution, #1→#12)** → **WHY it isn't robust (target collinearity, #12→#142)** → rank cascade recap → MLM reshuffle → cGAS asymmetry → HSF1 co-elevation → CAN/CANNOT boundary → what to run next.)
+
+**fig3d and fig3e are REINSTATED into the deck spine** (per `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`, candidate 2 → IN). They are the literal "how the collaborator's DoRothEA-ULM produced HIF1α #1 (#1→#12 regulon dilution) and why CollecTRI-MLM does not hold it (#12→#142 collinearity redistribution)." They sit between fig3l (what the genes are) and fig3c (the full cascade) so mechanism precedes the cascade recap, making fig3c a recap rather than a bare assertion. This overrides the earlier audit's "archive fig3e" vote.
+
+The CAN/CANNOT boundary is rendered as a deck SLIDE (two-column CAN | CANNOT text), placed immediately before fig3o — it is conceptual, not an estimate from the data, so it is text, not a rendered data figure.
+
+**Archive-only (retained in phase directory, NOT part of the deck):** fig3b, fig3f, the two fig3j variants, and **lombardi_recurrence** — canonical PDFs and tables are retained; they are simply not placed in the deck. See DROP notes under each legend below.
+
+---
+
+## Figure Legends
+
+---
+
+### fig3a_tf_interaction_axes.pdf
+
+**STATEMENT: The IFN axis members Irf3 (+5.93, padj = 1.04×10⁻⁶), Stat2 (+5.85, padj = 1.10×10⁻⁶), and Stat1 (+5.30, padj = 1.88×10⁻⁵) are significantly interaction-positive — their activation is cGAS-dependent — at BH padj < 0.05 on the cGAS×heat Interaction contrast; NFkB members Nfkb1 (+2.16, padj = 0.598) and Rela (+2.03, padj = 0.631) lean positive but are non-significant at n=5; and the HIF axis (Hif1a −0.19, padj = 0.97; Epas1 −0.86, padj = 0.91) is flat with no detectable cGAS-dependence. This is asymmetry between the two arms — the IFN arm is cGAS-dependent, the HIF arm is not detectable at n=5 — not independence.**
+
+MECHANISM: CollecTRI ULM (`run_ulm(.mor="mor", minsize=5)`) applied to limma t-statistics from the 2×2 Interaction contrast (captures cGAS-dependent temperature response); BH correction within contrast; TFs classified as HIF axis {Hif1a, Epas1}, IFN axis {Irf1, Irf3, Irf7, Stat1, Stat2, Nfkb1, Rela}, or other; lollipop plot on ULM score axis, significant TFs (padj < 0.05) starred.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` + BH within Interaction contrast |
+| Input | `03_results/04_tf/tables/fig3a_tf_interaction_axes_data.csv` |
+
+---
+
+### fig3b_top_tf_by_contrast.pdf
+
+> **ARCHIVE ONLY — NOT in narrative deck.** The "heat drives broad stress/glycolytic program" point is made more sharply and on-message by the expanded fig3g + fig3l, which name the stress genes explicitly; the "Interaction isolates IFN" point belongs to fig3a. The 96-row 4-facet top/bottom-12 grid is dense and off the single-message spine. Retained as a forensic backup.
+
+**STATEMENT: The top-12 activated and top-12 suppressed TFs per contrast (CollecTRI ULM, BH) reveal that heat drives a broad stress-response and glycolytic program in both genotypes (WT_heat and KO_heat) while the Interaction contrast selectively isolates the IFN/Irf9/Stat2 axis; the HIF axis shows no detectable signal on the Interaction contrast.**
+
+MECHANISM: For each of four contrasts (WT_heat, KO_heat, Temp_main, Interaction), the top and bottom 12 TFs by ULM score from the CollecTRI run are extracted and faceted on a shared score axis; HIF-axis and IFN-axis members annotated; all facets use the same x-axis to enable direct cross-contrast comparison.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `run_ulm(.mor="mor", minsize=5)` — scores read from pre-computed table; top/bottom 12 per contrast (`TOPN_CONTRAST = 12`) |
+| Input | `03_results/04_tf/tables/fig3b_top_tf_by_contrast_data.csv` |
+
+---
+
+### fig3c_hif1a_rank_cascade.pdf
+
+**STATEMENT: Hif1a's activation rank on the WT_heat contrast is highly method/network-dependent — #1 of 263 (DoRothEA-ULM, score = 6.09), #12 of 658 (CollecTRI-ULM, score = 5.11), #142 of 658 (CollecTRI-MLM, score = 1.13), #8 of 658 (CollecTRI-consensus, score = 2.89) — establishing that the apparent rank is an artifact of inference choice rather than a stable biological signal; its flat, non-significant Interaction score (ULM = −0.19, padj = 0.97) confirms no detectable cGAS-dependence regardless of which method is used.**
+
+MECHANISM: Four inferences run on the WT_heat t-statistic vector: DoRothEA-ABC ULM (`run_ulm`, net_dorothea_mouse_ABC), CollecTRI ULM (`run_ulm`, net_collectri_mouse), CollecTRI MLM (`run_mlm`), and CollecTRI consensus (`decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)`); Hif1a rank extracted from each ranked list; percentage rank computed as rank/n_tfs×100.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `run_ulm` / `run_mlm` / `decouple(..., consensus_score=TRUE)` on WT_heat t-stat vector |
+| Input | `03_results/04_tf/tables/fig3c_hif1a_rank_cascade_data.csv` |
+
+---
+
+### fig3d_regulon_swap.pdf  *(REINSTATED — library-stack spine, "why #1 happened")*
+
+**STATEMENT: The drop from rank #1 (DoRothEA-ULM) to #12 (CollecTRI-ULM) is explained by regulon expansion: CollecTRI's Hif1a regulon (353 targets, mean|t| = 4.26) is 2.7× larger than DoRothEA's (131 targets, mean|t| = 4.70), with 252 CollecTRI-only targets that carry high |t| but mixed sign (median signed t ≈ 0.3), adding magnitude but little net directional signal and so diluting the mor-weighted ULM score.**
+
+SERENDIPITY ROLE: This is the regulon-definition effect that mechanically explains the collaborator's "#1" call. DoRothEA's smaller, tighter Hif1α regulon concentrates the high-t heat targets, producing the #1 rank under ULM; CollecTRI's fuller regulon dilutes that concentration to #12. The "#1" is therefore a property of which regulon library was used, not a biological fact — explained without invoking any biology.
+
+MECHANISM: DoRothEA and CollecTRI Hif1a target lists are intersected against the expression universe; per-gene t-statistics (WT_heat) retrieved; targets classified as `both` (n = 101), `dorothea_only` (n = 30), or `collectri_only` (n = 252); per-network mean|t|, median t, and %|t|>2 computed.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | Set arithmetic on filtered `net_dorothea_mouse_ABC` and `net_collectri_mouse`; `mean(abs(t_wt))` per network |
+| Input | `03_results/04_tf/tables/fig3d_regulon_swap_data.csv`, `03_results/04_tf/tables/fig3d_regulon_swap_summary.csv` |
+
+---
+
+### fig3e_mlm_collinearity.pdf  *(REINSTATED — library-stack spine, "why it isn't robust")*
+
+**STATEMENT: The drop from rank #12 (CollecTRI-ULM, score = 5.11) to #142 (CollecTRI-MLM, score = 1.13) is explained by target collinearity: 92% (frac_co_regulated = 0.9207) of Hif1a's 353 CollecTRI targets are co-regulated by at least one other TF in the same network (mean = 22.23 co-regulators per target, median = 11), so the multivariate MLM re-assigns shared signal away from Hif1a.**
+
+SERENDIPITY ROLE: This is the collinearity-redistribution half of the "#1" explanation. Because 92% of Hif1α's CollecTRI targets are co-regulated by a mean of 22 other TFs, the multivariate MLM distributes that shared signal across the competing regulons rather than crediting it all to Hif1α, and the score collapses 5.11/#12 (ULM) → 1.13/#142 (MLM). Together with fig3d (regulon-definition effect), this accounts for the collaborator's "#1" call mechanically — without invoking any biology. The broad, defensible statement is that Hif1α's signal is shared across many stress-responsive TFs, not uniquely its own.
+
+MECHANISM: For each Hif1a CollecTRI target present in the expression universe, all other CollecTRI TFs also targeting that gene are counted; co-regulated flag set when n_other_TFs ≥ 1; fraction and mean computed across the 353-target regulon; two-bar score-collapse panel shows ULM score 5.11 → MLM score 1.13 for the same network and data.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `count(target, name="n_tfs_total")` across CollecTRI edges; `run_mlm(.mor="mor", minsize=5)` |
+| Input | `03_results/04_tf/tables/fig3e_mlm_collinearity_data.csv`, `03_results/04_tf/tables/fig3e_mlm_collinearity_summary.csv`, `03_results/04_tf/tables/fig3e_score_collapse.csv` |
+
+---
+
+### fig3f_consensus_zmix.pdf
+
+> **ARCHIVE ONLY — NOT in narrative deck.** The #142→#8 arithmetic (4:1 univariate z-vote drowning MLM) is a methods-internal detail; including it in the deck invites the "consensus recovers HIF1a" mis-read. Archive only; cite in prose if a methods reviewer presses.
+
+**STATEMENT: The partial recovery from rank #142 (MLM) to #8 (consensus, score = 2.89) occurs because the decoupleR consensus is an unweighted mean of folded-z scores across all statistics: the four univariate-family statistics (ulm z = 2.44, wsum z = 4.13, norm_wsum z = 2.72, corr_wsum z = 4.31) numerically outvote the single multivariate statistic (mlm z = 0.85), re-inflating Hif1a's rank while inheriting univariate double-counting.**
+
+MECHANISM: `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)` run on the WT_heat vector; non-consensus rows folded (mirror + scale by symmetric sd) to produce z-scores per statistic; consensus = mean of folded-z across all emitted statistics; Hif1a's per-statistic z-scores tabulated; algebraic mean verified to reproduce the stored consensus score (diff < 1×10⁻⁶).
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `decouple(..., consensus_score=TRUE)`; folded-z via sign-symmetric sd standardisation per statistic then `mean(z_score)` |
+| Input | `03_results/04_tf/tables/fig3f_consensus_zmix_data.csv` |
+
+---
+
+### fig3g_target_decomposition.pdf  *(REDESIGNED — expanded full-landscape view)*
+
+**STATEMENT: Hif1a's positive CollecTRI-ULM score on the WT_heat contrast is built almost entirely from its 340 "other" regulon members — generic stress/ECM/proliferation genes that happen to sit in the regulon. The six highest-contributing stress/remodelling genes (Timp1 +24.92, Sdc1 +22.89, Cdkn1a +12.33, Serpine1 +11.21, Eno2 +11.00, Hspa1a +10.81) dominate the entire ranked landscape. Across the full 353-member regulon (coarse 3-class view): 91.8% of the total signed contribution comes from the 340 "other" targets (sum = +351.43); the 9 `shared/glycolytic` members (Hk2, Vegfa, Egln3, Slc2a1, Aldoa, Pgk1, Ldha, Eno1, Pkm) sum to +39.81; and the 4-member `hypoxic HIF core` (Pdk1 −4.16, Bnip3l −1.81, Bnip3 −1.43, Car9 −1.06) is uniformly REPRESSED, summing to −8.46. The score is a regulon-aggregation dominated by non-HIF-diagnostic genes. Vegfa/Slc2a1/Egln3 are `shared/glycolytic`, NOT HIF-specific.**
+
+VOCABULARY RECONCILE (fig3g ↔ fig3l): fig3g is the COARSE 3-class view of the regulon — `hypoxic HIF core` (Pdk1/Bnip3/Bnip3l/Car9, REPRESSED, sum = −8.46) / `shared/glycolytic` (the UP angio-glucose targets Vegfa/Slc2a1/Egln3 plus the glycolytic set) / `other`. fig3l is the FINER module decomposition of the SAME regulon: it carves 7 heat-shock genes out of fig3g's 340-member 91.8% "other" lump into a named `heatshock_stress` bucket, leaving a 339-member 90.7% residual "other." "The HIF core" denotes ONE set across both figures — Pdk1/Bnip3/Bnip3l/Car9, sum −8.46. The two figures cannot contradict; the % "other" differs (91.8% coarse vs 90.7% finer) BY CONSTRUCTION, not by error. Per-gene contribution values are identical between the figures; only class names/membership boundaries differ.
+
+MECHANISM: The redesigned viz reads the existing `fig3g_target_decomposition_data.csv` (no recomputation of statistics) and renders the full ranked 353-member contribution distribution on a single signed-contribution axis (x = `contrib = sign(mor) × t_wt`). Each gene is plotted at its rank-ordered contribution position, coloured by `class` (`hypoxic HIF core` / `shared/glycolytic` / `other`) with a purple `#762A83` heat-shock/stress highlight overlaid on the six stress contaminants (Timp1, Sdc1, Cdkn1a, Serpine1, Eno2, Hspa1a) to visually connect this landscape to the module-level view in fig3l. The top stress drivers and the curated-class members are text-labelled; the coarse 91.8% / +39.81 / −8.46 provenance split is annotated from the existing `fig3g_target_decomposition_summary.csv`. Zero-line drawn. A viz-local label-subset file (`fig3g_target_landscape_labels.csv`) identifies the labelled genes by rank and class; it is a `head/tail` slice of the sorted table, not a statistic.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` (fig3g block, expanded viz) |
+| Function | `contrib = sign(mor) * t_wt` computed in `03_decoupler_tf.R`; coarse 3-class lookup (`hypoxic HIF core` / `shared/glycolytic` / `other`); viz reads pre-computed table |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv`, `03_results/04_tf/tables/fig3g_target_decomposition_summary.csv`, `03_results/04_tf/tables/fig3g_target_landscape_labels.csv` |
+
+---
+
+### fig3h_lombardi_vs_phylo.pdf  *(RELABELLED — hypoxia/provenance control)*
+
+**STATEMENT: This is a PROVENANCE / HYPOXIA CONTROL, not a thermal-HIF confirmation. Two independently curated HIF target gene sets — the field-consensus Lombardi-100 (WT_heat ULM score = 6.90, padj = 1.04×10⁻¹¹; KO_heat = 7.15, padj = 1.74×10⁻¹²) and the hand-made Phylo-16 (WT_heat = 2.43, padj = 0.015; KO_heat = 2.64, padj = 0.008) — both rise significantly with heat in both genotypes, and neither shows a significant cGAS×heat Interaction (Lombardi: Interaction score −1.38, padj = 0.34; Phylo: Interaction score −0.88, padj = 0.38). The figure's role is twofold: (1) a provenance check that the hand-made Phylo-16 list is not idiosyncratic relative to the field consensus, and (2) a coarse hypoxia control that the heat-activated signal is not an artifact of one list. It does NOT prove a canonical thermal-HIF program: BOTH curated metagenes COLLAPSE HIF1/HIF2 (Hif1a and HIF2a/Epas1 aggregated into one score) and are DIRECTION-BLIND — they cannot distinguish which members are up vs down — so they are blind to the repressed hypoxic-survival core (Pdk1/Bnip3/Bnip3l/Car9; fig3l). The on-figure title and the "collapses HIF1/HIF2, direction-blind" caveat now state this directly.**
+
+MECHANISM: Lombardi-2022 (n = 100 mouse genes) and Phylo-16 (n = 16 mouse-mapped genes) formatted as unit-mor networks and scored by `run_ulm(.mor="mor", minsize=5)` against the full 7-contrast t-stat matrix; BH correction within contrast; three conditions reported (WT_heat, KO_heat, Interaction). Underlying table and scores are unchanged; the on-figure title was relabelled to the provenance/hypoxia-control framing and the direction-blind/HIF1-HIF2-collapse caveat was added on the figure to match this README.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` with unit-mor signature networks; BH within contrast |
+| Input | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
+
+---
+
+### fig3i_interaction_primer.pdf
+
+**STATEMENT: Fever-heat raises the shared HIF/glycolytic target Vegfa in BOTH genotypes — parallel genotype slopes (WT heat logFC = +0.970, KO heat logFC = +0.954, Interaction logFC = +0.016, Interaction adjP ~1.000) signal no detectable cGAS-dependence at n=5 — while the IFN target Ifit1 rises only in WT (WT heat logFC = +0.497, KO heat logFC = −0.511, Interaction logFC = +1.007, Interaction adjP = 0.003; slopes diverge). The phenomenon of heat-responsive gene activation is real and shared across both genotypes; the two arms differ in cGAS-dependence.**
+
+MECHANISM: Four group-mean log2CPM values per gene (WT/cGASKO × 37 °C/39 °C) drawn from `fig2_marker_means.csv`, plotted as WT (solid) vs cGAS-KO (dashed) across temperature, faceted by gene with free y-axis scales. Contrast logFCs and BH-adjusted Interaction p-value read directly from `02_de_results.rds` and placed in the facet strip. A positive Interaction value means heat raises the gene more in WT than in cGAS-KO (cGAS-dependent); a near-zero Interaction means heat raises the gene similarly in both genotypes (no detectable cGAS-dependence). The Vegfa facet strip now reads "Vegfa [shared HIF/glycolytic target]" (was "[HIF arm]"), because Vegfa is the LEAST HIF-diagnostic target (fig3l: `shared_angio_glucose`); Ifit1's "[IFN arm]" tag is unchanged. Vegfa is the exemplar because it is the highest-t upregulated member of the shared/glycolytic class on the WT_heat contrast (t = 9.39 in fig3g) and its parallel slopes illustrate the absence of a detectable cGAS effect. No new statistics computed.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
+| Function | Line-plot of pre-computed group means + DE contrast annotations (no recomputation) |
+| Input | `03_results/04_tf/tables/fig3i_interaction_primer_data.csv` |
+
+---
+
+### fig3j_topTF_allmethods_WT_heat.pdf
+
+> **RECOMMENDED ARCHIVE / SUPPLEMENT — NOT in primary narrative deck.** fig3c and fig3k already carry method-fragility cleanly on single axes; fig3j's value is the complete per-method audit, which belongs in the supplement. Flagged for Anton's decision.
+
+**STATEMENT: The top-12 activated and top-12 suppressed TFs on the WT_heat contrast rendered under all six decoupleR statistics show that the HIF axis is consistently high-ranked under the five univariate-family statistics (Hif1a rank #3–#12: norm_wsum #3, consensus #8, ulm #12, wsum #7, corr_wsum #7) but collapses to rank #142 under MLM, and that the IFN members Irf3/Stat2 are bottom-ranked (ranks ~522–636) across all six methods on the WT_heat contrast, consistent with their heat-agnostic, cGAS-dependent profile.**
+
+MECHANISM: `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)` run on the WT_heat limma t-statistic vector using CollecTRI (minsize=5); top-12 activated and top-12 suppressed TFs per statistic extracted and faceted with free x-axes (absolute scores are not comparable across statistics — only rank and identity are meaningful across facets).
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` |
+| Function | `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)` on WT_heat t-vector; top/bottom 12 per statistic; facet_wrap by statistic, free x-axis scales |
+| Input | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+---
+
+### fig3j_topTF_allmethods_Interaction.pdf
+
+> **RECOMMENDED ARCHIVE / SUPPLEMENT — NOT in primary narrative deck.** See note above for fig3j_WT_heat.
+
+**STATEMENT: The same six-method top-TF view applied to the Interaction contrast shows the HIF axis uniformly low-ranked across ALL six statistics (Hif1a: ulm #423, norm_wsum #411, mlm #248, consensus #307, corr_wsum #167, wsum #123), establishing that the IFN-significant / HIF-flat asymmetry is robust to inference method choice.**
+
+MECHANISM: Identical pipeline as fig3j_topTF_allmethods_WT_heat.pdf, applied to the Interaction t-statistic vector; top-12 activated and top-12 suppressed TFs per statistic extracted and faceted with free x-axes.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` |
+| Function | `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)` on Interaction t-vector; top/bottom 12 per statistic; facet_wrap by statistic, free x-axis scales |
+| Input | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+---
+
+### fig3k_method_rank_divergence.pdf
+
+**STATEMENT: MLM is the lone outlier among decoupleR statistics: Spearman rank-correlation vs ULM on the WT_heat contrast is 0.619 for MLM versus 0.968–0.996 for every other statistic (norm_wsum 0.996, corr_wsum 0.975, consensus 0.969, wsum 0.968; n = 658 TFs). Rank instability is an "MLM vs the entire univariate family" multivariate de-confounding effect, not general noise across methods. MLM reshuffles both axes: Rela drops from rank #3 (ULM) to #350 (MLM), Nfkb1 from #6 to #86, and Hif1a from #12 to #142. Hif1a's rank collapse is therefore one instance of a general MLM de-confounding reshuffle of high-collinearity TFs, not a HIF-specific quirk.**
+
+MECHANISM: Per-statistic TF ranks tabulated for the WT_heat contrast across all 658 TFs surviving minsize=5; Spearman rank-correlation of each statistic vs ULM computed over the full 658-TF rank vector; rank heatmap over a focused TF set with per-method rho annotated on the method axis; Hif1a highlighted; equivalent drops for Rela and Nfkb1 annotated to frame MLM de-confounding as a broad re-ranking of high-collinearity TFs.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` |
+| Function | `cor(rank_ulm, rank_x, method="spearman")` over 658-TF rank vectors; heatmap of per-TF ranks per statistic |
+| Input | `03_results/04_tf/tables/fig3k_method_rank_divergence_data.csv`, `03_results/04_tf/tables/fig3k_method_rank_spearman.csv` |
+
+---
+
+### fig3l_hif_attribution.pdf  *(NEW — attribution arc, panel 3 of 3: WHAT KIND)*
+
+**STATEMENT: When the 353 members of the Hif1a CollecTRI regulon are re-bucketed by curated biological module, the positive WT_heat "activity" signal is dominated by a heat-shock/stress fraction: the 7 `heatshock_stress` members (Timp1, Sdc1, Spp1, Cdkn1a, Serpine1, Eno2, Hspa1a) all move UP and sum to +108.54, exceeding the contribution of every other curated class. By contrast, the HIF1a-selective hypoxic-survival core (`hif1a_hypoxic_core`: Pdk1, Bnip3, Bnip3l, Car9) is uniformly REPRESSED (all 4 members down, sum = −8.46). The shared angiogenic/glycolytic class (Vegfa/Slc2a1, sum = +15.93) and the autoregulatory feedback member (Egln3, sum = +6.81) both rise, but neither is diagnostic for canonical hypoxic HIF1a biology. The 339 `other_unclassified` members account for 90.7% of the total. This pattern identifies the program as a heat-induced glycolytic/stress program partially overlapping HIF targets — not a canonical hypoxic-HIF output.**
+
+VOCABULARY RECONCILE (fig3l ↔ fig3g): fig3l is the FINER module decomposition of the SAME 353-member Hif1a regulon shown coarsely in fig3g. "The HIF core" denotes ONE set across both figures — Pdk1/Bnip3/Bnip3l/Car9, sum = −8.46 (REPRESSED). The 7 `heatshock_stress` genes are carved OUT of fig3g's 340-member 91.8% "other" lump, leaving the 339-member 90.7% residual `other_unclassified` here; the % "other" differs (91.8% vs 90.7%) BY CONSTRUCTION (coarse vs finer bucketing of the identical regulon), not by error. Vegfa/Slc2a1/Egln3 are `shared_angio_glucose`/`autoreg_feedback` (shared/glycolytic), NOT HIF-specific. Per-gene contribution values are unchanged from fig3g; only class names/membership boundaries changed.
+
+MECHANISM: `03c_hif_program_attribution.R` reads `fig3g_target_decomposition_data.csv` and joins it to a curated module/isoform lookup (module assignment per a curated lookup; definitions and refs in the script header). No statistical recomputation — `t_wt` and `contrib` are copied from the existing fig3g table. Emits `fig3l_hif_attribution_data.csv` (per-gene with `module`, `isoform_attribution`, `direction` columns) and `fig3l_module_summary.csv` (per-module aggregates). The viz renders a horizontal sign-aware lollipop on the signed-contribution (x = `contrib`) axis, faceted by module with the curated buckets foregrounded and `other_unclassified` shown as a compact context row; facet order top→bottom: `heatshock_stress` → `shared_angio_glucose` → `autoreg_feedback` → `hif1a_hypoxic_core`, so the reading is "stress up … shared up … feedback up … hypoxic core DOWN." Module palette (single source of truth in `config.R::MODULE_COLORS`): `heatshock_stress` = `#762A83` (purple); `shared_angio_glucose` = `#E08214` (orange); `autoreg_feedback` = `#FDB863` (pale orange); `hif1a_hypoxic_core` = `#01665E` (DARK TEAL — repalette; the repressed diagnostic core is now teal, not a third orange, so it separates cleanly from the orange shared/glycolytic up-set and the purple heat-shock bucket); `other_unclassified` = `grey80`.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03c_hif_program_attribution.R` |
+| Script (viz) | `02_analysis/scripts/03c_hif_program_attribution_viz.R` |
+| Function | Join of `fig3g_target_decomposition_data.csv` to curated module lookup; `group_by(module) %>% summarise(...)` aggregations only |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` + curated module/isoform lookup defined in script header |
+| Output tables | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv`, `03_results/04_tf/tables/fig3l_module_summary.csv` |
+
+---
+
+### fig3m_ulm_mechanic.pdf  *(NEW — attribution arc, panel 1 of 3: HOW)*
+
+**STATEMENT: decoupleR-ULM scores a TF by the regulon-weighted alignment of its targets' t-statistics to their modes of regulation (`t_gene ~ mor_TF`; signed contribution = `sign(mor) × t_wt`). Because the score is a regulon-weighted aggregation, a promiscuous regulon picks up any high-|t| members regardless of biological specificity. Hif1a (353 members, weighted contribution center = +1.08) scores positive in the WT_heat contrast primarily because seven generic heat-shock/stress genes that happen to reside in the CollecTRI regulon (Timp1 +24.92, Sdc1 +22.89, Cdkn1a +12.33, Serpine1 +11.21, Eno2 +11.00, Hspa1a +10.81, Spp1 +15.36) pile the distribution to the right. By contrast, a specific IFN regulon (Stat2, 32 members, weighted center = −0.62) does not pile up on this contrast: its targets are distributed across both sides of zero, reflecting the absence of a coherent heat-MAIN signal for the IFN arm.**
+
+MECHANISM: `03d_ulm_mechanic.R` reads `fig3g_target_decomposition_data.csv` and copies the Hif1a `contrib` column directly (no recomputation). For the Stat2 comparator regulon, it joins the existing CollecTRI network RDS targets to the WT_heat t-stat vector in `02_de_results.rds` (a descriptive lookup only, no `run_ulm`), computes `aligned_contrib = sign(mor) × t_wt` as an arithmetic relabel of existing t-stats, and flags the seven stress contaminants via `is_stress_contaminant`. Emits `fig3m_ulm_mechanic_data.csv` (353 Hif1a + 32 Stat2 rows) and `fig3m_ulm_mechanic_summary.csv` (per-tf aggregates: n_targets, mean_aligned_contrib, pct_contrib_from_stress, ulm_score_sign). The viz renders two panels sharing the same signed-contribution x-axis (licensing direct comparison): Panel A = Hif1a regulon as a strip/beeswarm with the aggregate weighted center marked as a labelled diamond and the seven stress contaminants highlighted in `#762A83` purple; Panel B = Stat2 regulon on the same axis showing the dispersed, near-zero distribution. DECLUTTER (this round): the score label, the dashed center rule, and the `t_gene ~ mor_TF` formula were moved OFF the swarm — the formula now sits in a footer band — and the Stat2 panel gained an in-panel cue "no pile-up of aligned targets → low score." No statistics changed; the score values, the weighted centers, and the stress-contaminant set are unchanged.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03d_ulm_mechanic.R` |
+| Script (viz) | `02_analysis/scripts/03d_ulm_mechanic_viz.R` |
+| Function | Copy of `contrib` from fig3g table (Hif1a); descriptive join of CollecTRI Stat2 targets to WT_heat t-vector + `sign(mor)*t_wt` (no run_ulm); `group_by(tf) %>% summarise(mean_aligned_contrib=mean(...), ...)` |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv`, `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+| Output tables | `03_results/04_tf/tables/fig3m_ulm_mechanic_data.csv`, `03_results/04_tf/tables/fig3m_ulm_mechanic_summary.csv` |
+
+---
+
+### fig3n_heat_main_regulators.pdf  *(NEW — HSF1 gap)*
+
+**STATEMENT: On the heat-MAIN contrast (Temp_main, averaging across both genotypes), Hsf1 is significantly co-elevated (decoupleR-ULM score = +3.20, padj = 0.015) alongside Hif1a (score = +5.14, padj = 2.0×10⁻⁵) and Epas1 (score = +4.17, padj = 8.9×10⁻⁴). Hsf1 was not foregrounded earlier in this analysis. The same direction holds in the genotype-stratified contrasts: Hsf1 is significantly elevated in both WT_heat (score = +2.83, padj = 0.034) and KO_heat (score = +3.48, padj = 0.008), so its co-elevation is present in both genotypes. This figure closes the analytical gap but does NOT claim Hsf1 causes or outranks HIF axis activity; the message is co-elevation and prior neglect, naming HSF1 as an alternative the design can now interrogate. The elevated Hsf1 activity does NOT mean Hif1α's inflated ULM score is an "HSF1 capture": the Hif1α∩Hsf1 regulon overlap is thin (≈24–32 shared targets, ~7–12% of Hif1α's signed contribution), and of the named heat-shock drivers only Hspa1a/Cdkn1a/Serpine1 are shared with Hsf1 while the biggest drivers (Timp1, Sdc1, Spp1, Eno2) are Hif1α-only. The defensible statement is the BROAD one already carried by fig3e — Hif1α's signal is shared across many stress-responsive TFs, not HSF1 specifically — not a localized HSF1 hijack. The Hsf1 cGAS×heat interaction term (raw p = 0.022) is non-significant after BH correction (padj = 0.515) and must not be cited as evidence of cGAS-dependence.**
+
+MECHANISM: `03e_heat_main_regulators.R` builds a heat-MAIN t-statistic matrix (genes × {Temp_main, WT_heat, KO_heat}) directly from `02_de_results.rds` and runs `run_ulm(mat, net_collectri, .source="source", .target="target", .mor="mor", minsize=5)` — the IDENTICAL decoupleR-ULM call as the primary `03_decoupler_tf.R` — then applies BH within contrast and selects the heat-shock / HIF / IFN axis TFs (`axis`: `heatshock` = Hsf1; `HIF` = Hif1a/Epas1; `IFN` = Irf3/Stat1/Stat2/Nfkb1/Rela). It does NOT filter `master_tf_activities.csv`. fig3n scores are therefore decoupleR-ULM and ARE axis-comparable to fig3a/fig3c/fig3k; they come out byte-identical to the master table's `nes` column only because that column is itself the ULM `score` written under a legacy schema name (`nes = score` in `03_decoupler_tf.R`). The viz renders a lollipop on the decoupleR-ULM score axis coloured by axis (heatshock = `#762A83` purple, matching the stress highlight in fig3g/fig3l for cross-figure consistency; HIF = `#B35806`; IFN = `#2166AC`), grouped by contrast, with padj < 0.05 stars matching fig3a's convention.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03e_heat_main_regulators.R` |
+| Script (viz) | `02_analysis/scripts/03e_heat_main_regulators_viz.R` |
+| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` on a fresh heat-MAIN t-stat matrix + BH within contrast — same call as `03_decoupler_tf.R` |
+| Input | `03_results/objects/02_de_results.rds`, `03_results/objects/net_collectri_mouse.rds` |
+| Output table | `03_results/04_tf/tables/fig3n_heat_main_regulators_data.csv` |
+
+---
+
+### fig3o_experiment_tiers.pdf  *(NEW — CONCEPTUAL next-steps ladder; carries NO statistics)*
+
+**STATEMENT: The actionable next-steps ladder for the wet lab, encoding "do NOT lead with genetics." Tier 0 (cheap, start here) excludes the heat×drug-cytotoxicity confound — inactive structural analog / vehicle @ 39 °C, drug dose-response @ 39 °C, and a HIF-agnostic Tconv comparator @ 39 °C (does the drug also kill/impair Tconv?). Tier 1 (medium, run only after Tier 0) asks "is it HIF at all?" with four arms — a chaperone / proteostasis inhibitor @ 39 °C (testing whether the dominant heat-shock module is HSP90/HSP70 chaperone dependence; the fig3l `heatshock_stress` module sum = +108.54 exceeds every other curated class; readout 17-AAG / VER-155008), a glycolysis inhibitor @ 39 °C (testing whether the shared glycolytic members — ONE part of the program, NOT the dominant module — carry the dependency; this does not imply the data nominate glycolysis), an HSF1 readout / knockdown @ 39 °C (the heat-shock axis fig3n shows co-elevated), and belzutifan as a HIF2a-selective cross-check the drug cannot exclude. Tier 2 (expensive, GATED on Tiers 0–1) is the isoform mind-changer: floxed-Hif1a vs floxed-Epas1 iTreg @ 39 °C. The figure is stamped "CONCEPTUAL — not data" and carries no statistics; belzutifan is named only as a HIF2a-selective cross-check tool, not a crowning of HIF2a.**
+
+MECHANISM: A curated config table (9 rows: 3 Tier-0 arms + 4 Tier-1 arms + 2 Tier-2 arms), hand-authored in `03f_experiment_tiers.R` with NO statistical computation. The Tier-1 chaperone / proteostasis arm was added to match the heat-shock/stress dominance the data show (fig3l `heatshock_stress` module +108.54 outweighs every other curated class), and the Tier-1 glycolysis arm was reworded to test only the shared glycolytic members (one part of the program, not the dominant module) so it no longer implies the data nominate glycolysis. The viz (`03f_experiment_tiers_viz.R`) renders it as a `theme_void` conceptual infographic — an ascending-cost ladder with Tier 0 at the bottom and Tier 2 at the top, gated by ascent arrows, with per-tier cost labels (cheap → medium → expensive (gated)) and a prominent "CONCEPTUAL — not data" stamp. It is conceptual, not inferred from the data: nothing in this figure is an estimate or a test.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03f_experiment_tiers.R` (config table only — no statistics) |
+| Script (viz) | `02_analysis/scripts/03f_experiment_tiers_viz.R` (`theme_void` infographic — no statistics) |
+| Function | Hand-authored lookup table → fixed-coordinate ladder geometry (no `run_ulm`/`p.adjust`/`cor`/`prcomp`) |
+| Input | None (config table authored in the compute script) |
+| Output | `03_results/04_tf/figures/fig3o_experiment_tiers.pdf` (+ `deck_assets/` PNG), `03_results/04_tf/tables/fig3o_experiment_tiers_data.csv` |
+
+---
+
+## Table Legends
+
+---
+
+### fig3a_tf_interaction_axes_data.csv
+
+**All TFs represented on fig3a: ULM scores and BH-adjusted p-values for the Interaction contrast, with axis classification and significance flag. Key values: Irf3 score = +5.93 padj = 1.04×10⁻⁶ (sig); Stat2 +5.85 padj = 1.10×10⁻⁶ (sig); Stat1 +5.30 padj = 1.88×10⁻⁵ (sig); Nfkb1 +2.16 padj = 0.598 (NS); Rela +2.03 padj = 0.631 (NS); Hif1a −0.19 padj = 0.97 (NS); Epas1 −0.86 padj = 0.91 (NS).**
+
+29 rows × 7 columns. `source` = TF gene symbol; `score` = CollecTRI ULM activity score on the Interaction contrast; `padj` = BH-adjusted p-value within Interaction contrast; `p_value` = raw p-value; `axis` = HIF | IFN | other; `sig` = logical, padj < 0.05; `direction` = Up | Down.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `run_ulm(.mor="mor", minsize=5)` + `p.adjust("BH")` within Interaction contrast |
+| Input | `03_results/objects/03_tf_collectri.rds` |
+
+---
+
+### fig3b_top_tf_by_contrast_data.csv
+
+**Top-12 activated and top-12 suppressed TFs (by ULM score) for each of four contrasts (WT_heat, KO_heat, Temp_main, Interaction), with axis and key-TF annotation.**
+
+96 rows × 9 columns. `contrast` = one of WT_heat | KO_heat | Temp_main | Interaction; `source` = TF symbol; `score` = ULM score; `padj` = BH-adjusted p-value within contrast; `direction` = Up | Down; `rank` = rank within direction within contrast (1 = most extreme); `axis` = HIF | IFN | other; `key_tf` = logical; `sig` = logical, padj < 0.05.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `run_ulm(.mor="mor", minsize=5)` + BH; top/bottom `TOPN_CONTRAST = 12` per contrast |
+| Input | `03_results/objects/03_tf_collectri.rds` |
+
+---
+
+### fig3c_hif1a_rank_cascade_data.csv
+
+**Hif1a's rank, score, number of TFs assessed, and percentile rank across four inference method/network combinations on the WT_heat contrast.**
+
+4 rows × 5 columns. `method` = DoRothEA_ULM | CollecTRI_ULM | CollecTRI_MLM | CollecTRI_consensus; `rank` = integer rank by descending score (1 = most activated); `n_tfs` = total TFs surviving minsize=5; `score` = Hif1a activity score; `pct_rank` = 100 × rank / n_tfs.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `run_ulm` / `run_mlm` / `decouple(..., consensus_score=TRUE)` on WT_heat; `row_number()` after `arrange(desc(score))` |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/net_dorothea_mouse_ABC.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3d_regulon_swap_data.csv
+
+**Per-target t-statistics and network membership for all genes in the union of the DoRothEA and CollecTRI Hif1a regulons present in the expression universe.**
+
+384 rows × 7 columns. `target` = gene symbol; `in_dorothea` = logical; `in_collectri` = logical; `t_wt` = WT_heat limma t-statistic; `membership` = both | dorothea_only | collectri_only; `abs_t` = |t_wt|; `high_t` = logical, |t_wt| ≥ 2.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | Set intersection/difference of filtered network target lists; `mat[target, "WT_heat"]` |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/net_dorothea_mouse_ABC.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3d_regulon_swap_summary.csv
+
+**Per-network summary statistics for the Hif1a regulon t-distribution, quantifying the dilution of signal when switching from DoRothEA (mean|t| = 4.70) to CollecTRI (mean|t| = 4.26).**
+
+2 rows × 8 columns. `network` = DoRothEA | CollecTRI; `n` = number of targets present in universe; `mean_abs_t`; `median_t`; `pct_abs_t_gt2`; `n_intersection` = 101; `n_dorothea_only` = 30; `n_collectri_only` = 252.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `net_t_summary()` helper: `mean(abs(tv))`, `median(tv)`, `mean(abs(tv)>2)` |
+| Input | Derived from `fig3d_regulon_swap_data.csv` |
+
+---
+
+### fig3e_mlm_collinearity_data.csv
+
+**Per-target count of co-regulating TFs and WT_heat t-statistic for all 353 Hif1a CollecTRI targets, demonstrating that 92% are shared with at least one other TF regulon (median co-regulator count = 11, mean ~22).**
+
+353 rows × 4 columns. `target` = gene symbol; `n_other_TFs` = number of other CollecTRI TFs also targeting this gene (Hif1a excluded); `t_wt` = WT_heat limma t-statistic; `co_regulated` = logical, n_other_TFs ≥ 1.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `distinct(source, target) %>% count(target, name="n_tfs_total")`; `n_other_TFs = n_tfs_total − 1` |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3e_mlm_collinearity_summary.csv
+
+**Regulon-level aggregates: 92.1% of Hif1a's 353 CollecTRI targets co-regulated by ≥1 other TF; mean 22.2 (median 11) other regulators per target.**
+
+1 row × 4 columns. `n_targets` = 353; `frac_co_regulated`; `mean_other_TFs`; `median_other_TFs`.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `summarise(frac_co_regulated = mean(n_other_TFs ≥ 1), ...)` |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3e_score_collapse.csv
+
+**Two-row table recording Hif1a's ULM score (5.11, rank #12) and MLM score (1.13, rank #142) on the WT_heat CollecTRI run, quantifying the 4.5-fold score collapse attributable to multivariate de-confounding.**
+
+2 rows × 4 columns. `method` = ULM | MLM; `score`; `rank`; `n_tfs`.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `run_ulm(.mor="mor", minsize=5)` and `run_mlm(.mor="mor", minsize=5)` on WT_heat vector |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3f_consensus_zmix_data.csv
+
+**Per-statistic folded-z scores and the consensus score for Hif1a (WT_heat, CollecTRI): ulm z = 2.44, wsum z = 4.13, norm_wsum z = 2.72, corr_wsum z = 4.31, mlm z = 0.85, consensus z = 2.89.**
+
+6 rows × 5 columns. `source` = "Hif1a"; `statistic` = ulm | mlm | wsum | norm_wsum | corr_wsum | consensus; `z_score`; `family` = univariate | multivariate | consensus; `canonical` = logical.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)`; folded-z via sign-symmetric sd standardisation; `consensus = mean(z_score)` verified vs stored value (diff < 1×10⁻⁶) |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3g_target_decomposition_data.csv
+
+**Per-target signed contributions (`contrib = sign(mor) × t_wt`) for all 353 Hif1a CollecTRI targets in the WT_heat expression universe, classified by biological specificity. This is the primary input table for all three attribution arc figures (fig3m, fig3g, fig3l) — no arc figure recomputes any statistics from it.**
+
+353 rows × 6 columns. `source` = "Hif1a"; `target` = gene symbol; `mor` = mode of regulation (±1, from CollecTRI); `t_wt` = WT_heat limma t-statistic; `contrib` = sign(mor) × t_wt; `class` = coarse 3-class label `hypoxic HIF core` (4: Pdk1/Bnip3/Bnip3l/Car9) | `shared/glycolytic` (9: Hk2/Vegfa/Egln3/Slc2a1/Aldoa/Pgk1/Ldha/Eno1/Pkm) | `other` (340). fig3l decomposes the `other` lump finer (carving out 7 heat-shock genes).
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `contrib = sign(mor) * t_wt`; coarse-class lookup against the `hypoxic HIF core` and `shared/glycolytic` member sets |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3g_target_decomposition_summary.csv
+
+**Three-row coarse-class aggregation of signed contributions: `other` 91.8% (n = 340, sum = +351.43), `shared/glycolytic` (n = 9, sum = +39.81, 10.4% of total), `hypoxic HIF core` (n = 4, sum = −8.46, −2.21% of total — REPRESSED). The `shared/glycolytic` and `hypoxic HIF core` percentages sum against the positive total, hence the negative core %.**
+
+3 rows × 5 columns. `class` = other | shared/glycolytic | hypoxic HIF core; `n_targets`; `sum_contrib`; `mean_contrib`; `pct_of_total`.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | `group_by(class) %>% summarise(n_targets=n(), sum_contrib=sum(contrib), ...)` |
+| Input | Derived from `fig3g_target_decomposition_data.csv` |
+
+---
+
+### fig3g_target_landscape_labels.csv
+
+**Viz-local label subset: the genes text-labelled in the redesigned fig3g ranked contribution landscape (the curated-class members — `hypoxic HIF core` and `shared/glycolytic` — plus the highest stress-contaminant entries). A `head/tail` slice of `fig3g_target_decomposition_data.csv` sorted by `contrib`, augmented with `rank` and `legend_class` columns for plot annotation. Not a statistic — a convenience slice for the viz script.**
+
+8 columns. `source`, `target`, `mor`, `t_wt`, `contrib`, `class` (from upstream table); `rank` = integer position in the 353-gene contribution ranking (1 = most negative); `legend_class` = re-label for the legend (curated-class / heat-shock-stress).
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` (computed inline as a viz-local slice) |
+| Function | `arrange(contrib) %>% mutate(rank = row_number())` on the upstream table; `head()`/`tail()` to select label candidates |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
+
+---
+
+### fig3h_lombardi_vs_phylo_data.csv
+
+**ULM scores, p-values, BH-adjusted p-values, and significance flags for two HIF signatures (Lombardi-100 and Phylo-16) across three contrasts (WT_heat, KO_heat, Interaction). Both signatures heat-activated in both genotypes (padj ≤ 0.015); Interaction NS for both (Lombardi padj = 0.34, Phylo padj = 0.38) — no detectable cGAS-dependence at n=5 for either signature.**
+
+6 rows × 9 columns. `signature`; `condition`; `score`; `p_value`; `padj`; `n_genes`; `sig_label`; `sig` = logical, padj < 0.05; `n_lombardi` = 100; `n_phylo` = 16.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | Unit-mor signature networks scored by `run_ulm(.mor="mor", minsize=5)` across 7-contrast matrix; BH within contrast |
+| Input | `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds`, Phylo-16 hard-coded vector, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3i_interaction_primer_data.csv
+
+**The eight group-mean log2CPM values (Ifit1 and Vegfa × genotype × temperature) with the three pre-computed contrast logFCs and Interaction BH-adjusted p-value visualised in fig3i.**
+
+8 rows × 9 columns. `gene`; `arm` = cGAS-dependent | no-detectable-cGAS-dependence; `genotype` = WT | cGASKO; `temp` = 37 | 39 (°C); `mean_log2cpm`; `wt_heat` = WT heat logFC (Ifit1: +0.497; Vegfa: +0.970); `ko_heat` = cGASKO heat logFC (Ifit1: −0.511; Vegfa: +0.954); `interaction` = Interaction logFC (Ifit1: +1.007; Vegfa: +0.016); `inter_adjP` = BH-adjusted Interaction p-value (Ifit1: 0.003; Vegfa: ~1.000).
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03_decoupler_tf.R` |
+| Function | Group means joined from `fig2_marker_means.csv`; contrast values extracted from `02_de_results.rds` |
+| Input | `03_results/objects/02_de_results.rds`, `03_results/03_de/tables/fig2_marker_means.csv` |
+
+---
+
+### fig3j_allmethods_topTF_data.csv
+
+**Top-12 activated and top-12 suppressed TFs per contrast × per decoupleR statistic (4 contrasts × 6 statistics = 576 rows); tidy source for the fig3j faceted lollipop figures. Scores are NOT comparable across statistics — only rank and identity are meaningful across facets.**
+
+576 rows × 8 columns. `contrast`; `statistic` = ulm | mlm | wsum | norm_wsum | corr_wsum | consensus; `source`; `score`; `rank`; `direction`; `axis`; `key_tf`.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison.R` |
+| Function | `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)` on each contrast; top/bottom 12 per statistic per contrast |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3k_method_rank_divergence_data.csv
+
+**Per-TF ranks across all six decoupleR statistics for WT_heat and Interaction contrasts, restricted to a focused TF set for the rank-divergence heatmap. Key values (WT_heat): Rela ulm #3 → mlm #350; Nfkb1 ulm #6 → mlm #86; Hif1a ulm #12 → mlm #142; Irf3/Stat2 bottom-ranked in all methods on WT_heat.**
+
+348 rows × 5 columns. `contrast`; `source`; `statistic`; `rank` (among all 658 TFs surviving minsize=5, 1 = most activated); `score`.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison.R` |
+| Function | `decouple(statistics=c("ulm","mlm","wsum"), consensus_score=TRUE)`; `row_number()` after `arrange(desc(score))` per statistic per contrast; filtered to focused TF set |
+| Input | `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3k_method_rank_spearman.csv
+
+**Spearman rank-correlation of each decoupleR statistic vs ULM over all 658 TFs on the WT_heat contrast: MLM rho = 0.619 (lone outlier); all others rho = 0.968–0.996 (norm_wsum 0.996; corr_wsum 0.975; consensus 0.969; wsum 0.968).**
+
+6 rows × 3 columns. `statistic`; `spearman_vs_ulm`; `n_tfs` = 658 for all rows.
+
+| | |
+|---|---|
+| Script | `02_analysis/scripts/03b_decoupler_method_comparison.R` |
+| Function | `cor(rank_ulm, rank_x, method="spearman")` over 658-TF rank vectors per statistic on WT_heat |
+| Input | Derived from full-rank tables in `03_results/objects/03_tf_collectri.rds` and method-comparison decouple run |
+
+---
+
+### fig3l_hif_attribution_data.csv
+
+**Per-target signed contributions for the 15 curated Hif1a regulon members (7 heatshock_stress + 2 shared_angio_glucose + 1 autoreg_feedback + 4 hif1a_hypoxic_core) plus a pointer to the 339 other_unclassified members. Values are copied directly from `fig3g_target_decomposition_data.csv` — no recomputation.**
+
+15 curated rows (see note on other_unclassified) × 7 columns. `source` = "Hif1a"; `target`; `t_wt` = WT_heat t-statistic (copied from fig3g); `contrib` = sign(mor)×t_wt (copied from fig3g); `module` = heatshock_stress | shared_angio_glucose | autoreg_feedback | hif1a_hypoxic_core | other_unclassified; `isoform_attribution` = non-HIF (stress) | shared HIF1/HIF2 | HIF1a-preferential-feedback | HIF1a-selective | unclassified; `direction` = Up | Down.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03c_hif_program_attribution.R` |
+| Function | Left join of `fig3g_target_decomposition_data.csv` to curated module lookup; no statistical functions |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
+
+---
+
+### fig3l_module_summary.csv
+
+**Per-module aggregation of signed contributions confirming: heatshock_stress sum = +108.54 (7 genes, all UP, 7.2% of total); shared_angio_glucose sum = +15.93 (2 genes, all UP, 1.1%); autoreg_feedback sum = +6.81 (1 gene, UP, 0.5%); hif1a_hypoxic_core sum = −8.46 (4 genes, ALL DOWN, −0.56% — `pct_of_total` is SIGNED, consistent with `sum_contrib` and with the fig3g signed-share convention); other_unclassified sum = +259.97 (339 genes, 189 up / 150 down, 90.7%).**
+
+5 rows × 6 columns. `module`; `n_targets`; `sum_contrib`; `pct_of_total`; `n_up`; `n_down`.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03c_hif_program_attribution.R` |
+| Function | `group_by(module) %>% summarise(n_targets=n(), sum_contrib=sum(contrib), pct_of_total=..., n_up=sum(direction=="Up"), n_down=sum(direction=="Down"))` |
+| Input | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv` |
+
+---
+
+### fig3m_ulm_mechanic_data.csv
+
+**Per-target aligned contributions for the Hif1a (n = 353) and Stat2 (n = 32) regulons, with a flag identifying the seven stress contaminants within the Hif1a regulon. The primary data source for the algorithmic mechanic figure (fig3m). No statistics computed — Hif1a `contrib` values are copied from fig3g; Stat2 `aligned_contrib = sign(mor) × t_wt` is an arithmetic relabel of existing t-statistics (descriptive lookup only).**
+
+385 rows × 7 columns. `tf`; `regulon_class` = promiscuous | specific; `target`; `mor` = ±1; `t_wt` = WT_heat limma t-statistic; `aligned_contrib` = sign(mor) × t_wt; `is_stress_contaminant` = logical (TRUE for {Hspa1a, Timp1, Sdc1, Cdkn1a, Serpine1, Eno2, Spp1} within the Hif1a regulon).
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03d_ulm_mechanic.R` |
+| Function | Copy of `contrib` from fig3g table (Hif1a); join of CollecTRI Stat2 targets to WT_heat t-vector + arithmetic `sign(mor)*t_wt` (no run_ulm) |
+| Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv`, `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/02_de_results.rds` |
+
+---
+
+### fig3m_ulm_mechanic_summary.csv
+
+**Per-TF regulon-level summary: Hif1a (n_targets = 353, mean_aligned_contrib = +1.08, pct_contrib_from_stress = 7.2%, ulm_score_sign = positive); Stat2 (n_targets = 32, mean_aligned_contrib = −0.62, pct_contrib_from_stress = NA, ulm_score_sign = negative).**
+
+2 rows × 6 columns. `tf`; `regulon_class`; `n_targets`; `mean_aligned_contrib`; `pct_contrib_from_stress`; `ulm_score_sign`.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03d_ulm_mechanic.R` |
+| Function | `group_by(tf) %>% summarise(mean_aligned_contrib = mean(aligned_contrib), ...)` |
+| Input | `03_results/04_tf/tables/fig3m_ulm_mechanic_data.csv` |
+
+---
+
+### fig3n_heat_main_regulators_data.csv
+
+**decoupleR-ULM scores and BH-adjusted p-values for the heat-shock / HIF / IFN axis TFs {Hsf1, Hif1a, Epas1, Irf3, Stat1, Stat2, Nfkb1, Rela} on contrasts {Temp_main, WT_heat, KO_heat}, used to build fig3n. ESTIMATOR NOTE: scores are decoupleR-ULM — the SAME estimator as fig3a/fig3c/fig3k (`run_ulm(.mor="mor", minsize=5)`), computed on a fresh heat-MAIN t-stat matrix — and ARE axis-comparable to those figures. (They equal the `master_tf_activities.csv` `nes` column only because that column is itself the ULM `score` under a legacy schema name; `nes` is a misnomer, not a GSEA score.) Key values: Hsf1 Temp_main +3.20 padj = 0.015 (sig); WT_heat +2.83 padj = 0.034 (sig); KO_heat +3.48 padj = 0.008 (sig); Hif1a Temp_main +5.14 padj = 2.0×10⁻⁵; Epas1 Temp_main +4.17 padj = 8.9×10⁻⁴.**
+
+24 rows × 6 columns. `tf`; `contrast` = Temp_main | WT_heat | KO_heat; `score` = decoupleR-ULM activity score; `padj` = BH-adjusted p-value within contrast; `direction` = Up | Down; `axis` = heatshock | HIF | IFN.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03e_heat_main_regulators.R` |
+| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` on a fresh heat-MAIN t-stat matrix + BH within contrast + axis lookup — same call as `03_decoupler_tf.R` |
+| Input | `03_results/objects/02_de_results.rds`, `03_results/objects/net_collectri_mouse.rds` |
+
+---
+
+### fig3o_experiment_tiers_data.csv
+
+**Hand-authored config table for the CONCEPTUAL tiered-experiment ladder (fig3o). Carries NO statistics — it is a curated plan, not inferred from the data. 9 rows: Tier 0 (3 arms — inactive analog/vehicle @ 39 °C, drug dose-response @ 39 °C, Tconv comparator @ 39 °C); Tier 1 (4 arms — chaperone/proteostasis inhibitor @ 39 °C [17-AAG / VER-155008], glycolysis inhibitor @ 39 °C, HSF1 readout/knockdown @ 39 °C, belzutifan HIF2a-selective cross-check); Tier 2 (2 arms, GATED — floxed-Hif1a, floxed-Epas1).**
+
+9 rows × 8 columns. `tier` = 0 | 1 | 2 (ascending cost); `tier_label`; `experiment`; `what_it_excludes_or_tests`; `readout`; `cost_tier` = cheap | medium | expensive; `gate` = the licensing rule for that tier; `row_in_tier` = arm index within the tier.
+
+| | |
+|---|---|
+| Script (compute) | `02_analysis/scripts/03f_experiment_tiers.R` |
+| Function | Hand-authored lookup table — no statistical functions |
+| Input | None (config authored in the script) |
+
+---
+
+## Reproduction
+
+```bash
+# From project root — in pipeline order:
+Rscript 02_analysis/scripts/03_decoupler_tf.R
+Rscript 02_analysis/scripts/03_decoupler_tf_viz.R
+Rscript 02_analysis/scripts/03b_decoupler_method_comparison.R
+Rscript 02_analysis/scripts/03b_decoupler_method_comparison_viz.R
+Rscript 02_analysis/scripts/03c_hif_program_attribution.R
+Rscript 02_analysis/scripts/03c_hif_program_attribution_viz.R
+Rscript 02_analysis/scripts/03d_ulm_mechanic.R
+Rscript 02_analysis/scripts/03d_ulm_mechanic_viz.R
+Rscript 02_analysis/scripts/03e_heat_main_regulators.R
+Rscript 02_analysis/scripts/03e_heat_main_regulators_viz.R
+Rscript 02_analysis/scripts/03f_experiment_tiers.R
+Rscript 02_analysis/scripts/03f_experiment_tiers_viz.R
+```
+
+All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`, `03f_`) contain no `ggplot`/`ggsave`. All VIZ scripts (`_viz.R`) contain no `lmFit`/`eBayes`/`run_ulm`/`run_mlm`/`p.adjust`/`prcomp`. Networks pre-built by `02_analysis/scripts/00c_prepare_networks.R` — do NOT call `decoupleR::get_collectri()` or `get_progeny()` in this environment (OmniPath unreachable; see `01_modules/SciAgent-toolkit/skills/bulk-rnaseq-activity-inference/references/known-issues.md`).
+
+## Dependencies
+
+- R with packages: decoupleR, limma, dplyr, ggplot2, readr
+- Pre-built network objects: `03_results/objects/net_collectri_mouse.rds`, `03_results/objects/net_dorothea_mouse_ABC.rds`
+- Upstream objects: `03_results/objects/02_de_results.rds`, `03_results/master/master_tf_activities.csv`
+- Reference gene sets: `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds`
+- Config: `02_analysis/config/config.R` (palette, theme, `provisional_caption()`)
+
+## Notes
+
+- **PROVISIONAL stamp**: all figures carry `provisional_caption()` because sample-to-condition mapping was inferred from GEO metadata and has not been confirmed by the primary authors.
+- **cGAS framing**: the HIF arm shows "no detectable cGAS-dependence at n=5" — this is an underpowered n=5 null, not evidence of independence. Never rephrase as "cGAS-independent," "parallel," or "cascade."
+- **Object name**: the program revealed here is "a heat-induced glycolytic/stress program partially overlapping HIF targets." Never "the HIF program," "HIF1a the TF," or "canonical HIF1a program."
+- **HIF2a/Epas1**: elevated on all heat contrasts (Temp_main decoupleR-ULM score = +4.17, padj = 8.9×10⁻⁴) but named only as an alternative the HIF inhibitor cannot exclude — not crowned as a driver; belzutifan (fig3o) is only a HIF2a-selective cross-check tool.
+- **fig3n estimator**: fig3n scores are decoupleR-ULM — the SAME `run_ulm(.mor="mor", minsize=5)` estimator as fig3a/fig3c/fig3k, computed on a fresh heat-MAIN t-stat matrix — and ARE axis-comparable to those figures. They equal the `master_tf_activities.csv` `nes` column only because that column is the ULM `score` written under a legacy schema name (`nes = score`); the `nes` name is a misnomer kept for master-schema compatibility, NOT a GSEA score. The Hsf1 cGAS×heat interaction raw p (0.022) is non-significant after BH correction (padj = 0.515) and must not be cited as evidence of cGAS-dependence.
+- **fig3d + fig3e reinstated into the deck spine** (serendipity-resolution decision, `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`): they carry the "how the collaborator got #1, and why it isn't robust" mechanism — regulon dilution (#1→#12) and collinearity redistribution (#12→#142) — and sit between fig3l and fig3c. This overrides the earlier audit's "archive fig3e" vote.
+- **Archive figures (not in the deck; canonical PDFs/tables retained)**: fig3b, fig3f, fig3j×2, and **lombardi_recurrence** are forensic/supplement backups (fig3b's broad-program point is made more sharply by fig3g/fig3l; fig3f risks the "consensus recovers HIF1a" mis-read; fig3j belongs in the supplement as the full per-method audit). Canonical artifacts kept, just not on the deck spine.

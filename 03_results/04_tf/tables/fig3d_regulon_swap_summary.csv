@@ -1,0 +1,3 @@
+"network","n","mean_abs_t","median_t","pct_abs_t_gt2","n_intersection","n_dorothea_only","n_collectri_only"
+"DoRothEA",131,4.70370416659287,1.89454557982844,64.1221374045801,101,30,252
+"CollecTRI",353,4.26185024271816,0.622755790097845,63.1728045325779,101,30,252

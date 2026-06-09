@@ -1,0 +1,3 @@
+"tf","regulon_class","n_targets","mean_aligned_contrib","pct_contrib_from_stress","ulm_score_sign"
+"Hif1a","promiscuous",353,1.08435198291572,7.21458745128378,"positive"
+"Stat2","specific",32,-0.622024857790225,NA,"negative"
