@@ -1,0 +1,10 @@
+== 00c network prep | 2026-06-08 19:16:37.005879 ==
+decoupleR 2.16.0 | OmnipathR 3.18.4 | progeny 1.32.0 | dorothea 1.22.0 | babelgene 22.9
+
+[PROGENy] 7006 edges | 14 pathways | 5647 unique targets | 4512 in dataset
+[DoRothEA A/B/C] 12895 edges | 273 TFs | 5130 unique targets | 4120 in dataset
+[CollecTRI->mouse] 42938 edges | 1184 TFs | 6591 unique targets | 4797 in dataset
+  human->mouse: 6737 via babelgene, 220 via title-case fallback (of 6957 unique symbols)
+
+[sanity] KEY_TFS present in CollecTRI source: Irf3, Irf7, Irf1, Stat1, Stat2, Hif1a, Epas1, Nfkb1, Rela
+[sanity] Hif1a in DoRothEA source: TRUE | Hif1a in CollecTRI source: TRUE
