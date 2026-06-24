@@ -1,4 +1,4 @@
-<!-- BEGIN SCIAGENT:ROLES v1 hash=20c3f484422f0f7e278a1dde1b8e9776e7e599fb -->
+<!-- BEGIN SCIAGENT:ROLES v1 hash=a2c786f49260190d04fa13cdb43f395275fb49fc -->
 # Active roles
 
 Stack (in order, last-wins on name collisions):
@@ -36,12 +36,14 @@ Stack (in order, last-wins on name collisions):
 - `scvi-scarches-reference-mapping` — (base)
 - `treearches-hierarchy-learning` — (base)
 - `scglue-unpaired-multiomics-integration` — (base)
+- `figure-style` — (base)
 - `scrna-pipeline-conventions` — (base)
 - `cellranger-multi-to-anndata` — (base)
 - `scrna-cxg-host` — (base)
 - `shinymultiome-uio-host` — (base)
 - `consensus-nmf-multirun` — (base)
 - `skill-creator` — (base)
+- `reasoning-trace` — (base)
 
 ## Skills (inherited via requires:)
 - `tobias-footprint-bindetect` — (via `tf-footprint-differential-analysis`)
@@ -53,28 +55,23 @@ Stack (in order, last-wins on name collisions):
 - `bio-interpreter` — (pathway-signature) [shadows base]
 - `insight-explorer` — (pathway-signature) [shadows base]
 - `captions` — (pathway-signature) [shadows base]
+- `figure-audit` — (base)
 - `doc-curator` — (pathway-signature) [shadows base]
 - `code-reviewer` — (pathway-signature) [shadows base]
 - `handoff` — (pathway-signature) [shadows base]
 
 ## Slash commands (effective, Claude-only)
 - `/commit` — (pathway-signature) [shadows base]
-
----
-
-# Analysis conventions (STING-cGAS-GSE329522)
-
-## Figure & conclusion discipline
-- **One claim = one dedicated, captioned figure.** No conclusions that live only in chat/handoff — every claim we produce must be persisted as a figure + written caption.
-- **Multi-panel ONLY when sub-panels share the same axis and are directly comparable.** Never stack distinct statements into one panel — that makes them impossible to audit/disambiguate (the original `fig3b_hif1a_robustness.pdf` was the anti-pattern: network-swap ranks + target decomposition + signature comparison crammed onto one illegible panel).
-- **Every figure documents how it was generated** (which inputs, which computation) — auditable, never a black box.
-- **Each `03_results/<phase>/` carries a `README.md`** captioning, laconically: (1) the STATEMENT the artifacts make, and (2) the MECHANISM behind that statement.
-- **Stop to explain surprising mechanics** rather than reporting a number and moving on (e.g. a transcription factor that ranks differently across inference methods/networks deserves its own figure explaining the math, not a footnote).
-
-## Normalize then visualize (compute / viz split)
-- Each analysis phase = a COMPUTE script `NN_<name>.R` (all statistics; writes checkpoints to `03_results/objects/*.rds`, master tables to `03_results/master/*.csv`, and plot-ready tidy tables to `03_results/<stage>/tables/*.csv`; contains **no** `ggplot`/`ggsave`) **plus** a VIZ script `NN_<name>_viz.R` (reads those normalized tables and renders figures; contains **no** statistical computation — no `lmFit`/`eBayes`/`run_ulm`/`p.adjust`/`prcomp`/…).
-- Viz must run standalone after compute and must never recompute statistics.
-
-## decoupleR networks are pre-built locally (OmniPath is broken here)
-`decoupleR::get_collectri()` / `get_progeny()` FAIL in this environment — do NOT call them. Use the cached RDS built by `02_analysis/scripts/00c_prepare_networks.R`: `03_results/objects/{net_collectri_mouse,net_dorothea_mouse_ABC,net_progeny_mouse}.rds`, then `run_ulm(.mor="mor")` / `run_mlm(.mor="weight")` directly. Full root-cause + the generic local-build recipe live in the skill: `01_modules/SciAgent-toolkit/skills/bulk-rnaseq-activity-inference/references/known-issues.md`. Env snapshot: `02_analysis/config/env/`.
 <!-- END SCIAGENT:ROLES -->
+
+<!-- BEGIN SCIAGENT:CRAFT v1 hash=a461c3b3edb1829ca9d756d0fd3ee6119a659fed -->
+# Craft standards
+
+Toolkit-managed standing conventions for this repo — do not hand-edit.
+
+- **Figures** — legible both shrunk in a journal column and projected to the back of a room: bigger, fewer, bolder (base >= 16pt screen, >= 9pt print). Style only via the project theme entry point (no inline `theme()`/`ggsave(width=)`/raw hex); cap to top-N; never truncate axis labels; disambiguate glyphs; prefer the residualized channel.
+- **Results** — every artifact under `03_results/<stage>/{figures,tables}/` with `by_contrast/<c>/` + `_overview/`; a figure's source table is its same-stem neighbor. Compute never plots; viz never computes.
+- **README** — a task is unfinished until the sibling `README.md` captions every `03_results/` file you create/edit/delete, including *how to read* it (glyphs, sign convention, Δρ, claim tier).
+- **Planning** — plans in `docs/_internal/plans/{date-slug}/` as `00_INDEX.md` + `NN_<slug>.md`; one phase == one script == one implementer (~35% of context); review every 3 phases that code runs and produces its artifacts.
+- **Reproducibility** — no ephemeral scripts: every `03_results/` artifact reproducible from a committed `02_analysis/scripts/NN_*`; log non-trivial decisions to `docs/_internal/reasoning/` before proceeding (`_scratch/` is the only sanctioned throwaway zone).
+<!-- END SCIAGENT:CRAFT -->
