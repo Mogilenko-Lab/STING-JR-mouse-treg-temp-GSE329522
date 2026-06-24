@@ -95,7 +95,20 @@ HEADLINE_CONTRASTS <- c("WT_heat", "KO_heat", "Interaction", "Temp_main")
 
 # Standard GATOM network pair. KEGG: gene2reaction.extra = NULL.
 #   Combined: REQUIRES the gene2reaction TSV (silent empty graph otherwise).
-NETWORKS <- c("kegg", "combined")
+# Self-healing: keep only networks whose metabolite-annotation DB (met.<net>.db.rds)
+# is actually provisioned. `combined` is dropped automatically until the owner
+# supplies met.combined.db.rds (only met.kegg/rhea/lipids ship by default), so the
+# run degrades to KEGG-only rather than stop()ing mid-bundle. Re-includes combined
+# the moment that file lands.
+NETWORKS <- Filter(
+  function(net) file.exists(file.path(GATOM_REFS, sprintf("met.%s.db.rds", net))),
+  c("kegg", "combined")
+)
+if (length(NETWORKS) == 0L)
+  stop("No GATOM network has a provisioned met.<net>.db.rds under ", GATOM_REFS)
+if (!"combined" %in% NETWORKS)
+  message("[10] met.combined.db.rds absent -> running GATOM on KEGG only ",
+          "(supply 00_data/references/gatom/met.combined.db.rds to enable combined).")
 
 # k.gene = module-size heuristic. 50 = GATOM default (25 stringent / 75 exploratory).
 K_GENE <- as.integer(YAML_CONFIG$thresholds$gatom_k_gene %||% 50L)
