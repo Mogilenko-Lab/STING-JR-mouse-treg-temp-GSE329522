@@ -81,7 +81,10 @@ CONTRAST_LABELS <- c(
   Geno_at_39  = "Genotype at 39°C",
   Geno_main   = "Genotype main effect"
 )
-contrast_label <- function(co) CONTRAST_LABELS[[co]] %||% co
+contrast_label <- function(co) {           # vectorized-safe (used scalar in loops AND in mutate())
+  lab <- unname(CONTRAST_LABELS[co])
+  ifelse(is.na(lab), co, lab)
+}
 
 ## PROVISIONAL stamp (single source of truth from config.R)
 PROVISIONAL <- provisional_caption()

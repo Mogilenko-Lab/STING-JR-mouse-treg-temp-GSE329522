@@ -967,7 +967,11 @@ if (!file.exists(readme_path)) {
 
 n_fig <- length(list.files(file.path("03_results", STAGE, "figures"),
                             pattern = "\\.(pdf|png)$", recursive = TRUE))
-n_ov  <- length(list.files(.ov_fig, pattern = "\\.(pdf|png)$"))
+## adjacency is per figure STEM, not per file: each stem emits both a
+## .print.pdf and a .screen.png variant but a single same-stem .csv, so compare
+## unique stems (strip the .<variant>.<ext> suffix) against the CSV count.
+n_ov  <- length(unique(sub("\\.(print|screen)\\.(pdf|png)$", "",
+                           list.files(.ov_fig, pattern = "\\.(pdf|png)$"))))
 n_csv <- length(list.files(.ov_tbl, pattern = "\\.csv$"))
 
 message(sprintf(
