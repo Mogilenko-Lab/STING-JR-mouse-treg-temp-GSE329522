@@ -124,6 +124,49 @@ visualization:
   volcano_label_top: 10               # top genes to label
 
 # =============================================================================
+# FIGURES — the figure-style contract (read by figure_helpers.{R,py})
+# =============================================================================
+# Dual-context legibility: legible BOTH shrunk in a journal column AND projected
+# to the back of a room. The figure-style helper library reads this block and
+# emits a `screen` variant (big, bold) + a `print` variant (column width) from
+# one code path. Font sizes are FLOORS — raise them, do not go under them.
+# NEW standard-sweep viz scripts (04-16) use this block via the figure_style.R
+# shim; legacy scripts (00-03g) keep using `visualization:` above.
+
+figures:
+  # screen / projected variant (default): bigger, fewer, bolder
+  base_size: 16                       # base font (pt) FLOOR for screen
+  title_size: 18
+  axis_title_size: 15
+  axis_text_size: 13
+  strip_size: 14
+  legend_text_size: 13
+  label_size: 5                       # geom_text/geom_label size (ggplot mm)
+  line_width: 0.8
+  point_size: 2.0
+  # print-column variant (Nature ~89mm; smaller, still legible)
+  base_size_column: 9                 # base font (pt) FLOOR for print column
+  # geometry (inches)
+  width: 10
+  height: 8
+  width_column: 3.5
+  height_column: 3.0
+  dpi: 300
+  # anti-clutter / comparability
+  top_n: 20                           # cap categorical axes (pathways/genes) to top-N
+  volcano_label_top: 10
+  z_clamp: 2.5
+  nes_cap: 3.5
+  caption_wrap_column: 70
+  # which variants save_figure() emits by default
+  variants:
+    - print
+    - screen
+  # results sub-layout directory names
+  by_contrast_dir: "by_contrast"
+  overview_dir: "_overview"
+
+# =============================================================================
 # DATABASES TO ANALYZE
 # =============================================================================
 
@@ -185,6 +228,12 @@ stages:
   - id: "07_synthesis"
     title: "Synthesis and reply memo"
     purpose: "Assemble the two-arms panel and the claim-to-evidence reply memo; no new statistics."
+  - id: "08_coresh"
+    title: "CoReSh signature search"
+    purpose: "Rank the public mmu compendium by coregulation of the heat/IFN/HIF signature; GSEA on CoReSh-derived gene sets."
+  - id: "09_gatom"
+    title: "GATOM metabolic modules"
+    purpose: "Atom-graph MWCS metabolic modules from the DE signal (MitoCarta-corroborating Complex-I / pseudohypoxia mechanism)."
 
 # =============================================================================
 # INPUT/OUTPUT PATHS (relative to project root)
