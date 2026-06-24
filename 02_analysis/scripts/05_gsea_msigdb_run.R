@@ -1,5 +1,7 @@
 # 05_gsea_msigdb_run.R — COMPUTE
-## fgsea over the 8 MSigDB collections × all 7 contrasts, ranked by the limma-trend t.
+## clusterProfiler::GSEA (by="fgsea") over the 8 MSigDB collections × all 7 contrasts,
+## ranked by the limma-trend t. Caches gseaResult S4 objects (consumable by the
+## RNAseq-toolkit GSEA plotters); derives the tidy master rows via normalize_gsea_results().
 ## Stage: 06_gsea.  Run from project root AFTER 04_gsea_set_prep.R and 11_emit_universe.R:
 ##   Rscript 02_analysis/scripts/05_gsea_msigdb_run.R
 ##
@@ -14,7 +16,7 @@
 ##   * Inputs are READ-ONLY. Only 03_results/{06_gsea,objects,master}/ are written.
 ##
 ## OUTPUTS
-##   Objects (one per contrast, full named-list of raw fgsea results):
+##   Objects (one per contrast, named list collection -> clusterProfiler gseaResult S4):
 ##     03_results/objects/gsea_msigdb_<contrast>.rds
 ##   Per-contrast tidy tables (all 8 collections merged):
 ##     03_results/06_gsea/tables/by_contrast/<contrast>/gsea_msigdb.csv
@@ -38,18 +40,38 @@
 source("02_analysis/config/config.R")       # PROJECT_ROOT, YAML_CONFIG, DIR_OBJECTS,
                                              # DIR_MASTER, SPECIES, GSEA_*, RANK_METRIC, %||%
 source("02_analysis/helpers/de_gsea_helpers.R")  # load_or_compute (path-keyed), load_de_results,
-                                                  # build_ranked_vector, run_fgsea,
+                                                  # build_ranked_vector, run_fgsea (now unused),
                                                   # append_master_table, round_numeric_cols,
                                                   # .empty_gsea_df
+
+## Toolkit GSEA processing helpers (the gseaResult -> tidy normalizer + the pathway-name
+## prettifier it picks up via exists()). normalize_gsea_results() turns each gseaResult
+## @result into the standard tibble; format_pathway_names.R defines format_pathway_name(),
+## which normalize_gsea_results() uses for the pathway_name column when present.
+RTK <- file.path(PROJECT_ROOT, YAML_CONFIG$paths$rnaseq_toolkit %||% "01_modules/RNAseq-toolkit")
+source(file.path(RTK, "scripts", "GSEA", "GSEA_plotting", "format_pathway_names.R"))   # format_pathway_name()
+source(file.path(RTK, "scripts", "GSEA", "GSEA_processing", "normalize_gsea.R"))       # normalize_gsea_results(), empty_gsea_tibble()
 
 suppressPackageStartupMessages({
   library(dplyr)
   library(tibble)
   library(readr)
+  library(clusterProfiler)   # GSEA() -> gseaResult S4 (by="fgsea")
+  library(org.Mm.eg.db)      # mouse annotation backing clusterProfiler
 })
 options(stringsAsFactors = FALSE)
 
 STAGE <- "06_gsea"
+
+## The cached object CLASS changed (tidy data.frame -> clusterProfiler gseaResult S4).
+## load_or_compute() is path-keyed and would happily return a stale tidy cache, so we
+## delete any pre-existing gsea_msigdb_<contrast>.rds up front to force a clean recompute.
+.stale_msigdb <- list.files(DIR_OBJECTS, pattern = "^gsea_msigdb_.*\\.rds$", full.names = TRUE)
+if (length(.stale_msigdb) > 0) {
+  file.remove(.stale_msigdb)
+  message(sprintf("[05] Removed %d stale gsea_msigdb_*.rds cache(s) (object class changed to gseaResult).",
+                  length(.stale_msigdb)))
+}
 
 # ============================================================================
 # 1. Pre-flight: validate required upstream inputs
@@ -83,13 +105,17 @@ if (file.exists(manifest_path)) {
           " — continuing without manifest (will still attempt to load each cached RDS).")
 }
 
-## (d) GSEA parameters (all from config.R constants, never hardcoded here)
+## (d) GSEA parameters (all from config.R constants / YAML gsea: block, never hardcoded here)
 MINSZ <- GSEA_MIN_SIZE   # 15    (thresholds.gsea_min_size)
 MAXSZ <- GSEA_MAX_SIZE   # 500   (thresholds.gsea_max_size)
 SEED  <- GSEA_SEED       # 123   (thresholds.gsea_seed)
-NPERM <- GSEA_NPERM      # 1e5   (thresholds.gsea_nperm)  — used only for legacy fgsea fallback
+NPERM <- GSEA_NPERM      # 1e5   (thresholds.gsea_nperm)  — nPermSimple for clusterProfiler::GSEA
 FDR   <- GSEA_FDR_CUTOFF # 0.05  (thresholds.gsea_fdr)    — display only (not used to filter)
-RM    <- RANK_METRIC      # "t"   (config.R constant; NEVER logFC)
+RM    <- (YAML_CONFIG$gsea$rank_metric %||% RANK_METRIC)  # "t"  (gsea.rank_metric; NEVER logFC)
+## clusterProfiler::GSEA run-time engine settings (gsea: block; §5 of the blast-radius doc)
+PCUT  <- YAML_CONFIG$gsea$pvalue_cutoff_run %||% 1      # keep ALL pathways at run time
+PADJM <- YAML_CONFIG$gsea$padj_method       %||% "fdr" # pAdjustMethod
+EPS   <- YAML_CONFIG$gsea$eps                %||% 0     # exact fgsea p-values
 
 ## (e) Confirm the rank metric column is present in at least one topTable (loud guard)
 ex_tt   <- de[[contrasts[[1]]]]
@@ -148,6 +174,44 @@ load_geneset_cache <- function(name) {
   gs
 }
 
+## Convert a named list of symbol vectors (the fgsea `pathways` format) to a
+## clusterProfiler TERM2GENE data.frame (columns term, gene). Inverse of split().
+build_term2gene <- function(gs) {
+  data.frame(
+    term = rep(names(gs), lengths(gs)),
+    gene = unlist(gs, use.names = FALSE),
+    stringsAsFactors = FALSE
+  )
+}
+
+## Run clusterProfiler::GSEA for one MSigDB collection and return its gseaResult
+## (or NULL on error / no sets / no result). Mirrors the 14839 run_gsea() idiom:
+## TERM2GENE built from the cached set list, by="fgsea", eps=0, pvalueCutoff=1 (keep all),
+## seeded for reproducibility. nPermSimple threads the config nperm.
+run_one_msigdb <- function(ranked, gs, name, co) {
+  t2g <- build_term2gene(gs)
+  res <- tryCatch({
+    set.seed(SEED)
+    clusterProfiler::GSEA(
+      geneList      = ranked,
+      TERM2GENE     = t2g,
+      pvalueCutoff  = PCUT,         # 1 — keep all (FDR-filter only at viz)
+      pAdjustMethod = PADJM,        # "fdr"
+      eps           = EPS,          # 0 — exact p-values
+      by            = "fgsea",
+      nPermSimple   = NPERM,
+      minGSSize     = MINSZ,
+      maxGSSize     = MAXSZ,
+      seed          = TRUE,
+      verbose       = FALSE
+    )
+  }, error = function(e) {
+    message(sprintf("  [%s] GSEA error: %s", name, conditionMessage(e))); NULL
+  })
+  if (is.null(res) || nrow(res@result) == 0) return(res)
+  res
+}
+
 # ============================================================================
 # 4. Per-contrast loop: compute (cached) → collect tidy rows
 # ============================================================================
@@ -187,54 +251,57 @@ for (co in contrasts) {
   message(sprintf("  ranked vector: %d genes, range [%.2f, %.2f]",
                   length(ranked), min(ranked), max(ranked)))
 
-  ## ---- 4b. Compute cached raw fgsea results (all 8 collections, one list per contrast) ----
-  ## Cache key: "gsea_msigdb_<contrast>.rds" — a named list (db_name -> tidy data.frame).
-  ## Storing the tidy data.frame (not the raw fgsea data.table) keeps the cache format
-  ## stable across fgsea versions and avoids list-column (leadingEdge) serialisation issues.
-  ##
-  ## NOTE: the cache stores TIDY rows (output of run_fgsea()), not raw fgsea objects,
-  ## because run_fgsea() coerces leadingEdge to slash-joined strings (the master contract)
-  ## and applies the schema renaming in one place. Re-running always reads from cache unless
-  ## force=TRUE is passed to load_or_compute().
+  ## ---- 4b. Compute cached gseaResult objects (all 8 collections, one list per contrast) ----
+  ## Cache key: "gsea_msigdb_<contrast>.rds" — a named list (db_name -> clusterProfiler
+  ## gseaResult S4). We store the gseaResult (NOT the tidy data.frame) so the downstream
+  ## viz (12_gsea_viz.R) can drive the RNAseq-toolkit plotters, which require @result +
+  ## @geneList (the ranked vector) + @geneSets (pathway membership) — none of which survive
+  ## a tidy data.frame. The tidy master rows are DERIVED below via normalize_gsea_results().
+  ## setNames(lapply(...), msigdb_names) keeps EVERY collection as a named slot (even when a
+  ## collection is skipped -> NULL), so the cache shape is stable.
 
   cache_file <- sprintf("gsea_msigdb_%s.rds", co)
 
   gsea_list <- load_or_compute(
     cache_file,
     function() {
-      ## Compute one run_fgsea() call per collection; warn+NULL on missing cache / empty sets.
-      ## setNames(lapply(...), msigdb_names) ensures every slot is present (even if NULL),
-      ## so a future load_or_compute() cache-hit can check expected_keys cleanly.
       setNames(
         lapply(msigdb_names, function(nm) {
           gs <- load_geneset_cache(nm)
           if (is.null(gs)) return(NULL)     # warn already emitted by load_geneset_cache()
-          message(sprintf("  [fgsea] %s (%d sets) ...", nm, length(gs)))
-          run_fgsea(
-            ranked    = ranked,
-            gene_sets = gs,
-            database  = nm,
-            contrast  = co,
-            minSize   = MINSZ,
-            maxSize   = MAXSZ,
-            seed      = SEED,
-            nperm     = NPERM
-          )
+          message(sprintf("  [GSEA] %s (%d sets) ...", nm, length(gs)))
+          run_one_msigdb(ranked = ranked, gs = gs, name = nm, co = co)
         }),
         msigdb_names
       )
     }
   )  ## end load_or_compute
 
-  ## ---- 4c. Accumulate tidy rows + summary stats ----
+  ## ---- 4c. Derive tidy rows from each gseaResult + accumulate + summary stats ----
+  ## normalize_gsea_results() (toolkit) turns a gseaResult @result into the standard tibble
+  ## (uppercase NES, plus leading_edge_size/gene_ratio/genes_full_set/neg_log_padj extras).
+  ## STING's master schema is the strict 10-col set, so we project DOWN: rename NES->nes and
+  ## keep only the schema columns (drop the toolkit extras). Numbers are statistically
+  ## equivalent to the old fgsea master (same fgsea core via clusterProfiler, same ranked t).
   co_rows <- list()   # this contrast's rows across all collections (for by_contrast CSV)
 
-  for (nm in msigdb_names) {
-    rows <- gsea_list[[nm]]
+  MASTER_COLS <- YAML_CONFIG$schemas$master_gsea_table$required_columns
 
-    ## rows is either a well-typed data.frame (possibly 0-row) or NULL (collection skipped)
-    is_null  <- is.null(rows)
-    is_empty <- !is_null && nrow(rows) == 0L
+  tidy_from_gsea <- function(g, nm, co) {
+    nt <- normalize_gsea_results(g, database = nm, contrast = co)   # toolkit tibble (NES uppercase)
+    if ("NES" %in% colnames(nt) && !"nes" %in% colnames(nt))
+      nt <- dplyr::rename(nt, nes = NES)
+    ## project to the strict master schema (drop toolkit extras: leading_edge_size,
+    ## gene_ratio, genes_full_set, neg_log_padj) so the master stays exactly 10 columns.
+    as.data.frame(nt[, MASTER_COLS, drop = FALSE], stringsAsFactors = FALSE)
+  }
+
+  for (nm in msigdb_names) {
+    g <- gsea_list[[nm]]
+
+    ## g is either a gseaResult (possibly 0-row) or NULL (collection skipped/errored)
+    is_null  <- is.null(g)
+    is_empty <- !is_null && nrow(g@result) == 0L
 
     if (is_null || is_empty) {
       status <- if (is_null) "skipped" else "empty"
@@ -252,6 +319,9 @@ for (co in contrasts) {
       )
       next
     }
+
+    ## Derive the tidy schema rows from this collection's gseaResult
+    rows <- tidy_from_gsea(g, nm, co)
 
     ## Accumulate for master + overview
     key <- paste(co, nm)

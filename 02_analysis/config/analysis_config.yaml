@@ -103,6 +103,20 @@ thresholds:
   gsea_max_size: 500                  # maximum gene set size
 
 # =============================================================================
+# GSEA RUN PARAMETERS (clusterProfiler::GSEA, by="fgsea")
+# =============================================================================
+# The compute scripts (05/06) run clusterProfiler::GSEA so the cached objects are
+# gseaResult S4 (consumable by the RNAseq-toolkit plotters). These keys pin the
+# run-time engine settings; the per-set size bounds + nperm + seed live in
+# thresholds: above (single source of truth).
+
+gsea:
+  rank_metric: "t"          # rank on the limma-trend t-statistic; NEVER logFC
+  pvalue_cutoff_run: 1      # keep ALL pathways at run time; FDR-filter only at viz
+  padj_method: "fdr"        # clusterProfiler::GSEA pAdjustMethod
+  eps: 0                    # 0 => exact (machine-precision) fgsea p-values
+
+# =============================================================================
 # COLOR PALETTES (colorblind-safe)
 # =============================================================================
 
@@ -175,9 +189,14 @@ figures:
   height: 8
   width_column: 3.5
   height_column: 3.0
+  width_wide: 14                      # two-column screen preset: save_figure(..., wide = TRUE)
+  width_narrow: 6                     # single-column screen preset
   dpi: 300
   # anti-clutter / comparability
   top_n: 20                           # cap categorical axes (pathways/genes) to top-N
+  top_pathways: 20                    # top-N pathways per dotplot/facet/barplot (toolkit showCategory/top_n)
+  running_sum_top: 5                  # # of curves per running-sum panel (top-N by |NES|)
+  running_sum_ylim: [-1.0, 1.0]       # shared running-ES y-range so curves are comparable across DBs/contrasts
   volcano_label_top: 10
   z_clamp: 2.5
   nes_cap: 3.5

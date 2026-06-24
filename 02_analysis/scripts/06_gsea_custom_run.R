@@ -1,8 +1,10 @@
 # 06_gsea_custom_run.R — COMPUTE
-## GSEA over the custom databases (TransportDB, MitoPathways, MitoXplorer,
-## Lombardi2022_HIF) × all 7 contrasts.
+## clusterProfiler::GSEA (by="fgsea") over the custom databases (TransportDB,
+## MitoPathways, MitoXplorer, Lombardi2022_HIF) × all 7 contrasts. Caches gseaResult
+## S4 objects (consumable by the RNAseq-toolkit GSEA plotters); derives the tidy master
+## rows via normalize_gsea_results().
 ##
-## EACH DATABASE IS RUN SEPARATELY — its own fgsea call, its own `database` tag,
+## EACH DATABASE IS RUN SEPARATELY — its own GSEA call, its own `database` tag,
 ## its own append key in master_gsea_table.csv — so custom rows coexist with
 ## MSigDB rows from 05_gsea_msigdb_run.R without clobbering them.
 ##
@@ -21,7 +23,8 @@
 ##       rows written by 05 are never touched and each custom DB replaces only
 ##       its own rows on re-run.
 ##   03_results/objects/gsea_custom_<contrast>.rds
-##       Cached result for the contrast (named list: db_name -> data.frame).
+##       Cached result for the contrast (named list: db_name -> clusterProfiler gseaResult S4,
+##       with @geneSets patched in so the running-sum viz can walk custom-set membership).
 ##
 ## Idempotency:  load_or_compute() returns cached RDS on re-run.
 ## Byte-stability: round_numeric_cols() (9 sig figs) before every CSV write.
@@ -54,12 +57,19 @@ source("02_analysis/config/config.R")       # PROJECT_ROOT, YAML_CONFIG, DIR_OBJ
                                              # DIR_MASTER, GSEA_*, RANK_METRIC, %||%,
                                              # load_or_compute, stage_dir
 source("02_analysis/helpers/de_gsea_helpers.R")  # load_de_results, build_ranked_vector,
-                                                  # run_fgsea, append_master_table,
+                                                  # run_fgsea (now unused), append_master_table,
                                                   # load_custom_geneset, round_numeric_cols,
                                                   # direction_from_nes, .empty_gsea_df
 
+## Toolkit GSEA processing helpers (gseaResult -> tidy normalizer + pathway-name prettifier).
+RTK <- file.path(PROJECT_ROOT, YAML_CONFIG$paths$rnaseq_toolkit %||% "01_modules/RNAseq-toolkit")
+source(file.path(RTK, "scripts", "GSEA", "GSEA_plotting", "format_pathway_names.R"))   # format_pathway_name()
+source(file.path(RTK, "scripts", "GSEA", "GSEA_processing", "normalize_gsea.R"))       # normalize_gsea_results(), empty_gsea_tibble()
+
 suppressPackageStartupMessages({
   library(dplyr); library(tibble); library(readr)
+  library(clusterProfiler)   # GSEA() -> gseaResult S4 (by="fgsea")
+  library(org.Mm.eg.db)      # mouse annotation backing clusterProfiler
 })
 options(stringsAsFactors = FALSE)
 
@@ -72,8 +82,22 @@ FDR_DISP  <- GSEA_FDR_CUTOFF      # display threshold (0.05); run always keeps a
 MINSZ     <- GSEA_MIN_SIZE         # 15  (from config.R / YAML thresholds)
 MAXSZ     <- GSEA_MAX_SIZE         # 500
 SEED      <- GSEA_SEED             # 123
-NPERM     <- GSEA_NPERM            # 100000
-RANK_COL  <- RANK_METRIC           # "t"
+NPERM     <- GSEA_NPERM            # 100000  (nPermSimple for clusterProfiler::GSEA)
+RANK_COL  <- (YAML_CONFIG$gsea$rank_metric %||% RANK_METRIC)   # "t"
+## clusterProfiler::GSEA run-time engine settings (gsea: block; §5 of the blast-radius doc)
+PCUT      <- YAML_CONFIG$gsea$pvalue_cutoff_run %||% 1       # keep ALL pathways at run time
+PADJM     <- YAML_CONFIG$gsea$padj_method       %||% "fdr"   # pAdjustMethod
+EPS       <- YAML_CONFIG$gsea$eps                %||% 0       # exact fgsea p-values
+
+## The cached object CLASS changed (tidy data.frame -> clusterProfiler gseaResult S4).
+## load_or_compute() is path-keyed and would return a stale tidy cache, so delete any
+## pre-existing gsea_custom_<contrast>.rds up front to force a clean recompute.
+.stale_custom <- list.files(DIR_OBJECTS, pattern = "^gsea_custom_.*\\.rds$", full.names = TRUE)
+if (length(.stale_custom) > 0) {
+  file.remove(.stale_custom)
+  message(sprintf("[06] Removed %d stale gsea_custom_*.rds cache(s) (object class changed to gseaResult).",
+                  length(.stale_custom)))
+}
 
 ## Stage table directories
 tbl_dir     <- stage_dir(STAGE, "tables")          # 03_results/06_gsea/tables/ (created)
@@ -138,6 +162,53 @@ names(collections) <- DB_NAMES
 for (nm in DB_NAMES)
   message(sprintf("[06]   %-25s  %d gene sets loaded", nm, length(collections[[nm]])))
 
+## ----------------------------------------------------------------------------
+## Per-(contrast x custom-DB) GSEA — direct clusterProfiler, NOT run_fgsea().
+## Mirrors the 14839 run_one_custom_db() idiom: build TERM2GENE (term,gene) +
+## TERM2NAME (term,name) from the cached named-list collection, run GSEA(by="fgsea",
+## eps=0), then APPLY THE REQUIRED PATCH res@geneSets <- split(T2G$gene, T2G$term)
+## so the viz running-sum/gseaplot2 can walk membership for custom sets (clusterProfiler
+## does not always populate @geneSets for a supplied TERM2GENE).
+## Returns a gseaResult (or NULL on no overlap / error / no result).
+## ----------------------------------------------------------------------------
+build_term2gene <- function(gs) {
+  data.frame(
+    term = rep(names(gs), lengths(gs)),
+    gene = unlist(gs, use.names = FALSE),
+    stringsAsFactors = FALSE
+  )
+}
+
+run_one_custom_db <- function(ranked, gs, dbn) {
+  T2G <- build_term2gene(gs)
+  ## TERM2NAME: the set name IS the display name for custom DBs (no separate description
+  ## table in the cached named-list shape); pass term==name so clusterProfiler keeps the ID.
+  T2N <- data.frame(term = names(gs), name = names(gs), stringsAsFactors = FALSE)
+  T2G_f <- dplyr::filter(T2G, gene %in% names(ranked))
+  if (nrow(T2G_f) == 0) { message(sprintf("    [%s] no overlapping genes", dbn)); return(NULL) }
+
+  res <- tryCatch({
+    set.seed(SEED)
+    clusterProfiler::GSEA(
+      geneList      = ranked,
+      TERM2GENE     = T2G_f,
+      TERM2NAME     = T2N,
+      minGSSize     = MINSZ, maxGSSize = MAXSZ,
+      pvalueCutoff  = PCUT,          # 1 — keep all
+      pAdjustMethod = PADJM,         # "fdr"
+      eps           = EPS,           # 0 — exact p-values
+      by            = "fgsea",
+      nPermSimple   = NPERM,
+      seed          = TRUE,
+      verbose       = FALSE)
+  }, error = function(e) { message(sprintf("    [%s] GSEA error: %s", dbn, conditionMessage(e))); NULL })
+  if (is.null(res) || nrow(res@result) == 0) return(res)
+  ## REQUIRED patch — the running-sum viz (12_gsea_viz.R via enrichplot::gseaplot2) reads
+  ## @geneSets; custom TERM2GENE GSEA does not always populate it.
+  res@geneSets <- split(T2G_f$gene, T2G_f$term)
+  res
+}
+
 ## ============================================================================
 ## 3. DE results (the ranking hub)
 ## ============================================================================
@@ -160,13 +231,26 @@ if (file.exists(universe_txt)) {
 
 ## ============================================================================
 ## 4. Per-contrast GSEA loop
-##    For each contrast: build ranked vector → run fgsea per DB → collect results.
-##    Each contrast's full result (named list db->data.frame) is cached as
-##    gsea_custom_<contrast>.rds (load_or_compute). The cache key is the contrast
-##    name; if new DBs are added, force = TRUE to invalidate. Idempotent on re-run.
+##    For each contrast: build ranked vector → clusterProfiler::GSEA per DB → collect.
+##    Each contrast's full result (named list db -> gseaResult S4) is cached as
+##    gsea_custom_<contrast>.rds (load_or_compute) so the viz can drive the toolkit
+##    plotters. The tidy master rows are DERIVED from each gseaResult below via
+##    normalize_gsea_results(), then projected to the strict 10-col master schema.
 ## ============================================================================
 
-all_results <- list()   # accumulates data.frames for every (contrast × DB) pair
+all_results <- list()   # accumulates TIDY data.frames for every (contrast × DB) pair
+
+MASTER_COLS <- YAML_CONFIG$schemas$master_gsea_table$required_columns
+
+## gseaResult -> tidy master-schema rows (toolkit normalizer, projected to 10 cols).
+tidy_from_gsea <- function(g, dbn, co) {
+  if (is.null(g) || nrow(g@result) == 0) return(.empty_gsea_df())
+  nt <- normalize_gsea_results(g, database = dbn, contrast = co)   # toolkit tibble (NES uppercase)
+  if ("NES" %in% colnames(nt) && !"nes" %in% colnames(nt))
+    nt <- dplyr::rename(nt, nes = NES)
+  ## drop toolkit extras (leading_edge_size, gene_ratio, genes_full_set, neg_log_padj)
+  as.data.frame(nt[, MASTER_COLS, drop = FALSE], stringsAsFactors = FALSE)
+}
 
 for (co in CONTRASTS) {
   message(sprintf("[06] == contrast: %s ==", co))
@@ -174,56 +258,39 @@ for (co in CONTRASTS) {
   ## Ranked vector by t-statistic (the config rank metric; Symbol -> t, sorted decreasing)
   ranked <- build_ranked_vector(de[[co]], metric = RANK_COL)
 
-  ## Cache key = contrast name; invalidate manually (force=TRUE) if DB set changes.
-  ## Assumption [A2]: collections list matches what 04 wrote; no key-drift check here
-  ## (the YAML databases.custom is the single source of truth for DB membership).
+  ## Cache key = contrast name. Cached value = named list db -> gseaResult S4 (with @geneSets
+  ## patched). setNames(lapply(...)) keeps every DB as a named slot even when a DB returns NULL.
   gsea_list <- load_or_compute(
     sprintf("gsea_custom_%s.rds", co),
     compute_fn = function() {
-      res <- list()
-      for (dbn in DB_NAMES) {
-        gsets <- collections[[dbn]]
-        message(sprintf("  [%s] running fgsea on %s (%d sets)...", co, dbn, length(gsets)))
-        ## run_fgsea() from de_gsea_helpers.R:
-        ##   - uses fgsea::fgseaMultilevel (eps=0) when available, else permutation fgsea
-        ##   - returns a data.frame in master_gsea_table schema:
-        ##       pathway_id, pathway_name, database, nes, pvalue, padj, set_size,
-        ##       core_enrichment, contrast, direction
-        ##   - `database` and `contrast` cols are filled from args; direction from sign(nes)
-        ##   - belt-and-suspenders: pass config minSize/maxSize in case the cache was
-        ##     created with different thresholds (the helper applies them a second time;
-        ##     this is benign when 04 already filtered correctly)
-        r <- run_fgsea(
-          ranked    = ranked,
-          gene_sets = gsets,
-          database  = dbn,           ## <- the per-DB tag; THIS is the master-table append key
-          contrast  = co,
-          minSize   = MINSZ,
-          maxSize   = MAXSZ,
-          eps       = 0,
-          nperm     = NPERM,
-          seed      = SEED
-        )
-        res[[dbn]] <- r
-        if (nrow(r) > 0) {
-          n_sig <- sum(r$padj < FDR_DISP, na.rm = TRUE)
-          message(sprintf("    -> %d pathways tested, %d at padj<%.2g (NES>0: %d, NES<0: %d)",
-                          nrow(r), n_sig,
-                          FDR_DISP,
-                          sum(r$padj < FDR_DISP & r$nes > 0, na.rm = TRUE),
-                          sum(r$padj < FDR_DISP & r$nes < 0, na.rm = TRUE)))
-        } else {
-          message(sprintf("    -> 0 pathways (no overlap between ranked genes and %s sets)", dbn))
-        }
-      }
-      res   # named list db_name -> data.frame
+      setNames(
+        lapply(DB_NAMES, function(dbn) {
+          gsets <- collections[[dbn]]
+          message(sprintf("  [%s] GSEA on %s (%d sets)...", co, dbn, length(gsets)))
+          g <- run_one_custom_db(ranked = ranked, gs = gsets, dbn = dbn)
+          if (!is.null(g) && nrow(g@result) > 0) {
+            n_sig <- sum(g@result$p.adjust < FDR_DISP, na.rm = TRUE)
+            message(sprintf("    -> %d pathways tested, %d at padj<%.2g (NES>0: %d, NES<0: %d)",
+                            nrow(g@result), n_sig, FDR_DISP,
+                            sum(g@result$p.adjust < FDR_DISP & g@result$NES > 0, na.rm = TRUE),
+                            sum(g@result$p.adjust < FDR_DISP & g@result$NES < 0, na.rm = TRUE)))
+          } else {
+            message(sprintf("    -> 0 pathways (no overlap / no result for %s sets)", dbn))
+          }
+          g
+        }),
+        DB_NAMES
+      )
     },
-    force = FALSE,   # set TRUE to recompute when DB set changes
+    force = FALSE,
     desc  = sprintf("custom GSEA for contrast '%s'", co)
   )
 
+  ## Derive tidy rows per DB from the cached gseaResult objects
+  tidy_list <- setNames(lapply(DB_NAMES, function(dbn) tidy_from_gsea(gsea_list[[dbn]], dbn, co)), DB_NAMES)
+
   ## Accumulate for CSV writes (bind all DB results for this contrast)
-  contrast_rows <- dplyr::bind_rows(gsea_list)
+  contrast_rows <- dplyr::bind_rows(tidy_list)
   if (nrow(contrast_rows) > 0) {
     ## Per-contrast output: one combined CSV (all custom DBs, sorted by padj).
     ## Layout: 03_results/06_gsea/tables/by_contrast/<contrast>/gsea_custom.csv
@@ -238,7 +305,7 @@ for (co in CONTRASTS) {
     message(sprintf("  -> no rows for contrast %s (all DBs returned empty or no overlap)", co))
   }
 
-  all_results[[co]] <- gsea_list   # store per-DB list for master-table writes
+  all_results[[co]] <- tidy_list   # store per-DB TIDY rows for master-table writes + asserts
 }
 
 ## ============================================================================
