@@ -136,18 +136,8 @@ wrap_pathway <- function(x, width = 40L) {
 }
 
 #' Human-readable contrast label for subtitles.
-contrast_label <- function(co) {
-  lut <- c(
-    WT_heat   = "WT: 39°C vs 37°C",
-    KO_heat   = "cGASKO: 39°C vs 37°C",
-    Interaction = "Interaction: (WT_heat) - (KO_heat)",
-    Geno_at_39  = "Genotype at 39°C (WT vs cGASKO)",
-    Geno_at_37  = "Genotype at 37°C (WT vs cGASKO)",
-    Temp_main   = "Pooled heat effect (main)",
-    Geno_main   = "Pooled genotype effect (main)"
-  )
-  lut[[co]] %||% co
-}
+#' Provided centrally by figure_style.R::contrast_label() (config-driven; the
+#' single source of truth lives in design.contrast_labels). Sourced above.
 
 #' Standard per-contrast subtitle line for every panel.
 contrast_subtitle <- function(co) {

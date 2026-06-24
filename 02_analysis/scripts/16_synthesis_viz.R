@@ -87,12 +87,9 @@ TRACK_LABELS <- c(
   IFN_ISG        = "IFN / ISG arm\n(cGAS-dependent)",
   HIF_glycolysis = "HIF / glycolysis arm\n(no detectable cGAS-dependence at n=5)")
 
-# Pretty, line-wrapped contrast labels for the x-axis.
-CONTRAST_LABELS <- c(
-  WT_heat     = "WT heat\n(39 vs 37 C)",
-  KO_heat     = "cGAS-KO heat\n(39 vs 37 C)",
-  Interaction = "Interaction\n(cGAS-dependence test)",
-  Temp_main   = "Temp main\n(pooled heat)")
+# Pretty, line-wrapped contrast labels for the x-axis come centrally from
+# figure_style.R::CONTRAST_LABELS_SHORT (config-driven; design.contrast_labels_short).
+# Used below via scale_x_discrete(labels = CONTRAST_LABELS_SHORT).
 
 # Provisional stamp (matches config.R::provisional_caption()).
 PROV_STAMP <- paste0(
@@ -225,7 +222,7 @@ build_two_arms_panel <- function(df) {
       low = NEG, mid = MID, high = POS, midpoint = 0,
       limits = c(-CAP, CAP), oob = scales::squish,
       name = "Signed score\n(orange = up in\nnumerator)") +
-    scale_x_discrete(labels = CONTRAST_LABELS, position = "top") +
+    scale_x_discrete(labels = CONTRAST_LABELS_SHORT, position = "top") +
     labs(
       title = "Two-arms cGAS-dependence asymmetry across methods",
       subtitle = paste0(

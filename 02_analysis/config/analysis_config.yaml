@@ -62,6 +62,30 @@ design:
       formula: "0.5*(WT_37 + WT_39) - 0.5*(cGASKO_37 + cGASKO_39)"
   samples_per_group: 5
 
+  # Human-readable DISPLAY labels for each contrast — the single source of truth
+  # for every figure title/caption (exposed by figure_style.R::contrast_label()).
+  # The contrast KEYS above (WT_heat, Interaction, ...) stay the stable join keys
+  # in 02_de_results.rds and every master CSV; these labels NEVER re-key the data.
+  # `_short` variants (with an embedded newline) are for compact axis ticks.
+  # House framing: the Interaction is LABELLED by what it TESTS (cGAS-dependence of
+  # the heat response), not by a result — never read a label as a claim; floor at L3.
+  contrast_labels:
+    WT_heat:     "WT: heat (39 vs 37 °C)"
+    KO_heat:     "cGAS-KO: heat (39 vs 37 °C)"
+    Interaction: "Heat × genotype interaction (cGAS-dependence of the heat response)"
+    Geno_at_37:  "Genotype (WT vs cGAS-KO) @ 37 °C"
+    Geno_at_39:  "Genotype (WT vs cGAS-KO) @ 39 °C"
+    Temp_main:   "Heat main effect (pooled genotypes)"
+    Geno_main:   "Genotype main effect (pooled temps)"
+  contrast_labels_short:
+    WT_heat:     "WT heat\n(39 vs 37 °C)"
+    KO_heat:     "cGAS-KO heat\n(39 vs 37 °C)"
+    Interaction: "Interaction\n(cGAS-dependence)"
+    Geno_at_37:  "Genotype\n@ 37 °C"
+    Geno_at_39:  "Genotype\n@ 39 °C"
+    Temp_main:   "Heat main\n(pooled)"
+    Geno_main:   "Genotype main\n(pooled)"
+
 # =============================================================================
 # ANALYSIS THRESHOLDS
 # =============================================================================

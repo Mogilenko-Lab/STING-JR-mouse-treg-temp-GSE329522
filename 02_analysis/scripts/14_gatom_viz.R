@@ -70,21 +70,9 @@ K_GENE     <- as.integer(YAML_CONFIG$thresholds$gatom_k_gene %||% 50L)
 ## Headline contrasts (mirrors 10_gatom_modules.R)
 HEADLINE_CONTRASTS <- c("WT_heat", "KO_heat", "Interaction", "Temp_main")
 
-## Human-readable contrast labels (inline; no CONFIG$contrasts — STING config uses
-## design.contrasts[] with `name` only, no `label` or `expr` field)
-CONTRAST_LABELS <- c(
-  WT_heat     = "WT heat effect (39°C vs 37°C)",
-  KO_heat     = "cGAS-KO heat effect (39°C vs 37°C)",
-  Interaction = "Interaction (heat × genotype; cGAS-dependence test)",
-  Temp_main   = "Temperature main effect (pooled heat program)",
-  Geno_at_37  = "Genotype at 37°C",
-  Geno_at_39  = "Genotype at 39°C",
-  Geno_main   = "Genotype main effect"
-)
-contrast_label <- function(co) {           # vectorized-safe (used scalar in loops AND in mutate())
-  lab <- unname(CONTRAST_LABELS[co])
-  ifelse(is.na(lab), co, lab)
-}
+## Human-readable contrast labels come centrally from figure_style.R (config-driven;
+## single source of truth in design.contrast_labels). CONTRAST_LABELS (named vector)
+## and the vectorized contrast_label() are defined there and sourced above.
 
 ## PROVISIONAL stamp (single source of truth from config.R)
 PROVISIONAL <- provisional_caption()

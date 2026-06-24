@@ -64,3 +64,25 @@ FIG_CFG <- tryCatch(
         list()
     }
 )
+
+## ---------------------------------------------------------------------------
+## 3. Contrast DISPLAY labels — single source of truth for every viz script.
+##    Read from design.contrast_labels{,_short} in the project config so all of
+##    12/13/14/16 render the SAME human-readable contrast names (the analytic
+##    keys WT_heat/Interaction/... stay the join keys; these are labels only).
+##    contrast_label() is VECTORIZED (safe inside dplyr::mutate AND scalar in
+##    per-contrast loops); falls back to the key when no label is configured.
+## ---------------------------------------------------------------------------
+.cl_to_vec <- function(x) {
+    if (is.null(x) || length(x) == 0) return(character(0))
+    v <- vapply(x, function(s) as.character(s)[1], character(1))
+    stats::setNames(v, names(x))
+}
+CONTRAST_LABELS       <- .cl_to_vec(FIG_CFG$design$contrast_labels)
+CONTRAST_LABELS_SHORT <- .cl_to_vec(FIG_CFG$design$contrast_labels_short)
+
+contrast_label <- function(co, short = FALSE) {
+    lut <- if (isTRUE(short)) CONTRAST_LABELS_SHORT else CONTRAST_LABELS
+    lab <- unname(lut[as.character(co)])
+    ifelse(is.na(lab), as.character(co), lab)
+}

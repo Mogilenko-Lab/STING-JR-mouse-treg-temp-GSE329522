@@ -255,20 +255,10 @@ if (TF_AVAILABLE) {
 .sig_star <- function(p, thr = FDR)
   ifelse(!is.na(p) & p < thr, "*", "")
 
-# Contrast label (pretty name for subtitle; never bare)
-.contrast_label <- function(co) {
-  lut <- c(
-    WT_heat     = "WT 39 degrees vs 37 degrees",
-    KO_heat     = "cGAS-KO 39 degrees vs 37 degrees",
-    Interaction = "Interaction: (WT-KO) heat slope",
-    Temp_main   = "Temperature main effect",
-    Geno_at_39  = "Genotype at 39 degrees (WT-KO)",
-    Geno_at_37  = "Genotype at 37 degrees (WT-KO)",
-    Geno_main   = "Genotype main effect"
-  )
-  lab <- unname(lut[co])
-  if (is.na(lab)) co else lab
-}
+# Contrast label (pretty name for subtitle; never bare).
+# Aliased to the central, config-driven figure_style.R::contrast_label() (single
+# source of truth in design.contrast_labels) — sourced at the top of this script.
+.contrast_label <- contrast_label
 
 # pheatmap-grob builder: captures the grob for ggsave-routed save_overview
 .heat_grob <- function(mat, main, pmat = NULL,
