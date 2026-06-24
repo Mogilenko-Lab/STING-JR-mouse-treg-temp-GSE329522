@@ -81,7 +81,11 @@ if (!exists("%||%")) {
 ##     returns; a miss computes, saves, returns. Re-defines the config.R name on purpose
 ##     (see header) — the path-keyed form is what the new sweep arms use.
 ## ---------------------------------------------------------------------------
-load_or_compute <- function(cache_path, compute_fn, force = FALSE) {
+load_or_compute <- function(cache_path, compute_fn, force = FALSE, desc = NULL) {
+  ## `desc` is an optional human-readable label for log messages — accepted so the
+  ## path-keyed form matches config.R's load_or_compute(..., desc=) signature (the
+  ## new sweep scripts 06/10 pass it). Defaults to the cache_path basename.
+  label <- desc %||% basename(cache_path)
   ## bare filename -> place under the project objects dir (03_results/objects/)
   if (identical(basename(cache_path), cache_path)) {
     odir <- if (exists("DIR_OBJECTS")) DIR_OBJECTS
@@ -92,10 +96,10 @@ load_or_compute <- function(cache_path, compute_fn, force = FALSE) {
     dir.create(dirname(cache_path), recursive = TRUE, showWarnings = FALSE)
   }
   if (file.exists(cache_path) && !force) {
-    message("[load_or_compute] cache hit: ", cache_path)
+    message("[load_or_compute] cache hit: ", label, " (", cache_path, ")")
     return(readRDS(cache_path))
   }
-  message("[load_or_compute] computing: ", cache_path)
+  message("[load_or_compute] computing: ", label, " (", cache_path, ")")
   obj <- compute_fn()
   saveRDS(obj, cache_path)
   obj
