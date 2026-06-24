@@ -92,13 +92,13 @@ message("=================================================================")
 
 message("[1] Loading DE results -> t-stat matrix ...")
 de <- load_de_results()                           # from de_gsea_helpers.R; stops loudly on Ensembl rownames
-stopifnot(all(CONTRASTS %in% names(de)),
-          "Some declared contrasts missing from 02_de_results.rds — re-run 02_de_limma_trend.R")
+stopifnot("Some declared contrasts missing from 02_de_results.rds — re-run 02_de_limma_trend.R" =
+            all(CONTRASTS %in% names(de)))
 de <- de[CONTRASTS]                               # enforce config order
 
 genes <- rownames(de[[1]])
-stopifnot(!anyDuplicated(genes),
-          "Duplicate rownames in topTable — collapse decided in Phase 1 must have run")
+stopifnot("Duplicate rownames in topTable — collapse decided in Phase 1 must have run" =
+            !anyDuplicated(genes))
 
 # Build gene x contrast t-statistic matrix (NA -> 0, matching 03_decoupler_tf.R).
 # decoupleR::run_mlm requires a numeric matrix: genes in rows, samples/contrasts in cols.
