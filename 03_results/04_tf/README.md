@@ -46,10 +46,6 @@ NON-IDENTIFIABLE ────▶ fig3c  (rank cascade recap #1 → #12 → #142 
 TWO ARMS ────────────▶ fig3a  (IFN interaction-significant / HIF flat — asymmetry, not independence, at n=5)
 
 HSF1 GAP ────────────▶ fig3n  (heat-shock Hsf1 co-elevated on heat-MAIN; same CollecTRI-ULM estimator as fig3a/fig3c)
-
-BOUNDARY ────────────▶ [CAN/CANNOT slide — conceptual text, not a data figure; placed before fig3o]
-
-NEXT STEPS ──────────▶ fig3o  (CONCEPTUAL tiered-experiment ladder — exclude confound → is-it-HIF → isoform genetics)
 ```
 
 `*` fig3g = expanded viz (full ranked landscape), same underlying table `fig3g_target_decomposition_data.csv`.
@@ -66,13 +62,12 @@ NON-IDENTIFIABILITY ─▶ fig3p  (heat-MAIN ranking: no clean winner — Hif1a 
 
 ### Final wet-lab deck spine (serendipity-resolution ordering)
 
-`fig3i → fig3h → fig3m → fig3g → fig3l → fig3d → fig3e → fig3c → fig3k → fig3a → fig3n → [CAN/CANNOT conceptual slide — text, not a figure] → fig3o`
+`fig3i → fig3h → fig3m → fig3g → fig3l → fig3d → fig3e → fig3c → fig3k → fig3a → fig3n`
 
-(affirm what's real → provenance/hypoxia control → HOW ULM nominates → WHERE the score comes from → WHAT KIND of genes + direction → **WHY #1 happened (regulon dilution, #1→#12)** → **WHY it isn't robust (target collinearity, #12→#142)** → rank cascade recap → MLM reshuffle → cGAS asymmetry → HSF1 co-elevation → CAN/CANNOT boundary → what to run next.)
+(affirm what's real → provenance/hypoxia control → HOW ULM nominates → WHERE the score comes from → WHAT KIND of genes + direction → **WHY #1 happened (regulon dilution, #1→#12)** → **WHY it isn't robust (target collinearity, #12→#142)** → rank cascade recap → MLM reshuffle → cGAS asymmetry → HSF1 co-elevation.)
 
 **fig3d and fig3e are REINSTATED into the deck spine** (per `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`, candidate 2 → IN). They are the literal "how the collaborator's DoRothEA-ULM produced HIF1α #1 (#1→#12 regulon dilution) and why CollecTRI-MLM does not hold it (#12→#142 collinearity redistribution)." They sit between fig3l (what the genes are) and fig3c (the full cascade) so mechanism precedes the cascade recap, making fig3c a recap rather than a bare assertion. This overrides the earlier audit's "archive fig3e" vote.
 
-The CAN/CANNOT boundary is rendered as a deck SLIDE (two-column CAN | CANNOT text), placed immediately before fig3o — it is conceptual, not an estimate from the data, so it is text, not a rendered data figure.
 
 **Archive-only (retained in phase directory, NOT part of the deck):** fig3b, fig3f, the two fig3j variants, and **lombardi_recurrence** — canonical PDFs and tables are retained; they are simply not placed in the deck. See DROP notes under each legend below.
 
@@ -685,11 +680,9 @@ Rscript 02_analysis/scripts/03d_ulm_mechanic.R
 Rscript 02_analysis/scripts/03d_ulm_mechanic_viz.R
 Rscript 02_analysis/scripts/03e_heat_main_regulators.R
 Rscript 02_analysis/scripts/03e_heat_main_regulators_viz.R
-Rscript 02_analysis/scripts/03f_experiment_tiers.R
-Rscript 02_analysis/scripts/03f_experiment_tiers_viz.R
 ```
 
-All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`, `03f_`) contain no `ggplot`/`ggsave`. All VIZ scripts (`_viz.R`) contain no `lmFit`/`eBayes`/`run_ulm`/`run_mlm`/`p.adjust`/`prcomp`. Networks pre-built by `02_analysis/scripts/00c_prepare_networks.R` — do NOT call `decoupleR::get_collectri()` or `get_progeny()` in this environment (OmniPath unreachable; see `01_modules/SciAgent-toolkit/skills/bulk-rnaseq-activity-inference/references/known-issues.md`).
+All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`) contain no `ggplot`/`ggsave`. All VIZ scripts (`_viz.R`) contain no `lmFit`/`eBayes`/`run_ulm`/`run_mlm`/`p.adjust`/`prcomp`. Networks pre-built by `02_analysis/scripts/00c_prepare_networks.R` — do NOT call `decoupleR::get_collectri()` or `get_progeny()` in this environment (OmniPath unreachable; see `01_modules/SciAgent-toolkit/skills/bulk-rnaseq-activity-inference/references/known-issues.md`).
 
 ## Dependencies
 
@@ -704,7 +697,7 @@ All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`, `03f_`) contain no `
 - **PROVISIONAL stamp**: all figures carry `provisional_caption()` because sample-to-condition mapping was inferred from GEO metadata and has not been confirmed by the primary authors.
 - **cGAS framing**: the HIF arm shows "no detectable cGAS-dependence at n=5" — this is an underpowered n=5 null, not evidence of independence. Never rephrase as "cGAS-independent," "parallel," or "cascade."
 - **Object name**: the program revealed here is "a heat-induced glycolytic/stress program partially overlapping HIF targets." Never "the HIF program," "HIF1a the TF," or "canonical HIF1a program."
-- **HIF2a/Epas1**: elevated on all heat contrasts (Temp_main decoupleR-ULM score = +4.17, padj = 8.9×10⁻⁴) but named only as an alternative the HIF inhibitor cannot exclude — not crowned as a driver; belzutifan (fig3o) is only a HIF2a-selective cross-check tool.
+- **HIF2a/Epas1**: elevated on all heat contrasts (Temp_main decoupleR-ULM score = +4.17, padj = 8.9×10⁻⁴) but named only as an alternative the HIF inhibitor cannot exclude — not crowned as a driver.
 - **fig3n estimator**: fig3n scores are decoupleR-ULM — the SAME `run_ulm(.mor="mor", minsize=5)` estimator as fig3a/fig3c/fig3k, computed on a fresh heat-MAIN t-stat matrix — and ARE axis-comparable to those figures. They equal the `master_tf_activities.csv` `nes` column only because that column is the ULM `score` written under a legacy schema name (`nes = score`); the `nes` name is a misnomer kept for master-schema compatibility, NOT a GSEA score. The Hsf1 cGAS×heat interaction raw p (0.022) is non-significant after BH correction (padj = 0.515) and must not be cited as evidence of cGAS-dependence.
 - **fig3d + fig3e reinstated into the deck spine** (serendipity-resolution decision, `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`): they carry the "how the collaborator got #1, and why it isn't robust" mechanism — regulon dilution (#1→#12) and collinearity redistribution (#12→#142) — and sit between fig3l and fig3c. This overrides the earlier audit's "archive fig3e" vote.
 - **Archive figures (not in the deck; canonical PDFs/tables retained)**: fig3b, fig3f, fig3j×2, and **lombardi_recurrence** are forensic/supplement backups (fig3b's broad-program point is made more sharply by fig3g/fig3l; fig3f risks the "consensus recovers HIF1a" mis-read; fig3j belongs in the supplement as the full per-method audit). Canonical artifacts kept, just not on the deck spine.
