@@ -16,6 +16,10 @@ services:
       - /tmp/ssh-XXXXXXG5CpIH/agent.11801:/ssh-agent:ro
       # Data mount STUB — raw GSE329522 data arrives later; uncomment when present:
       # - /scratch/data/GSE329522:/workspaces/STING-cGAS-GSE329522/00_data/raw:ro
+      # CORESH refcache (read-only) - pre-cached Synapse GEO chunks for Phase 04c signature search.
+      # Host: /data2/users/shared/refcache (coresh/current -> syn66227307_*/preprocessed_chunks/{hsa,mmu}, _tools/).
+      # Consumed via CORESH_CHUNKS env (see devcontainer.json). Analysis container never sees a Synapse PAT.
+      - /data2/users/shared/refcache:/workspaces/STING-cGAS-GSE329522/00_data/references:ro
     stdin_open: true
     tty: true
     tmpfs:
