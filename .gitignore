@@ -22,6 +22,7 @@
 #03_results/**/tables/**/*.tsv
 
 # Scratch: throwaway artifacts, never committed
+scratch/
 03_results/_scratch/*
 !03_results/_scratch/.gitkeep
 
