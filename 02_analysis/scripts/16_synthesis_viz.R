@@ -231,17 +231,17 @@ build_two_arms_panel <- function(df) {
         "Interaction - no detectable cGAS-dependence at n=5.\n", PROV_STAMP),
       x = NULL, y = NULL,
       caption = paste0(
-        "Tile = signed enrichment/activity score (GSEA NES, PROGENy/TF MLM-ULM ",
-        "score, or limma t); orange = up in numerator, blue = down. ",
-        "Black ring = padj < ", FDR, ". Columns: WT_heat | cGAS-KO heat | ",
-        "Interaction (the cGAS-dependence test) | Temp_main. Claim tier: L3 ",
-        "(DE/enrichment statistics; provisional, n=5/group). 'Flat Interaction' ",
-        "is NOT proven cGAS-independence.")) +
+        "Tile = signed score; orange = up in numerator, blue = down. ",
+        "Black ring = padj < ", FDR, ". Claim tier: L3 (provisional, n=5/group). ",
+        "'Flat Interaction' is NOT proven cGAS-independence.")) +
     project_theme(config = FIG_CFG, legend = TRUE) +
+    # Structural facet geometry only (NOT styling): the two arm tracks are stacked
+    # vertically via facet_grid(arm ~ .), so the y-strip label must be UN-rotated
+    # (ggplot defaults strip.text.y to 270 deg, which would make the two-line track
+    # names unreadable), and the stacked tracks need breathing room between them.
+    # Font/face/grid styling stays owned by project_theme() per the figure contract.
     theme(
-      axis.text.x.top = element_text(face = "bold"),
-      strip.text.y    = element_text(face = "bold", angle = 0),
-      panel.grid      = element_blank(),
+      strip.text.y    = element_text(angle = 0),
       panel.spacing.y = unit(0.6, "lines"))
 }
 
@@ -270,6 +270,11 @@ panel_table <- ev2 %>%
 # ============================================================================
 
 message("[16_synthesis_viz] Rendering headline two-arms panel ...")
+
+# Own the namespace: drop any stale two_arms_panel.* before the re-render (house
+# stale-file guard; save_figure also purges, but call it explicitly to match the
+# contract pattern).
+purge_figures(STAGE, "two_arms_panel", overview = TRUE, config = FIG_CFG)
 
 fig <- build_two_arms_panel(ev2)
 
@@ -312,6 +317,19 @@ save_overview(
     "TF (e.g. HIF1a/HIF2a) is the driver. Claim tier: L3 (DE/enrichment ",
     "statistics; provisional, n=5/group). 'Flat Interaction' is NOT proven ",
     "cGAS-independence - the 1-df interaction is the lowest-powered comparison."),
+  # GEOMETRY OVERRIDE (contract-sanctioned width/height passthrough; NOT raw ggsave):
+  # a 40-glyph-row x 4-column faceted heatmap with long method+feature y-labels
+  # cannot honour the fixed canvas (10x8 screen / 3.5x3.0 print) - the columns
+  # collapse to a right-edge sliver and the multi-line x labels overprint. A tall
+  # canvas sized to the row count gives every column real width (resolving the
+  # x-label overprint too); the per-variant font FLOOR is still enforced by
+  # project_theme regardless of inches, so a larger canvas only ever helps. Vector
+  # PDF stays editable at this size. The y-axis carries long method+feature labels
+  # (a fixed-width text block), so canvas width is spent mostly on the panel: 18in
+  # gives each of the 4 columns enough absolute width that the two-line
+  # contrast_labels_short stop overprinting (the §B label-collision fix).
+  width  = 18,
+  height = 16,
   config = FIG_CFG)
 
 message("[16_synthesis_viz] two_arms_panel saved (print + screen + table + caption).")
@@ -352,7 +370,7 @@ if (file.exists(readme_path)) {
       "pending the collaborator sample sheet; n=5/group.",
       "",
       "Artifacts:",
-      "- figures/_overview/two_arms_panel.{print.pdf,screen.png} - the headline panel",
+      "- figures/_overview/two_arms_panel.png + two_arms_panel.pdf - the headline panel",
       "- tables/_overview/two_arms_panel.csv - the source table behind the panel",
       "- tables/two_arms_summary.csv - the full cross-arm evidence table (16_synthesis.R)",
       "",

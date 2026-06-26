@@ -78,10 +78,11 @@ PROVISION_NOTE <- "docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md
 
 rk_fp <- file.path(DIR_OBJECTS, "coresh_ranked.rds")
 if (!file.exists(rk_fp)) {
-  stop(
+  message(
     "CoReSh outputs not found — run 07/08 after provisioning the mmu compendium; ",
-    "see ", PROVISION_NOTE
+    "see ", PROVISION_NOTE, " — exiting cleanly with no figures produced."
   )
+  quit(save = "no", status = 0)
 }
 
 # =============================================================================
@@ -828,7 +829,7 @@ ov_tbl_dir <- overview_path(STAGE, "tables",  config = FIG_CFG)
 ## Every PDF/PNG in _overview/figures/ must have a same-stem .csv in _overview/tables/
 ov_figs <- list.files(ov_fig_dir, pattern = "\\.(pdf|png)$")
 ## Reduce to unique stems (strip .<variant>.<ext>)
-ov_stems <- unique(sub("\\.(print\\.pdf|screen\\.png)$", "", ov_figs))
+ov_stems <- unique(sub("\\.(pdf|png)$", "", ov_figs))
 ov_orphans <- ov_stems[!file.exists(file.path(ov_tbl_dir, paste0(ov_stems, ".csv")))]
 if (length(ov_orphans) > 0L)
   warning("Overview figure(s) without a same-stem tables/_overview sidecar CSV: ",
@@ -838,7 +839,7 @@ n_ov_figs       <- length(ov_stems)
 n_contrast_loll <- sum(vapply(CONTRASTS, function(co)
   file.exists(file.path(
     contrast_path(STAGE, co, "figures", config = FIG_CFG),
-    "coresh_gsea_lollipop.screen.png")),
+    "coresh_gsea_lollipop.png")),
   logical(1)))
 
 message(sprintf(

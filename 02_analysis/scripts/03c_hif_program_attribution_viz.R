@@ -31,39 +31,16 @@
 # =============================================================================
 
 source("02_analysis/config/config.R")
-load_packages()   # ggplot2 + dplyr
+source("02_analysis/helpers/figure_style.R")       # contract: project_theme + save_overview; FIG_CFG
+suppressPackageStartupMessages({ library(ggplot2); library(dplyr) })
 
+STAGE   <- "04_tf"
+SCRIPT  <- "02_analysis/scripts/03c_hif_program_attribution_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
-FIG_DIR <- stage_dir("04_tf", "figures")
 
 cap <- provisional_caption()
 rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
-# -----------------------------------------------------------------------------
-# DECK EXPORT: when DECK_EXPORT is set, ALSO write a clean 300-dpi PNG (no
-# embargo caption) to 03_results/04_tf/deck_assets/. The stamped PDF is always
-# written, unchanged; only labs(caption=NULL) is dropped for the PNG.
-# -----------------------------------------------------------------------------
-DECK_EXPORT <- nzchar(Sys.getenv("DECK_EXPORT"))
-DECK_DIR    <- file.path(DIR_RESULTS, "04_tf", "deck_assets")
-if (DECK_EXPORT) dir.create(DECK_DIR, recursive = TRUE, showWarnings = FALSE)
-
-save_fig <- function(plot, fname, width, height, deck_h = 5.625) {
-  ggsave(file.path(FIG_DIR, fname), plot, width = width, height = height)
-  cat(sprintf("  wrote %s\n", fname))
-  if (DECK_EXPORT) {
-    png_name <- sub("\\.pdf$", ".png", fname)
-    ggsave(file.path(DECK_DIR, png_name), plot + labs(caption = NULL),
-           width = 10, height = deck_h, dpi = 300)
-    cat(sprintf("  wrote deck_assets/%s (clean, no embargo stamp)\n", png_name))
-  }
-}
-
-base_theme <- theme_minimal(base_size = 11) +
-  theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(face = "bold", size = 12),
-        plot.subtitle = element_text(size = 9, color = "grey25"),
-        plot.caption  = element_text(size = 7, color = "grey45", hjust = 0, face = "italic"))
 
 # =============================================================================
 # FIG 3l -- module-bucketed, sign-aware attribution of Hif1a's WT_heat "activity"
@@ -132,13 +109,35 @@ fig3l <- ggplot(plot_df, aes(x = contrib, y = target, color = module)) +
       "copied from fig3g -- no recomputation). Heat-shock/stress UP, shared/glycolytic UP, feedback UP, but the HIF1a-selective\n",
       "hypoxic-survival core (Pdk1/Bnip3/Bnip3l/Car9) is REPRESSED (left of zero). NOT a canonical hypoxic-HIF output.\n",
       quant_line),
-    x = "contribution to WT_heat ULM signal (signed t * mor)", y = NULL,
-    caption = paste(cap, carve_note, sep = "   |   ")
+    x = "contribution to WT_heat ULM signal (signed t * mor)", y = NULL
   ) +
-  base_theme +
+  project_theme(config = FIG_CFG) +
   theme(strip.text.y = element_text(angle = 0, face = "bold", size = 8, lineheight = 0.95),
         panel.spacing = unit(0.6, "lines"))
 
-save_fig(fig3l, "fig3l_hif_attribution.pdf", width = 9, height = 7.5, deck_h = 6.5)
+# One-time relocation cleanup: this script previously wrote flat-dir PDFs into 04_tf/figures/.
+.FLAT_FIG_DIR <- stage_dir("04_tf", "figures")
+.stale_pdf <- file.path(.FLAT_FIG_DIR, "fig3l_hif_attribution.pdf")
+if (file.exists(.stale_pdf)) file.remove(.stale_pdf)
 
-cat("[DONE] 03c_hif_program_attribution_viz.R -- fig3l rendered from tidy tables (no statistics).\n")
+save_overview(
+  fig3l, STAGE, "fig3l_hif_attribution",
+  table = plot_df[, c("target", "module", "contrib", "direction")],
+  finding = paste0(
+    "Re-bucketed by curated biological module, Hif1a's positive WT_heat activity is ",
+    "carried by a heat-shock/stress fraction (all UP) while the HIF1a-selective ",
+    "hypoxic-survival core is repressed; only the shared/glycolytic/feedback subset ",
+    "rises. This is a heat-induced glycolytic/stress program partially overlapping ",
+    "HIF targets -- NOT a canonical hypoxic-HIF output. ", cap),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.base_size=16; figures.base_size_column=9; modules",
+  input = "03_results/04_tf/tables/fig3l_hif_attribution_data.csv",
+  how_to_read = paste0(
+    "Horizontal lollipop plot: x = signed contribution = sign(mor) x t_wt of Hif1a ",
+    "targets, grouped and colored by module. Facets are ordered from stress/contamination ",
+    "(top) to hypoxic-survival core (bottom; diagnostic of true hypoxia, all repressed). ",
+    "Claim tier: descriptive target attribution. ",
+    "Note: ", carve_note),
+  width = 9, height = 7.5, config = FIG_CFG)
+
+cat("[DONE] 03c_hif_program_attribution_viz.R -- fig3l rendered (no statistics).\n")

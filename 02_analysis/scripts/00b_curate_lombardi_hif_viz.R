@@ -26,22 +26,20 @@
 # =============================================================================
 
 source("02_analysis/config/config.R")
-load_packages()
+source("02_analysis/helpers/figure_style.R")       # contract: project_theme + save_overview; FIG_CFG
+suppressPackageStartupMessages({ library(ggplot2); library(dplyr) })
+
+STAGE   <- "../00_data/references/gene_sets"
+SCRIPT  <- "02_analysis/scripts/00b_curate_lombardi_hif_viz.R"
 
 GENESET_DIR <- file.path(PROJECT_ROOT, "00_data/references/gene_sets")
 TBL_DIR     <- file.path(GENESET_DIR, "tables")
 FIG_DIR     <- file.path(GENESET_DIR, "figures")
-dir.create(FIG_DIR, recursive = TRUE, showWarnings = FALSE)
 
 DOWN <- DIVERGING_COLORS$negative   # blue
 UP   <- DIVERGING_COLORS$positive   # orange
 cap  <- provisional_caption()
 
-# DECK EXPORT (TASK 4): canonical stamped PDF always; clean 300-dpi PNG (no
-# embargo caption) into 03_results/04_tf/deck_assets/ when DECK_EXPORT is set.
-DECK_EXPORT <- nzchar(Sys.getenv("DECK_EXPORT"))
-DECK_DIR    <- file.path(DIR_RESULTS, "04_tf", "deck_assets")
-if (DECK_EXPORT) dir.create(DECK_DIR, recursive = TRUE, showWarnings = FALSE)
 
 rd <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
@@ -94,18 +92,33 @@ fig <- ggplot(plot_df, aes(x = recurrence_level, y = count, fill = series)) +
     y = "genes at this recurrence level (log1p axis)",
     caption = cap
   ) +
-  theme_minimal(base_size = 11) +
+  project_theme(config = FIG_CFG) +
   theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(face = "bold", size = 12),
-        plot.subtitle = element_text(size = 9, color = "grey25"),
-        plot.caption  = element_text(size = 7, color = "grey45", hjust = 0, face = "italic"),
         legend.position = "top")
 
-ggsave(file.path(FIG_DIR, "lombardi_recurrence.pdf"), fig, width = 9, height = 6)
-cat("  wrote", file.path(FIG_DIR, "lombardi_recurrence.pdf"), "\n")
-if (DECK_EXPORT) {
-  ggsave(file.path(DECK_DIR, "lombardi_recurrence.png"), fig + labs(caption = NULL),
-         width = 10, height = 5.625, dpi = 300)
-  cat("  wrote deck_assets/lombardi_recurrence.png (clean, no embargo stamp)\n")
-}
+# Remove stale flat-dir PDF if it exists
+.stale_pdf <- file.path(FIG_DIR, "lombardi_recurrence.pdf")
+if (file.exists(.stale_pdf)) file.remove(.stale_pdf)
+
+# Clean up stale deck asset PNG if it exists in the wrong stage directory
+.stale_deck_png <- file.path(DIR_RESULTS, "04_tf", "deck_assets", "lombardi_recurrence.png")
+if (file.exists(.stale_deck_png)) file.remove(.stale_deck_png)
+
+save_overview(
+  fig, STAGE, "lombardi_recurrence",
+  table = gene_df[, c("human_symbol", "recurrence_count", "null_padj", "kept")],
+  finding = paste0(
+    "Consensus reconstruction of the published Lombardi-2022 HIF signature: observed ",
+    "cross-TCGA recurrence (orange) detaches from the Poisson-binomial null expectation ",
+    "(blue) in the right tail; consensus genes are retained at recurrence >= 6 of 32 cancers. ",
+    cap),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.base_size=16; figures.base_size_column=9; consensus_threshold=6",
+  input = "00_data/references/gene_sets/tables/lombardi_recurrence_{data,null}.csv",
+  how_to_read = paste0(
+    "Observed (orange) vs Poisson-binomial null-expected (blue) gene counts at each ",
+    "recurrence level (log1p y-axis). Consensus threshold (recurrence >= 6) is shaded. ",
+    "Claim tier: curation methodology documentation (illustrative null test)."),
+  width = 9, height = 6, config = FIG_CFG)
+
 cat("[DONE] 00b_curate_lombardi_hif_viz.R -- recurrence derivation figure rendered.\n")

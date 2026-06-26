@@ -32,58 +32,46 @@
 # =============================================================================
 
 library(ggrepel)
-source("02_analysis/config/config.R")
+source("02_analysis/helpers/figure_style.R")  # contract: FIG_CFG, project_theme, save_overview, purge_figures, ...
+source("02_analysis/config/config.R")          # palette tokens: AXIS_COLORS/MODULE_COLORS/DIVERGING_COLORS
 load_packages()  # limma/edgeR pulled in but unused; ggplot2 + dplyr are what we need
 
+STAGE   <- "04_tf"
+SCRIPT  <- "02_analysis/scripts/03_decoupler_tf_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
-FIG_DIR <- stage_dir("04_tf", "figures")
+TOP_N   <- as.integer(FIG_CFG$figures$top_n %||% 20L)
 
 DOWN <- DIVERGING_COLORS$negative   # blue   (down / suppressed)
 NEUT <- DIVERGING_COLORS$neutral    # white  (neutral)
 UP   <- DIVERGING_COLORS$positive   # orange (up / activated)
 
-cap <- provisional_caption()
-
 rd <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
-# -----------------------------------------------------------------------------
-# DECK EXPORT (TASK 4): when DECK_EXPORT is set, ALSO write a clean 300-dpi PNG
-# (no embargo caption line) to 03_results/04_tf/deck_assets/ for pptx packaging.
-# Canonical stamped PDFs are ALWAYS written, unchanged. The clean PNG keeps all
-# real scientific subtitles/annotations -- only labs(caption=NULL) is dropped.
-# -----------------------------------------------------------------------------
-DECK_EXPORT <- nzchar(Sys.getenv("DECK_EXPORT"))
-DECK_DIR    <- file.path(DIR_RESULTS, "04_tf", "deck_assets")
-if (DECK_EXPORT) dir.create(DECK_DIR, recursive = TRUE, showWarnings = FALSE)
-
-#' Write the canonical stamped PDF, and (when DECK_EXPORT) a clean 16:9 PNG.
-#' @param plot   ggplot object carrying the provisional caption.
-#' @param fname  PDF filename, e.g. "fig3a_tf_interaction_axes.pdf".
-#' @param width,height  PDF dimensions (canonical, unchanged).
-#' @param deck_h  PNG height in inches (PNG width fixed at 10in, ~16:9-friendly).
-save_fig <- function(plot, fname, width, height, deck_h = 5.625) {
-  ggsave(file.path(FIG_DIR, fname), plot, width = width, height = height)
-  cat(sprintf("  wrote %s\n", fname))
-  if (DECK_EXPORT) {
-    png_name <- sub("\\.pdf$", ".png", fname)
-    ggsave(file.path(DECK_DIR, png_name), plot + labs(caption = NULL),
-           width = 10, height = deck_h, dpi = 300)
-    cat(sprintf("  wrote deck_assets/%s (clean, no embargo stamp)\n", png_name))
+# One-time relocation cleanup: this script previously wrote flat-dir PDFs (and a
+# retired composite) into 04_tf/figures/. Now every owned stem lands in
+# figures/_overview/. Remove the stale flat-dir artifacts for the owned stems so
+# the run owns its namespace (save_overview purges the _overview/ dir per stem).
+.FLAT_FIG_DIR <- stage_dir("04_tf", "figures")
+.OWNED_STEMS  <- c("fig3a_tf_interaction_axes", "fig3b_top_tf_by_contrast",
+                   "fig3c_hif1a_rank_cascade", "fig3d_regulon_swap",
+                   "fig3e_mlm_collinearity", "fig3f_consensus_zmix",
+                   "fig3g_target_decomposition", "fig3h_lombardi_vs_phylo",
+                   "fig3i_interaction_primer", "fig3b_hif1a_robustness")
+for (.stale in list.files(.FLAT_FIG_DIR, full.names = TRUE)) {
+  if (any(startsWith(basename(.stale), .OWNED_STEMS)) &&
+      grepl("\\.(pdf|png)$", .stale)) {
+    file.remove(.stale)
+    cat(sprintf("  removed stale flat-dir artifact %s\n", basename(.stale)))
   }
 }
 
-base_theme <- theme_minimal(base_size = 11) +
-  theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(face = "bold", size = 12),
-        plot.subtitle = element_text(size = 9, color = "grey25"),
-        plot.caption  = element_text(size = 7, color = "grey45", hjust = 0, face = "italic"))
-
-# Retire the illegible composite that this script replaces.
-old_composite <- file.path(FIG_DIR, "fig3b_hif1a_robustness.pdf")
-if (file.exists(old_composite)) {
-  file.remove(old_composite)
-  cat(sprintf("  removed retired composite %s\n", old_composite))
-}
+# -----------------------------------------------------------------------------
+# Contract note: every owned stem (fig3a..fig3i) is a cross-method/forensic
+# overview panel (none is per-contrast), so all route through save_overview() to
+# figures/_overview/ with a same-stem source table + idempotent README caption,
+# dual print/screen variants, and per-variant legibility floors. The screen .png
+# IS the clean raster for deck packaging (no embargo stamp; captions live in the
+# README, not baked into the image) -- so the old DECK_EXPORT raw-ggsave is gone.
 
 # =============================================================================
 # FIG 3a -- TF activity on the cGAS x heat Interaction contrast
@@ -118,12 +106,24 @@ fig3a <- ggplot(fig3a_df, aes(x = score, y = source)) +
   labs(
     title = "Fig 3a. TF activity on the cGAS x heat Interaction contrast (CollecTRI ULM)",
     subtitle = "HIF axis (orange triangles) is flat/NS -> no detectable cGAS-dependence; the IFN members Irf3/Stat2/Stat1 are interaction-positive\n(* = BH padj < 0.05). NFkB members (Nfkb1/Rela) lean positive but are NS at n=5.",
-    x = "TF activity (ULM score; Interaction = WT_heat - KO_heat)", y = NULL,
-    caption = cap
+    x = "TF activity (ULM score; Interaction = WT_heat - KO_heat)", y = NULL
   ) +
-  base_theme
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3a, "fig3a_tf_interaction_axes.pdf", width = 8.5, height = 7.5, deck_h = 7.0)
+save_overview(
+  fig3a, STAGE, "fig3a_tf_interaction_axes",
+  table     = fig3a_df,
+  finding   = paste0("On the cGAS x heat Interaction contrast, the HIF axis (Hif1a/Epas1) is ",
+                     "flat/NS -- no detectable cGAS-dependence -- while IFN members ",
+                     "Irf3/Stat2/Stat1 are interaction-positive."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "colors.diverging; design.axis_colors",
+  input     = "03_results/04_tf/tables/fig3a_tf_interaction_axes_data.csv",
+  how_to_read = paste0(
+    "Lollipop x = TF activity (ULM score; Interaction = WT_heat - KO_heat); ",
+    "color/shape = TF axis (orange triangle = HIF; blue square = IFN/NFkB; grey = other). ",
+    "Glyph: * = BH padj < 0.05. Asymmetry, not proven independence; claim tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 9)
 
 # =============================================================================
 # FIG 3b -- Top up/down TF per contrast (THE ONLY multi-panel)
@@ -133,6 +133,11 @@ save_fig(fig3a, "fig3a_tf_interaction_axes.pdf", width = 8.5, height = 7.5, deck
 #        captures.
 # =============================================================================
 fig3b_df <- rd("fig3b_top_tf_by_contrast_data.csv")
+# Legibility cap: keep top-N per (contrast x direction) by |score| so the faceted
+# panel honours the font floor without truncating labels (config figures.top_n).
+fig3b_df <- do.call(rbind, lapply(
+  split(fig3b_df, list(fig3b_df$contrast, fig3b_df$direction), drop = TRUE),
+  function(g) g[order(-abs(g$score)), ][seq_len(min(nrow(g), TOP_N)), ]))
 fig3b_df$contrast <- factor(fig3b_df$contrast,
                             levels = c("WT_heat", "KO_heat", "Temp_main", "Interaction"))
 fig3b_df$axis     <- factor(fig3b_df$axis, levels = c("HIF", "IFN", "other"))
@@ -149,20 +154,31 @@ fig3b <- ggplot(fig3b_df, aes(x = score, y = row_key)) +
   geom_point(aes(color = axis, size = key_tf)) +
   geom_text(data = subset(fig3b_df, key_tf),
             aes(label = source), nudge_x = 0.15, hjust = 0, size = 2.4, color = "black") +
-  facet_wrap(~ contrast, scales = "free_y", ncol = 2) +
+  facet_wrap(~ contrast, scales = "free_y", ncol = 2,
+             labeller = labeller(contrast = function(x) contrast_label(x))) +
   scale_color_manual(values = AXIS_COLORS, name = "TF axis", labels = AXIS_LABELS) +
   scale_size_manual(values = c("TRUE" = 2.8, "FALSE" = 1.5), guide = "none") +
   labs(
     title = "Fig 3b. Top activated / suppressed TFs per contrast (CollecTRI ULM)",
     subtitle = "Shared x-axis (ULM score) across all four facets. Key TFs (HIF orange, IFN/NFkB blue) labelled.\nReads out what each contrast captures: heat arms vs the temperature main effect vs the cGAS x heat Interaction.",
-    x = "TF activity (ULM score)", y = NULL,
-    caption = cap
+    x = "TF activity (ULM score)", y = NULL
   ) +
-  base_theme +
-  theme(axis.text.y = element_text(size = 6.5),
-        strip.text  = element_text(face = "bold", size = 9))
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3b, "fig3b_top_tf_by_contrast.pdf", width = 11, height = 9, deck_h = 8.0)
+save_overview(
+  fig3b, STAGE, "fig3b_top_tf_by_contrast",
+  table     = fig3b_df,
+  finding   = paste0("Top activated/suppressed TFs (CollecTRI ULM) per contrast on a shared ",
+                     "ULM-score x-axis: reads out what each heat arm, the temperature main ",
+                     "effect, and the cGAS x heat Interaction capture."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = paste0("figures.top_n=", TOP_N, "; design.axis_colors"),
+  input     = "03_results/04_tf/tables/fig3b_top_tf_by_contrast_data.csv",
+  how_to_read = paste0(
+    "Four facets share the x-axis (TF activity, ULM score). Lollipop color = TF axis ",
+    "(orange = HIF; blue = IFN/NFkB; grey = other); HIF/IFN watchlist TFs labelled. ",
+    "Capped to top-", TOP_N, " per direction per contrast by |score|. Claim tier L3 (n=5)."),
+  config    = FIG_CFG, width = 16, height = 14, wide = TRUE)
 
 # =============================================================================
 # FIG 3c -- Hif1a rank cascade across 4 method/network configs
@@ -180,15 +196,27 @@ fig3c <- ggplot(fig3c_df, aes(x = method, y = rank, color = score, group = 1)) +
   scale_color_gradient2(low = DOWN, mid = NEUT, high = UP, midpoint = 0, name = "ULM/consensus\nscore") +
   scale_y_reverse(expand = expansion(mult = c(0.10, 0.22))) +
   labs(
-    title = "Fig 3c. Hif1a rank cascade across inference method / network (WT_heat)",
+    title = sprintf("Fig 3c. Hif1a rank cascade across inference method / network (%s)",
+                    contrast_label("WT_heat")),
     subtitle = "rank #1 (top) = most activated. The DoRothEA #1 collapses under the CollecTRI swap (#12), the\nmultivariate MLM de-confounding (#142), and is partially re-inflated by the consensus (#8): method/network-fragile.",
-    x = NULL, y = "Hif1a rank among activated TFs (lower = higher activity)",
-    caption = cap
+    x = NULL, y = "Hif1a rank among activated TFs (lower = higher activity)"
   ) +
-  base_theme +
-  theme(axis.text.x = element_text(angle = 15, hjust = 1))
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3c, "fig3c_hif1a_rank_cascade.pdf", width = 8.5, height = 6.5, deck_h = 6.0)
+save_overview(
+  fig3c, STAGE, "fig3c_hif1a_rank_cascade",
+  table     = fig3c_df,
+  finding   = paste0("Hif1a's #1 DoRothEA ranking is method/network-fragile: it collapses ",
+                     "under the CollecTRI swap (#12) and multivariate MLM de-confounding ",
+                     "(#142), then is partially re-inflated by the consensus (#8)."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "colors.diverging",
+  input     = "03_results/04_tf/tables/fig3c_hif1a_rank_cascade_data.csv",
+  how_to_read = paste0(
+    "x = inference method/network config (left -> right reading order); y = Hif1a rank ",
+    "among activated TFs (reversed; rank #1 at top = most activated). Point color = ULM/",
+    "consensus score (orange up / blue down). Labels give rank/total and score. Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 9)
 
 # =============================================================================
 # FIG 3d -- Regulon swap: explains #1 -> #12 (DoRothEA -> CollecTRI)
@@ -204,7 +232,13 @@ fig3d_df$membership <- factor(fig3d_df$membership,
                               levels = c("dorothea_only", "both", "collectri_only"),
                               labels = c("DoRothEA-only", "shared (both)", "CollecTRI-only"))
 
-mem_cols <- c("DoRothEA-only" = "#1B7837", "shared (both)" = "grey45", "CollecTRI-only" = "#762A83")
+# Membership palette built ONCE from config MODULE_COLORS tokens (no inline hex):
+# DoRothEA-only = diagnostic teal, shared = faint grey context, CollecTRI-only =
+# the heat-shock/stress purple (the diluting set the swap adds).
+mem_cols <- c(
+  "DoRothEA-only"  = unname(MODULE_COLORS["hif1a_hypoxic_core"]),
+  "shared (both)"  = unname(MODULE_COLORS["other_unclassified"]),
+  "CollecTRI-only" = unname(MODULE_COLORS["heatshock_stress"]))
 
 dor <- fig3d_sum[fig3d_sum$network == "DoRothEA", ]
 ct  <- fig3d_sum[fig3d_sum$network == "CollecTRI", ]
@@ -223,12 +257,24 @@ fig3d <- ggplot(fig3d_df, aes(x = membership, y = t_wt, fill = membership)) +
   labs(
     title = "Fig 3d. Regulon swap dilutes Hif1a's ULM signal (explains #1 -> #12)",
     subtitle = "Per-target WT_heat t-statistic by membership. The CollecTRI-only targets the swap ADDS carry high |t| but\nMIXED sign (their box straddles 0), so they cancel and add little net directional signal -> diluting the\nmor-weighted regulon mean and dragging the Hif1a ULM score below the tighter DoRothEA value.",
-    x = "Hif1a target membership across networks", y = "WT_heat target t-statistic",
-    caption = cap
+    x = "Hif1a target membership across networks", y = "WT_heat target t-statistic"
   ) +
-  base_theme
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3d, "fig3d_regulon_swap.pdf", width = 8.5, height = 6.5, deck_h = 6.0)
+save_overview(
+  fig3d, STAGE, "fig3d_regulon_swap",
+  table     = fig3d_df,
+  finding   = paste0("The DoRothEA -> CollecTRI regulon swap dilutes Hif1a's ULM signal: the ",
+                     "CollecTRI-only targets carry high |t| but mixed sign, so they cancel and ",
+                     "drag the regulon mean down (explains the #1 -> #12 drop)."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "design.module_colors",
+  input     = "03_results/04_tf/tables/fig3d_regulon_swap_data.csv",
+  how_to_read = paste0(
+    "Box+jitter of per-target WT_heat t-statistic by regulon membership ",
+    "(DoRothEA-only / shared / CollecTRI-only). The CollecTRI-only box straddles 0 ",
+    "(mixed sign), diluting the mor-weighted mean. Annotation gives regulon sizes. Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 9)
 
 # =============================================================================
 # FIG 3e -- MLM collinearity: explains #12 -> #142 (ULM -> MLM)
@@ -252,19 +298,31 @@ collapse_note <- sprintf(
   ulm$score, ulm$rank, mlm$score, mlm$rank, pct_co, mean_ot)
 
 fig3e <- ggplot(fig3e_df, aes(x = n_other_TFs)) +
-  geom_histogram(binwidth = 10, fill = "#2166AC", color = "white", boundary = 0) +
+  geom_histogram(binwidth = 10, fill = DOWN, color = "white", boundary = 0) +
   geom_vline(xintercept = mean_ot, color = UP, linewidth = 0.8, linetype = "22") +
   annotate("label", x = max(fig3e_df$n_other_TFs) * 0.98, y = Inf, hjust = 1, vjust = 1.1,
            label = collapse_note, size = 2.9, fill = "grey96", color = "grey15") +
   labs(
     title = "Fig 3e. Target collinearity collapses Hif1a under MLM (explains #12 -> #142)",
     subtitle = "For each Hif1a target: how many OTHER CollecTRI TFs also regulate it. The dashed line marks the mean.\nBecause nearly every Hif1a target is co-regulated, the multivariate MLM re-attributes its signal away from Hif1a.",
-    x = "number of OTHER CollecTRI TFs sharing each Hif1a target", y = "Hif1a targets (count)",
-    caption = cap
+    x = "number of OTHER CollecTRI TFs sharing each Hif1a target", y = "Hif1a targets (count)"
   ) +
-  base_theme
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3e, "fig3e_mlm_collinearity.pdf", width = 8.5, height = 6, deck_h = 5.625)
+save_overview(
+  fig3e, STAGE, "fig3e_mlm_collinearity",
+  table     = fig3e_df,
+  finding   = paste0("Nearly every Hif1a target is co-regulated by many other CollecTRI TFs, so ",
+                     "the multivariate MLM re-attributes Hif1a's signal away from it -- collapsing ",
+                     "its score (explains the #12 -> #142 drop)."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "colors.diverging",
+  input     = "03_results/04_tf/tables/fig3e_mlm_collinearity_data.csv",
+  how_to_read = paste0(
+    "Histogram: for each Hif1a target, how many OTHER CollecTRI TFs also regulate it. ",
+    "Dashed orange line = mean. Annotation gives the ULM -> MLM score/rank collapse. ",
+    "High co-regulation is why MLM de-confounds Hif1a's signal away. Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 8)
 
 # =============================================================================
 # FIG 3f -- Consensus z-mix: explains #142 -> #8 (MLM -> consensus)
@@ -279,7 +337,7 @@ fig3f_df$family    <- factor(fig3f_df$family,
 fig3f_df <- fig3f_df[order(fig3f_df$statistic), ]
 
 consensus_z <- fig3f_df$z_score[fig3f_df$statistic == "consensus"]
-fam_cols <- c("univariate" = UP, "multivariate" = "#2166AC", "consensus" = "grey25")
+fam_cols <- c("univariate" = UP, "multivariate" = DOWN, "consensus" = "grey25")
 
 fig3f <- ggplot(fig3f_df, aes(x = statistic, y = z_score, fill = family)) +
   geom_hline(yintercept = consensus_z, color = "grey40", linetype = "22", linewidth = 0.6) +
@@ -291,12 +349,24 @@ fig3f <- ggplot(fig3f_df, aes(x = statistic, y = z_score, fill = family)) +
   labs(
     title = "Fig 3f. The consensus outvotes MLM, re-inflating Hif1a (explains #142 -> #8)",
     subtitle = "Hif1a's per-statistic folded-z. Only mlm (multivariate) is low; the four univariate statistics stay high\nand the consensus is their mean (dashed line) -> Hif1a is pulled back up to #8 despite the MLM verdict.",
-    x = "decoupleR statistic", y = "Hif1a folded z-score",
-    caption = cap
+    x = "decoupleR statistic", y = "Hif1a folded z-score"
   ) +
-  base_theme
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3f, "fig3f_consensus_zmix.pdf", width = 8.5, height = 6, deck_h = 5.625)
+save_overview(
+  fig3f, STAGE, "fig3f_consensus_zmix",
+  table     = fig3f_df,
+  finding   = paste0("Only the multivariate MLM gives Hif1a a low folded-z; the four univariate ",
+                     "statistics stay high and the consensus (their mean) re-inflates Hif1a back ",
+                     "to #8 (explains the #142 -> #8 recovery)."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "colors.diverging",
+  input     = "03_results/04_tf/tables/fig3f_consensus_zmix_data.csv",
+  how_to_read = paste0(
+    "Bars = Hif1a folded z per decoupleR statistic; fill = statistic family ",
+    "(orange univariate / blue multivariate / grey consensus). Dashed line = consensus ",
+    "mean z. The lone low MLM bar is outvoted by the univariate family. Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 8)
 
 # =============================================================================
 # FIG 3g -- EXPANDED: full ranked contribution landscape of all 353 Hif1a
@@ -367,13 +437,12 @@ fig3g_df$legend_class <- ifelse(
   )
 )
 
-# --- viz-local convenience table of labelled genes (re-rank, NOT a statistic) -
+# --- viz-local convenience slice of labelled genes (re-rank, NOT a statistic).
+# This becomes the same-stem source table written atomically by save_overview()
+# below -- no ad-hoc write.csv in the viz (contract: source table is the figure's
+# same-stem neighbor, written by the save path). -----------------------------
 fig3g_labels_df <- fig3g_df[fig3g_df$target %in% LABEL_GENES,
                              c("source","target","mor","t_wt","contrib","class","rank","legend_class")]
-write.csv(fig3g_labels_df,
-          file.path(TBL_DIR, "fig3g_target_landscape_labels.csv"),
-          row.names = FALSE)
-cat("  wrote fig3g_target_landscape_labels.csv\n")
 
 # --- text-label data: label position nudged above stem-head ------------------
 fig3g_lab_sub <- fig3g_df[fig3g_df$target %in% LABEL_GENES, ]
@@ -432,23 +501,30 @@ fig3g <- ggplot(fig3g_df, aes(x = rank, y = contrib, color = legend_class)) +
   scale_size_manual(values = c("TRUE" = 2.2, "FALSE" = 0.8), guide = "none") +
   scale_x_continuous(breaks = NULL) +
   labs(
-    title    = "Fig 3g. WHERE Hif1a's score comes from: full ranked regulon contribution landscape (WT_heat)",
+    title    = sprintf("Fig 3g. WHERE Hif1a's score comes from: full ranked regulon contribution landscape (%s)",
+                       contrast_label("WT_heat")),
     subtitle = sub_g_expanded,
     x        = "regulon members ranked by contribution (left = most negative; right = most positive)",
-    y        = "contribution to WT_heat ULM score (sign(mor) x t_wt)",
-    caption  = cap
+    y        = "contribution to WT_heat ULM score (sign(mor) x t_wt)"
   ) +
-  base_theme +
-  theme(
-    legend.position  = "right",
-    legend.text      = element_text(size = 8),
-    legend.title     = element_text(size = 8, face = "bold"),
-    axis.text.x      = element_blank(),
-    axis.ticks.x     = element_blank(),
-    panel.grid.major.x = element_blank()
-  )
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3g, "fig3g_target_decomposition.pdf", width = 11, height = 7, deck_h = 6.5)
+save_overview(
+  fig3g, STAGE, "fig3g_target_decomposition",
+  table     = fig3g_labels_df,
+  finding   = paste0("Hif1a's positive WT_heat ULM score is built almost entirely from its ",
+                     "'other' regulon members -- generic stress/ECM genes tower over the HIF-",
+                     "specific core, which is repressed. This is a heat-induced glycolytic/stress ",
+                     "program partially overlapping HIF targets, not the canonical HIF program."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "design.module_colors",
+  input     = "03_results/04_tf/tables/fig3g_target_decomposition_data.csv",
+  how_to_read = paste0(
+    "Lollipop landscape: all 353 Hif1a regulon members ranked by signed contribution ",
+    "(sign(mor) x t_wt; + = pushes the ULM score up). Color = regulon class (purple heat-",
+    "shock/stress; orange shared/glycolytic; teal repressed hypoxic core; grey other). ",
+    "Labelled = top stress drivers + the 7 HIF-specific members (the source table). Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 16, height = 9, wide = TRUE)
 
 # =============================================================================
 # FIG 3h -- Lombardi vs Phylo HIF signatures x 3 contrasts
@@ -468,24 +544,38 @@ fig3h <- ggplot(fig3h_df, aes(x = condition, y = score, fill = signature)) +
   geom_col(position = position_dodge(width = 0.75), width = 0.7) +
   geom_text(aes(label = ifelse(sig, "*", "ns")),
             position = position_dodge(width = 0.75), vjust = -0.35, size = 3.4) +
-  scale_fill_manual(values = setNames(c(UP, "#7B3294"), names(sig_lab_map)),
+  scale_fill_manual(values = setNames(c(UP, unname(MODULE_COLORS["heatshock_stress"])),
+                                      names(sig_lab_map)),
                     labels = sig_lab_map, name = "HIF signature") +
   labs(
     title = "Fig 3h. Provenance / hypoxia control: a field-consensus and a hand-made HIF list both rise with heat",
     subtitle = sprintf("Field-consensus %s and hand-made %s both go UP with heat in BOTH genotypes (Interaction NS for both) -- a hypoxia/provenance\ncheck that the hand-made Phylo list isn't idiosyncratic, NOT thermal-HIF proof. CAVEAT: each metagene COLLAPSES HIF1/HIF2 and is\nDIRECTION-BLIND -- it cannot see the repressed hypoxic core (Pdk1/Bnip3/Bnip3l/Car9; fig3l). * = BH padj < 0.05; ns otherwise.",
                        sig_lab_map[["Lombardi2022_HIF"]], sig_lab_map[["Phylo16_HIF"]]),
-    x = NULL, y = "signature activity (ULM score)",
-    caption = cap
+    x = NULL, y = "signature activity (ULM score)"
   ) +
-  base_theme
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3h, "fig3h_lombardi_vs_phylo.pdf", width = 8.5, height = 6, deck_h = 5.625)
+save_overview(
+  fig3h, STAGE, "fig3h_lombardi_vs_phylo",
+  table     = fig3h_df,
+  finding   = paste0("A field-consensus and a hand-made HIF metagene both rise with heat in BOTH ",
+                     "genotypes (Interaction NS for both): a hypoxia/provenance check that the ",
+                     "hand-made list isn't idiosyncratic -- not thermal-HIF proof, and direction-",
+                     "blind to the repressed hypoxic core."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "colors.diverging; design.module_colors",
+  input     = "03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv",
+  how_to_read = paste0(
+    "Grouped bars = signature activity (ULM score) per condition; fill = HIF signature ",
+    "(field-consensus vs hand-made). Glyphs: * = BH padj < 0.05, ns otherwise. Each ",
+    "metagene collapses HIF1/HIF2 and is direction-blind. Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 11, height = 8)
 
 # =============================================================================
 # FIG 3i -- Interaction primer: how the cGAS x heat Interaction is read
 # CLAIM: The Interaction = (WT_39-WT_37) - (cGASKO_39-cGASKO_37).
 #        Ifit1 (IFN arm, cGAS-dependent): slopes DIVERGE -> large positive Interaction.
-#        Vegfa (HIF arm, cGAS-independent): slopes PARALLEL -> Interaction ~0.
+#        Vegfa (HIF arm, no detectable cGAS-dependence): slopes PARALLEL -> Interaction ~0.
 # Design: two facets (free_y; same metric log2CPM, different absolute levels),
 #         WT solid / cGAS-KO dashed, annotated with contrast values from table.
 # ZERO statistics in this block: all numbers come from fig3i_interaction_primer_data.csv.
@@ -509,8 +599,9 @@ strip_labels <- vapply(c("Ifit1", "Vegfa"), function(g) {
   )
 }, character(1))
 
-# Qualitative genotype palette: WT = teal/dark, cGASKO = orange (house UP color).
-GENO_COLS <- c("WT" = "#1B7837", "cGASKO" = "#D6604D")
+# Qualitative genotype palette built ONCE from config tokens (no inline hex):
+# WT = diagnostic teal (MODULE_COLORS), cGASKO = house UP orange (DIVERGING_COLORS).
+GENO_COLS <- c("WT" = unname(MODULE_COLORS["hif1a_hypoxic_core"]), "cGASKO" = UP)
 
 fig3i <- ggplot(fig3i_df, aes(x = temp, y = mean_log2cpm,
                                color = genotype, group = genotype,
@@ -531,19 +622,25 @@ fig3i <- ggplot(fig3i_df, aes(x = temp, y = mean_log2cpm,
       "Diverging slopes = cGAS-dependent (Ifit1, IFN arm).  ",
       "Parallel slopes = no detectable cGAS-dependence (Vegfa, shared HIF/glycolytic target)."
     ),
-    x = "Temperature", y = "mean log2 CPM (group mean)",
-    caption = cap
+    x = "Temperature", y = "mean log2 CPM (group mean)"
   ) +
-  base_theme +
-  theme(
-    plot.title    = element_text(size = 11, face = "bold"),
-    plot.subtitle = element_text(size = 8.5, lineheight = 1.25),
-    strip.text    = element_text(face = "bold", size = 9, lineheight = 1.1),
-    strip.background = element_rect(fill = "grey94", color = NA),
-    panel.spacing = unit(1.4, "lines"),
-    plot.margin   = margin(t = 6, r = 8, b = 4, l = 8, unit = "mm")
-  )
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3i, "fig3i_interaction_primer.pdf", width = 9, height = 6, deck_h = 5.625)
+save_overview(
+  fig3i, STAGE, "fig3i_interaction_primer",
+  table     = fig3i_df,
+  finding   = paste0("Reading the cGAS x heat Interaction as the difference of genotype heat-",
+                     "slopes: Ifit1 (IFN arm) slopes diverge -> large positive Interaction ",
+                     "(cGAS-dependent); Vegfa (shared HIF/glycolytic target) slopes stay parallel ",
+                     "-> Interaction ~0 (no detectable cGAS-dependence)."),
+  script    = SCRIPT, fn = "save_overview",
+  config_kv = "design.module_colors; colors.diverging",
+  input     = "03_results/04_tf/tables/fig3i_interaction_primer_data.csv",
+  how_to_read = paste0(
+    "Two facets (free y; same metric log2 CPM): x = temperature, lines = genotype ",
+    "(WT teal solid, cGAS-KO orange dashed). Diverging slopes = cGAS-dependent; ",
+    "parallel slopes = no detectable cGAS-dependence. Strip text carries the contrast ",
+    "values (WT heat / KO heat / Interaction + adjP). Tier L3 (n=5)."),
+  config    = FIG_CFG, width = 12, height = 8)
 
 cat("[DONE] 03_decoupler_tf_viz.R -- 9 single-claim Phase-3 figures rendered from tidy tables.\n")

@@ -49,7 +49,6 @@ suppressPackageStartupMessages({
   library(tibble)
   library(readr)
   library(ggrepel)
-  library(pheatmap)
   library(scales)
 })
 options(stringsAsFactors = FALSE)
@@ -99,10 +98,6 @@ PROV_STAMP <- paste0(
   "[PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas), ",
   "pending collaborator sample sheet; n=5/group]"
 )
-
-# pheatmap color ramp + break vector (diverging palette, clamped to CAP)
-RAMP <- colorRampPalette(c(NEG, MID, POS))(100)
-BRKS <- seq(-CAP, CAP, length.out = 101)
 
 # =============================================================================
 # DIRECTORIES
@@ -260,37 +255,95 @@ if (TF_AVAILABLE) {
 # source of truth in design.contrast_labels) — sourced at the top of this script.
 .contrast_label <- contrast_label
 
-# pheatmap-grob builder: captures the grob for ggsave-routed save_overview
-.heat_grob <- function(mat, main, pmat = NULL,
-                       fontsize_row = 10, cellheight = 14, cellwidth = 24,
-                       cluster_rows = TRUE, gaps_row = NULL,
-                       annotation_row = NULL, annotation_colors = NULL) {
-  disp <- if (!is.null(pmat)) {
-    pm_sub <- pmat[rownames(mat), colnames(mat), drop = FALSE]
-    star_m <- matrix(.sig_star(as.vector(pm_sub)),
-                     nrow = nrow(mat), ncol = ncol(mat),
-                     dimnames = dimnames(mat))
-    star_m
-  } else FALSE
+# ----------------------------------------------------------------------------
+# ggplot tile-heatmap builder (replaces the old pheatmap-grob path).
+#
+# A pheatmap returns a *grob*; the contract's save_figure does `plot +
+# project_theme(variant=v)` per variant, and `grob + <ggplot theme>` evaluates
+# to NULL (no error) -> ggsave(NULL) writes a blank 853-B PDF / a non-heatmap
+# PNG. A ggplot object survives `+ project_theme`, so the dual-variant +
+# font-floor + cairo machinery works unchanged. Hence geom_tile, not pheatmap.
+#
+# Row order: clustered via explicit hclust(dist(mat)) so the biological grouping
+# (IFN block, HIF rows) reads the same as the pheatmap version gave. Columns stay
+# in the supplied (config) order. Significance stars from .sig_star(p). Fill via
+# .div_fill() (identical diverging contract to the old RAMP/BRKS, clamped +/-CAP).
+#
+# For the TF heatmap, `axis_map` (named char: row -> HIF/IFN/other) renders a
+# thin left-edge tile strip carrying the row annotation pheatmap drew as
+# `annotation_row`.
+# ----------------------------------------------------------------------------
+.heat_tile <- function(mat, main, pmat = NULL, axis_map = NULL) {
+  # Clustered row order (keep "rows clustered" semantics pheatmap gave). Guard
+  # against degenerate cases (<3 rows, or any non-finite distance).
+  row_ord <- rownames(mat)
+  if (nrow(mat) >= 3) {
+    d <- tryCatch(stats::dist(mat), error = function(e) NULL)
+    if (!is.null(d) && all(is.finite(d)))
+      row_ord <- rownames(mat)[stats::hclust(d)$order]
+  }
+  col_ord <- colnames(mat)
 
-  pheatmap(mat,
-           main              = main,
-           color             = RAMP,
-           breaks            = BRKS,
-           cluster_rows      = cluster_rows,
-           cluster_cols      = FALSE,
-           gaps_row          = gaps_row,
-           annotation_row    = annotation_row,
-           annotation_colors = annotation_colors,
-           display_numbers   = disp,
-           number_color      = "black",
-           fontsize_number   = 10,
-           fontsize_row      = fontsize_row,
-           fontsize_col      = 10,
-           angle_col         = 45,
-           cellwidth         = cellwidth,
-           cellheight        = cellheight,
-           silent            = TRUE)$gtable
+  long <- as.data.frame(mat) %>%
+    tibble::rownames_to_column("source") %>%
+    tidyr::pivot_longer(-source, names_to = "contrast", values_to = "score")
+
+  if (!is.null(pmat)) {
+    pm_sub <- pmat[rownames(mat), colnames(mat), drop = FALSE]
+    plong <- as.data.frame(pm_sub) %>%
+      tibble::rownames_to_column("source") %>%
+      tidyr::pivot_longer(-source, names_to = "contrast", values_to = "p")
+    long <- dplyr::left_join(long, plong, by = c("source", "contrast"))
+  } else {
+    long$p <- NA_real_
+  }
+
+  long <- long %>%
+    dplyr::mutate(
+      source   = factor(source, levels = row_ord),
+      contrast = factor(contrast, levels = col_ord),
+      star     = .sig_star(p)
+    )
+  # Column display labels in config column order. Use the SHORT (two-line)
+  # contrast labels so the column ticks stay legible without colliding (the long
+  # labels are sentence-length and overlap into mush on a tile grid).
+  col_labs <- .contrast_label(col_ord, short = TRUE)
+
+  p <- ggplot(long, aes(x = contrast, y = source, fill = score)) +
+    geom_tile(color = "grey90", linewidth = 0.3) +
+    geom_text(aes(label = star), size = 5, vjust = 0.78, color = "black") +
+    .div_fill() +
+    scale_y_discrete(expand = c(0, 0)) +
+    labs(title = main, x = NULL, y = NULL)
+
+  if (is.null(axis_map)) {
+    # Plain score grid: contrasts on x, in config order.
+    p <- p + scale_x_discrete(labels = col_labs, expand = c(0, 0))
+  } else {
+    # Left-edge axis-family strip (TF heatmap): a thin tile column to the LEFT
+    # of the score grid (its own discrete x position "axis"), carrying the row
+    # annotation pheatmap drew as `annotation_row`. ggnewscale lets the strip
+    # use a categorical fill independent of the diverging score fill.
+    strip_df <- data.frame(
+      source = factor(names(axis_map), levels = row_ord),
+      axis   = unname(axis_map),
+      stringsAsFactors = FALSE
+    )
+    p <- p +
+      scale_x_discrete(
+        limits = c("axis", col_ord),
+        labels = c("axis" = "", stats::setNames(col_labs, col_ord)),
+        expand = c(0, 0)) +
+      ggnewscale::new_scale_fill() +
+      geom_tile(data = strip_df,
+                aes(x = "axis", y = source, fill = axis),
+                inherit.aes = FALSE, width = 1, height = 1) +
+      scale_fill_manual(values = AXIS_COLORS, name = "TF axis",
+                        breaks = c("HIF", "IFN", "other"))
+  }
+
+  p + project_theme(config = FIG_CFG, legend = TRUE) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 30, hjust = 1))
 }
 
 # Build a wide score matrix (rows = sources, cols = contrasts, ordered)
@@ -505,13 +558,9 @@ tryCatch({
   pmat_ph <- .wide_pmat(prog_long, pathways_all, CO_PROG, "p_value")
   pmat_ph <- pmat_ph[rownames(mat_ph), colnames(mat_ph), drop = FALSE]
 
-  grob_ph <- .heat_grob(mat_ph,
-                        main         = "PROGENy pathway activity across contrasts",
-                        pmat         = pmat_ph,
-                        fontsize_row = 11,
-                        cellheight   = 18,
-                        cellwidth    = 28,
-                        cluster_rows = TRUE)
+  fig_ph <- .heat_tile(mat_ph,
+                       main = "PROGENy pathway activity across contrasts",
+                       pmat = pmat_ph)
 
   side_ph <- as.data.frame(mat_ph) %>%
     tibble::rownames_to_column("source") %>%
@@ -524,7 +573,7 @@ tryCatch({
     dplyr::mutate(significant = !is.na(p_value) & p_value < FDR) %>%
     dplyr::select(source, contrast, score, p_value, significant)
 
-  save_overview(grob_ph, STAGE, "progeny_heatmap",
+  save_overview(fig_ph, STAGE, "progeny_heatmap",
                 table     = side_ph,
                 finding   = paste0(
                   "PROGENy 14-pathway x ", length(CO_PROG), "-contrast activity heatmap (MLM score, ",
@@ -533,7 +582,7 @@ tryCatch({
                   "JAK-STAT/NFkB/TNFa rise in WT_heat and are positive in the Interaction (cGAS-dependent). ",
                   "PROVISIONAL; n=5/group."),
                 script    = SCRIPT,
-                fn        = ".heat_grob + pheatmap",
+                fn        = ".heat_tile (ggplot geom_tile)",
                 config_kv = paste0("thresholds.gsea_fdr=", FDR,
                                    "; figures.z_clamp=", CAP,
                                    "; colors.diverging"),
@@ -544,6 +593,10 @@ tryCatch({
                   "Fill: orange = pathway activated in numerator; blue = activated in denominator. ",
                   "Score clamped to +/-", CAP, "; * = raw p < ", FDR, " (n=14 pathways; no multi-test ",
                   "correction warranted). Claim tier: L3 (provisional, n=5/group)."),
+                # Tall canvas: 14 rows need vertical room so tiles do not collapse;
+                # wide so the contrast labels and legend fit. Floors still enforced.
+                height    = 8,
+                width     = 9,
                 config    = FIG_CFG)
   message("[13_activity_viz] PROGENy heatmap done (",
           nrow(mat_ph), " pathways x ", ncol(mat_ph), " contrasts)")
@@ -613,15 +666,10 @@ tryCatch({
       )) +
       labs(
         title    = "PROGENy pathway activity: Hypoxia vs immune split (MLM)",
-        subtitle = paste0(
-          "Hypoxia (orange) rises equally in BOTH genotypes (flat Interaction -> ",
-          "no detectable cGAS-dependence at n=5).\n",
-          "JAK-STAT/NFkB/TNFa (blue) are cGAS-dependent (positive Interaction).\n",
-          PROV_STAMP),
+        subtitle = "Hypoxia (orange): flat Interaction (no detectable cGAS-dependence). JAK-STAT/NFkB/TNFa (blue): positive Interaction (cGAS-dependent). PROVISIONAL.",
         x        = NULL,
         y        = "PROGENy activity score (MLM)",
-        caption  = paste0("* raw p < ", FDR,
-                          "  |  PROVISIONAL; n=5/group; not proven independence.")
+        caption  = NULL
       ) +
       project_theme(config = FIG_CFG, legend = TRUE)
 
@@ -684,24 +732,19 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
       pmat_th <- .wide_pmat(tf_long, tf_pick, CO_TF, "padj")
       pmat_th <- pmat_th[rownames(mat_th), colnames(mat_th), drop = FALSE]
 
-      # Row annotation: axis family (HIF / IFN / other)
+      # Row annotation: axis family (HIF / IFN / other), named by row so the
+      # left-edge strip in .heat_tile lines up regardless of clustered order.
       tf_axis <- dplyr::case_when(
         rownames(mat_th) %in% c("Hif1a", "Epas1")                              ~ "HIF",
         rownames(mat_th) %in% c("Irf1","Irf3","Irf7","Stat1","Stat2","Nfkb1","Rela") ~ "IFN",
         TRUE                                                                     ~ "other"
       )
-      ann_th <- data.frame(axis = tf_axis, row.names = rownames(mat_th))
-      ann_col_th <- list(axis = AXIS_COLORS)
+      axis_map_th <- stats::setNames(tf_axis, rownames(mat_th))
 
-      grob_th <- .heat_grob(mat_th,
-                            main           = sprintf("CollecTRI TF activity across contrasts (sig in >=%d)", HM_MINC),
-                            pmat           = pmat_th,
-                            fontsize_row   = 9,
-                            cellheight     = 13,
-                            cellwidth      = 22,
-                            cluster_rows   = TRUE,
-                            annotation_row = ann_th,
-                            annotation_colors = ann_col_th)
+      fig_th <- .heat_tile(mat_th,
+                           main = sprintf("CollecTRI TF activity across contrasts (sig in >=%d)", HM_MINC),
+                           pmat = pmat_th,
+                           axis_map = axis_map_th)
 
       side_th <- as.data.frame(mat_th) %>%
         tibble::rownames_to_column("source") %>%
@@ -717,7 +760,7 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
         dplyr::mutate(significant = !is.na(padj) & padj < FDR) %>%
         dplyr::select(source, axis, contrast, score, padj, significant)
 
-      save_overview(grob_th, STAGE, "tf_heatmap",
+      save_overview(fig_th, STAGE, "tf_heatmap",
                     table     = side_th,
                     finding   = paste0(
                       "CollecTRI TF activity heatmap (TFs significant in >=", HM_MINC,
@@ -726,7 +769,7 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
                       "IFN/IRF/STAT TFs cluster as the cGAS-dependent block (positive in Interaction); ",
                       "HIF-axis TFs are non-significant in the Interaction. PROVISIONAL; n=5/group."),
                     script    = SCRIPT,
-                    fn        = ".heat_grob + pheatmap",
+                    fn        = ".heat_tile (ggplot geom_tile)",
                     config_kv = paste0("thresholds.gsea_fdr=", FDR,
                                        "; figures.z_clamp=", CAP,
                                        "; figures.top_n=", TF_TOPN,
@@ -735,11 +778,15 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
                     how_to_read = paste0(
                       "Rows = CollecTRI TFs (hierarchically clustered); columns = contrasts. ",
                       "Fill: orange = TF activated in numerator; blue = activated in denominator. ",
-                      "Row strip: orange = HIF axis (Hif1a/Epas1), blue = IFN/NFkB axis. ",
-                      "Score clamped to +/-", CAP, ". * = BH padj < ", FDR, ". ",
+                      "Left-edge strip: orange = HIF axis (Hif1a/Epas1), blue = IFN/NFkB axis, ",
+                      "grey = other. Score clamped to +/-", CAP, ". * = BH padj < ", FDR, ". ",
                       "Claim tier: L3 (provisional, n=5/group; IFN-arm TFs positive in Interaction ",
                       "= cGAS-dependent; HIF-axis TFs flat/NS in Interaction = no detectable ",
                       "cGAS-dependence at n=5; NOT proven independence)."),
+                    # Tall canvas scaled by row count so the (up to ~40-row) grid
+                    # never collapses; wide enough for left strip + legends.
+                    height    = max(8, nrow(mat_th) * 0.32 + 2),
+                    width     = 9,
                     config    = FIG_CFG)
       message("[13_activity_viz] TF heatmap done (",
               nrow(mat_th), " TFs x ", ncol(mat_th), " contrasts)")
@@ -835,18 +882,12 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                            name = "Entity type") +
         labs(
           title    = "PROGENy + TF activity: key pathways and TFs (headline contrasts)",
-          subtitle = paste0(
-            "PROGENy MLM footprint (top) + CollecTRI ULM TF activity (bottom). ",
-            "Orange = HIF/glycolysis arm; blue = IFN/NFkB arm.\n",
-            PROV_STAMP),
+          subtitle = "PROGENy MLM (top) + CollecTRI ULM (bottom). Orange = HIF arm; blue = IFN/NFkB arm. PROVISIONAL.",
           x        = "Activity score",
           y        = NULL,
-          caption  = paste0("* p < ", FDR, " (raw for PROGENy, BH padj for TF)",
-                            "  |  diamond = PROGENy; circle = TF")
+          caption  = NULL
         ) +
-        project_theme(config = FIG_CFG, legend = TRUE) +
-        theme(panel.spacing.x = unit(0.4, "lines"),
-              panel.spacing.y = unit(0.5, "lines"))
+        project_theme(config = FIG_CFG, legend = TRUE)
 
       side_comb <- comb_df %>%
         dplyr::transmute(
@@ -958,9 +999,9 @@ if (!file.exists(readme_path)) {
 n_fig <- length(list.files(file.path("03_results", STAGE, "figures"),
                             pattern = "\\.(pdf|png)$", recursive = TRUE))
 ## adjacency is per figure STEM, not per file: each stem emits both a
-## .print.pdf and a .screen.png variant but a single same-stem .csv, so compare
-## unique stems (strip the .<variant>.<ext> suffix) against the CSV count.
-n_ov  <- length(unique(sub("\\.(print|screen)\\.(pdf|png)$", "",
+## .pdf and a .png, but a single same-stem .csv, so compare unique stems
+## (strip the extension) against the CSV count.
+n_ov  <- length(unique(sub("\\.(pdf|png)$", "",
                            list.files(.ov_fig, pattern = "\\.(pdf|png)$"))))
 n_csv <- length(list.files(.ov_tbl, pattern = "\\.csv$"))
 

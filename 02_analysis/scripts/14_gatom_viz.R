@@ -80,6 +80,19 @@ PROVISIONAL <- provisional_caption()
 ## Network fill palette (two networks: kegg / combined)
 NET_PAL <- c(kegg = NEG, combined = POS)
 
+## KEGG-only degradation note (met.combined.db.rds absent → 10_gatom_modules.R built
+## only the KEGG reaction network; there is no `combined` network in any bundle). Surfaced
+## on the overviews so the single-network legend is not read as a missing-bar bug. Kept SHORT
+## so a one-line subtitle does not clip at the panel edge; the full reason lives in how_to_read.
+KEGG_ONLY_NOTE <- "KEGG-only run (Combined KEGG+Rhea network unavailable)"
+
+## Overview geometry (inches) — explicit so BOTH variants (incl. the print PDF) are legible;
+## `wide=TRUE` only widens the screen variant, leaving print at the 3.5×3 in column default,
+## which crams the horizontal-bar overviews + their full-sentence contrast labels.
+OVERVIEW_W   <- 11   # wide enough for full contrast labels + bars on both variants
+BAR_OVERVIEW_H     <- 5    # 3-contrast horizontal-bar charts
+SUMMARY_OVERVIEW_H <- 10   # 2-panel stacked patchwork
+
 ## ── 2. GUARD: discover per-contrast RDS objects ───────────────────────────
 rds_pattern <- file.path(DIR_OBJECTS, "10_gatom_%s.rds")
 rds_exists  <- function(co) file.exists(sprintf(rds_pattern, co))
@@ -125,6 +138,16 @@ NETWORKS <- c("kegg", "combined")
   if (!length(hit)) return(NULL)
   df[[hit[1]]]
 }
+
+## Borderless network / info panels: the figure-style contract's ONE theme entry point is
+## project_theme(), which (correctly for bars/dots) keeps axis lines + grid + x/y titles.
+## A ggraph network or a centred info panel must be borderless. The OLD code did
+## `theme_void() + project_theme()` — which re-added that chrome after stripping it (order
+## bug) — then patched it with an inline theme(). Both are gone: the panels now build with
+## plain project_theme(), and the borderless stripping is applied by the contract itself at
+## save time via save_overview(..., void = TRUE) (a void-override layer added AFTER
+## project_theme, so it is not clobbered by save_figure's per-variant re-theme). No raw
+## theme() and no theme_void()/project_theme() ordering left in this script.
 
 net_result <- function(bundle, net) bundle$modules[[net]]
 
@@ -179,21 +202,21 @@ build_module_ggraph <- function(res, co, net) {
   ## Node score: metabolomics absent in this run (k.met=NULL) → uniform nodes
   met_scored <- "score" %in% names(vd) && any(vd$score != 0, na.rm = TRUE)
 
-  ## Label: top-N vertices by degree (layout-independent; avoids overlap on dense graphs)
-  vd_lbl <- vd
-  if (nrow(vd_lbl) > TOP_N_LBL) {
-    degs <- igraph::degree(module)
-    top_v <- names(sort(degs, decreasing = TRUE))[seq_len(TOP_N_LBL)]
-    lbl_col <- .pick(vd_lbl, c("label", "metabolite", "name"))
-    if (!is.null(lbl_col)) {
-      vd_lbl_vec <- vd_lbl[[lbl_col]]
-      node_names <- if (!is.null(rownames(vd_lbl))) rownames(vd_lbl) else as.character(seq_len(nrow(vd_lbl)))
-      show_lbl <- node_names %in% top_v
-      igraph::V(module)$display_label <- ifelse(show_lbl, vd_lbl_vec, NA_character_)
-    }
+  ## Label: top-N vertices by degree (layout-independent; avoids overlap on dense graphs).
+  ## .pick() returns the column VALUES (a vector) already — assign them directly; do NOT
+  ## re-index the data.frame with them (that is the `no such index at level 1` bug).
+  vd_lbl   <- vd
+  lbl_vals <- .pick(vd_lbl, c("label", "metabolite", "name"))   # vector of label strings or NULL
+  if (is.null(lbl_vals)) {
+    igraph::V(module)$display_label <- NA_character_
+  } else if (nrow(vd_lbl) > TOP_N_LBL) {
+    degs       <- igraph::degree(module)
+    top_v      <- names(sort(degs, decreasing = TRUE))[seq_len(TOP_N_LBL)]
+    node_names <- if (!is.null(rownames(vd_lbl))) rownames(vd_lbl) else as.character(seq_len(nrow(vd_lbl)))
+    show_lbl   <- node_names %in% top_v
+    igraph::V(module)$display_label <- ifelse(show_lbl, as.character(lbl_vals), NA_character_)
   } else {
-    lbl_col <- .pick(vd_lbl, c("label", "metabolite", "name"))
-    igraph::V(module)$display_label <- if (!is.null(lbl_col)) vd_lbl[[lbl_col]] else NA_character_
+    igraph::V(module)$display_label <- as.character(lbl_vals)
   }
 
   lbl_size <- min(MAX_LBL_SZ, max(2, 5 - n_edges / 25))
@@ -277,23 +300,8 @@ build_module_ggraph <- function(res, co, net) {
       title    = sprintf("%s\n[%s]", contrast_label(co), net_label),
       subtitle = sprintf("Direction cue: %s  |  k.gene = %d  |  V=%d  E=%d",
                          cue, K_GENE, n_verts, n_edges),
-      caption  = paste0(
-        "Nodes = metabolites/atoms | Edges = enzymatic reactions (gene symbol).\n",
-        "Edge color: orange = up-regulated enzyme (log2FC > 0), blue = down-regulated.\n",
-        sprintf("Module: V=%d metabolites, E=%d reactions, w=%.2f.\n",
-                n_verts, n_edges, res$solution_weight %||% NA_real_),
-        sprintf("Sign convention: positive log2FC = higher in numerator of '%s'.\n",
-                contrast_label(co)),
-        "Claim tier L3 (DE/enrichment statistics; mechanism is interpretive text only).\n",
-        PROVISIONAL,
-        met_note)) +
-    theme_void() +
-    project_theme(config = FIG_CFG) +
-    theme(
-      plot.title       = element_text(hjust = 0.5, face = "bold", lineheight = 1.1),
-      legend.position  = "right",
-      plot.margin      = unit(c(0.4, 0.6, 0.7, 0.8), "cm"),
-      plot.caption     = element_text(hjust = 0, margin = margin(t = 5)))
+      caption  = NULL) +
+    project_theme(config = FIG_CFG)   # borderless stripping applied at save time (void = TRUE)
 }
 
 ## ── 5. PLACEHOLDER for empty/failed modules ───────────────────────────────
@@ -313,8 +321,7 @@ make_empty_placeholder <- function(co, net, reason = "no significant module") {
       title    = sprintf("%s [%s] — no module", contrast_label(co), net),
       subtitle = "GATOM SGMWCS returned an empty or failed module for this contrast/network.",
       caption  = paste0("Claim tier L3. ", PROVISIONAL)) +
-    theme_void() +
-    project_theme(config = FIG_CFG)
+    project_theme(config = FIG_CFG)   # borderless stripping applied at save time (void = TRUE)
 }
 
 ## Helper: build node/edge table for save_overview source table
@@ -425,7 +432,15 @@ for (co in CO) {
         input     = sprintf("03_results/objects/10_gatom_%s.rds", co),
         how_to_read = how_to_read_graph,
         contrast  = co,
-        config    = FIG_CFG),
+        config    = FIG_CFG,
+        ## NETWORK_H (≈ figures.height × 1.8 ≈ 14 in): a labeled metabolic subnetwork is
+        ## unreadable at the 3.5×3 in print-column default. A force-directed graph reads
+        ## best near-square, so give BOTH variants a tall square canvas (explicit width +
+        ## height both win over the column/wide presets in .variant_geometry).
+        width     = NETWORK_H,
+        height    = NETWORK_H,
+        ## Borderless: strip the 0–1 ggraph axes + x/y titles + grid AFTER project_theme.
+        void      = TRUE),
       error = function(e)
         message("  [14_gatom_viz] save_overview failed [", co, "/", net, "]: ",
                 conditionMessage(e)))
@@ -477,17 +492,20 @@ tidy_summary <- dplyr::bind_rows(lapply(CO, function(co) {
 sz_df <- dplyr::filter(tidy_summary, n_edges > 0L)
 
 if (nrow(sz_df) > 0L) {
+  ## Horizontal bars (coord_flip): long sentence-style contrast labels collide on a
+  ## vertical x-axis; flipping reads them in full without rotating or truncating.
   p_sizes <- ggplot(sz_df,
-      aes(x = reorder(label, -n_edges), y = n_edges, fill = network)) +
+      aes(x = reorder(label, n_edges), y = n_edges, fill = network)) +
     geom_col(position = "dodge", width = 0.7, alpha = 0.85) +
     scale_fill_manual(values = NET_PAL, name = "Network") +
+    coord_flip() +
     labs(
       title    = "GATOM metabolic module size by contrast",
-      subtitle = sprintf("Reaction edges per contrast × network (k.gene = %d)", K_GENE),
+      subtitle = sprintf("Reaction edges per contrast × network (k.gene = %d) · %s", K_GENE, KEGG_ONLY_NOTE),
       x        = NULL,
       y        = "Number of edges (enzymatic reactions)",
-      caption  = paste0("Larger modules indicate more connected metabolic DE signal.\n",
-                        "Claim tier L3. ", PROVISIONAL)) +
+      caption  = paste0("Larger modules = more connected metabolic DE signal · Claim tier L3.\n",
+                        PROVISIONAL)) +
     project_theme(config = FIG_CFG)
 
   tryCatch(
@@ -506,13 +524,17 @@ if (nrow(sz_df) > 0L) {
       config_kv = sprintf("colors.diverging; thresholds.gatom_k_gene=%d", K_GENE),
       input     = paste(sprintf("03_results/objects/10_gatom_%s.rds", CO), collapse = "; "),
       how_to_read = paste0(
-        "Each bar = one (contrast × network) combination. ",
-        "Height = number of reaction edges (enzyme-encoded enzymatic steps) in the SGMWCS module. ",
-        "Orange bars = Combined KEGG+Rhea network; blue bars = KEGG-only network. ",
-        "An absent bar means the module was empty (GATOM returned 0 edges for that contrast/network). ",
+        "Horizontal bar = one (contrast × network) combination; longer bar = bigger module. ",
+        "Length = number of reaction edges (enzyme-encoded enzymatic steps) in the SGMWCS module. ",
+        "Blue bars = KEGG reaction network (the only network in this run). The Combined ",
+        "KEGG+Rhea network is unavailable (met.combined.db.rds absent in 00_data/references/gatom/), ",
+        "so 10_gatom_modules.R degraded to KEGG-only — there is no orange (combined) bar by design. ",
+        "An absent contrast means its module was empty (GATOM returned 0 edges). ",
         "Claim tier L3: module size reflects DE signal density in the atom-graph, ",
         "not metabolic flux."),
-      config    = FIG_CFG),
+      config    = FIG_CFG,
+      width     = OVERVIEW_W,
+      height    = BAR_OVERVIEW_H),
     error = function(e) message("  [14_gatom_viz] module_sizes overview failed: ", conditionMessage(e)))
 }
 
@@ -521,16 +543,17 @@ wt_df <- dplyr::filter(tidy_summary, !is.na(solution_weight), n_edges > 0L)
 
 if (nrow(wt_df) > 0L) {
   p_weights <- ggplot(wt_df,
-      aes(x = reorder(label, -solution_weight), y = solution_weight, fill = network)) +
+      aes(x = reorder(label, solution_weight), y = solution_weight, fill = network)) +
     geom_col(position = "dodge", width = 0.7, alpha = 0.85) +
     scale_fill_manual(values = NET_PAL, name = "Network") +
+    coord_flip() +
     labs(
       title    = "GATOM MWCS solution weight by contrast",
-      subtitle = "Maximum-weight connected subgraph optimization score per contrast × network",
+      subtitle = sprintf("SGMWCS optimization score per contrast × network · %s", KEGG_ONLY_NOTE),
       x        = NULL,
       y        = "Solution weight (SGMWCS objective)",
-      caption  = paste0("Higher weight = more concentrated DE signal in the metabolic subnetwork.\n",
-                        "Claim tier L3. ", PROVISIONAL)) +
+      caption  = paste0("Higher weight = more concentrated DE signal in the subnetwork · Claim tier L3.\n",
+                        PROVISIONAL)) +
     project_theme(config = FIG_CFG)
 
   tryCatch(
@@ -554,7 +577,9 @@ if (nrow(wt_df) > 0L) {
         "A higher weight indicates more/larger-magnitude enzyme DE signals concentrated in ",
         "a connected metabolic sub-network. ",
         "Claim tier L3: does not imply metabolic flux or enzyme activity directly."),
-      config    = FIG_CFG),
+      config    = FIG_CFG,
+      width     = OVERVIEW_W,
+      height    = BAR_OVERVIEW_H),
     error = function(e) message("  [14_gatom_viz] module_weights overview failed: ", conditionMessage(e)))
 }
 
@@ -562,39 +587,62 @@ if (nrow(wt_df) > 0L) {
 ##   Cross-contrast panel: module size / score / top metabolites.
 ##   Uses master_gsea_table-schema columns (nes = mean edge log2FC pseudo-NES).
 
-summary_src <- if (!is.null(master_df) && nrow(master_df) > 0) master_df else tidy_summary
+## Source preference: tidy_summary (built from the RDS bundles) carries the REAL per-network
+## edge count and a network key (`kegg`/`combined`) that matches NET_PAL. The master CSV
+## collapses to database="GATOM" with set_size = GSEA leading-edge size (not the module edge
+## count) and no per-network split — using it here mis-colored every bar grey ("No shared
+## levels") and understated module size. So drive the summary panel from tidy_summary; fall
+## back to the master schema only if the bundles produced nothing plottable.
+tidy_plottable <- tidy_summary %>% dplyr::filter(n_edges > 0L)
 
-if (!is.null(summary_src) && nrow(summary_src) > 0) {
-  ## Harmonise column names between master schema (nes, set_size) and tidy_summary
-  has_master_cols <- all(c("nes", "set_size", "pathway_name") %in% names(summary_src))
-  if (has_master_cols) {
-    sum_plot_df <- summary_src %>%
-      dplyr::select(
-        contrast,
-        network  = dplyr::any_of(c("network", "database")),
-        n_edges  = set_size,
-        score    = nes) %>%
-      dplyr::mutate(label = contrast_label(contrast))
-  } else {
-    sum_plot_df <- tidy_summary %>%
-      dplyr::select(contrast, network, n_edges, score = mean_log2FC, label) %>%
-      dplyr::filter(!is.na(n_edges))
-  }
+if (nrow(tidy_plottable) > 0L) {
+  sum_plot_df <- tidy_plottable %>%
+    dplyr::select(contrast, network, n_edges, score = mean_log2FC, label)
+} else if (!is.null(master_df) && nrow(master_df) > 0 &&
+           all(c("nes", "set_size") %in% names(master_df))) {
+  sum_plot_df <- master_df %>%
+    dplyr::select(contrast,
+                  network = dplyr::any_of(c("network", "database")),
+                  n_edges = set_size, score = nes) %>%
+    dplyr::mutate(label = contrast_label(contrast))
+} else {
+  sum_plot_df <- NULL
+}
+
+if (!is.null(sum_plot_df) && nrow(sum_plot_df) > 0) {
+
+  ## SHARED contrast ordering: both panels must place the SAME contrast at the SAME
+  ## position, so order ONCE (by module size) and apply that single factor to both. The
+  ## old code reordered panel A by -n_edges and panel B by -score independently, so a
+  ## contrast sat at different x in the two panels (misleading). coord_flip below reads
+  ## the long sentence-style labels in full.
+  ord_levels <- sum_plot_df %>%
+    dplyr::group_by(label) %>%
+    dplyr::summarise(.k = max(n_edges, na.rm = TRUE), .groups = "drop") %>%
+    dplyr::arrange(.k) %>%        # ascending → largest ends up at TOP after coord_flip
+    dplyr::pull(label)
+  sum_plot_df <- sum_plot_df %>%
+    dplyr::mutate(label = factor(label, levels = ord_levels))
+
+  ## Networks actually present (KEGG-only run → just "kegg"); avoids a misleading "× 2".
+  nets_present <- sort(unique(as.character(sum_plot_df$network)))
 
   ## Panel A: n_edges (bar)
-  pA <- ggplot(sum_plot_df, aes(reorder(label, -n_edges), n_edges, fill = network)) +
+  pA <- ggplot(sum_plot_df, aes(label, n_edges, fill = network)) +
     geom_col(position = "dodge", width = 0.7, alpha = 0.85) +
     scale_fill_manual(values = NET_PAL, name = "Network") +
+    coord_flip() +
     labs(title = "Module size", subtitle = "Reaction edges",
          x = NULL, y = "Edges") +
     project_theme(config = FIG_CFG)
 
-  ## Panel B: mean edge log2FC (point + hline at 0)
+  ## Panel B: mean edge log2FC (point + hline at 0) — SAME label factor / ordering as A
   pB <- ggplot(sum_plot_df %>% dplyr::filter(!is.na(score)),
-               aes(reorder(label, -score), score, color = network, group = network)) +
+               aes(label, score, color = network, group = network)) +
     geom_hline(yintercept = 0, color = "gray60", linetype = "dashed") +
     geom_point(size = 3, alpha = 0.85, position = position_dodge(0.4)) +
     scale_color_manual(values = NET_PAL, name = "Network") +
+    coord_flip() +
     labs(title = "Module direction",
          subtitle = "Mean enzyme log2FC (pseudo-NES)",
          x = NULL, y = "Mean log2FC") +
@@ -605,12 +653,13 @@ if (!is.null(summary_src) && nrow(summary_src) > 0) {
     patchwork::plot_annotation(
       title   = "GATOM metabolic-module summary",
       subtitle = sprintf(
-        "SGMWCS modules across %d headline contrasts × %d networks (k.gene = %d). %s",
-        length(CO), length(NETWORKS), K_GENE, PROVISIONAL),
+        "SGMWCS modules · %d headline contrasts · %s network%s · k.gene = %d (Combined KEGG+Rhea n/a)",
+        length(CO), paste(nets_present, collapse = "+"),
+        if (length(nets_present) == 1) "" else "s", K_GENE),
       caption = paste0(
-        "Top panel: module size (reaction edges). ",
-        "Bottom panel: mean module enzyme log2FC (pseudo-NES; positive = net up-regulation).\n",
-        "Claim tier L3 (enrichment statistics; Complex-I / pseudohypoxia mechanism is interpretive text only)."),
+        "Top: module size (reaction edges). Bottom: mean enzyme log2FC ",
+        "(pseudo-NES; positive = net up-regulation). Same contrast ordering in both panels.\n",
+        "Claim tier L3 (enrichment statistics; mechanism is interpretive text). ", PROVISIONAL),
       theme = project_theme(config = FIG_CFG))
 
   tryCatch(
@@ -630,17 +679,20 @@ if (!is.null(summary_src) && nrow(summary_src) > 0) {
       config_kv = sprintf(
         "colors.diverging; figures.top_n=%d; thresholds.gatom_k_gene=%d",
         TOP_N_LBL, K_GENE),
-      input     = file.path(DIR_MASTER, "master_gatom_modules.csv"),
+      input     = paste(sprintf("03_results/objects/10_gatom_%s.rds", CO), collapse = "; "),
       how_to_read = paste0(
         "Top panel: bar height = number of enzymatic reaction edges in the SGMWCS module. ",
         "Bottom panel: dot position = mean log2FC across all enzyme-edges in the module. ",
-        "Orange = Combined KEGG+Rhea network, blue = KEGG-only network. ",
+        "Blue = KEGG-only network (the only network in this run; Combined KEGG+Rhea ",
+        "was unavailable — met.combined.db.rds absent). ",
         "Positive pseudo-NES (above dashed line) = net up-regulation of module enzymes ",
         "in the contrast numerator. ",
         "Sign convention: positive log2FC = higher in numerator (e.g. 39°C arm for heat contrasts). ",
         "Claim tier L3: module statistics, not metabolic flux measurement. ",
         "PROVISIONAL: sample-group labels are marker-inferred, pending collaborator sample sheet."),
-      config    = FIG_CFG),
+      config    = FIG_CFG,
+      width     = OVERVIEW_W,
+      height    = SUMMARY_OVERVIEW_H),
     error = function(e) message("  [14_gatom_viz] module_summary overview failed: ", conditionMessage(e)))
 }
 

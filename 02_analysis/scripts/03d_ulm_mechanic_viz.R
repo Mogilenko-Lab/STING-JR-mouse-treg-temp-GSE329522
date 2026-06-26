@@ -27,24 +27,30 @@
 # Inputs (03_results/04_tf/tables/, written by 03d_ulm_mechanic.R):
 #   fig3m_ulm_mechanic_data.csv      fig3m_ulm_mechanic_summary.csv
 #
-# Outputs:
-#   03_results/04_tf/figures/fig3m_ulm_mechanic.pdf         (canonical, stamped)
-#   03_results/04_tf/deck_assets/fig3m_ulm_mechanic.png     (DECK_EXPORT=1; clean)
+# Outputs (figure-style contract, dual variants):
+#   03_results/04_tf/figures/_overview/fig3m_ulm_mechanic.{print.pdf,screen.png}
+#   03_results/04_tf/tables/_overview/fig3m_ulm_mechanic.csv
+#   03_results/04_tf/README.md caption (via save_overview)
 #
 # Object name (HARD GUARDRAIL, sec 0): the Hif1a panel describes "a heat-induced
 #   glycolytic/stress program partially overlapping HIF targets" -- NEVER "the
 #   HIF program" / "HIF1a the TF". The comparator NEVER implies HIF2a anything.
 #   This figure is about the SCORING MECHANIC, not a biology claim.
-# Dependencies: config.R; ggplot2, dplyr (no statistics)
+# Dependencies: config.R (palette/label constants); figure_style.R (theme+save);
+#   ggplot2, dplyr, ggrepel (no statistics)
 # =============================================================================
 
-source("02_analysis/config/config.R")
-load_packages()  # ggplot2 + dplyr; limma/edgeR pulled in but unused
+source("02_analysis/config/config.R")              # palette/label constants only
+source("02_analysis/helpers/figure_style.R")       # contract: project_theme + save_overview; FIG_CFG
+suppressPackageStartupMessages({ library(ggplot2); library(dplyr) })
 
+STAGE  <- "04_tf"
+SCRIPT <- "02_analysis/scripts/03d_ulm_mechanic_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
-FIG_DIR <- stage_dir("04_tf", "figures")
 
-cap <- provisional_caption()
+# Embargo provenance now lives in the README caption (not burned into the plot).
+PROV <- provisional_caption()
+
 rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
 # Cross-figure palette continuity (single source of truth: config.R MODULE_COLORS).
@@ -52,34 +58,6 @@ COL_STRESS <- unname(MODULE_COLORS["heatshock_stress"])    # purple -- contamina
 COL_HIF    <- unname(MODULE_COLORS["hif1a_hypoxic_core"])  # full HIF-orange -- specific core
 COL_OTHER  <- "grey70"                                     # faint context members
 COL_SCORE  <- "grey15"                                     # the aggregate-score diamond/rule
-
-# -----------------------------------------------------------------------------
-# DECK EXPORT: when DECK_EXPORT is set, ALSO write a clean 300-dpi PNG (no
-# embargo caption line) to 03_results/04_tf/deck_assets/. Canonical stamped PDF
-# is ALWAYS written, unchanged. Only labs(caption=NULL) is dropped for the PNG.
-# -----------------------------------------------------------------------------
-DECK_EXPORT <- nzchar(Sys.getenv("DECK_EXPORT"))
-DECK_DIR    <- file.path(DIR_RESULTS, "04_tf", "deck_assets")
-if (DECK_EXPORT) dir.create(DECK_DIR, recursive = TRUE, showWarnings = FALSE)
-
-save_fig <- function(plot, fname, width, height, deck_h = 5.625) {
-  ggsave(file.path(FIG_DIR, fname), plot, width = width, height = height)
-  cat(sprintf("  wrote %s\n", fname))
-  if (DECK_EXPORT) {
-    png_name <- sub("\\.pdf$", ".png", fname)
-    ggsave(file.path(DECK_DIR, png_name), plot + labs(caption = NULL),
-           width = width, height = deck_h, dpi = 300)
-    cat(sprintf("  wrote deck_assets/%s (clean, no embargo stamp)\n", png_name))
-  }
-}
-
-base_theme <- theme_minimal(base_size = 11) +
-  theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(face = "bold", size = 12),
-        plot.subtitle = element_text(size = 9, color = "grey25"),
-        plot.caption  = element_text(size = 7, color = "grey45", hjust = 0, face = "italic"),
-        strip.text    = element_text(face = "bold", size = 10),
-        legend.position = "bottom")
 
 # =============================================================================
 # READ tidy tables
@@ -157,6 +135,8 @@ stat2_cue_df <- data.frame(
 
 # =============================================================================
 # FIG 3m -- the scoring mechanic (two panels, SHARED x = aligned contribution)
+#   Geom-text sizes lifted off the 2.5-3pt floor so they survive the per-variant
+#   re-theme; the contract enforces the print >=9 / screen >=16 base floors.
 # =============================================================================
 fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
   geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
@@ -173,14 +153,14 @@ fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
   geom_segment(data = score_df, aes(x = x, xend = label_x, y = 1.30, yend = label_y - 0.06),
                color = COL_SCORE, linewidth = 0.3, linetype = "12") +
   geom_text(data = score_df, aes(x = label_x, y = label_y, label = score_label, hjust = label_hjust),
-            size = 2.9, color = COL_SCORE, lineheight = 0.9, fontface = "bold") +
+            size = 4.0, color = COL_SCORE, lineheight = 0.9, fontface = "bold") +
   # Stat2 (specific) foil: in-panel "no pile-up -> low score" verdict cue.
   geom_text(data = stat2_cue_df, aes(x = x, y = y, label = lab),
-            hjust = 0, size = 2.8, color = "grey25", lineheight = 0.95, fontface = "italic") +
+            hjust = 0, size = 3.9, color = "grey25", lineheight = 0.95, fontface = "italic") +
   # label the stress contaminants dragging the Hif1a pile to the right
   ggrepel::geom_text_repel(
     data = label_df, aes(x = aligned_contrib, y = 1, label = target),
-    color = COL_STRESS, size = 2.7, fontface = "bold",
+    color = COL_STRESS, size = 3.8, fontface = "bold",
     direction = "both",
     ylim = c(NA, 0.78),          # push labels below the point strip (away from diamond/formula)
     xlim = c(NA, NA),
@@ -193,11 +173,11 @@ fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
     seed               = 42) +
   # the literal ULM formula, stated once (small + plain)
   geom_text(data = formula_df, aes(x = x, y = y, label = lab),
-            hjust = 0, size = 2.7, color = "grey25", fontface = "italic") +
+            hjust = 0, size = 3.8, color = "grey25", fontface = "italic") +
   scale_color_manual(values = member_cols, name = NULL, drop = FALSE) +
-  scale_size_manual(values = c("heat-shock/stress contaminant" = 2.6,
-                               "HIF-specific member" = 2.6,
-                               "regulon member" = 1.5), guide = "none") +
+  scale_size_manual(values = c("heat-shock/stress contaminant" = 3.0,
+                               "HIF-specific member" = 3.0,
+                               "regulon member" = 1.8), guide = "none") +
   scale_alpha_manual(values = c("heat-shock/stress contaminant" = 0.95,
                                 "HIF-specific member" = 0.95,
                                 "regulon member" = 0.45), guide = "none") +
@@ -210,12 +190,37 @@ fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
       "A broad (promiscuous) regulon scores high off any high-|t| members it happens to contain -- here generic heat-shock/stress genes\n",
       "(purple) push the ", TF_A, " pile right, scoring a heat-induced glycolytic/stress program that partially overlaps HIF targets.\n",
       "A small, specific regulon (", TF_B, ") only piles up when its OWN targets coherently move -- on this contrast they do not."),
-    x = "Aligned (signed) target contribution  =  sign(mor) × t_gene  (shared axis)",
-    y = NULL,
-    caption = cap
+    x = "Aligned (signed) target contribution  =  sign(mor) x t_gene  (shared axis)",
+    y = NULL
   ) +
-  base_theme
+  project_theme(config = FIG_CFG) +
+  theme(legend.position = "bottom")
 
-save_fig(fig3m, "fig3m_ulm_mechanic.pdf", width = 9.5, height = 7.0, deck_h = 6.2)
+# Source-table neighbor: the per-member tidy frame the figure draws (key columns).
+fig3m_tbl <- dat[, c("tf", "target", "aligned_contrib", "is_stress_contaminant",
+                     "member_class")]
+
+save_overview(
+  fig3m, STAGE, "fig3m_ulm_mechanic",
+  table = fig3m_tbl,
+  finding = paste0(
+    "decoupleR-ULM scores a TF by the regulon-weighted pile-up of aligned target ",
+    "contributions: a promiscuous regulon (", TF_A, ") scores high off generic ",
+    "heat-shock/stress contaminants it happens to contain (a heat-induced ",
+    "glycolytic/stress program partially overlapping HIF targets), while a small ",
+    "specific regulon (", TF_B, ") does not pile up. This is the scoring MECHANIC, ",
+    "not a biology claim; the Hif1a panel is NOT 'the HIF program'/'Hif1a the TF'. ",
+    PROV),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.base_size=16; figures.base_size_column=9",
+  input = "03_results/04_tf/tables/fig3m_ulm_mechanic_{data,summary}.csv",
+  how_to_read = paste0(
+    "Two panels share the x-axis = aligned (signed) target contribution = ",
+    "sign(mor) x t_gene. Each jittered point is one regulon member; purple = ",
+    "heat-shock/stress contaminant, orange = HIF-specific member, grey = other. ",
+    "The grey diamond + dashed rule sit at the regulon's weighted center (the ULM ",
+    "score); a high score is literally a rightward pile-up. Pedagogical (claim ",
+    "tier: illustrative mechanic, not a quantitative result)."),
+  config = FIG_CFG)
 
 cat("[DONE] 03d_ulm_mechanic_viz.R -- fig3m rendered (no statistics).\n")

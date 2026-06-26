@@ -29,48 +29,24 @@
 #   - fig3r_membership_data.csv         (gene, tf, in_regulon, gene_heat_t,
 #                                        tf_heatmain_score, gene_contrib, tf_family)
 #
-# Outputs:
-#   - 03_results/04_tf/figures/fig3{p,q,r}_*.pdf  (canonical, STAMPED)
-#   - 03_results/04_tf/deck_assets/fig3{p,q,r}_*.png  (DECK_EXPORT=1; clean,
-#       caption-stripped)
+# Outputs (figure-style contract, dual variants):
+#   - 03_results/04_tf/figures/_overview/fig3{p,q,r}_*.{print.pdf,screen.png}
+#   - 03_results/04_tf/tables/_overview/fig3{p,q,r}_*.csv
+#   - 03_results/04_tf/README.md captions (via save_overview)
 #
-# Dependencies: config.R; ggplot2, dplyr, patchwork
+# Dependencies: config.R (palettes); figure_style.R (theme+save); ggplot2, dplyr, patchwork
 # =============================================================================
 
 source("02_analysis/config/config.R")
-load_packages(extra = c("patchwork"))   # ggplot2 + dplyr + patchwork
+source("02_analysis/helpers/figure_style.R")       # contract: project_theme + save_overview; FIG_CFG
+suppressPackageStartupMessages({ library(ggplot2); library(dplyr); library(patchwork) })
 
+STAGE  <- "04_tf"
+SCRIPT <- "02_analysis/scripts/03g_nonidentifiability_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
-FIG_DIR <- stage_dir("04_tf", "figures")
 
-cap <- provisional_caption()
+PROV <- provisional_caption()
 rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
-
-DECK_EXPORT <- nzchar(Sys.getenv("DECK_EXPORT"))
-DECK_DIR    <- file.path(DIR_RESULTS, "04_tf", "deck_assets")
-if (DECK_EXPORT) dir.create(DECK_DIR, recursive = TRUE, showWarnings = FALSE)
-
-# save_fig: always writes the STAMPED PDF; under DECK_EXPORT also writes a clean
-# caption-stripped PNG. For patchwork composites the caption lives on the
-# assembled object, so we strip via & labs(caption = NULL) when needed.
-save_fig <- function(plot, fname, width, height, deck_w = 10, deck_h = 5.625,
-                     patchwork = FALSE) {
-  ggsave(file.path(FIG_DIR, fname), plot, width = width, height = height)
-  cat(sprintf("  wrote figures/%s\n", fname))
-  if (DECK_EXPORT) {
-    png_name <- sub("\\.pdf$", ".png", fname)
-    clean <- if (patchwork) plot + plot_annotation(caption = NULL)
-             else plot + labs(caption = NULL)
-    ggsave(file.path(DECK_DIR, png_name), clean, width = deck_w, height = deck_h, dpi = 300)
-    cat(sprintf("  wrote deck_assets/%s (clean, no embargo stamp)\n", png_name))
-  }
-}
-
-base_theme <- theme_minimal(base_size = 11) +
-  theme(panel.grid.minor = element_blank(),
-        plot.title    = element_text(face = "bold", size = 12),
-        plot.subtitle = element_text(size = 9, color = "grey25"),
-        plot.caption  = element_text(size = 7, color = "grey45", hjust = 0, face = "italic"))
 
 # -----------------------------------------------------------------------------
 # FAMILY PALETTE -- single source of truth shared across fig3p/3q/3r so a family
@@ -135,13 +111,13 @@ fig3p <- ggplot(plot_p, aes(x = score, y = ypos, color = family)) +
   # discontinuity rule between the top-22 block (ypos>=1) and the appended Hsf1 (ypos=0)
   geom_hline(yintercept = 0.5, linetype = "22", color = "grey60", linewidth = 0.4) +
   geom_segment(aes(xend = 0, yend = ypos), linewidth = 0.6) +
-  # Hif1a emphasis: a larger outlined ring under the point
+  # Hif1a emphasis: a larger outlined ring under the point (darker + thicker for print contrast)
   geom_point(data = subset(plot_p, tf == "Hif1a"),
-             color = "black", size = 5.4, shape = 21, fill = NA, stroke = 1.1) +
-  geom_point(size = 3.0) +
-  geom_point(data = subset(plot_p, tf == "Hif1a"), size = 3.0) +
+             color = "grey5", size = 6.0, shape = 21, fill = NA, stroke = 1.4) +
+  geom_point(size = 3.2) +
+  geom_point(data = subset(plot_p, tf == "Hif1a"), size = 3.2) +
   geom_text(aes(label = lab), hjust = 0, nudge_x = max(plot_p$score) * 0.02,
-            size = 3.0, color = "grey15") +
+            size = 4.0, color = "grey15") +
   scale_color_manual(values = FAMILY_COLORS, drop = TRUE, name = "TF family/role") +
   scale_x_continuous(limits = c(0, xmax), expand = expansion(mult = c(0, 0.02))) +
   scale_y_continuous(breaks = NULL) +
@@ -153,17 +129,27 @@ fig3p <- ggplot(plot_p, aes(x = score, y = ypos, color = family)) +
       "stress / immediate-early / NF-kB regulators, not atop a hypoxia-specific peak. Hsf1 -- the canonical heat-shock TF --\n",
       "is far down at #50 (3.20, appended below the dashed break). Colored by curated TF family; this ranking crowns no TF."),
       nrow(p), hif_score, p$p_value[p$tf == "Hif1a"]),
-    x = "heat-MAIN (Temp_main) ULM activity score", y = NULL,
-    caption = cap
+    x = "heat-MAIN (Temp_main) ULM activity score", y = NULL
   ) +
-  base_theme +
-  theme(legend.position = "right",
-        legend.key.size = unit(0.8, "lines"),
-        legend.text = element_text(size = 7.5),
-        legend.title = element_text(size = 8))
+  project_theme(config = FIG_CFG)
 
-save_fig(fig3p, "fig3p_heatmain_ranking.pdf", width = 10, height = 6.2,
-         deck_w = 10, deck_h = 6.0)
+save_overview(
+  fig3p, STAGE, "fig3p_heatmain_ranking",
+  table = plot_p[, c("rank", "tf", "score", "family", "is_hif")],
+  finding = paste0(
+    "On heat-MAIN there is no clean winner: Hif1a is #9 in a crowd of co-elevated ",
+    "stress / immediate-early / NF-kB TFs separated by tiny gaps (all p~1e-7), and ",
+    "the canonical heat-shock TF Hsf1 is far down at #50. This ranking crowns NO ",
+    "TF -- not Hif1a, not Jun/AP-1, not Epas1/HIF2a. ", PROV),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.top_n=22; figures.base_size=16; figures.base_size_column=9",
+  input = "03_results/04_tf/tables/fig3p_heatmain_ranking_data.csv",
+  how_to_read = paste0(
+    "Ranked dotplot: each row is a TF, x = heat-MAIN ULM activity score, colored by ",
+    "curated TF family. Top-22 shown; Hsf1 appended below the dashed discontinuity ",
+    "(it is #50). The dark ring marks Hif1a (#9). Claim tier: descriptive -- the ",
+    "tiny gaps mean no single TF is identifiable as the driver."),
+  config = FIG_CFG)
 
 # =============================================================================
 # FIG 3q -- "Hif1a's targets belong to everyone."
@@ -182,7 +168,7 @@ qd$lab <- sprintf("%.0f%%  (%d)", qd$pct_of_hif1a_set, qd$shared_targets)
 
 fig3q <- ggplot(qd, aes(x = pct_of_hif1a_set, y = tf, fill = family)) +
   geom_col(width = 0.72) +
-  geom_text(aes(label = lab), hjust = -0.08, size = 3.0, color = "grey15") +
+  geom_text(aes(label = lab), hjust = -0.08, size = 4.0, color = "grey15") +
   scale_fill_manual(values = FAMILY_COLORS, drop = TRUE, name = "TF family/role") +
   scale_x_continuous(limits = c(0, max(qd$pct_of_hif1a_set) * 1.18),
                      expand = expansion(mult = c(0, 0.02)),
@@ -195,17 +181,29 @@ fig3q <- ggplot(qd, aes(x = pct_of_hif1a_set, y = tf, fill = family)) +
       "(Trp53), NF-kB, AP-1/immediate-early, proliferation (Myc) -- none hypoxia-specific. Bars = % of the 353-target set the\n",
       "TF also regulates (shared count in parentheses); this is why Hif1a's heat-MAIN signal cannot be attributed to Hif1a alone."),
     x = "share of Hif1a's 353 targets also regulated by this TF",
-    y = NULL, caption = cap
+    y = NULL
   ) +
-  base_theme +
-  theme(legend.position = "right",
-        legend.key.size = unit(0.8, "lines"),
-        legend.text = element_text(size = 7.5),
-        legend.title = element_text(size = 8),
-        panel.grid.major.y = element_blank())
+  project_theme(config = FIG_CFG) +
+  theme(panel.grid.major.y = element_blank())
 
-save_fig(fig3q, "fig3q_coregulators.pdf", width = 10, height = 6.0,
-         deck_w = 10, deck_h = 5.8)
+save_overview(
+  fig3q, STAGE, "fig3q_coregulators",
+  table = qd[, c("tf", "shared_targets", "pct_of_hif1a_set", "family")],
+  finding = paste0(
+    "92% of Hif1a's 353 CollecTRI targets are co-regulated (mean 22 other TFs ",
+    "each); the top sharers are the network's most promiscuous regulators ",
+    "(Sp1, Trp53, NF-kB, AP-1, Myc), none hypoxia-specific -- so Hif1a's heat-MAIN ",
+    "signal cannot be attributed to Hif1a alone, and no co-regulator is crowned ",
+    "the driver. ", PROV),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.top_n=15; figures.base_size=16; figures.base_size_column=9",
+  input = "03_results/04_tf/tables/fig3q_coregulators_data.csv",
+  how_to_read = paste0(
+    "Horizontal bars (top-15 sharers): x = % of Hif1a's 353 targets that this TF ",
+    "also regulates (shared count in parentheses), colored by TF family. None of ",
+    "the top sharers is hypoxia-specific. Claim tier: descriptive -- targets ",
+    "'belong to everyone', so the signal is not Hif1a-specific."),
+  config = FIG_CFG)
 
 # =============================================================================
 # FIG 3r -- THE unifier: shared ownership grid.
@@ -214,6 +212,13 @@ save_fig(fig3q, "fig3q_coregulators.pdf", width = 10, height = 6.0,
 # grid of regulon membership, with a LEFT marginal bar (gene heat-MAIN t) and a
 # TOP marginal bar (TF heat-MAIN ULM score) so the reader sees BOTH margins read
 # high. Rows ordered by Hif1a signed contrib; columns by TF heat-MAIN score.
+#
+# PATCHWORK NOTE: each sub-panel carries project_theme(config = FIG_CFG) so the
+# composite is already on-contract BEFORE save_figure's per-variant re-theme.
+# The marginal panels then blank their redundant shared axis (structural layout,
+# not a styling-floor override) so the three panels align. save_figure adds
+# project_theme(variant=) to the assembled patchwork; we verify both .print and
+# .screen render filled (not blank) after the round trip.
 # =============================================================================
 cat("[fig3r] shared-ownership grid ...\n")
 m <- rd("fig3r_membership_data.csv")
@@ -244,11 +249,10 @@ grid <- ggplot(m, aes(x = tf, y = gene)) +
   scale_fill_manual(values = c("0" = "grey92", "1" = MEMBER_FILL), guide = "none") +
   scale_x_discrete(position = "bottom") +
   labs(x = NULL, y = NULL) +
-  theme_minimal(base_size = 10) +
+  project_theme(config = FIG_CFG, legend = FALSE) +
   theme(panel.grid = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1, face = col_face,
-                                   color = col_color, size = 8),
-        axis.text.y = element_text(size = 8),
+                                   color = col_color),
         plot.margin = margin(2, 4, 2, 2))
 
 # --- LEFT marginal: gene heat-MAIN t (one bar per row, aligned to grid y) --
@@ -258,12 +262,10 @@ left <- ggplot(gdf, aes(x = gene_heat_t, y = gene)) +
   geom_col(fill = "grey45", width = 0.7) +
   scale_x_reverse(expand = expansion(mult = c(0.05, 0))) +
   labs(x = "gene t\n(heat-MAIN)", y = NULL) +
-  theme_minimal(base_size = 10) +
+  project_theme(config = FIG_CFG, legend = FALSE) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major.y = element_blank(),
-        axis.text.y = element_blank(),
-        axis.title.x = element_text(size = 7.5, color = "grey35"),
-        axis.text.x = element_text(size = 7),
+        axis.text.y = element_blank(),       # structural: shares grid's y
         plot.margin = margin(2, 2, 2, 2))
 
 # --- TOP marginal: TF heat-MAIN ULM score (one bar per column, aligned x) --
@@ -274,12 +276,10 @@ topbar <- ggplot(tdf, aes(x = tf, y = tf_heatmain_score)) +
   geom_col(fill = top_fill, width = 0.7) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
   labs(x = NULL, y = "TF score\n(heat-MAIN)") +
-  theme_minimal(base_size = 10) +
+  project_theme(config = FIG_CFG, legend = FALSE) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.title.y = element_text(size = 7.5, color = "grey35"),
-        axis.text.y = element_text(size = 7),
+        axis.text.x = element_blank(),       # structural: shares grid's x
         plot.margin = margin(2, 4, 2, 2))
 
 # --- assemble: blank | topbar  /  left | grid  ---------------------------
@@ -295,15 +295,30 @@ fig3r <- comp + plot_annotation(
     "sharers (columns, ordered by heat-MAIN ULM score; Hif1a in orange). Filled = the gene is in that TF's CollecTRI regulon.\n",
     "LEFT bar = each gene's heat-MAIN t (all high -> the rows are genuinely heat-driven); TOP bar = each TF's heat-MAIN score\n",
     "(all high -> every column reads as 'active'). Because the same heat-driven genes sit in many regulons, the contrast cannot\n",
-    "single out Hif1a -- or any one TF -- as the driver."),
-  caption = cap,
-  theme = theme(plot.title    = element_text(face = "bold", size = 12),
-                plot.subtitle = element_text(size = 9, color = "grey25"),
-                plot.caption  = element_text(size = 7, color = "grey45",
-                                             hjust = 0, face = "italic"))
-)
+    "single out Hif1a -- or any one TF -- as the driver."))
 
-save_fig(fig3r, "fig3r_shared_ownership.pdf", width = 10, height = 7.6,
-         deck_w = 10, deck_h = 6.8, patchwork = TRUE)
+# fig3r table neighbor: the membership grid the figure draws.
+fig3r_tbl <- m[, c("gene", "tf", "in_regulon", "gene_heat_t",
+                   "tf_heatmain_score", "gene_contrib")]
+
+save_overview(
+  fig3r, STAGE, "fig3r_shared_ownership",
+  table = fig3r_tbl,
+  finding = paste0(
+    "The same heat-driven genes populate many TFs' CollecTRI regulons: every gene ",
+    "(LEFT bar) and every TF (TOP bar) reads high on heat-MAIN, so the contrast ",
+    "cannot single out Hif1a -- or any one TF -- as the driver. None is identifiable. ",
+    PROV),
+  script = SCRIPT, fn = "save_overview",
+  config_kv = "figures.base_size=16; figures.base_size_column=9; patchwork=TRUE",
+  input = "03_results/04_tf/tables/fig3r_membership_data.csv",
+  how_to_read = paste0(
+    "Center grid: rows = top-20 heat-MAIN-driving genes of Hif1a's regulon (signed ",
+    "contribution order), columns = Hif1a + its 12 largest target-sharers (heat-MAIN ",
+    "ULM score order; Hif1a orange + bold). Teal tile = the gene is in that TF's ",
+    "regulon. LEFT bar = gene heat-MAIN t; TOP bar = TF heat-MAIN score (both read ",
+    "high). Claim tier: descriptive non-identifiability -- shared ownership, no ",
+    "single driver."),
+  width = 10, height = 7.6, config = FIG_CFG)
 
 cat("[DONE] 03g_nonidentifiability_viz.R -- fig3p/3q/3r rendered from tidy tables (no statistics).\n")
