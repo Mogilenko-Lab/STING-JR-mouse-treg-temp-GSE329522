@@ -1,0 +1,4 @@
+"contrast","network","label","success","n_vertices","n_edges","solution_weight","mean_log2FC"
+"WT_heat","kegg","WT: heat (39 vs 37 °C)",TRUE,7,6,47.0075007,0.740240574
+"KO_heat","kegg","cGAS-KO: heat (39 vs 37 °C)",TRUE,18,17,44.82745,-0.111999141
+"Temp_main","kegg","Heat main effect (pooled genotypes)",TRUE,6,5,48.3233636,0.764806702

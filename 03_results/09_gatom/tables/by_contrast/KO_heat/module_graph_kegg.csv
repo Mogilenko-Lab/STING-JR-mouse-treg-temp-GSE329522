@@ -1,0 +1,36 @@
+"contrast","network","type","label","log2FC","pval"
+"KO_heat","kegg","enzyme_edge","Galm",0.989823223,1.39551049e-21
+"KO_heat","kegg","enzyme_edge","Glb1",0.50669619,1.19640532e-15
+"KO_heat","kegg","enzyme_edge","Idnk",-0.468691311,5.15511456e-12
+"KO_heat","kegg","enzyme_edge","Adpgk",-0.433029248,1.78521455e-12
+"KO_heat","kegg","enzyme_edge","Plcg1",-0.507643842,3.07360954e-14
+"KO_heat","kegg","enzyme_edge","G6pdx",-0.350346284,4.46670356e-11
+"KO_heat","kegg","enzyme_edge","H6pd",-0.584882814,1.36324384e-11
+"KO_heat","kegg","enzyme_edge","G6pdx",-0.350346284,4.46670356e-11
+"KO_heat","kegg","enzyme_edge","Inpp5k",-0.59314877,1.82021881e-16
+"KO_heat","kegg","enzyme_edge","Isyna1",-0.0112437083,0.820172806
+"KO_heat","kegg","enzyme_edge","Mtmr7",0.660955504,4.00374513e-12
+"KO_heat","kegg","enzyme_edge","Inpp4b",-0.460201332,2.05419142e-11
+"KO_heat","kegg","enzyme_edge","Inpp1",-0.417069207,3.63872574e-10
+"KO_heat","kegg","enzyme_edge","Inpp4b",-0.460201332,2.05419142e-11
+"KO_heat","kegg","enzyme_edge","Mtmr7",0.660955504,4.00374513e-12
+"KO_heat","kegg","enzyme_edge","Inpp4b",-0.460201332,2.05419142e-11
+"KO_heat","kegg","enzyme_edge","Inpp5b",0.374589644,3.3396597e-12
+"KO_heat","kegg","metabolite_node","D-Glucose 6-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","beta-D-Glucose",NA,NA
+"KO_heat","kegg","metabolite_node","Lactose",NA,NA
+"KO_heat","kegg","metabolite_node","D-Gluconic acid",NA,NA
+"KO_heat","kegg","metabolite_node","alpha-D-Glucose",NA,NA
+"KO_heat","kegg","metabolite_node","6-Phospho-D-gluconate",NA,NA
+"KO_heat","kegg","metabolite_node","beta-D-Glucose 6-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","Inositol 1-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1-Phosphatidyl-D-myo-inositol",NA,NA
+"KO_heat","kegg","metabolite_node","D-Glucono-1,5-lactone 6-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1D-myo-Inositol 1,3,4-trisphosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1D-myo-Inositol 1,3,4,5-tetrakisphosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1D-myo-Inositol 3-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","D-myo-Inositol 1,3-bisphosphate",NA,NA
+"KO_heat","kegg","metabolite_node","D-myo-Inositol 3,4-bisphosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1-Phosphatidyl-1D-myo-inositol 3-phosphate",NA,NA
+"KO_heat","kegg","metabolite_node","Phosphatidylinositol-3,4,5-trisphosphate",NA,NA
+"KO_heat","kegg","metabolite_node","1-Phosphatidyl-1D-myo-inositol 3,4-bisphosphate",NA,NA

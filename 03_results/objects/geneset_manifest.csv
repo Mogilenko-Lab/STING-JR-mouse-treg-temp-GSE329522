@@ -1,0 +1,13 @@
+database,type,n_sets,source,cache_path
+Hallmark,msigdb,50,MSigDB H,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_Hallmark.rds
+KEGG,msigdb,139,MSigDB C2/CP:KEGG,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_KEGG.rds
+Reactome,msigdb,735,MSigDB C2/CP:REACTOME,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_Reactome.rds
+WikiPathways,msigdb,477,MSigDB C2/CP:WIKIPATHWAYS,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_WikiPathways.rds
+GO_BP,msigdb,2679,MSigDB C5/GO:BP,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_GO_BP.rds
+GO_MF,msigdb,429,MSigDB C5/GO:MF,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_GO_MF.rds
+GO_CC,msigdb,335,MSigDB C5/GO:CC,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_GO_CC.rds
+TF_Targets,msigdb,354,MSigDB C3/TFT:GTRD,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_msigdb_TF_Targets.rds
+TransportDB,custom,17,01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_custom_TransportDB.rds
+MitoPathways,custom,60,01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_custom_MitoPathways.rds
+MitoXplorer,custom,25,01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_custom_MitoXplorer.rds
+Lombardi2022_HIF,custom,1,00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds,/workspaces/STING-cGAS-GSE329522/03_results/objects/geneset_custom_Lombardi2022_HIF.rds

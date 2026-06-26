@@ -1,0 +1,9 @@
+"gene","arm","genotype","temp","mean_log2cpm","wt_heat","ko_heat","interaction","inter_adjP"
+"Ifit1","cGAS-dependent","WT","37",0.759984249,0.496594484,-0.510561814,1.0071563,0.00327810716
+"Ifit1","cGAS-dependent","WT","39",1.25657873,0.496594484,-0.510561814,1.0071563,0.00327810716
+"Ifit1","cGAS-dependent","cGASKO","37",0.0776258147,0.496594484,-0.510561814,1.0071563,0.00327810716
+"Ifit1","cGAS-dependent","cGASKO","39",-0.432936,0.496594484,-0.510561814,1.0071563,0.00327810716
+"Vegfa","no-detectable-cGAS-dependence","WT","37",4.93532378,0.969969171,0.954340868,0.015628303,1
+"Vegfa","no-detectable-cGAS-dependence","WT","39",5.90529295,0.969969171,0.954340868,0.015628303,1
+"Vegfa","no-detectable-cGAS-dependence","cGASKO","37",4.98478472,0.969969171,0.954340868,0.015628303,1
+"Vegfa","no-detectable-cGAS-dependence","cGASKO","39",5.93912559,0.969969171,0.954340868,0.015628303,1

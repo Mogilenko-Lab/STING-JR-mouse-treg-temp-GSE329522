@@ -1,0 +1,9 @@
+"method","rank","n_tfs","score","method_order","pct_rank","lab"
+"DoRothEA_ULM",1,263,6.08737314,1,0.380228137,"#1 / 263
+score=6.09"
+"CollecTRI_ULM",12,658,5.11034559,2,1.82370821,"#12 / 658
+score=5.11"
+"CollecTRI_MLM",142,658,1.13360497,3,21.5805471,"#142 / 658
+score=1.13"
+"CollecTRI_consensus",8,658,2.88979033,4,1.21580547,"#8 / 658
+score=2.89"

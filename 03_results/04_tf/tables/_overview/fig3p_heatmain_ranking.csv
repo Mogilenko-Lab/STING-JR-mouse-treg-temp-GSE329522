@@ -1,0 +1,24 @@
+"rank","tf","score","family","is_hif"
+1,"Jun",6.06145105,"AP-1/immediate-early",FALSE
+2,"Egr1",5.54191188,"AP-1/immediate-early",FALSE
+3,"Fos",5.4552984,"AP-1/immediate-early",FALSE
+4,"Sp1",5.29319701,"housekeeping",FALSE
+5,"Stat5a",5.27368752,"cytokine/STAT",FALSE
+6,"Rela",5.24945295,"NF-kB",FALSE
+7,"Ncoa1",5.24929183,"growth-factor/other-stress",FALSE
+8,"Hoxd3",5.20100597,"other",FALSE
+9,"Hif1a",5.13626311,"HIF axis",TRUE
+10,"Nfkb1",5.12470586,"NF-kB",FALSE
+11,"Jund",5.10057669,"AP-1/immediate-early",FALSE
+12,"Nfkb",4.81159529,"NF-kB",FALSE
+13,"Runx2",4.71137014,"growth-factor/other-stress",FALSE
+14,"Hsf2",4.62286173,"heat-shock",FALSE
+15,"Rel",4.56266385,"NF-kB",FALSE
+16,"Smad3",4.51146199,"growth-factor/other-stress",FALSE
+17,"Ep300",4.45894571,"growth-factor/other-stress",FALSE
+18,"Rbpj",4.36719592,"other",FALSE
+19,"Irf5",4.31465403,"other",FALSE
+20,"Ssrp1",4.28765077,"other",FALSE
+21,"Sp3",4.23916452,"housekeeping",FALSE
+22,"Stat3",4.22317985,"cytokine/STAT",FALSE
+50,"Hsf1",3.20200106,"heat-shock",FALSE

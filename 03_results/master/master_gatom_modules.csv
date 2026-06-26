@@ -1,0 +1,4 @@
+pathway_id,pathway_name,database,nes,pvalue,padj,set_size,core_enrichment,contrast,direction
+GATOM_KEGG,GATOM kegg metabolic module,GATOM,0.740240574,1.8458392100000001e-16,1.8458392100000001e-16,4,Galm/Glb1/B3gnt5/St3gal1,WT_heat,Up
+GATOM_KEGG,GATOM kegg metabolic module,GATOM,-0.111999141,3.16668074e-12,3.16668074e-12,13,Galm/Glb1/Idnk/Adpgk/Plcg1/G6pdx/H6pd/Inpp5k/Isyna1/Mtmr7/Inpp4b/Inpp1/Inpp5b,KO_heat,Down
+GATOM_KEGG,GATOM kegg metabolic module,GATOM,0.764806702,4.95613481e-20,4.95613481e-20,4,Galm/Glb1/B3gnt5/St3gal1,Temp_main,Up

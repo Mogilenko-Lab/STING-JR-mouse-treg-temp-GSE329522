@@ -22,8 +22,6 @@ A secondary forensic thread explains why Hif1a's rank varies from #1 to #142 acr
 | `02_analysis/scripts/03d_ulm_mechanic_viz.R` | VIZ — reads fig3m tables, no recomputation | `figures/fig3m_ulm_mechanic.pdf` |
 | `02_analysis/scripts/03e_heat_main_regulators.R` | COMPUTE — `run_ulm` on a fresh heat-MAIN t-stat matrix (same call as `03_decoupler_tf.R`); no ggplot | `tables/fig3n_heat_main_regulators_data.csv` |
 | `02_analysis/scripts/03e_heat_main_regulators_viz.R` | VIZ — reads fig3n table, no recomputation | `figures/fig3n_heat_main_regulators.pdf` |
-| `02_analysis/scripts/03f_experiment_tiers.R` | COMPUTE — hand-authored config table; NO statistics | `tables/fig3o_experiment_tiers_data.csv` |
-| `02_analysis/scripts/03f_experiment_tiers_viz.R` | VIZ — `theme_void` conceptual infographic; NO statistics | `figures/fig3o_experiment_tiers.pdf`, `deck_assets/fig3o_experiment_tiers.png` |
 | `02_analysis/scripts/03g_nonidentifiability.R` | COMPUTE — `run_ulm` on heat-MAIN t-stat vector + CollecTRI set-membership counting; no ggplot | `tables/fig3p_heatmain_ranking_data.csv`, `tables/fig3q_coregulators_data.csv`, `tables/fig3r_membership_data.csv` |
 | `02_analysis/scripts/03g_nonidentifiability_viz.R` | VIZ — reads the three fig3p/3q/3r tables, no recomputation; shared `FAMILY_COLORS` palette | `figures/fig3p_heatmain_ranking.{pdf,png}`, `figures/fig3q_coregulators.{pdf,png}`, `figures/fig3r_shared_ownership.{pdf,png}` |
 
@@ -313,22 +311,6 @@ MECHANISM: `03e_heat_main_regulators.R` builds a heat-MAIN t-statistic matrix (g
 | Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` on a fresh heat-MAIN t-stat matrix + BH within contrast — same call as `03_decoupler_tf.R` |
 | Input | `03_results/objects/02_de_results.rds`, `03_results/objects/net_collectri_mouse.rds` |
 | Output table | `03_results/04_tf/tables/fig3n_heat_main_regulators_data.csv` |
-
----
-
-### fig3o_experiment_tiers.pdf  *(NEW — CONCEPTUAL next-steps ladder; carries NO statistics)*
-
-**STATEMENT: The actionable next-steps ladder for the wet lab, encoding "do NOT lead with genetics." Tier 0 (cheap, start here) excludes the heat×drug-cytotoxicity confound — inactive structural analog / vehicle @ 39 °C, drug dose-response @ 39 °C, and a HIF-agnostic Tconv comparator @ 39 °C (does the drug also kill/impair Tconv?). Tier 1 (medium, run only after Tier 0) asks "is it HIF at all?" with four arms — a chaperone / proteostasis inhibitor @ 39 °C (testing whether the dominant heat-shock module is HSP90/HSP70 chaperone dependence; the fig3l `heatshock_stress` module sum = +108.54 exceeds every other curated class; readout 17-AAG / VER-155008), a glycolysis inhibitor @ 39 °C (testing whether the shared glycolytic members — ONE part of the program, NOT the dominant module — carry the dependency; this does not imply the data nominate glycolysis), an HSF1 readout / knockdown @ 39 °C (the heat-shock axis fig3n shows co-elevated), and belzutifan as a HIF2a-selective cross-check the drug cannot exclude. Tier 2 (expensive, GATED on Tiers 0–1) is the isoform mind-changer: floxed-Hif1a vs floxed-Epas1 iTreg @ 39 °C. The figure is stamped "CONCEPTUAL — not data" and carries no statistics; belzutifan is named only as a HIF2a-selective cross-check tool, not a crowning of HIF2a.**
-
-MECHANISM: A curated config table (9 rows: 3 Tier-0 arms + 4 Tier-1 arms + 2 Tier-2 arms), hand-authored in `03f_experiment_tiers.R` with NO statistical computation. The Tier-1 chaperone / proteostasis arm was added to match the heat-shock/stress dominance the data show (fig3l `heatshock_stress` module +108.54 outweighs every other curated class), and the Tier-1 glycolysis arm was reworded to test only the shared glycolytic members (one part of the program, not the dominant module) so it no longer implies the data nominate glycolysis. The viz (`03f_experiment_tiers_viz.R`) renders it as a `theme_void` conceptual infographic — an ascending-cost ladder with Tier 0 at the bottom and Tier 2 at the top, gated by ascent arrows, with per-tier cost labels (cheap → medium → expensive (gated)) and a prominent "CONCEPTUAL — not data" stamp. It is conceptual, not inferred from the data: nothing in this figure is an estimate or a test.
-
-| | |
-|---|---|
-| Script (compute) | `02_analysis/scripts/03f_experiment_tiers.R` (config table only — no statistics) |
-| Script (viz) | `02_analysis/scripts/03f_experiment_tiers_viz.R` (`theme_void` infographic — no statistics) |
-| Function | Hand-authored lookup table → fixed-coordinate ladder geometry (no `run_ulm`/`p.adjust`/`cor`/`prcomp`) |
-| Input | None (config table authored in the compute script) |
-| Output | `03_results/04_tf/figures/fig3o_experiment_tiers.pdf` (+ `deck_assets/` PNG), `03_results/04_tf/tables/fig3o_experiment_tiers_data.csv` |
 
 ---
 
@@ -689,20 +671,6 @@ MECHANISM: `03g_nonidentifiability.R` selects the top-20 Hif1a targets by signed
 
 ---
 
-### fig3o_experiment_tiers_data.csv
-
-**Hand-authored config table for the CONCEPTUAL tiered-experiment ladder (fig3o). Carries NO statistics — it is a curated plan, not inferred from the data. 9 rows: Tier 0 (3 arms — inactive analog/vehicle @ 39 °C, drug dose-response @ 39 °C, Tconv comparator @ 39 °C); Tier 1 (4 arms — chaperone/proteostasis inhibitor @ 39 °C [17-AAG / VER-155008], glycolysis inhibitor @ 39 °C, HSF1 readout/knockdown @ 39 °C, belzutifan HIF2a-selective cross-check); Tier 2 (2 arms, GATED — floxed-Hif1a, floxed-Epas1).**
-
-9 rows × 8 columns. `tier` = 0 | 1 | 2 (ascending cost); `tier_label`; `experiment`; `what_it_excludes_or_tests`; `readout`; `cost_tier` = cheap | medium | expensive; `gate` = the licensing rule for that tier; `row_in_tier` = arm index within the tier.
-
-| | |
-|---|---|
-| Script (compute) | `02_analysis/scripts/03f_experiment_tiers.R` |
-| Function | Hand-authored lookup table — no statistical functions |
-| Input | None (config authored in the script) |
-
----
-
 ## Reproduction
 
 ```bash
@@ -740,3 +708,507 @@ All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`, `03f_`) contain no `
 - **fig3n estimator**: fig3n scores are decoupleR-ULM — the SAME `run_ulm(.mor="mor", minsize=5)` estimator as fig3a/fig3c/fig3k, computed on a fresh heat-MAIN t-stat matrix — and ARE axis-comparable to those figures. They equal the `master_tf_activities.csv` `nes` column only because that column is the ULM `score` written under a legacy schema name (`nes = score`); the `nes` name is a misnomer kept for master-schema compatibility, NOT a GSEA score. The Hsf1 cGAS×heat interaction raw p (0.022) is non-significant after BH correction (padj = 0.515) and must not be cited as evidence of cGAS-dependence.
 - **fig3d + fig3e reinstated into the deck spine** (serendipity-resolution decision, `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`): they carry the "how the collaborator got #1, and why it isn't robust" mechanism — regulon dilution (#1→#12) and collinearity redistribution (#12→#142) — and sit between fig3l and fig3c. This overrides the earlier audit's "archive fig3e" vote.
 - **Archive figures (not in the deck; canonical PDFs/tables retained)**: fig3b, fig3f, fig3j×2, and **lombardi_recurrence** are forensic/supplement backups (fig3b's broad-program point is made more sharply by fig3g/fig3l; fig3f risks the "consensus recovers HIF1a" mis-read; fig3j belongs in the supplement as the full per-method audit). Canonical artifacts kept, just not on the deck spine.
+
+## tables/_overview/fig3a_tf_interaction_axes.csv
+
+Plot-ready TF activity data for fig3a written by `save_overview()`: CollecTRI ULM scores and BH-adjusted p-values for the Interaction contrast panel (29 TFs), factor-ordered by score for lollipop rendering.
+
+**How to read:** Each row = one TF. `source` = TF gene symbol; `score` = ULM activity on the Interaction contrast (Interaction = WT_heat − KO_heat; positive = more active when cGAS is present); `padj` = BH-adjusted p-value within the Interaction contrast; `axis` = HIF / IFN / other; `sig` = logical padj < 0.05; `direction` = Up / Down. Rows ordered by ascending score for bottom-to-top lollipop layout. Key values: Irf3 +5.93 padj = 1.04×10⁻⁶ (sig); Hif1a −0.19 padj = 0.97 (NS). Claim tier L3 (n=5, underpowered null).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.axis_colors` | `03_results/04_tf/tables/fig3a_tf_interaction_axes_data.csv` |
+
+## tables/_overview/fig3b_top_tf_by_contrast.csv
+
+Plot-ready data for fig3b: top-N activated and suppressed TFs (CollecTRI ULM) per contrast, filtered to at most `figures.top_n` = 20 per direction per contrast by |score|, with a `row_key` integer for within-facet ordering.
+
+**How to read:** Each row = one TF × contrast combination. `contrast` = WT_heat / KO_heat / Temp_main / Interaction; `source` = TF symbol; `score` = ULM; `padj` = BH within contrast; `direction` = Up / Down; `rank` = rank within direction within contrast; `axis` = HIF / IFN / other; `key_tf` = logical (HIF/IFN watchlist); `sig` = logical padj < 0.05; `row_key` = plot ordering integer. Claim tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `figures.top_n=20; design.axis_colors` | `03_results/04_tf/tables/fig3b_top_tf_by_contrast_data.csv` |
+
+## tables/_overview/fig3c_hif1a_rank_cascade.csv
+
+Plot-ready data for fig3c: Hif1a rank, score, n_tfs, and pct_rank across four inference method/network combinations on the WT_heat contrast, documenting the #1 → #12 → #142 → #8 cascade.
+
+**How to read:** 4 rows × 5 columns. `method` = DoRothEA_ULM / CollecTRI_ULM / CollecTRI_MLM / CollecTRI_consensus; `rank` = integer rank among all scored TFs by descending score (1 = most activated); `n_tfs` = total TFs surviving minsize=5; `score` = Hif1a activity estimate; `pct_rank` = 100 × rank / n_tfs. Read left to right as the cascade: the rank is not a stable biological signal, it is a method/network artefact. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3c_hif1a_rank_cascade_data.csv` |
+
+## tables/_overview/fig3d_regulon_swap.csv
+
+Plot-ready data for fig3d: per-target WT_heat limma t-statistics for all genes in the union of the DoRothEA and CollecTRI Hif1a regulons, classified by network membership.
+
+**How to read:** Each row = one gene (384 total in union). `target` = gene symbol; `in_dorothea` / `in_collectri` = logical membership; `t_wt` = WT_heat limma t-statistic; `membership` = both (n = 101) / dorothea_only (n = 30) / collectri_only (n = 252); `abs_t` = |t_wt|; `high_t` = logical |t_wt| ≥ 2. The CollecTRI-only targets straddle zero (mixed sign), diluting the mor-weighted ULM mean and explaining the #1 → #12 rank drop. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3d_regulon_swap_data.csv` |
+
+## tables/_overview/fig3e_mlm_collinearity.csv
+
+Plot-ready data for fig3e: per-target co-regulator count for all 353 Hif1a CollecTRI targets on the WT_heat contrast, demonstrating that 92% are shared with ≥1 other CollecTRI TF (mean ~22 co-regulators per target).
+
+**How to read:** Each row = one gene (353 total). `target` = gene symbol; `n_other_TFs` = number of other CollecTRI TFs also targeting this gene (Hif1a excluded); `t_wt` = WT_heat limma t-statistic; `co_regulated` = logical, n_other_TFs ≥ 1. The high co-regulation count explains why the multivariate MLM re-distributes Hif1a's shared signal, collapsing its rank from #12 (ULM) to #142 (MLM). Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3e_mlm_collinearity_data.csv` |
+
+## tables/_overview/fig3f_consensus_zmix.csv
+
+Plot-ready data for fig3f: per-statistic folded-z scores for Hif1a on the WT_heat CollecTRI run, showing the five-to-one univariate-vs-multivariate vote that re-inflates Hif1a's consensus rank to #8.
+
+**How to read:** 6 rows × 5 columns. `source` = "Hif1a"; `statistic` = ulm / mlm / wsum / norm_wsum / corr_wsum / consensus; `z_score` = folded z (sign-symmetric sd standardisation per statistic); `family` = univariate / multivariate / consensus; `canonical` = logical. The lone MLM bar (z = 0.85) is outvoted by four univariate-family statistics (z = 2.44–4.31); consensus = unweighted mean = 2.89. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3f_consensus_zmix_data.csv` |
+
+## tables/_overview/fig3g_target_decomposition.csv
+
+Plot-ready data for fig3g: signed contribution (sign(mor) × t_wt) for all 353 Hif1a CollecTRI targets ranked by contribution, classified by biological specificity class, plus a `legend_class` column for the heat-shock/stress highlight overlay.
+
+**How to read:** 353 rows. `source` = "Hif1a"; `target` = gene symbol; `mor` = ±1 (mode of regulation from CollecTRI); `t_wt` = WT_heat limma t-statistic; `contrib` = sign(mor) × t_wt (positive = pushes ULM score up); `class` = hypoxic HIF core (4 genes: Pdk1/Bnip3/Bnip3l/Car9, REPRESSED, sum = −8.46) / shared/glycolytic (9 genes, sum = +39.81) / other (340 genes, 91.8% of total); `rank` = rank position in the contribution landscape (1 = most negative); `legend_class` = re-label for the heat-shock/stress highlight. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
+
+## tables/_overview/fig3h_lombardi_vs_phylo.csv
+
+Plot-ready data for fig3h: ULM scores and BH-adjusted p-values for two HIF metagenes (Lombardi-100 and Phylo-16) across three contrasts (WT_heat, KO_heat, Interaction).
+
+**How to read:** 6 rows. `signature` = Lombardi-100 / Phylo-16; `condition` = WT_heat / KO_heat / Interaction; `score` = ULM activity; `p_value`; `padj` = BH within contrast; `n_genes`; `sig` = logical padj < 0.05. Both metagenes are heat-activated in both genotypes (padj ≤ 0.015); Interaction NS for both (Lombardi padj = 0.34, Phylo padj = 0.38), confirming no detectable cGAS-dependence. Caveat: each metagene collapses HIF1/HIF2 and is direction-blind. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.module_colors` | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
+
+## tables/_overview/fig3i_interaction_primer.csv
+
+Plot-ready data for fig3i: eight group-mean log2CPM values (Ifit1 and Vegfa × genotype × temperature) with pre-computed contrast logFCs and the Interaction BH-adjusted p-value.
+
+**How to read:** 8 rows × ~9 columns. `gene` = Ifit1 / Vegfa; `arm` = cGAS-dependent / no-detectable-cGAS-dependence; `genotype` = WT / cGASKO; `temp` = 37 / 39 (°C); `mean_log2cpm`; `wt_heat` = WT heat logFC; `ko_heat` = KO heat logFC; `interaction` = Interaction logFC; `inter_adjP` = BH-adjusted Interaction p-value. Ifit1: Interaction logFC = +1.007, adjP = 0.003 (diverging slopes = cGAS-dependent); Vegfa: Interaction ~0, adjP ~1.000 (parallel slopes = no detectable cGAS-dependence). Claim tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors; colors.diverging` | `03_results/04_tf/tables/fig3i_interaction_primer_data.csv` |
+
+## tables/_overview/fig3j_topTF_allmethods_WT_heat.csv
+
+Plot-ready data for fig3j (WT_heat panel): top-12 activated and suppressed TFs per decoupleR statistic on the WT_heat contrast, across all six statistics; scores are NOT comparable across statistics.
+
+**How to read:** Each row = one TF × statistic combination. `contrast` = WT_heat; `statistic` = ulm / mlm / wsum / norm_wsum / corr_wsum / consensus; `source` = TF symbol; `score`; `rank` (within statistic); `direction` = Up / Down; `axis` = HIF / IFN / other; `key_tf` = logical. Hif1a is consistently high-ranked under five univariate-family statistics (#3–#12) but collapses to #142 under MLM. Compare rank and identity across statistics — not raw scores. Claim tier: methodological comparison.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `make_fig3j` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+## tables/_overview/fig3j_topTF_allmethods_Interaction.csv
+
+Plot-ready data for fig3j (Interaction panel): top-12 activated and suppressed TFs per decoupleR statistic on the Interaction contrast, across all six statistics; HIF axis uniformly low-ranked across all six methods.
+
+**How to read:** Each row = one TF × statistic combination. `contrast` = Interaction; `statistic` = ulm / mlm / wsum / norm_wsum / corr_wsum / consensus; `source`; `score`; `rank`; `direction`; `axis`; `key_tf`. Hif1a is bottom-half across all six statistics on the Interaction contrast (ulm #423, mlm #248, consensus #307), confirming the IFN-significant / HIF-flat asymmetry is method-robust. Scores not comparable across statistics. Claim tier: methodological comparison.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `make_fig3j` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+## tables/_overview/fig3k_method_rank_divergence.csv
+
+Plot-ready data for fig3k: per-TF ranks across all six decoupleR statistics for a focused TF set on the WT_heat contrast, with Spearman rho of each statistic vs ULM annotated (MLM rho = 0.619; all others 0.968–0.996).
+
+**How to read:** Each row = one TF × statistic combination. `contrast` = WT_heat (primarily); `source` = TF symbol; `statistic`; `rank` = integer rank among 658 TFs (1 = most activated); `score`. Key rank collapses under MLM: Rela ulm #3 → mlm #350; Nfkb1 ulm #6 → mlm #86; Hif1a ulm #12 → mlm #142. Spearman rho values are stored in the sibling `fig3k_method_rank_spearman.csv`. Claim tier: methodological rank divergence.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3k_method_rank_divergence_data.csv` |
+
+## tables/_overview/fig3l_hif_attribution.csv
+
+Plot-ready data for fig3l: per-target signed contributions for the 15 curated Hif1a regulon members bucketed into five biological modules, with the 339 other_unclassified genes represented as an aggregate row.
+
+**How to read:** Each curated row = one gene. `source` = "Hif1a"; `target`; `t_wt` = WT_heat t-statistic (copied from fig3g; no recomputation); `contrib` = sign(mor) × t_wt; `module` = heatshock_stress / shared_angio_glucose / autoreg_feedback / hif1a_hypoxic_core / other_unclassified; `isoform_attribution` = non-HIF (stress) / shared HIF1/HIF2 / HIF1a-preferential-feedback / HIF1a-selective / unclassified; `direction` = Up / Down. Key result: heatshock_stress sum = +108.54 (7 genes, all UP); hif1a_hypoxic_core sum = −8.46 (4 genes, ALL DOWN). Claim tier: descriptive target attribution.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03c_hif_program_attribution_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; modules` | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv` |
+
+## tables/_overview/fig3m_ulm_mechanic.csv
+
+Plot-ready data for fig3m: aligned contributions for the Hif1a (n = 353) and Stat2 (n = 32) regulons side by side, with a `is_stress_contaminant` flag identifying the seven heat-shock/stress genes driving Hif1a's rightward pile-up.
+
+**How to read:** 385 rows. `tf` = Hif1a / Stat2; `regulon_class` = promiscuous / specific; `target`; `mor` = ±1; `t_wt` = WT_heat limma t-statistic; `aligned_contrib` = sign(mor) × t_wt; `is_stress_contaminant` = logical (TRUE for {Hspa1a, Timp1, Sdc1, Cdkn1a, Serpine1, Eno2, Spp1} within the Hif1a regulon). Values are copies/joins from fig3g and CollecTRI — no run_ulm called. A high ULM score is literally a rightward pile-up; the Stat2 panel shows a dispersed, near-zero distribution. Claim tier: illustrative mechanic.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03d_ulm_mechanic_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3m_ulm_mechanic_data.csv` |
+
+## tables/_overview/fig3n_heat_main_regulators.csv
+
+Plot-ready data for fig3n: decoupleR-ULM scores and BH padj for the heat-shock / HIF / IFN axis TFs across heat-MAIN contrasts (Temp_main, WT_heat, KO_heat), showing Hsf1 significantly co-elevated alongside Hif1a and Epas1.
+
+**How to read:** 24 rows. `tf` = Hsf1 / Hif1a / Epas1 / Irf3 / Stat1 / Stat2 / Nfkb1 / Rela; `contrast` = Temp_main / WT_heat / KO_heat; `score` = decoupleR-ULM activity (same `run_ulm(.mor="mor", minsize=5)` call as fig3a/fig3c — scores are axis-comparable); `padj` = BH within contrast; `direction`; `axis` = heatshock / HIF / IFN. Key values: Hsf1 Temp_main +3.20 padj = 0.015 (sig); Hif1a Temp_main +5.14 padj = 2.0×10⁻⁵. Co-elevation only — no crowning of any TF as driver. Claim tier L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03e_heat_main_regulators_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3n_heat_main_regulators_data.csv` |
+
+## tables/_overview/fig3p_heatmain_ranking.csv
+
+Plot-ready data for fig3p: CollecTRI-ULM rankings for the top-22 TFs + Hsf1 on the heat-MAIN (Temp_main) contrast, showing Hif1a at #9 in a crowd of stress / immediate-early / NF-kB regulators with no clean winner.
+
+**How to read:** Each row = one TF (~23 rows: top-22 + Hsf1 appended below a visual break). `source` = TF symbol; `score` = CollecTRI ULM on Temp_main; `rank` = integer rank among 658 TFs (1 = most activated); `p_value`; `family` = curated TF family (HIF axis = orange; AP-1/immediate-early = red; NF-kB = blue; heat-shock = purple; etc.; defined by `FAMILY_COLORS` palette). Key: Jun #1 (6.06), Hif1a #9 (5.14), Hsf1 #50 (3.20). The tiny gaps between ranks mean no single TF is identifiable as the driver. Claim tier: descriptive ranking.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.top_n=22; figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3p_heatmain_ranking_data.csv` |
+
+## tables/_overview/fig3q_coregulators.csv
+
+Plot-ready data for fig3q: set-membership counts showing that the top sharers of Hif1a's 353-member CollecTRI target set are all non-hypoxia-specific regulators, making the heat-MAIN signal non-attributable to Hif1a alone.
+
+**How to read:** Each row = one TF (top-15 sharers). `source` = TF symbol; `shared_targets` = count of Hif1a's 353 targets also in this TF's CollecTRI regulon; `pct_of_hif1a_set` = shared_targets / 353 × 100; `family` = curated TF family. Top sharers: Sp1 48.4% (171), Trp53 40.5% (143), Nfkb 36.0% (127), Jun 33.4% (118), Myc 31.2% (110). For reference: Epas1 13.0% (46); Hsf1 6.8% (24). No statistical inference — pure set arithmetic over CollecTRI edges. Claim tier: descriptive.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.top_n=15; figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3q_coregulators_data.csv` |
+
+## tables/_overview/fig3r_shared_ownership.csv
+
+Plot-ready data for fig3r: cross-tabulation of the top-20 heat-MAIN-driving Hif1a targets against Hif1a and its 12 largest target-sharing TFs, with CollecTRI membership indicator and gene/TF-level marginal statistics.
+
+**How to read:** Each row = one gene × TF combination (top-20 genes × 13 TFs = 260 rows). `target` = gene symbol; `tf` = Hif1a or one of its 12 largest sharers (from fig3q); `in_regulon` = 0/1 (CollecTRI membership; teal tile in the heatmap when 1); `gene_heat_t` = gene's heat-MAIN limma t-statistic (left marginal bar); `tf_heatmain_score` = TF's heat-MAIN ULM score (top marginal bar); `contrib` = signed contribution of the gene to Hif1a's ULM score (copied from fig3g). Every gene reads high on heat-MAIN AND is claimed by multiple TFs simultaneously — shared ownership, not unique attribution. Claim tier: descriptive non-identifiability.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; patchwork=TRUE` | `03_results/04_tf/tables/fig3r_membership_data.csv` |
+
+
+## figures/_overview/fig3a_tf_interaction_axes.png
+
+On the cGAS x heat Interaction contrast, the HIF axis (Hif1a/Epas1)
+is flat/NS -- no detectable cGAS-dependence -- while IFN members
+Irf3/Stat2/Stat1 are interaction-positive.
+
+**How to read:** Lollipop x = TF activity (ULM score; Interaction = WT_heat -
+KO_heat); color/shape = TF axis (orange triangle = HIF; blue square =
+IFN/NFkB; grey = other). Glyph: * = BH padj < 0.05. Asymmetry, not
+proven independence; claim tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.axis_colors` | `03_results/04_tf/tables/fig3a_tf_interaction_axes_data.csv` |
+
+## figures/_overview/fig3b_top_tf_by_contrast.png
+
+Top activated/suppressed TFs (CollecTRI ULM) per contrast on a shared
+ULM-score x-axis: reads out what each heat arm, the temperature main
+effect, and the cGAS x heat Interaction capture.
+
+**How to read:** Four facets share the x-axis (TF activity, ULM score). Lollipop color
+= TF axis (orange = HIF; blue = IFN/NFkB; grey = other); HIF/IFN
+watchlist TFs labelled. Capped to top-20 per direction per contrast
+by |score|. Claim tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `figures.top_n=20; design.axis_colors` | `03_results/04_tf/tables/fig3b_top_tf_by_contrast_data.csv` |
+
+## figures/_overview/fig3c_hif1a_rank_cascade.png
+
+Hif1a's #1 DoRothEA ranking is method/network-fragile: it collapses
+under the CollecTRI swap (#12) and multivariate MLM de-confounding
+(#142), then is partially re-inflated by the consensus (#8).
+
+**How to read:** x = inference method/network config (left -> right reading order); y
+= Hif1a rank among activated TFs (reversed; rank #1 at top = most
+activated). Point color = ULM/consensus score (orange up / blue
+down). Labels give rank/total and score. Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3c_hif1a_rank_cascade_data.csv` |
+
+## figures/_overview/fig3d_regulon_swap.png
+
+The DoRothEA -> CollecTRI regulon swap dilutes Hif1a's ULM signal:
+the CollecTRI-only targets carry high |t| but mixed sign, so they
+cancel and drag the regulon mean down (explains the #1 -> #12 drop).
+
+**How to read:** Box+jitter of per-target WT_heat t-statistic by regulon membership
+(DoRothEA-only / shared / CollecTRI-only). The CollecTRI-only box
+straddles 0 (mixed sign), diluting the mor-weighted mean. Annotation
+gives regulon sizes. Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3d_regulon_swap_data.csv` |
+
+## figures/_overview/fig3e_mlm_collinearity.png
+
+Nearly every Hif1a target is co-regulated by many other CollecTRI
+TFs, so the multivariate MLM re-attributes Hif1a's signal away from
+it -- collapsing its score (explains the #12 -> #142 drop).
+
+**How to read:** Histogram: for each Hif1a target, how many OTHER CollecTRI TFs also
+regulate it. Dashed orange line = mean. Annotation gives the ULM ->
+MLM score/rank collapse. High co-regulation is why MLM de-confounds
+Hif1a's signal away. Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3e_mlm_collinearity_data.csv` |
+
+## figures/_overview/fig3f_consensus_zmix.png
+
+Only the multivariate MLM gives Hif1a a low folded-z; the four
+univariate statistics stay high and the consensus (their mean)
+re-inflates Hif1a back to #8 (explains the #142 -> #8 recovery).
+
+**How to read:** Bars = Hif1a folded z per decoupleR statistic; fill = statistic
+family (orange univariate / blue multivariate / grey consensus).
+Dashed line = consensus mean z. The lone low MLM bar is outvoted by
+the univariate family. Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging` | `03_results/04_tf/tables/fig3f_consensus_zmix_data.csv` |
+
+## figures/_overview/fig3g_target_decomposition.png
+
+Hif1a's positive WT_heat ULM score is built almost entirely from its
+'other' regulon members -- generic stress/ECM genes tower over the
+HIF-specific core, which is repressed. This is a heat-induced
+glycolytic/stress program partially overlapping HIF targets, not the
+canonical HIF program.
+
+**How to read:** Lollipop landscape: all 353 Hif1a regulon members ranked by signed
+contribution (sign(mor) x t_wt; + = pushes the ULM score up). Color =
+regulon class (purple heat-shock/stress; orange shared/glycolytic;
+teal repressed hypoxic core; grey other). Labelled = top stress
+drivers + the 7 HIF-specific members (the source table). Tier L3
+(n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
+
+## figures/_overview/fig3h_lombardi_vs_phylo.png
+
+A field-consensus and a hand-made HIF metagene both rise with heat in
+BOTH genotypes (Interaction NS for both): a hypoxia/provenance check
+that the hand-made list isn't idiosyncratic -- not thermal-HIF proof,
+and direction-blind to the repressed hypoxic core.
+
+**How to read:** Grouped bars = signature activity (ULM score) per condition; fill =
+HIF signature (field-consensus vs hand-made). Glyphs: * = BH padj <
+0.05, ns otherwise. Each metagene collapses HIF1/HIF2 and is
+direction-blind. Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.module_colors` | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
+
+## figures/_overview/fig3i_interaction_primer.png
+
+Reading the cGAS x heat Interaction as the difference of genotype
+heat-slopes: Ifit1 (IFN arm) slopes diverge -> large positive
+Interaction (cGAS-dependent); Vegfa (shared HIF/glycolytic target)
+slopes stay parallel -> Interaction ~0 (no detectable
+cGAS-dependence).
+
+**How to read:** Two facets (free y; same metric log2 CPM): x = temperature, lines =
+genotype (WT teal solid, cGAS-KO orange dashed). Diverging slopes =
+cGAS-dependent; parallel slopes = no detectable cGAS-dependence.
+Strip text carries the contrast values (WT heat / KO heat /
+Interaction + adjP). Tier L3 (n=5).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors; colors.diverging` | `03_results/04_tf/tables/fig3i_interaction_primer_data.csv` |
+
+## figures/_overview/fig3j_topTF_allmethods_WT_heat.png
+
+Method comparison for contrast WT_heat: lollipops show the top
+activated / suppressed TFs under all 6 decoupleR statistics.
+PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
+Cgas), pending collaborator sample sheet
+
+**How to read:** Lollipops = per-TF activity, faceted by statistic (ULM, MLM, wsum,
+norm_wsum, corr_wsum, consensus), colored by axis (HIF orange;
+IFN/NFkB blue; other grey). Key TFs are labelled. Note that y-axes
+differ (scales='free') to compare rank. Claim tier: methodological
+comparison (ranking identity).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `make_fig3j` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+## figures/_overview/fig3j_topTF_allmethods_Interaction.png
+
+Method comparison for contrast Interaction: lollipops show the top
+activated / suppressed TFs under all 6 decoupleR statistics.
+PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
+Cgas), pending collaborator sample sheet
+
+**How to read:** Lollipops = per-TF activity, faceted by statistic (ULM, MLM, wsum,
+norm_wsum, corr_wsum, consensus), colored by axis (HIF orange;
+IFN/NFkB blue; other grey). Key TFs are labelled. Note that y-axes
+differ (scales='free') to compare rank. Claim tier: methodological
+comparison (ranking identity).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `make_fig3j` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3j_allmethods_topTF_data.csv` |
+
+## figures/_overview/fig3k_method_rank_divergence.png
+
+MLM (the only multivariate estimator) reshuffles both axes on
+WT_heat: rank heatmap shows MLM is a structural outlier with a
+Spearman rho of 0.62 vs ULM, while univariate statistics sit at
+0.97-1.00. Top univariate TFs are demoted under MLM: Rela 3->350,
+Nfkb1 6->86, Hif1a 12->142. PROVISIONAL - inferred sample mapping
+(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+
+**How to read:** Rank heatmap: rows = key TFs, columns = statistics. Fill = binned
+rank quantile (bright yellow = highly activated, dark purple =
+demoted/inactive). Cell label = absolute rank. The boxed column marks
+MLM (multivariate outlier). Claim tier: methodological rank
+divergence.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03b_decoupler_method_comparison_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; statistics` | `03_results/04_tf/tables/fig3k_method_rank_divergence_data.csv; fig3k_method_rank_spearman.csv` |
+
+## figures/_overview/fig3l_hif_attribution.png
+
+Re-bucketed by curated biological module, Hif1a's positive WT_heat
+activity is carried by a heat-shock/stress fraction (all UP) while
+the HIF1a-selective hypoxic-survival core is repressed; only the
+shared/glycolytic/feedback subset rises. This is a heat-induced
+glycolytic/stress program partially overlapping HIF targets -- NOT a
+canonical hypoxic-HIF output. PROVISIONAL - inferred sample mapping
+(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+
+**How to read:** Horizontal lollipop plot: x = signed contribution = sign(mor) x t_wt
+of Hif1a targets, grouped and colored by module. Facets are ordered
+from stress/contamination (top) to hypoxic-survival core (bottom;
+diagnostic of true hypoxia, all repressed). Claim tier: descriptive
+target attribution. Note: Heat-shock genes carved out of fig3g's
+91.8% 'other' -> 90.7% residual here.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03c_hif_program_attribution_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; modules` | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv` |
+
+## figures/_overview/fig3m_ulm_mechanic.png
+
+decoupleR-ULM scores a TF by the regulon-weighted pile-up of aligned
+target contributions: a promiscuous regulon (Hif1a) scores high off
+generic heat-shock/stress contaminants it happens to contain (a
+heat-induced glycolytic/stress program partially overlapping HIF
+targets), while a small specific regulon (Stat2) does not pile up.
+This is the scoring MECHANIC, not a biology claim; the Hif1a panel is
+NOT 'the HIF program'/'Hif1a the TF'. PROVISIONAL - inferred sample
+mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator
+sample sheet
+
+**How to read:** Two panels share the x-axis = aligned (signed) target contribution =
+sign(mor) x t_gene. Each jittered point is one regulon member; purple
+= heat-shock/stress contaminant, orange = HIF-specific member, grey =
+other. The grey diamond + dashed rule sit at the regulon's weighted
+center (the ULM score); a high score is literally a rightward
+pile-up. Pedagogical (claim tier: illustrative mechanic, not a
+quantitative result).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03d_ulm_mechanic_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3m_ulm_mechanic_{data,summary}.csv` |
+
+## figures/_overview/fig3n_heat_main_regulators.png
+
+On the heat-MAIN contrasts the heat-shock regulator Hsf1 is
+significantly co-elevated (Temp_main 3.20, padj 0.015) alongside the
+HIF axis (Hif1a +5.14 / Epas1 +4.17) -- co-elevation only, NOT a
+claim that Hsf1 causes or outranks HIF, and no single master TF is
+crowned. The axis is the decoupleR-ULM score, the same estimator as
+fig3a/fig3c and cross-quotable with them. PROVISIONAL - inferred
+sample mapping (Hspa1b/Hsph1 thermometer + Cgas), pending
+collaborator sample sheet
+
+**How to read:** Lollipops = per-TF activity, faceted by heat-MAIN contrast, colored
+by axis (heat-shock purple = Hsf1; HIF orange; IFN blue; other grey).
+x = decoupleR-ULM score (CollecTRI), the SAME estimator as fig3a/3c
+-- cross-quotable, no GSEA-NES caveat. * = BH padj < 0.05. Claim
+tier: descriptive co-elevation; the equal visual weight crowns no
+master TF.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03e_heat_main_regulators_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3n_heat_main_regulators_data.csv` |
+
+## figures/_overview/fig3p_heatmain_ranking.png
+
+On heat-MAIN there is no clean winner: Hif1a is #9 in a crowd of
+co-elevated stress / immediate-early / NF-kB TFs separated by tiny
+gaps (all p~1e-7), and the canonical heat-shock TF Hsf1 is far down
+at #50. This ranking crowns NO TF -- not Hif1a, not Jun/AP-1, not
+Epas1/HIF2a. PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1
+thermometer + Cgas), pending collaborator sample sheet
+
+**How to read:** Ranked dotplot: each row is a TF, x = heat-MAIN ULM activity score,
+colored by curated TF family. Top-22 shown; Hsf1 appended below the
+dashed discontinuity (it is #50). The dark ring marks Hif1a (#9).
+Claim tier: descriptive -- the tiny gaps mean no single TF is
+identifiable as the driver.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.top_n=22; figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3p_heatmain_ranking_data.csv` |
+
+## figures/_overview/fig3q_coregulators.png
+
+92% of Hif1a's 353 CollecTRI targets are co-regulated (mean 22 other
+TFs each); the top sharers are the network's most promiscuous
+regulators (Sp1, Trp53, NF-kB, AP-1, Myc), none hypoxia-specific --
+so Hif1a's heat-MAIN signal cannot be attributed to Hif1a alone, and
+no co-regulator is crowned the driver. PROVISIONAL - inferred sample
+mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator
+sample sheet
+
+**How to read:** Horizontal bars (top-15 sharers): x = % of Hif1a's 353 targets that
+this TF also regulates (shared count in parentheses), colored by TF
+family. None of the top sharers is hypoxia-specific. Claim tier:
+descriptive -- targets 'belong to everyone', so the signal is not
+Hif1a-specific.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.top_n=15; figures.base_size=16; figures.base_size_column=9` | `03_results/04_tf/tables/fig3q_coregulators_data.csv` |
+
+## figures/_overview/fig3r_shared_ownership.png
+
+The same heat-driven genes populate many TFs' CollecTRI regulons:
+every gene (LEFT bar) and every TF (TOP bar) reads high on heat-MAIN,
+so the contrast cannot single out Hif1a -- or any one TF -- as the
+driver. None is identifiable. PROVISIONAL - inferred sample mapping
+(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+
+**How to read:** Center grid: rows = top-20 heat-MAIN-driving genes of Hif1a's regulon
+(signed contribution order), columns = Hif1a + its 12 largest
+target-sharers (heat-MAIN ULM score order; Hif1a orange + bold). Teal
+tile = the gene is in that TF's regulon. LEFT bar = gene heat-MAIN t;
+TOP bar = TF heat-MAIN score (both read high). Claim tier:
+descriptive non-identifiability -- shared ownership, no single
+driver.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/03g_nonidentifiability_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; patchwork=TRUE` | `03_results/04_tf/tables/fig3r_membership_data.csv` |
+

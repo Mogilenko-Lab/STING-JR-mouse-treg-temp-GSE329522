@@ -1,0 +1,7 @@
+"source","statistic","z_score","family","canonical"
+"Hif1a","ulm",2.4397741,"univariate",TRUE
+"Hif1a","mlm",0.846212367,"multivariate",TRUE
+"Hif1a","wsum",4.13305265,"univariate",TRUE
+"Hif1a","norm_wsum",2.71534548,"univariate",FALSE
+"Hif1a","corr_wsum",4.31456705,"univariate",FALSE
+"Hif1a","consensus",2.88979033,"consensus",TRUE

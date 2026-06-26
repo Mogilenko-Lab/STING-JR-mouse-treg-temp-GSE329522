@@ -1,0 +1,12 @@
+"contrast","network","type","label","log2FC","pval"
+"Temp_main","kegg","enzyme_edge","Galm",0.993845075,6.09703287e-26
+"Temp_main","kegg","enzyme_edge","Glb1",0.539593798,1.66435812e-20
+"Temp_main","kegg","enzyme_edge","B3gnt5",1.1175973,9.09811616e-18
+"Temp_main","kegg","enzyme_edge","Glb1",0.539593798,1.66435812e-20
+"Temp_main","kegg","enzyme_edge","St3gal1",0.633403538,1.946041e-15
+"Temp_main","kegg","metabolite_node","D-Galactose",NA,NA
+"Temp_main","kegg","metabolite_node","alpha-D-Galactose",NA,NA
+"Temp_main","kegg","metabolite_node","Lactosylceramide",NA,NA
+"Temp_main","kegg","metabolite_node","N-Acetyl-beta-D-glucosaminyl-(1->3)-beta-D-galactosyl-(1->4)-beta-D-glucosyl-(1<->1)-ceramide",NA,NA
+"Temp_main","kegg","metabolite_node","D-Galactosyl-N-acetyl-D-galactosaminyl-(N-acetylneuraminyl)-D-galactosyl-D-glucosylceramide",NA,NA
+"Temp_main","kegg","metabolite_node","N-Acetylneuraminyl-D-galactosyl-N-acetyl-D-galactosaminyl-(N-acetylneuraminyl)-D-galactosyl-D-glucosylceramide",NA,NA

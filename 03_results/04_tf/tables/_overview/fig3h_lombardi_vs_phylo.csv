@@ -1,0 +1,7 @@
+"signature","condition","score","p_value","padj","n_genes","sig_label","sig","n_lombardi","n_phylo"
+"Lombardi2022_HIF","WT_heat",6.9037295,5.21980887e-12,1.04396177e-11,100,"Lombardi-100",TRUE,100,16
+"Lombardi2022_HIF","KO_heat",7.15468036,8.68140189e-13,1.73628038e-12,100,"Lombardi-100",TRUE,100,16
+"Lombardi2022_HIF","Interaction",-1.37850541,0.168062972,0.336125943,100,"Lombardi-100",FALSE,100,16
+"Phylo16_HIF","WT_heat",2.42869766,0.0151620599,0.0151620599,16,"Phylo-16",TRUE,100,16
+"Phylo16_HIF","KO_heat",2.64267016,0.00823202471,0.00823202471,16,"Phylo-16",TRUE,100,16
+"Phylo16_HIF","Interaction",-0.875899477,0.381095376,0.381095376,16,"Phylo-16",FALSE,100,16

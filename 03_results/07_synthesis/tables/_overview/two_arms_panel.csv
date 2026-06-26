@@ -1,0 +1,321 @@
+"arm","arm_track","method","feature","feature_kind","contrast","score","pvalue","padj","direction","significant"
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glucose Metabolic Process","gene_set","WT_heat",1.15476579,0.192307692,0.318822399,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glucose Metabolic Process","gene_set","KO_heat",1.13844908,0.210280374,0.358797017,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glucose Metabolic Process","gene_set","Interaction",1.1404022,0.221033868,0.690852024,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glucose Metabolic Process","gene_set","Temp_main",1.12023278,0.246085011,0.387029027,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glycolytic Process Through Glucose 6 Phosphate","gene_set","WT_heat",1.10024426,0.330645161,0.449068386,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glycolytic Process Through Glucose 6 Phosphate","gene_set","KO_heat",1.236567,0.205821206,0.35564204,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glycolytic Process Through Glucose 6 Phosphate","gene_set","Interaction",-1.09325579,0.331182796,0.797576309,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Glycolytic Process Through Glucose 6 Phosphate","gene_set","Temp_main",1.15755524,0.262295082,0.399575722,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Pyruvate Metabolic Process","gene_set","WT_heat",0.92287534,0.598726115,0.660040151,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Pyruvate Metabolic Process","gene_set","KO_heat",1.01686667,0.418224299,0.524757274,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Pyruvate Metabolic Process","gene_set","Interaction",0.912741075,0.623853211,0.943331303,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Pyruvate Metabolic Process","gene_set","Temp_main",0.991455791,0.454342984,0.553506063,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Cell Migration Involved In Sprouting Angiogenesis","gene_set","WT_heat",1.56910953,0.0249844269,0.0823279944,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Cell Migration Involved In Sprouting Angiogenesis","gene_set","KO_heat",1.51729278,0.0451671076,0.143109045,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Cell Migration Involved In Sprouting Angiogenesis","gene_set","Interaction",-0.914755361,0.582056893,0.91784417,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Cell Migration Involved In Sprouting Angiogenesis","gene_set","Temp_main",1.5237433,0.0339888928,0.110140966,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Glucose Metabolic Process","gene_set","WT_heat",-1.33810559,0.0924855491,0.193474586,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Glucose Metabolic Process","gene_set","KO_heat",-1.49634526,0.0333186447,0.116712965,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Glucose Metabolic Process","gene_set","Interaction",1.32586245,0.0966542751,0.479489278,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:GO_BP","Regulation Of Glucose Metabolic Process","gene_set","Temp_main",-1.4002442,0.0655430712,0.170198258,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Glycolysis","gene_set","WT_heat",1.62995577,0.000258463557,0.000994090603,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Glycolysis","gene_set","KO_heat",1.60548562,0.000535540296,0.00178513432,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Glycolysis","gene_set","Interaction",-1.14970379,0.156542056,0.37593985,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Glycolysis","gene_set","Temp_main",1.64357461,0.000367676296,0.00153198457,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Hypoxia","gene_set","WT_heat",1.93265676,4.68069961e-07,5.85087451e-06,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Hypoxia","gene_set","KO_heat",1.9764103,7.58369049e-08,6.31974207e-07,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Hypoxia","gene_set","Interaction",-1.28053117,0.0355623335,0.127008334,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Hallmark","Hypoxia","gene_set","Temp_main",1.96899312,2.84776952e-07,2.37314127e-06,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Glycolysis Gluconeogenesis","gene_set","WT_heat",0.987038762,0.470715835,0.598677421,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Glycolysis Gluconeogenesis","gene_set","KO_heat",1.10563789,0.295942721,0.435889024,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Glycolysis Gluconeogenesis","gene_set","Interaction",-1.28326016,0.117400419,0.307589099,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Glycolysis Gluconeogenesis","gene_set","Temp_main",1.01393707,0.435079727,0.553487954,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Pyruvate Metabolism","gene_set","WT_heat",-1.30056759,0.115311909,0.264047383,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Pyruvate Metabolism","gene_set","KO_heat",-1.18228479,0.243636364,0.416484209,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Pyruvate Metabolism","gene_set","Interaction",-1.13391018,0.297239915,0.526194985,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Pyruvate Metabolism","gene_set","Temp_main",-1.24110232,0.169117647,0.354794474,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Vegf Signaling Pathway","gene_set","WT_heat",1.65818549,0.009983429,0.0644196334,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Vegf Signaling Pathway","gene_set","KO_heat",1.54690639,0.0269293532,0.130168626,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Vegf Signaling Pathway","gene_set","Interaction",1.40565532,0.061452514,0.213454376,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:KEGG","Vegf Signaling Pathway","gene_set","Temp_main",1.5917363,0.016550662,0.086725469,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Glycolysis","gene_set","WT_heat",1.30410815,0.135371179,0.308637309,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Glycolysis","gene_set","KO_heat",1.4047354,0.0818181818,0.376363636,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Glycolysis","gene_set","Interaction",-1.12341857,0.289256198,0.720730028,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Glycolysis","gene_set","Temp_main",1.33226671,0.116591928,0.344857497,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Pyruvate Metabolism","gene_set","WT_heat",-1.40637684,0.0806142035,0.308637309,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Pyruvate Metabolism","gene_set","KO_heat",-1.43786432,0.0680147059,0.376363636,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Pyruvate Metabolism","gene_set","Interaction",1.10272869,0.320075758,0.720730028,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:MitoXplorer","Pyruvate Metabolism","gene_set","Temp_main",-1.38679141,0.094972067,0.344857497,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Pyruvate Metabolism","gene_set","WT_heat",-1.22657799,0.183044316,0.428828203,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Pyruvate Metabolism","gene_set","KO_heat",-1.32365229,0.123161765,0.364446475,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Pyruvate Metabolism","gene_set","Interaction",1.21509136,0.208646617,0.478538305,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Pyruvate Metabolism","gene_set","Temp_main",-1.34616272,0.0948766603,0.326785521,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Regulation Of Pyruvate Metabolism","gene_set","WT_heat",-1.49416752,0.0515873016,0.235672568,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Regulation Of Pyruvate Metabolism","gene_set","KO_heat",-1.87222949,0.00184619228,0.0313852688,"Down",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Regulation Of Pyruvate Metabolism","gene_set","Interaction",1.65600179,0.0355568745,0.190499338,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Regulation Of Pyruvate Metabolism","gene_set","Temp_main",-1.74765403,0.00470118662,0.0677584071,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Signaling By Vegf","gene_set","WT_heat",1.54440775,0.00894206624,0.0942322152,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Signaling By Vegf","gene_set","KO_heat",1.48154256,0.0165715234,0.119423044,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Signaling By Vegf","gene_set","Interaction",1.41689591,0.0526315789,0.235152153,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Signaling By Vegf","gene_set","Temp_main",1.516544,0.0120361411,0.105645604,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Vegfr2 Mediated Vascular Permeability","gene_set","WT_heat",0.911978694,0.586134454,0.709137122,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Vegfr2 Mediated Vascular Permeability","gene_set","KO_heat",1.01331922,0.427645788,0.59690349,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Vegfr2 Mediated Vascular Permeability","gene_set","Interaction",1.09739797,0.328971963,0.592503612,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:Reactome","Vegfr2 Mediated Vascular Permeability","gene_set","Temp_main",0.990778491,0.465957447,0.625914562,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis","gene_set","WT_heat",0.960024562,0.518763797,0.648223036,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis","gene_set","KO_heat",0.919801132,0.580865604,0.654651234,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis","gene_set","Interaction",1.24284416,0.195694716,0.45589216,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis","gene_set","Temp_main",0.930311017,0.566292135,0.672774417,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis Overview","gene_set","WT_heat",0.912411644,0.603070175,0.698556287,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis Overview","gene_set","KO_heat",-0.897435039,0.618538324,0.677656384,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis Overview","gene_set","Interaction",1.8118443,0.00236656094,0.0448570868,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Angiogenesis Overview","gene_set","Temp_main",0.890788897,0.644295302,0.705173598,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Vegfavegfr2 Signaling","gene_set","WT_heat",1.96669685,1.06222416e-08,2.21473738e-06,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Vegfavegfr2 Signaling","gene_set","KO_heat",1.88473041,7.96342588e-08,1.6603743e-05,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Vegfavegfr2 Signaling","gene_set","Interaction",1.18854182,0.112068966,0.338643178,"Up",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","GSEA:WikiPathways","Vegfavegfr2 Signaling","gene_set","Temp_main",1.9087285,8.05025194e-08,1.67847753e-05,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","PROGENy","Hypoxia","pathway","WT_heat",4.00981558,6.09905398e-05,0.00012198108,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","PROGENy","Hypoxia","pathway","KO_heat",4.62162782,3.83158234e-06,1.07284305e-05,"Up",TRUE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","PROGENy","Hypoxia","pathway","Interaction",-2.22914785,0.0258153214,0.1204715,"Down",FALSE
+"HIF_glycolysis","HIF / glycolysis arm
+(no detectable cGAS-dependence at n=5)","PROGENy","Hypoxia","pathway","Temp_main",4.3787039,1.20003512e-05,2.40007025e-05,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Ifit1","gene","WT_heat",4.15406854,0.000255474921,0.001050019,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Ifit1","gene","KO_heat",-4.27090682,0.00018506172,0.000761570388,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Ifit1","gene","Interaction",5.95735721,1.6657895e-06,0.00327810716,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Ifit1","gene","Temp_main",-0.082617142,0.93471314,0.953824393,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Irf7","gene","WT_heat",0.863484974,0.394826423,0.521567375,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Irf7","gene","KO_heat",-9.28722253,2.87661856e-10,6.39649453e-09,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Irf7","gene","Interaction",7.17763411,6.0025437e-08,0.000393746858,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Irf7","gene","Temp_main",-5.95648195,1.66984012e-06,7.07748949e-06,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Isg15","gene","WT_heat",4.01336804,0.000375888151,0.00147470154,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Isg15","gene","KO_heat",-2.36601631,0.0247444915,0.0539732706,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Isg15","gene","Interaction",4.51090593,9.50480297e-05,0.074818007,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Isg15","gene","Temp_main",1.16485358,0.253397136,0.336341713,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Mx1","gene","WT_heat",5.65179093,3.89972745e-06,2.62727249e-05,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Mx1","gene","KO_heat",-2.48946282,0.0186587243,0.0425869909,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Mx1","gene","Interaction",5.75673573,2.91014151e-06,0.00520624316,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Mx1","gene","Temp_main",2.23610365,0.0330539343,0.0571840327,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Oasl2","gene","WT_heat",-0.777514523,0.443036597,0.567685714,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Oasl2","gene","KO_heat",-10.5575649,1.52500994e-11,5.50654508e-10,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Oasl2","gene","Interaction",6.91553996,1.21064267e-07,0.000476484744,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","DE:limma-trend","Oasl2","gene","Temp_main",-8.01511154,6.7317166e-09,4.61097985e-08,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Antiviral Innate Immune Response","gene_set","WT_heat",1.26444685,0.138297872,0.255920695,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Antiviral Innate Immune Response","gene_set","KO_heat",-1.20275538,0.204339964,0.354612272,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Antiviral Innate Immune Response","gene_set","Interaction",2.69022943,1.70312497e-10,6.78127594e-08,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Antiviral Innate Immune Response","gene_set","Temp_main",-0.878322966,0.637362637,0.689746995,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Interferon Mediated Signaling Pathway","gene_set","WT_heat",-1.46222834,0.0305743657,0.092932629,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Interferon Mediated Signaling Pathway","gene_set","KO_heat",-1.76071824,0.0021273826,0.0210396433,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Interferon Mediated Signaling Pathway","gene_set","Interaction",2.52028914,1.85684521e-09,4.92889244e-07,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Interferon Mediated Signaling Pathway","gene_set","Temp_main",-1.62820444,0.00694473973,0.0407640865,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Response To Type I Interferon","gene_set","WT_heat",-1.43798433,0.0359337558,0.102809273,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Response To Type I Interferon","gene_set","KO_heat",-1.83678626,0.000302469855,0.00547424609,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Response To Type I Interferon","gene_set","Interaction",2.44039984,3.33027006e-09,6.63001265e-07,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Response To Type I Interferon","gene_set","Temp_main",-1.7120753,0.00148230566,0.0145729557,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Type I Interferon Mediated Signaling Pathway","gene_set","WT_heat",-1.32621487,0.100192678,0.204406753,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Type I Interferon Mediated Signaling Pathway","gene_set","KO_heat",-1.73099567,0.00322296109,0.0269183473,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Type I Interferon Mediated Signaling Pathway","gene_set","Interaction",2.6185665,2.53369386e-10,8.6471352e-08,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:GO_BP","Type I Interferon Mediated Signaling Pathway","gene_set","Temp_main",-1.59132566,0.0144285643,0.0645502626,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Alpha Response","gene_set","WT_heat",-1.90084657,1.92148115e-05,0.000106748953,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Alpha Response","gene_set","KO_heat",-2.52563627,6.54308477e-14,3.27154238e-12,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Alpha Response","gene_set","Interaction",3.1997827,5.62804091e-25,2.81402045e-23,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Alpha Response","gene_set","Temp_main",-2.22168703,3.66854301e-09,6.11423834e-08,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Gamma Response","gene_set","WT_heat",-1.77738708,5.84113254e-06,3.65070783e-05,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Gamma Response","gene_set","KO_heat",-2.21270105,2.54822226e-12,4.24703711e-11,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Gamma Response","gene_set","Interaction",2.85866217,3.73923242e-23,9.34808104e-22,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Hallmark","Interferon Gamma Response","gene_set","Temp_main",-1.97494138,3.02726364e-08,3.02726364e-07,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Alpha Beta Signaling","gene_set","WT_heat",-1.46552883,0.028651163,0.164222727,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Alpha Beta Signaling","gene_set","KO_heat",-1.83879214,0.000448078503,0.0164577067,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Alpha Beta Signaling","gene_set","Interaction",2.88068096,1.24894796e-15,8.28052497e-13,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Alpha Beta Signaling","gene_set","Temp_main",-1.69207823,0.00218649652,0.0471658147,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Signaling","gene_set","WT_heat",-1.3878173,0.0197186744,0.143318988,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Signaling","gene_set","KO_heat",-1.7315059,7.75971929e-05,0.00514469389,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Signaling","gene_set","Interaction",2.4641326,5.9323483e-14,1.96657346e-11,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:Reactome","Interferon Signaling","gene_set","Temp_main",-1.58577012,0.00123672018,0.0315363645,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Hostpathogen Interaction Of Human Coronaviruses Interferon Induction","gene_set","WT_heat",-1.32628014,0.13559322,0.330657151,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Hostpathogen Interaction Of Human Coronaviruses Interferon Induction","gene_set","KO_heat",-1.69810146,0.00798997926,0.0724308989,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Hostpathogen Interaction Of Human Coronaviruses Interferon Induction","gene_set","Interaction",2.43314518,4.76322147e-08,9.93131677e-06,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Hostpathogen Interaction Of Human Coronaviruses Interferon Induction","gene_set","Temp_main",-1.59188349,0.0184239312,0.128556262,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Type I Interferon Induction And Signaling During Sarscov2 Infection","gene_set","WT_heat",-1.34754867,0.118867925,0.300411664,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Type I Interferon Induction And Signaling During Sarscov2 Infection","gene_set","KO_heat",-1.95535943,0.000118917487,0.00354204229,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Type I Interferon Induction And Signaling During Sarscov2 Infection","gene_set","Interaction",2.62926116,1.12489796e-11,4.69082449e-09,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","GSEA:WikiPathways","Type I Interferon Induction And Signaling During Sarscov2 Infection","gene_set","Temp_main",-1.68198586,0.00618403843,0.0628961958,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","PROGENy","JAK-STAT","pathway","WT_heat",-6.46686417,1.02411655e-10,3.58440793e-10,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","PROGENy","JAK-STAT","pathway","KO_heat",-11.7201094,1.2810033e-31,1.79340462e-30,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","PROGENy","JAK-STAT","pathway","Interaction",16.792135,7.6381266e-63,1.06933772e-61,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","PROGENy","JAK-STAT","pathway","Temp_main",-9.25384017,2.38180703e-20,3.33452984e-19,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf1","TF","WT_heat",-0.645512729,0.518602499,0.715388772,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf1","TF","KO_heat",-1.71691484,0.0860104704,0.267203982,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf1","TF","Interaction",3.38168907,0.000721818322,0.0791594093,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf1","TF","Temp_main",-1.2049164,0.228250069,0.455117574,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf3","TF","WT_heat",-1.29130233,0.196614031,0.424170598,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf3","TF","KO_heat",-3.16342362,0.00156162342,0.0177163484,"Down",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf3","TF","Interaction",5.9251867,3.17139607e-09,1.04338931e-06,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Irf3","TF","Temp_main",-2.27088956,0.0231644213,0.105118547,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat1","TF","WT_heat",2.01600339,0.0438131851,0.161240784,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat1","TF","KO_heat",0.250774409,0.801991146,0.897466283,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat1","TF","Interaction",5.30465365,1.14107817e-07,1.87707358e-05,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat1","TF","Temp_main",1.13587066,0.256024535,0.479954826,"Up",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat2","TF","WT_heat",-0.767050591,0.44306064,0.66107532,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat2","TF","KO_heat",-2.62905622,0.00856887568,0.0558249524,"Down",FALSE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat2","TF","Interaction",5.8487094,5.0324488e-09,1.10378377e-06,"Up",TRUE
+"IFN_ISG","IFN / ISG arm
+(cGAS-dependent)","TF:CollecTRI","Stat2","TF","Temp_main",-1.73438202,0.082865983,0.25360845,"Down",FALSE

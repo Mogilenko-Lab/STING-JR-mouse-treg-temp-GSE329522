@@ -1,0 +1,4 @@
+"contrast","network","n_edges","score","label"
+"WT_heat","kegg",6,0.740240574,"WT: heat (39 vs 37 °C)"
+"KO_heat","kegg",17,-0.111999141,"cGAS-KO: heat (39 vs 37 °C)"
+"Temp_main","kegg",5,0.764806702,"Heat main effect (pooled genotypes)"

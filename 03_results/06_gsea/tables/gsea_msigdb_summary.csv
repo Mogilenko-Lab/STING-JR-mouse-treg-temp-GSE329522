@@ -1,0 +1,57 @@
+contrast,database,n_sets_tested,n_sig_up,n_sig_down,top_pathway_up,top_nes_up,top_pathway_down,top_nes_down,status
+Geno_at_37,GO_BP,2389,4,1,Recombinational Repair,2.02043514,Proton Transmembrane Transport,-1.97240046,ok
+Geno_at_37,GO_CC,311,0,7,NA,NA,Ribosomal Subunit,-2.07001537,ok
+Geno_at_37,GO_MF,386,2,5,Catalytic Activity Acting On DNA,1.86194988,Proton Transmembrane Transporter Activity,-1.98588498,ok
+Geno_at_37,Hallmark,50,3,3,Interferon-alpha Response,1.86470502,Oxidative Phosphorylation,-1.72689229,ok
+Geno_at_37,KEGG,131,1,7,Rig I Like Receptor Signaling Pathway,2.02700871,Ribosome,-2.24196821,ok
+Geno_at_37,Reactome,663,7,12,Diseases of DNA Repair,2.15761126,Eukaryotic Translation Elongation,-2.25018927,ok
+Geno_at_37,TF_Targets,352,0,0,NA,NA,NA,NA,ok
+Geno_at_37,WikiPathways,417,0,1,NA,NA,Electron Transport Chain OXPHOS System in Mitochondria,-2.04261935,ok
+Geno_at_39,GO_BP,2389,127,14,Defense Response to Virus,3.01738928,Proton Motive Force Driven ATP Synthesis,-2.18297583,ok
+Geno_at_39,GO_CC,311,5,9,Nuclear Ubiquitin Ligase Complex,2.03812444,Respiratory Chain Complex,-2.15904886,ok
+Geno_at_39,GO_MF,386,39,8,Double Stranded RNA Binding,2.73566626,Proton Transmembrane Transporter Activity,-2.07251453,ok
+Geno_at_39,Hallmark,50,7,4,Interferon-alpha Response,3.30931164,Oxidative Phosphorylation,-2.14293009,ok
+Geno_at_39,KEGG,131,10,11,Rig I Like Receptor Signaling Pathway,2.47246857,Oxidative Phosphorylation,-2.2179852,ok
+Geno_at_39,Reactome,663,42,28,Interferon-alpha beta Signaling,3.04860668,Formation of the Early Elongation Complex,-2.24423984,ok
+Geno_at_39,TF_Targets,352,12,2,Rlf Target Genes,1.92347878,Znf581 Target Genes,-1.78105148,ok
+Geno_at_39,WikiPathways,417,34,4,Type I Interferon Induction and Signaling During Sarscov2 Infection,2.70635795,Electron Transport Chain OXPHOS System in Mitochondria,-2.20326141,ok
+Geno_main,GO_BP,2389,70,24,Defense Response to Virus,2.93820231,Proton Transmembrane Transport,-2.3748656,ok
+Geno_main,GO_CC,311,1,11,Cytoplasmic Ribonucleoprotein Granule,1.94040918,Respiratory Chain Complex,-2.33728665,ok
+Geno_main,GO_MF,386,25,17,Double Stranded RNA Binding,2.61544299,Proton Transmembrane Transporter Activity,-2.30858181,ok
+Geno_main,Hallmark,50,7,5,Interferon-alpha Response,3.30107237,Oxidative Phosphorylation,-2.34968323,ok
+Geno_main,KEGG,131,6,12,Rig I Like Receptor Signaling Pathway,2.43484896,Oxidative Phosphorylation,-2.43938164,ok
+Geno_main,Reactome,663,20,28,Interferon-alpha beta Signaling,3.00766023,Eukaryotic Translation Elongation,-2.32237081,ok
+Geno_main,TF_Targets,352,0,0,NA,NA,NA,NA,ok
+Geno_main,WikiPathways,417,11,4,Type I Interferon Induction and Signaling During Sarscov2 Infection,2.58139079,Electron Transport Chain OXPHOS System in Mitochondria,-2.41977371,ok
+Interaction,GO_BP,2389,66,0,Defense Response to Virus,2.73728352,NA,NA,ok
+Interaction,GO_CC,311,2,3,Organelle Subcompartment,1.75912996,Replisome,-2.10049368,ok
+Interaction,GO_MF,386,5,1,Double Stranded RNA Binding,2.37184889,Damaged DNA Binding,-1.89205493,ok
+Interaction,Hallmark,50,2,3,Interferon-alpha Response,3.14455856,E2f Targets,-1.80617496,ok
+Interaction,KEGG,131,2,3,Rig I Like Receptor Signaling Pathway,1.85802433,DNA Replication,-2.07736468,ok
+Interaction,Reactome,663,36,27,Interferon-alpha beta Signaling,2.85721084,Resolution of AP Sites via the Multiple Nucleotide Patch Replacement Pathway,-2.24077235,ok
+Interaction,TF_Targets,352,6,0,Pias4 Target Genes,2.0924888,NA,NA,ok
+Interaction,WikiPathways,417,22,8,Type I Interferon Induction and Signaling During Sarscov2 Infection,2.64437127,DNA Mismatch Repair,-2.10039212,ok
+KO_heat,GO_BP,2389,361,53,Endoderm Development,2.19378097,Acyl CoA Metabolic Process,-2.13567918,ok
+KO_heat,GO_CC,311,40,4,External Encapsulating Structure,2.31992103,Atpase Dependent Transmembrane Transport Complex,-1.75308984,ok
+KO_heat,GO_MF,386,37,11,Cytokine Activity,2.48461872,Abc Type Transporter Activity,-2.18731764,ok
+KO_heat,Hallmark,50,24,3,TNF-alpha Signaling via NF-kappaB,2.2892655,Interferon-alpha Response,-2.52172421,ok
+KO_heat,KEGG,131,4,1,ECM Receptor Interaction,2.22101936,Abc Transporters,-2.14371433,ok
+KO_heat,Reactome,663,39,16,Regulation of Hsf1 Mediated Heat Shock Response,2.28204929,Cholesterol Biosynthesis,-2.08931783,ok
+KO_heat,TF_Targets,352,30,2,Ppargc1a Target Genes,2.20857818,Rag1 Target Genes,-1.45085952,ok
+KO_heat,WikiPathways,417,32,8,Overview of Proinflammatory and Profibrotic Mediators,2.52670672,Cholesterol Metabolism With Bloch and Kandutschrussell Pathways,-2.23171073,ok
+Temp_main,GO_BP,2389,390,42,Endoderm Development,2.17546498,Acyl CoA Metabolic Process,-2.0833791,ok
+Temp_main,GO_CC,311,37,4,External Encapsulating Structure,2.23478385,Microbody,-1.76104815,ok
+Temp_main,GO_MF,386,44,11,Cytokine Activity,2.41675217,Abc Type Transporter Activity,-2.13687564,ok
+Temp_main,Hallmark,50,21,2,TNF-alpha Signaling via NF-kappaB,2.27077909,Interferon-alpha Response,-2.21940061,ok
+Temp_main,KEGG,131,6,2,ECM Receptor Interaction,2.17441645,Abc Transporters,-2.09218425,ok
+Temp_main,Reactome,663,30,11,Regulation of Hsf1 Mediated Heat Shock Response,2.16828218,Cholesterol Biosynthesis,-2.00275485,ok
+Temp_main,TF_Targets,352,45,3,Ppargc1a Target Genes,2.13934069,Znf260 Target Genes,-1.52113594,ok
+Temp_main,WikiPathways,417,32,7,Overview of Proinflammatory and Profibrotic Mediators,2.46612618,Cholesterol Metabolism With Bloch and Kandutschrussell Pathways,-2.1230381,ok
+WT_heat,GO_BP,2389,507,39,Endoderm Development,2.2073965,Acyl CoA Metabolic Process,-2.0661074,ok
+WT_heat,GO_CC,311,39,2,External Encapsulating Structure,2.20788406,Microbody,-1.79569935,ok
+WT_heat,GO_MF,386,52,12,Cytokine Activity,2.48662436,Abc Type Transporter Activity,-2.12651125,ok
+WT_heat,Hallmark,50,23,2,TNF-alpha Signaling via NF-kappaB,2.36401715,Interferon-alpha Response,-1.89788424,ok
+WT_heat,KEGG,131,7,3,ECM Receptor Interaction,2.13292648,Abc Transporters,-2.0742204,ok
+WT_heat,Reactome,663,37,12,Interleukin 4 and Interleukin 13 Signaling,2.16384007,Cholesterol Biosynthesis,-1.91786781,ok
+WT_heat,TF_Targets,352,53,4,Ppargc1a Target Genes,2.09325135,Rag1 Target Genes,-1.48108198,ok
+WT_heat,WikiPathways,417,43,8,Overview of Proinflammatory and Profibrotic Mediators,2.50545137,Cholesterol Metabolism With Bloch and Kandutschrussell Pathways,-2.04406051,ok
