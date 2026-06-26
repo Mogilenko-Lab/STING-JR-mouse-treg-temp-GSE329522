@@ -1,4 +1,4 @@
-<!-- BEGIN SCIAGENT:ROLES v1 hash=a2c786f49260190d04fa13cdb43f395275fb49fc -->
+<!-- BEGIN SCIAGENT:ROLES v1 hash=e3769f72bc396457e4505b9d87a85dc7b87a8748 -->
 # Active roles
 
 Stack (in order, last-wins on name collisions):
@@ -40,7 +40,6 @@ Stack (in order, last-wins on name collisions):
 - `scrna-pipeline-conventions` — (base)
 - `cellranger-multi-to-anndata` — (base)
 - `scrna-cxg-host` — (base)
-- `shinymultiome-uio-host` — (base)
 - `consensus-nmf-multirun` — (base)
 - `skill-creator` — (base)
 - `reasoning-trace` — (base)
@@ -64,12 +63,12 @@ Stack (in order, last-wins on name collisions):
 - `/commit` — (pathway-signature) [shadows base]
 <!-- END SCIAGENT:ROLES -->
 
-<!-- BEGIN SCIAGENT:CRAFT v1 hash=a461c3b3edb1829ca9d756d0fd3ee6119a659fed -->
+<!-- BEGIN SCIAGENT:CRAFT v1 hash=1e98ccc98cac4ef01baff5fbbcea627f4f3e2654 -->
 # Craft standards
 
 Toolkit-managed standing conventions for this repo — do not hand-edit.
 
-- **Figures** — legible both shrunk in a journal column and projected to the back of a room: bigger, fewer, bolder (base >= 16pt screen, >= 9pt print). Style only via the project theme entry point (no inline `theme()`/`ggsave(width=)`/raw hex); cap to top-N; never truncate axis labels; disambiguate glyphs; prefer the residualized channel.
+- **Figures** — legible both shrunk in a journal column and projected to the back of a room: bigger, fewer, bolder (one legible tier, base >= 14pt; emit a vector PDF + raster PNG from one plot object). Style only via the project theme entry point (no inline `theme()`/`ggsave(width=)`/raw hex); cap to top-N; never truncate axis labels; disambiguate glyphs; prefer the residualized channel.
 - **Results** — every artifact under `03_results/<stage>/{figures,tables}/` with `by_contrast/<c>/` + `_overview/`; a figure's source table is its same-stem neighbor. Compute never plots; viz never computes.
 - **README** — a task is unfinished until the sibling `README.md` captions every `03_results/` file you create/edit/delete, including *how to read* it (glyphs, sign convention, Δρ, claim tier).
 - **Planning** — plans in `docs/_internal/plans/{date-slug}/` as `00_INDEX.md` + `NN_<slug>.md`; one phase == one script == one implementer (~35% of context); review every 3 phases that code runs and produces its artifacts.
