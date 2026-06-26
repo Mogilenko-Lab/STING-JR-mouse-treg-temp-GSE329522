@@ -86,3 +86,18 @@ contrast_label <- function(co, short = FALSE) {
     lab <- unname(lut[as.character(co)])
     ifelse(is.na(lab), as.character(co), lab)
 }
+
+## ---------------------------------------------------------------------------
+## 4. UNIFIED STYLE OVERRIDES — single-variant theme + dual-format (pdf+png) export.
+##    Sourced LAST so it SHADOWS the toolkit lib's project_theme / save_figure /
+##    save_overview / style_series with the unified contract (no .print/.screen split;
+##    compact-but-legible 14pt @ 8.5x6.5in; patchwork-correct running-sum normalizer).
+##    Proven in-project (Wave-0, 2026-06-25); promoted to the toolkit in Wave 2.
+## ---------------------------------------------------------------------------
+.UNIFIED_OVERRIDES <- "02_analysis/helpers/figure_style_unified.R"
+if (file.exists(.UNIFIED_OVERRIDES)) {
+    source(.UNIFIED_OVERRIDES)
+} else {
+    warning("[figure_style] unified overrides not found at: ", .UNIFIED_OVERRIDES,
+            "; falling back to the toolkit lib's dual-variant style.", call. = FALSE)
+}

@@ -80,7 +80,7 @@ design:
   contrast_labels_short:
     WT_heat:     "WT heat\n(39 vs 37 °C)"
     KO_heat:     "cGAS-KO heat\n(39 vs 37 °C)"
-    Interaction: "Interaction\n(cGAS-dependence)"
+    Interaction: "Interaction"
     Geno_at_37:  "Genotype\n@ 37 °C"
     Geno_at_39:  "Genotype\n@ 39 °C"
     Temp_main:   "Heat main\n(pooled)"
@@ -162,36 +162,35 @@ visualization:
   volcano_label_top: 10               # top genes to label
 
 # =============================================================================
-# FIGURES — the figure-style contract (read by figure_helpers.{R,py})
+# FIGURES — the figure-style contract (read by figure_style.R)
 # =============================================================================
-# Dual-context legibility: legible BOTH shrunk in a journal column AND projected
-# to the back of a room. The figure-style helper library reads this block and
-# emits a `screen` variant (big, bold) + a `print` variant (column width) from
-# one code path. Font sizes are FLOORS — raise them, do not go under them.
-# NEW standard-sweep viz scripts (04-16) use this block via the figure_style.R
-# shim; legacy scripts (00-03g) keep using `visualization:` above.
+# UNIFIED single-variant style (Wave-0 redesign, 2026-06-25): ONE legible theme,
+# rendered to BOTH pdf + png from one code path — NO .print/.screen split, no suffix.
+# Compact-but-legible: legible shrunk in a journal column AND projected to the back of
+# a room. Font sizes are FLOORS — raise them, do not go under them. Colors are the
+# centralized colorblind-safe `colors:` palette (okabe_ito / diverging / groups).
 
 figures:
-  # screen / projected variant (default): bigger, fewer, bolder
-  base_size: 16                       # base font (pt) FLOOR for screen
-  title_size: 18
-  axis_title_size: 15
-  axis_text_size: 13
-  strip_size: 14
-  legend_text_size: 13
-  label_size: 5                       # geom_text/geom_label size (ggplot mm)
-  line_width: 0.8
-  point_size: 2.0
-  # print-column variant (Nature ~89mm; smaller, still legible)
-  base_size_column: 9                 # base font (pt) FLOOR for print column
-  # geometry (inches)
-  width: 10
-  height: 8
-  width_column: 3.5
-  height_column: 3.0
-  width_wide: 14                      # two-column screen preset: save_figure(..., wide = TRUE)
-  width_narrow: 6                     # single-column screen preset
+  # fonts (pt) — single tier
+  base_size: 14
+  title_size: 16
+  subtitle_size: 11
+  axis_title_size: 13
+  axis_text_size: 11
+  strip_size: 12
+  legend_text_size: 11
+  caption_size: 9
+  label_size: 4                       # geom_text/geom_label size (ggplot mm)
+  cue_size: 4                         # in-panel direction-cue text size
+  line_width: 1.0                     # stronger trajectory/line contrast (was 0.8)
+  point_size: 2.4
+  # geometry (inches) — ONE canvas shared by the pdf + png
+  width: 8.5
+  height: 6.5
+  width_wide: 13                      # two-column preset: save_figure(..., wide = TRUE)
+  width_narrow: 6                     # single-column preset
   dpi: 300
+  formats: [pdf, png]                 # both emitted for every figure (replaces variants:)
   # anti-clutter / comparability
   top_n: 20                           # cap categorical axes (pathways/genes) to top-N
   top_pathways: 20                    # top-N pathways per dotplot/facet/barplot (toolkit showCategory/top_n)
@@ -201,10 +200,6 @@ figures:
   z_clamp: 2.5
   nes_cap: 3.5
   caption_wrap_column: 70
-  # which variants save_figure() emits by default
-  variants:
-    - print
-    - screen
   # results sub-layout directory names
   by_contrast_dir: "by_contrast"
   overview_dir: "_overview"
