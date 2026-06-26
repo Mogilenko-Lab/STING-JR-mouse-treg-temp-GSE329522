@@ -11,8 +11,23 @@
 #                                           metadata aligned 021..040, collapse_record)
 #           02_analysis/config/analysis_config.yaml  (design.contrasts, 7 contrasts)
 #           00_data/processed/GSE329522_normalized_counts_CPM_iTreg.csv (ensembl map)
-# Outputs:  03_results/objects/02_de_results.rds   (named list of 7 topTables, t intact)
-#           03_results/master/master_de_genes.csv  (stacked 7 contrasts + schema cols)
+# Contrasts (7, built generically from config:design.contrasts via makeContrasts):
+#   WT_heat    = WT_39 - WT_37          heat response in the cGAS-competent genotype
+#   KO_heat    = cGASKO_39 - cGASKO_37 heat response with cGAS removed
+#   Interaction= (WT_39-cGASKO_39) - (WT_37-cGASKO_37)  cGAS-dependence test (1 df)
+#   Geno_at_39 = WT_39 - cGASKO_39     genotype effect under heat
+#   Geno_at_37 = WT_37 - cGASKO_37     genotype effect at baseline
+#   Temp_main  = ½(WT_39+cGASKO_39) - ½(WT_37+cGASKO_37)  pooled average heat program
+#   Geno_main  = ½(WT_37+WT_39) - ½(cGASKO_37+cGASKO_39)  pooled average genotype effect
+#
+# Outputs:  03_results/objects/02_de_results.rds
+#             named list of 7 topTables; gene-symbol rownames;
+#             cols: gene_symbol / ensembl / logFC / AveExpr / t /
+#                   P.Value / adj.P.Val / B / contrast
+#           03_results/master/master_de_genes.csv
+#             7 contrasts stacked;
+#             cols: gene_symbol / ensembl / logFC / t / P.Value /
+#                   adj.P.Val / contrast / significant / direction
 #           03_results/03_de/tables/marker_cgas_dependence.csv  (marker readout)
 #           03_results/03_de/tables/fig2_marker_means.csv       (plot-ready, tidy)
 #

@@ -386,7 +386,7 @@ The inferred temperature-major mapping (021-025 WT_37, 026-030 cGASKO_37, 031-03
 
 **Evidence.** The heat-shock thermometer (%s) is monotone with the inferred temperature: mean log2CPM = %.2f in the hot half (031-040) vs %.2f in the cool half (021-030), a +%.2f log2 shift. %s (Cgas) is higher in WT than cGAS-KO within both temperature halves (37C: WT-KO = %.2f; 39C: WT-KO = %.2f log2CPM). PCA on the top %d variable genes places %.1f%%/%.1f%% of variance on PC1/PC2; temperature and genotype track the leading axes, forming the expected 2x2.
 
-**Scramble caveat.** The deposited CPM column order is temperature-major; the GEO GSM accessions are genotype-major. A naive positional GSM->column join therefore mislabels **%d** libraries (%s) -- see `figures/fig1d_scramble.pdf`. This is why the mapping must be marker-derived, not accession-positional.
+**Scramble caveat.** The deposited CPM column order is temperature-major; the GEO GSM accessions are genotype-major. A naive positional GSM->column join therefore mislabels **%d** libraries (%s) -- see `figures/fig1d_scramble.png`. This is why the mapping must be marker-derived, not accession-positional.
 
 **Bottom line:** inferred mapping **%s**, PROVISIONAL pending the collaborator sample sheet.
 
