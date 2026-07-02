@@ -1,4 +1,4 @@
-<!-- BEGIN SCIAGENT:ROLES v1 hash=e3769f72bc396457e4505b9d87a85dc7b87a8748 -->
+<!-- BEGIN SCIAGENT:ROLES v1 hash=cef2142357f46125eef5599c5524670bd467f933 -->
 # Active roles
 
 Stack (in order, last-wins on name collisions):
@@ -61,9 +61,11 @@ Stack (in order, last-wins on name collisions):
 
 ## Slash commands (effective, Claude-only)
 - `/commit` — (pathway-signature) [shadows base]
+- `/decompose` — (pathway-signature) [shadows base]
+- `/implement` — (pathway-signature) [shadows base]
 <!-- END SCIAGENT:ROLES -->
 
-<!-- BEGIN SCIAGENT:CRAFT v1 hash=1e98ccc98cac4ef01baff5fbbcea627f4f3e2654 -->
+<!-- BEGIN SCIAGENT:CRAFT v1 hash=2399c4db2eb105a2de6c58e227fc7983dcf81fcc -->
 # Craft standards
 
 Toolkit-managed standing conventions for this repo — do not hand-edit.
@@ -73,4 +75,5 @@ Toolkit-managed standing conventions for this repo — do not hand-edit.
 - **README** — a task is unfinished until the sibling `README.md` captions every `03_results/` file you create/edit/delete, including *how to read* it (glyphs, sign convention, Δρ, claim tier).
 - **Planning** — plans in `docs/_internal/plans/{date-slug}/` as `00_INDEX.md` + `NN_<slug>.md`; one phase == one script == one implementer (~35% of context); review every 3 phases that code runs and produces its artifacts.
 - **Reproducibility** — no ephemeral scripts: every `03_results/` artifact reproducible from a committed `02_analysis/scripts/NN_*`; log non-trivial decisions to `docs/_internal/reasoning/` before proceeding (`_scratch/` is the only sanctioned throwaway zone).
+- **Memory & traceability** — durable project memory lives only in tracked locations (`AGENTS.md`, `docs/_internal/`, committed scripts). Ephemeral/auto memory of vendored coding harnesses (e.g. Claude Code auto-memory, untracked `~/.claude` state written outside the repo) is prohibited as project state — `autoMemoryEnabled` is off; record decisions in `docs/_internal/reasoning/` and session handoffs in `docs/_internal/sessions/` so context stays reproducible, traceable, and observable.
 <!-- END SCIAGENT:CRAFT -->
