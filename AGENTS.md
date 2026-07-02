@@ -1,3 +1,5 @@
+> **Submodule of the STING-JR super-repo.** For cross-project context and shared conventions, read the umbrella `../AGENTS.md` first.
+
 <!-- BEGIN SCIAGENT:ROLES v1 hash=cef2142357f46125eef5599c5524670bd467f933 -->
 # Active roles
 
