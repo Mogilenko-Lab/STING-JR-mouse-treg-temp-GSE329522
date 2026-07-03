@@ -272,6 +272,15 @@ stages:
   - id: "09_gatom"
     title: "GATOM metabolic modules"
     purpose: "Atom-graph MWCS metabolic modules from the DE signal (MitoCarta-corroborating Complex-I / pseudohypoxia mechanism)."
+  # --- Phase-0 mouse→human projection export (stage id != script number: scripts 17/18
+  #     serve stages 10/11, matching the existing 12–16 → 06/07 offset). No new biology;
+  #     reshape + ortholog-map master_de_genes.csv into the frozen human-projection contract.
+  - id: "10_signature"
+    title: "Projection signature derivation"
+    purpose: "Derive per-contrast up/down gene sets + signed-t ranked lists (mouse symbols) from master_de_genes.csv at config thresholds; no new statistics."
+  - id: "11_projection"
+    title: "Human projection export"
+    purpose: "Ortholog-map mouse→human (babelgene, pinned) and freeze the human-symbol projection contract under 03_results/human_projection/."
 
 # =============================================================================
 # INPUT/OUTPUT PATHS (relative to project root)
@@ -323,3 +332,40 @@ schemas:
       - contrast
       - significant
       - direction
+
+# =============================================================================
+# DECISIONS — human sign-offs breakpoints
+# =============================================================================
+# Records human steering at a review breakpoint
+# Re-run will end up at same choice defined in the notebook EDA. 
+# Values here are inputs into the downstream numbered scripts read 
+# Values here get hardcoded only after human review and exploration
+# `status` gates the freeze: a compute stage that consumes a
+# decision must refuse to run while status is PROPOSED_DEFAULT.
+
+decisions:
+  # BREAKPOINT 10 (after 17 compute+viz, before 18 freezes the contract): the human
+  # approves WHICH contrasts to freeze, WHICH threshold gate, and HOW ortholog
+  # ambiguity is resolved. Until sign-off these hold the plan DEFAULTS (runbook §3.1)
+  # and 18_projection_export.R stops with status != APPROVED.
+  projection:
+    status: APPROVED                  # signed off at BREAKPOINT 10 (2026-07-03)
+    # role=primary is the headline "mouse 39 °C Treg" axis; every other exported
+    # contrast is role=comparator (the manifest `role` column).
+    role_primary: ["WT_heat"]
+    # The exact set of contrasts frozen as the export (the manifest rows). Default per
+    # runbook §3.1: the primary axis + the three interpretable comparators.
+    contrasts_primary: ["WT_heat", "KO_heat", "Interaction"]
+    # Binary up/down gate. `fdr_logfc` = adj.P.Val < de_fdr AND |logFC| >= de_logfc (the
+    # stringent config gate); `fdr_only` = adj.P.Val < de_fdr, |logFC| gate off (split by
+    # DE direction). Ranked .rnk lists are ALWAYS the full signed-t list regardless.
+    gate: fdr_logfc                   # fdr_only | fdr_logfc  (pending the review)
+    # Collision policy for the mouse→human map (mirrors ortholog_utils::default_ortholog_policy).
+    ortholog_ambiguity:
+      one_mouse_to_many_human: union      # binary sets union; ranked list assigns t to each human
+      many_mouse_to_one_human: max_abs_t  # ranked keeps max|t| per human; binary dedupe by union
+      no_human_ortholog: drop             # dropped + logged (auditable)
+      min_support: 3                      # babelgene::orthologs(min_support=)
+      # Interaction is 1 df, underpowered at n=5; EDA-value 
+      drop_interaction_if_trivial: true
+      trivial_min_genes: 5
