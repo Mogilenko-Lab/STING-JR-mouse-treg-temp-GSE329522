@@ -1,6 +1,6 @@
 services:
   dev-core:
-    image: scdock-r-dev:v0.5.5
+    image: scdock-r-dev:v0.5.6
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     working_dir: /workspaces/STING-cGAS-GSE329522
     env_file: .env
@@ -51,7 +51,7 @@ services:
 
   dev-archr:
     profiles: ["archr"]  # Only started with: docker compose --profile archr up
-    image: scdock-r-archr:v0.5.5
+    image: scdock-r-archr:v0.5.6
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     working_dir: /workspaces/STING-cGAS-GSE329522
     env_file: .env

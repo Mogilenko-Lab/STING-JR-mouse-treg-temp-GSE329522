@@ -9,7 +9,7 @@
   "python.terminal.executeInFileDir": true,
 
   // R Configuration
-  "r.alwaysUseActiveTerminal": true,
+  "r.alwaysUseActiveTerminal": false,
   "r.bracketedPaste": true,
   "r.rterm.linux": "/opt/venvs/base/bin/radian",
   "r.sessionWatcher": true,
