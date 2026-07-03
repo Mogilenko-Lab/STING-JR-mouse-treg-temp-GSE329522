@@ -1,0 +1,7 @@
+"contrast","role","direction","gate","n_human"
+"WT_heat","primary","up","fdr_logfc",199
+"WT_heat","primary","down","fdr_logfc",94
+"KO_heat","comparator","up","fdr_logfc",218
+"KO_heat","comparator","down","fdr_logfc",113
+"Interaction","comparator","up","fdr_logfc",7
+"Interaction","comparator","down","fdr_logfc",0

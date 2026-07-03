@@ -1,0 +1,15 @@
+"contrast","role","gate","n_input","mapped_1to1","one_to_many","unmapped"
+"WT_heat","primary","fdr_logfc",339,298,1,40
+"WT_heat","primary","fdr_only",8723,6929,40,1754
+"KO_heat","comparator","fdr_logfc",392,337,2,53
+"KO_heat","comparator","fdr_only",8901,7079,41,1781
+"Interaction","comparator","fdr_logfc",9,8,0,1
+"Interaction","comparator","fdr_only",23,20,1,2
+"Geno_at_39","comparator","fdr_logfc",17,15,0,2
+"Geno_at_39","comparator","fdr_only",64,53,1,10
+"Geno_at_37","comparator","fdr_logfc",2,1,0,1
+"Geno_at_37","comparator","fdr_only",5,4,0,1
+"Temp_main","comparator","fdr_logfc",346,300,2,44
+"Temp_main","comparator","fdr_only",11153,8555,49,2549
+"Geno_main","comparator","fdr_logfc",4,3,0,1
+"Geno_main","comparator","fdr_only",60,49,1,10

@@ -1,0 +1,7 @@
+"contrast","role","direction","gate","n_mouse","n_unmapped","n_many_mapped","n_human","n_mapped_1to1"
+"WT_heat","primary","up","fdr_logfc",213,12,0,199,201
+"WT_heat","primary","down","fdr_logfc",126,28,1,94,97
+"KO_heat","comparator","up","fdr_logfc",239,19,0,218,220
+"KO_heat","comparator","down","fdr_logfc",153,34,2,113,117
+"Interaction","comparator","up","fdr_logfc",9,1,0,7,8
+"Interaction","comparator","down","fdr_logfc",0,0,0,0,0
