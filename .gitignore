@@ -26,6 +26,11 @@ scratch/
 03_results/_scratch/*
 !03_results/_scratch/.gitkeep
 
+# Rendered notebook HTML — regenerable via 02_analysis/notebooks/render.R.
+# Commit the gfm .md + its *_files/ figure dir instead (GitHub renders those inline).
+# Each notebook lives in its own folder, so match nested .html too.
+02_analysis/notebooks/**/*.html
+
 # Keep .gitkeep placeholders everywhere under 03_results/.
 !03_results/**/.gitkeep
 

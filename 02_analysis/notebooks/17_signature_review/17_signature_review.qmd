@@ -1,0 +1,320 @@
+---
+title: "Signature review"
+subtitle: "Stage 10_signature · GSE329522 iTreg"
+format:
+  html:
+    toc: true
+    toc-location: left
+    df-print: paged
+    embed-resources: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      # crisper + more compact figures: 150 dpi (sharp on GitHub/preview),
+                      # capped display width so plots don't span the whole page.
+                      fig.align = "center", dpi = 150, out.width = "80%")
+# This notebook only READS what stage 17 wrote — it never computes anything a later
+# stage leans on. Find the compartment root by walking up to a sentinel so paths work
+# whether this is knitted, quarto-rendered, or run line-by-line.
+.find_root <- function(sentinel = "02_analysis/config/analysis_config.yaml", start = getwd()) {
+  d <- normalizePath(start)
+  while (!file.exists(file.path(d, sentinel))) {
+    parent <- dirname(d)
+    if (identical(parent, d)) stop("project root (", sentinel, ") not found above ", start)
+    d <- parent
+  }
+  d
+}
+knitr::opts_knit$set(root.dir = .find_root())
+```
+
+```{r libs}
+suppressPackageStartupMessages({ library(dplyr); library(ggplot2); library(knitr) })
+here <- function(...) file.path(getwd(), ...)
+# Re-plot live from the checkpoint/tables using the project style (project_theme,
+# contrast_label) — I'd rather build figures at render time off the rds than embed
+# baked PNGs. The canonical publication figures still live in
+# 03_results/10_signature/figures/ (written by 17_signature_derive_viz.R).
+source(here("02_analysis/helpers/figure_style.R"))
+```
+
+*Notebook run `r format(Sys.time(), '%Y-%m-%d %H:%M UTC', tz='UTC')`.*
+
+## Where we are
+
+The mouse pipeline is done — `00`–`16` gave us DE, GSEA, TF, PROGENy, GATOM, CoReSh for
+all seven contrasts. It's 19,679 *mouse* symbols spread across seven contrasts,
+and the human compartments need **one frozen, ortholog-mapped signature** they can all score against.
+
+Stage 17 reshapes `master_de_genes.csv` into projectable pieces — up/down gene sets and signed-`t` ranked lists.
+Here I double check and *look* at what I'm about to freeze and make three calls:
+- which contrasts to ship,
+- which significance gate, and
+- how to handle ortholog ambiguity.
+
+```{r load}
+sig  <- readRDS(here("03_results/objects/17_signature_sets.rds"))
+ovd  <- here("03_results/10_signature/tables/_overview")
+sizes    <- read.csv(file.path(ovd, "signature_sizes.csv"))
+overlap  <- read.csv(file.path(ovd, "updown_overlap.csv"))
+coverage <- read.csv(file.path(ovd, "ortholog_coverage_preview.csv"))
+thr <- sig$thresholds
+# What I'm actually planning to freeze — read straight from the config so this
+# notebook tracks whatever I tweak in decisions.projection (no hardcoded set here).
+dcn <- yaml::read_yaml(here("02_analysis/config/analysis_config.yaml"))$decisions$projection
+EXPORT <- unlist(dcn$contrasts_primary)
+GATE   <- dcn$gate
+# small palette pulls for the live plots
+col_up <- FIG_CFG$colors$diverging$up %||% "#B35806"
+col_dn <- FIG_CFG$colors$diverging$down %||% "#2166AC"
+lab_short <- function(x) contrast_label(x, short = TRUE)
+```
+
+Stage 17 knobs used:
+* FDR < **`r thr$de_fdr`**,
+* |log2FC| ≥ **`r thr$de_logfc`**,
+* everything ranks on the signed **`r thr$rank_metric`**-statistic.
+
+It carries **both** gates forward
+* `fdr_only` and
+*  `fdr_logfc`
+
+to visually compare the effect of gate and contrast. I'm planning to freeze
+**`r paste(EXPORT, collapse=", ")`** at gate **`r GATE`** (read from `decisions.projection`).
+
+## 1. How big are these sets, and which gate?
+
+How many genes actually survive each threshold.
+The two gates give very different answers.
+
+```{r sizes-fig, fig.width=8, fig.height=4.6}
+sizes %>%
+  mutate(direction = factor(direction, c("up", "down"))) %>%
+  ggplot(aes(contrast, n_genes, fill = direction)) +
+  geom_col(position = position_dodge2(preserve = "single"), width = 0.7) +
+  geom_text(aes(label = n_genes), position = position_dodge2(width = 0.7, preserve = "single"),
+            vjust = -0.3, size = 3, colour = "grey25") +
+  facet_wrap(~ gate, ncol = 1, scales = "free_y") +
+  scale_fill_manual(values = c(up = col_up, down = col_dn)) +
+  scale_x_discrete(labels = lab_short) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(x = NULL, y = "genes in set", fill = "direction",
+       title = "Set sizes per contrast (mouse symbols, pre-ortholog)") +
+  project_theme() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r sizes-tab}
+sizes %>%
+  tidyr::pivot_wider(names_from = c(gate, direction), values_from = n_genes) %>%
+  knitr::kable(caption = "Set sizes by contrast × gate × direction (mouse symbols, before ortholog mapping).")
+```
+
+**What we see**
+* `WT_heat` alone is ~4k up and ~4.5k down. At 39 °C basically a third of the transcriptome moves,
+  which tracks (heat shock is a massive, genome-wide program) but
+  it makes for a mushy signature: score anything against a 4,000-gene set and you'll get a hit off
+  general transcriptional activity, not the specific axis.
+* Adding the |log2FC| ≥ 1 gate cuts `WT_heat` down to **`r sizes$n_genes[sizes$contrast=="WT_heat"&sizes$gate=="fdr_logfc"&sizes$direction=="up"]` up / `r sizes$n_genes[sizes$contrast=="WT_heat"&sizes$gate=="fdr_logfc"&sizes$direction=="down"]` down**
+   still plenty of genes, but now they're the ones that actually moved a lot.
+
+The small contrasts nearly vanish under the strict gate. `Interaction` drops to
+`r sizes$n_genes[sizes$contrast=="Interaction"&sizes$gate=="fdr_logfc"&sizes$direction=="up"]` up /
+`r sizes$n_genes[sizes$contrast=="Interaction"&sizes$gate=="fdr_logfc"&sizes$direction=="down"]` down,
+`Geno_at_39` to `r sizes$n_genes[sizes$contrast=="Geno_at_39"&sizes$gate=="fdr_logfc"&sizes$direction=="up"]`/
+`r sizes$n_genes[sizes$contrast=="Geno_at_39"&sizes$gate=="fdr_logfc"&sizes$direction=="down"]`.
+
+Downstream we'll move on with `fdr_logfc`, rather ship lean `WT_heat`.
+The gate only touches the binary up/down sets for the AUCell/UCell inputs.
+The ranked `.rnk` files stay the full signed-`t` list, so
+fgsea/decoupleR on the human pseudobulk isn't affected by this call.
+
+## 2. Are the contrasts saying different things?
+
+If `Temp_main` is basically a copy of `WT_heat`, there's no point shipping both. Jaccard overlap
+tells me how much the sets actually share.
+
+```{r overlap-fig, fig.width=7.5, fig.height=4}
+overlap %>%
+  filter(gate == "fdr_logfc") %>%
+  ggplot(aes(contrast_a, contrast_b, fill = jaccard)) +
+  geom_tile(colour = "grey92") +
+  geom_text(aes(label = ifelse(is.na(jaccard), "", sprintf("%.2f", jaccard))),
+            size = 2.8, 
+            colour = "grey15") +
+  facet_wrap(~ direction, labeller = labeller(direction = c(up = "UP sets", down = "DOWN sets"))) +
+  scale_fill_gradient(low = "grey97", high = col_dn, limits = c(0, 1), na.value = "grey90") +
+  scale_x_discrete(labels = lab_short) + scale_y_discrete(labels = lab_short) +
+  labs(x = NULL, y = NULL, fill = "Jaccard", title = "Set overlap across contrasts (gate = fdr_logfc)") +
+  project_theme() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), panel.grid = element_blank())
+```
+
+**What we see.**
+- The diagonal is 1 (each set with itself), and
+- off-diagonal shows divergence.
+
+Refresher: 2x2 factorial: genotype {WT, cGASKO} x temperature {37, 39}, n=5/group
+**Groups**
+    - "WT_37"
+    - "cGASKO_37"
+    - "WT_39"
+    - "cGASKO_39"
+
+**Contrasts**
+    - "WT_heat" = "WT_39" - "WT_37"; # heat effect in WT
+    - "KO_heat" = "cGASKO_39" - "cGASKO_37"; # heat effect in cGAS-KO samples
+    - "Temp_main" = "0.5*(WT_39 + cGASKO_39) - 0.5*(WT_37 + cGASKO_37)"; # aggregated/pooled temperature effect across genotypes
+    - "Interaction" = "(WT_39 - cGASKO_39) - (WT_37 - cGASKO_37)"; # cGAS-dependent heat effect
+(see `02_analysis/config/analysis_config.yaml`)
+
+At `fdr_logfc` gate, WT_heat and KO_heat are largely overlapping sets,
+but "Interaction" is mostly non-overlapping, which is interesting, though the set is 9 genes.
+
+```{r overlap-genes}
+# up+down union per contrast (the sets going to the freeze) at the gate I'm keeping
+setU <- function(co) sort(unique(c(sig$sets[[co]]$up[[GATE]], sig$sets[[co]]$down[[GATE]])))
+wt  <- setU("WT_heat"); ko <- setU("KO_heat"); int <- setU("Interaction")
+
+# list genes in sets + overlaps + uniques (summary)
+summary_tab <- data.frame(
+  set          = c("WT_heat", "KO_heat", "Interaction"),
+  n_genes      = c(length(wt), length(ko), length(int)),
+  shared_WT_KO = length(intersect(wt, ko)),
+  unique_vs_others = c(length(setdiff(wt, union(ko, int))),
+                       length(setdiff(ko, union(wt, int))),
+                       length(setdiff(int, union(wt, ko)))))
+knitr::kable(summary_tab,
+  caption = sprintf("Set sizes / sharing at gate=%s (up+down union, mouse symbols).", GATE))
+```
+
+```{r overlap-genes-lists}
+show_head <- function(x, n = 30) {
+  if (length(x) == 0) { cat("(none)\n"); return(invisible()) }
+  extra <- if (length(x) > n) sprintf("  … (+%d more)", length(x) - n) else ""
+  cat(paste(head(x, n), collapse = ", "), extra, "\n")
+}
+
+cat("Shared WT_heat ∩ KO_heat — the common heat core (genotype-independent):\n"); show_head(intersect(wt, ko))
+cat("\nWT_heat-unique (heat in the cGAS-competent genotype only):\n");          show_head(setdiff(wt, ko))
+cat("\nKO_heat-unique (heat only in cGAS-KO):\n");                              show_head(setdiff(ko, wt))
+cat("\nInteraction — full set (the cGAS-dependent heat response):\n");          show_head(int, n = 100)
+```
+
+I believe all might be of value for the temperature question. and might highlight interesting loci on the embeddings later on.
+
+## 3. Does it survive the trip to human?
+
+Need to count how many genes will survive orthology mapping
+
+```{r coverage-fig, fig.width=7.5, fig.height=4.4}
+coverage %>%
+  tidyr::pivot_longer(c(mapped_1to1, one_to_many, unmapped),
+                      names_to = "category", values_to = "n") %>%
+  mutate(category = factor(category, c("mapped_1to1", "one_to_many", "unmapped"))) %>%
+  ggplot(aes(contrast, n, fill = category)) +
+  geom_col(position = "fill", width = 0.7) +
+  facet_wrap(~ gate, ncol = 1) +
+  scale_fill_manual(values = c(mapped_1to1 = FIG_CFG$colors$okabe_ito$bluish_green %||% "#009E73",
+                               one_to_many = FIG_CFG$colors$okabe_ito$orange %||% "#E69F00",
+                               unmapped = "grey65"),
+                    labels = c(mapped_1to1 = "1:1", one_to_many = "one→many", unmapped = "no ortholog")) +
+  scale_y_continuous(labels = scales::percent_format(1), expand = expansion(mult = c(0, 0.02))) +
+  scale_x_discrete(labels = lab_short) +
+  labs(x = NULL, y = "fraction of up+down genes", fill = "mapping",
+       title = "Ortholog coverage of the up+down sets (dry run)") +
+  project_theme() + theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+```{r projected-human, message=FALSE}
+source(here("02_analysis/helpers/ortholog_utils.R"))
+# Map exactly the set I plan to freeze (EXPORT, GATE — both from the config above).
+mu   <- sort(unique(unlist(lapply(EXPORT, function(co) sig$sets[[co]]$ranked$gene_symbol))))
+omap <- build_ortholog_map(mu, min_support = sig$min_support)
+proj <- do.call(rbind, lapply(EXPORT, function(co) {
+  up <- map_binary_set(sig$sets[[co]]$up[[GATE]], omap)
+  dn <- map_binary_set(sig$sets[[co]]$down[[GATE]], omap)
+  data.frame(contrast = co, role = sig$roles[[co]],
+             mouse_up = length(sig$sets[[co]]$up[[GATE]]),
+             mouse_down = length(sig$sets[[co]]$down[[GATE]]),
+             human_up = length(up), human_down = length(dn),
+             human_up_down = length(unique(c(up, dn))))
+}))
+TRIVIAL <- as.integer(dcn$ortholog_ambiguity$trivial_min_genes %||% 10L)
+proj$verdict <- ifelse(proj$human_up_down < TRIVIAL, "TRIVIAL — would demote", "keep")
+knitr::kable(proj, row.names = FALSE,
+  caption = sprintf("Same sets, mapped mouse→human (dry run, gate=%s). 'TRIVIAL' = fewer than %d human genes in up+down.",
+                    GATE, TRIVIAL))
+```
+
+```{r demote-check}
+# Live consistency check: is anything I put in contrasts_primary going to be dropped
+# out from under me by the trivial-set rule?
+drop_on <- isTRUE(dcn$ortholog_ambiguity$drop_interaction_if_trivial)
+clash   <- proj$contrast[proj$verdict != "keep"]
+if (drop_on && length(clash)) {
+  cat(sprintf(paste0("HEADS UP: %s is in contrasts_primary but maps below trivial_min_genes=%d,\n",
+                     "and drop_interaction_if_trivial=TRUE — stage 18 WILL DEMOTE it.\n",
+                     "Set drop_interaction_if_trivial: false (or lower the floor) to actually ship it.\n"),
+              paste(clash, collapse = ", "), TRIVIAL))
+} else {
+  cat("No trivial-drop clash: every exported contrast clears the floor (or the drop rule is off).\n")
+}
+```
+
+Major contrasts defined sets should be fine. The Interaction needs visual inspection on whether its would be scattered noise or not.
+AUCell on a small set is unstable, might compare to UCell, though still .... Might try out simple expression or mean/z-scored expression, or per-gene z-scoring and show individual genes, see if they are interesting. Might just as well plot standard FeaturePlots or VlnPlots. Seurat's AddModulesScore or scanpy's score_genes might work, but depends on seed and background. Also not sure if they all are going to move up or down in whatever we are looking for. Would need to test. Might get a better angle on cGAS dependence from SAVI dataset.
+
+## 4. Does `WT_heat` look like heat-stressed Tregs?
+
+What are the genes sorted by signed `t`: noise or biology?
+
+```{r wt-top}
+wt_rank <- sig$sets$WT_heat$ranked
+top_up   <- head(wt_rank[order(-wt_rank$t), ], 30)
+top_down <- head(wt_rank[order(wt_rank$t), ], 30)
+markers <- c("Hspa1b","Hsph1","Hspa1a","Dnajb1","Ifit1","Isg15","Irf7","Stat1","Cxcl10")
+present <- intersect(markers, top_up$gene_symbol)
+knitr::kable(data.frame(rank = 1:30,
+                        up_gene = top_up$gene_symbol, up_t = round(top_up$t, 2),
+                        down_gene = top_down$gene_symbol, down_t = round(top_down$t, 2)),
+             caption = "WT_heat top-30 up (highest signed t) and top-30 down (lowest).")
+```
+
+Seems like a general stress-protective response with some migratory hints:
+* protein unfolding protection: Hsph1 and Hspa4l
+* complement activation via C3
+* inflammatory counterbalance of Il1rn
+* Itga5 and Itga3 breaking anchors which go up so cells detach from resting spot and grab onto something new (Sdc1)
+* Gap43 and Plek2 changing cell shape via cytoskeleton modifications
+* Timp1 inhibits matrix metalloproteinases, in an attempt to protect structural matrix of tissue from being degraded.
+* Serpinb6a protease inhibitor, that safeguards the insides of the cell from self-digestion through proteolytic enzymes
+* Dot1l epigenetic reponse, changing methylation behaviour
+* interesting retinoic pattern with Crabp2 (trasport vit A/retinoic acid to the nucleus) + Rorc (nuclear receptor transcription factor, master TF of Th17's) - might be a differentiation switch into more pro-inflammatory, more Th17-like state. Though we know that Th17 are more protected from heat than other Th's. There's a wet lab expectation that Tregs are potentially more hypoxia-sensitive under 39 degrees, and might be more prone to death under 39. Don't know for now just got to keep an eye on it
+
+## 5. Where are we?
+
+Pulling it together.
+
+1. **Which contrasts** Will explore both
+   * `WT_heat` (primary) along with
+   * `KO_heat`
+   * and `Interaction`
+2. **Gate** → `fdr_logfc`.
+3. **Ortholog ambiguity** keeping the defaults (one→many = union / `t` to each; many→one = max|`t`|;
+   no ortholog = drop and log;). Every dropped gene stays auditable in `ortholog_map.tsv`.
+
+**Downstream:** Later Phases 1–4 load these from `03_results/human_projection/`
+* the `.rnk` files feed fgsea/decoupleR on donor-level human *pseudobulk* (the primary evidence), and
+*  the up/down `.txt` sets feed AUCell/UCell where only per-cell scoring is possible.
+*  Keeping `WT_heat` as the headline, but will EDA other sets as well
+
+> **Green light:**
+> set `decisions.projection.status: APPROVED` in `analysis_config.yaml`
+> then run `18_projection_export.R` + `18_projection_export_viz.R`.
+> Until then 18 refuses to run and nothing is frozen.
+
+```{r decisions-echo, echo=TRUE}
+# Current proposed defaults (what 18 will use once status flips to APPROVED):
+str(yaml::read_yaml(here("02_analysis/config/analysis_config.yaml"))$decisions$projection)
+```
