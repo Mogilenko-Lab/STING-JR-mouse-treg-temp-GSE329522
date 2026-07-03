@@ -27,5 +27,5 @@
       ]
     }
   },
-  "postStartCommand": "bash -lc 'chmod +x .devcontainer/scripts/*.sh && .devcontainer/scripts/poststart_sanity.sh && .devcontainer/scripts/configure_pi_models.sh && .devcontainer/scripts/configure_sciagent_alias.sh'"
+  "postStartCommand": "bash -lc 'chmod +x .devcontainer/scripts/*.sh && .devcontainer/scripts/poststart_sanity.sh && .devcontainer/scripts/setup_ai_env.sh && .devcontainer/scripts/configure_pi_models.sh'"
 }
