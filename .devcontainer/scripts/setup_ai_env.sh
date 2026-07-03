@@ -119,4 +119,45 @@ else
 fi
 log "Claude settings seeded → $settings"
 
+######################################################################
+# 3. Shell-rc conveniences   (idempotent ~/.bashrc injections)
+######################################################################
+# Home is not persisted across rebuilds, so re-inject each start. Each block is
+# marker-guarded, so it is appended at most once per container lifetime.
+# (Folded in from the former standalone configure_sciagent_alias.sh + source_env.sh.)
+rc="$HOME/.bashrc"; touch "$rc"
+
+# 3a. `si` -> the project-local SciAgent-toolkit CLI. CWD-relative (NOT a PATH
+#     symlink) so it resolves to whichever project's vendored 01_modules copy you
+#     cd into — a fixed symlink would bake one checkout as the target.
+if ! grep -q '_sciagent_si_alias' "$rc" 2>/dev/null; then
+  cat >> "$rc" <<'RC'
+
+# _sciagent_si_alias: CWD-relative, safe across multiple vendored toolkit copies
+alias si="./01_modules/SciAgent-toolkit/bin/sciagent"
+RC
+  log "installed 'si' alias"
+fi
+
+# 3b. Auto-source the active project's .env (Gemini/PAL/etc. keys) into every shell.
+if ! grep -q '_source_project_env' "$rc" 2>/dev/null; then
+  cat >> "$rc" <<'RC'
+
+# _source_project_env: load the active project's .env into every interactive shell
+_source_project_env() {
+    local project_dir=""
+    if [ -d "/workspaces" ]; then
+        for d in /workspaces/*/; do
+            [ -f "${d}.devcontainer/.env" ] && project_dir="${d%/}" && break
+        done
+    fi
+    [ -z "$project_dir" ] && project_dir="${PWD}"
+    [ -f "${project_dir}/.devcontainer/.env" ] && { set -a; source "${project_dir}/.devcontainer/.env"; set +a; }
+    [ -f "${project_dir}/.env" ] && { set -a; source "${project_dir}/.env"; set +a; }
+}
+_source_project_env
+RC
+  log "installed .env auto-sourcing"
+fi
+
 log "done."
