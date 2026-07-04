@@ -19,6 +19,11 @@
 #   Rscript 02_analysis/notebooks/render.R [notebook.qmd] [gfm|html|both]
 # Defaults: 17_signature_review/17_signature_review.qmd, both.
 
+# Headless raster: R's default bitmapType is Xlib (needs X11), so on a container png() fails
+# and knitr silently falls back to svg. Force cairo; the notebook setup chunk also sets
+# dev="ragg_png". Both are headless and produce the committed PNGs the .md references.
+options(bitmapType = "cairo")
+
 args       <- commandArgs(trailingOnly = TRUE)
 default_nb <- "02_analysis/notebooks/17_signature_review/17_signature_review.qmd"
 nb   <- if (length(args) >= 1 && nzchar(args[1])) args[1] else default_nb

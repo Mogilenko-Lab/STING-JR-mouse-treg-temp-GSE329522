@@ -12,26 +12,36 @@ format:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
                       # crisper + more compact figures: 150 dpi (sharp on GitHub/preview),
-                      # capped display width so plots don't span the whole page.
-                      fig.align = "center", dpi = 150, out.width = "80%")
-# This notebook only READS what stage 17 wrote — it never computes anything a later
-# stage leans on. Find the compartment root by walking up to a sentinel so paths work
-# whether this is knitted, quarto-rendered, or run line-by-line.
-.find_root <- function(sentinel = "02_analysis/config/analysis_config.yaml", start = getwd()) {
-  d <- normalizePath(start)
+                      # capped display width so plots don't span the whole page. ragg_png is a
+                      # headless raster device (no X11) so this renders on the container and
+                      # commits real PNGs instead of silently falling back to svg.
+                      fig.align = "center", dpi = 150, out.width = "80%", dev = "ragg_png")
+options(bitmapType = "cairo")   # any bare png()/ggsave() in a chunk also stays headless-safe
+# This notebook only READS what stage 17 wrote — it never computes anything a later stage
+# leans on. Resolve the compartment root by (1) the notebook's own dir when knitr knows it
+# (render), else (2) walking up from the wd to a sentinel (interactive line-by-line), so paths
+# work whether this is knitted, quarto-rendered, or run line-by-line from any directory.
+.find_root <- function(sentinel = "02_analysis/config/analysis_config.yaml") {
+  start <- tryCatch(dirname(knitr::current_input(dir = TRUE)), error = function(e) NA_character_)
+  if (is.na(start) || !nzchar(start)) start <- getwd()
+  d <- normalizePath(start, mustWork = FALSE)
   while (!file.exists(file.path(d, sentinel))) {
     parent <- dirname(d)
-    if (identical(parent, d)) stop("project root (", sentinel, ") not found above ", start)
+    if (identical(parent, d))
+      stop("compartment root (", sentinel, ") not found above ", start,
+           "\n  -> launch radian from inside the compartment, or render via notebooks/render.R")
     d <- parent
   }
   d
 }
-knitr::opts_knit$set(root.dir = .find_root())
+.root <- .find_root()
+knitr::opts_knit$set(root.dir = .root)   # render pass runs from the compartment root
+if (interactive()) setwd(.root)          # line-by-line runs agree with render
 ```
 
 ```{r libs}
 suppressPackageStartupMessages({ library(dplyr); library(ggplot2); library(knitr) })
-here <- function(...) file.path(getwd(), ...)
+here <- function(...) file.path(.root, ...)   # anchored to the resolved root, never getwd()
 # Re-plot live from the checkpoint/tables using the project style (project_theme,
 # contrast_label) — I'd rather build figures at render time off the rds than embed
 # baked PNGs. The canonical publication figures still live in
