@@ -1,6 +1,6 @@
 services:
   dev-core:
-    image: scdock-r-dev:v0.5.6
+    image: scdock-r-dev:v0.5.7
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     working_dir: /workspaces/STING-cGAS-GSE329522
     env_file: .env
