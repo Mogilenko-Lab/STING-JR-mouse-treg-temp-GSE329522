@@ -35,9 +35,31 @@ install_if_missing(){
   if eval "$cmd"; then log "$name installed"; else log "WARN: $name install failed (continuing)"; fi
 }
 
-install_if_missing claude   "Claude Code"  'curl -fsSL https://claude.ai/install.sh | bash'
-install_if_missing codex    "OpenAI Codex" 'curl -fsSL https://chatgpt.com/codex/install.sh | sh'
-install_if_missing opencode "opencode"     'curl -fsSL https://opencode.ai/install | bash'
+install_with_fallback(){
+  # $1 = probe   $2 = name   $3 = primary installer   $4 = npm fallback pkg
+  # The official curl installers hit GitHub's release API for version info, which
+  # rate-limits unauthenticated requests (60/hr per IP) — on a shared workstation
+  # that intermittently 403s / "Failed to fetch version". The npm registry has no
+  # such limit, so fall back to it (user prefix ~/.local, already on PATH).
+  local probe="$1" name="$2" primary="$3" pkg="$4"
+  if command -v "$probe" >/dev/null 2>&1; then
+    log "$name present ($(command -v "$probe")) — skip"; return 0
+  fi
+  log "installing $name ..."
+  eval "$primary" >/dev/null 2>&1 || true
+  if command -v "$probe" >/dev/null 2>&1; then log "$name installed"; return 0; fi
+  log "$name primary installer failed — trying npm fallback ($pkg) ..."
+  npm config set prefix "$HOME/.local" >/dev/null 2>&1
+  if npm install -g "$pkg" >/dev/null 2>&1 && command -v "$probe" >/dev/null 2>&1; then
+    log "$name installed (npm fallback)"
+  else
+    log "WARN: $name install failed (continuing)"
+  fi
+}
+
+install_if_missing   claude   "Claude Code"  'curl -fsSL https://claude.ai/install.sh | bash'
+install_with_fallback codex    "OpenAI Codex" 'curl -fsSL https://chatgpt.com/codex/install.sh | sh'  '@openai/codex'
+install_with_fallback opencode "opencode"     'curl -fsSL https://opencode.ai/install | bash'         'opencode-ai'
 
 # Pi agent — the official pi.dev installer is interactive AND wants Node >=22.19;
 # the npm package installs cleanly headless on the image's Node 20 into a
@@ -102,6 +124,7 @@ desired="$(cat <<'JSON'
   "showThinkingSummaries": true,
   "autoMemoryEnabled": false,
   "teammateMode": "auto",
+  "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" },
   "statusLine": { "type": "command", "command": "bash \"$HOME/.claude/statusline.sh\"", "padding": 2 }
 }
 JSON
