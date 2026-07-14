@@ -53,6 +53,12 @@ if (!file.exists(gsea_mst_fp)) {
 }
 gsea_mst <- readr::read_csv(gsea_mst_fp, show_col_types = FALSE)
 
+# Drop PROGENy-as-gene-set rows: PROGENy is represented canonically by the
+# dedicated decoupleR activity frame (entity_type == "PROGENy"). Keeping the
+# fgsea-on-footprints rows too would collide on the shared PROGENY_* pathway_id
+# namespace and break global pathway_id uniqueness.
+gsea_mst <- dplyr::filter(gsea_mst, database != "PROGENy")
+
 # Add entity_type
 gsea_mst$entity_type <- "Pathway"
 
@@ -97,6 +103,11 @@ gsea_mst$genes_full_set <- vapply(
 tf_mst_fp <- file.path(MST_DIR, "master_tf_activities.csv")
 tf_mst <- if (file.exists(tf_mst_fp)) {
   readr::read_csv(tf_mst_fp, show_col_types = FALSE) %>%
+    # Keep only the CollecTRI network — the same network that backs the TF rows
+    # in explorer_universe.csv. The DoRothEA_ABC rows are a WT_heat-only forensic
+    # ULM run that shares the TF_* pathway_id namespace with CollecTRI, so keeping
+    # them would duplicate identities and drift genes_full_set across contrasts.
+    dplyr::filter(database == "CollecTRI") %>%
     dplyr::mutate(entity_type = "TF", genes_full_set = core_enrichment)
 } else {
   NULL
