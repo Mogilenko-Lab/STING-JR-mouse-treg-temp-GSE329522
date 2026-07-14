@@ -56,3 +56,38 @@ Standalone interactive HTML dashboard and companion CSV for exploring pathway-le
 | Script | Function | Config | Input |
 | :--- | :--- | :--- | :--- |
 | [bump_dashboard.py](file:///workspaces/STING-cGAS-GSE329522/02_analysis/scripts/bump_dashboard.py) | Renders the interactive pathway-trajectory bump-chart dashboard and companion CSV | [analysis_config.yaml](file:///workspaces/STING-cGAS-GSE329522/02_analysis/config/analysis_config.yaml) | [master_gsea_table.csv](file:///workspaces/STING-cGAS-GSE329522/03_results/master/master_gsea_table.csv) |
+## master_unified.csv (explorer bundle view)
+**The consolidated pathway-explorer input accumulator (entity_type-tagged Pathway/TF/PROGENy/GATOM rows, lowercase nes, genes_full_set = membership ∩ atlas, contrast-invariant): the cross-stratum enrichment/activity universe the dashboards lay out.**
+| | |
+|---|---|
+| Script   | `02_analysis/scripts/pathway_explorer_adapter/consolidate_explorer_bundle.R` |
+| Function | (validation + manifest) |
+| Config   | `paths.master = 03_results/master/` |
+| Input    | `03_results/master/master_unified.csv; 03_results/master/atlas_gene_universe.txt` |
+
+## master_de_table.csv (explorer schema view)
+**The explorer-schema DE view (gene_symbol, t, logFC, adj.P.Val, contrast): the t-ranked per-contrast gene list that drives the dashboards' running-sum panel.**
+| | |
+|---|---|
+| Script   | `02_analysis/scripts/pathway_explorer_adapter/consolidate_explorer_bundle.R` |
+| Function | (validation) |
+| Config   | `paths.master = 03_results/master/` |
+| Input    | `03_results/master/master_de_table.csv` |
+## pathway_explorer_<contrast>.html
+**Per-contrast interactive pathway-explorer dashboard (UMAP of GSEA pathways + CollecTRI TF + PROGENy activities, NES-colored, FDR-sliderable, with the t-ranked running-sum panel): this dashboard enables interactive cross-entity similarity mapping and detailed exploration of regulatory cascades.**
+| | |
+|---|---|
+| Script   | `02_analysis/scripts/pathway_explorer_adapter/run_pathway_explorer.sh` |
+| Function | `generate_all_dashboards()` (pathway_explorer) |
+| Config   | `paths.interactive = 03_results/interactive/; paths.master = 03_results/master/` |
+| Input    | `03_results/master/master_unified.csv; 03_results/master/master_de_table.csv` |
+
+## index.html
+**Landing page linking every per-contrast pathway-explorer dashboard: the entry point for interactive exploration of MSigDB/custom pathways, TF activities, and PROGENy activities.**
+| | |
+|---|---|
+| Script   | `02_analysis/scripts/pathway_explorer_adapter/run_pathway_explorer.sh` |
+| Function | `generate_index_page()` (pathway_explorer) |
+| Config   | `paths.interactive = 03_results/interactive/; paths.master = 03_results/master/` |
+| Input    | `03_results/master/master_unified.csv` |
+
