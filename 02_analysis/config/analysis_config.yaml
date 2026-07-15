@@ -236,6 +236,19 @@ databases:
     # selectively-subset 16-gene list (shows what was dropped). Built by 00b_curate_lombardi_hif.R.
     - name: "Lombardi2022_HIF"
       path: "00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds"
+    # Curated heat-shock-response (HSR) thermal proteostasis lens — the biology-defined
+    # second lens held orthogonal to the empirical WT_heat_up. Two terms: HSR_core (47 mouse,
+    # cleaned cytosolic HSF1/chaperone core) and HSR_sensitivity (170 mouse, full union).
+    # Built by 00d + 00e (msigdbr v2026.1.Hs, taxonomy-refined). Honest ceiling: proteotoxic-
+    # stress-general, not fever-specific — only the 37/39 contrast measures thermal-ness.
+    - name: "HSR_lens"
+      path: "00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds"
+    # Tight TCR/IEG T-cell-activation lens — the "activation pole" of the three-lens
+    # decomposition (66 mouse; TCR-proximal + costim-early + immediate-early TFs + activation
+    # effectors), disjoint from the HSR core by construction. Built by 00f (agy web-researched
+    # panel + curator refinement). Overlap of WT_heat_up with this = activation, not thermal.
+    - name: "TCR_activation"
+      path: "00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds"
 
 # =============================================================================
 # ANALYSIS STAGES
@@ -281,6 +294,9 @@ stages:
   - id: "11_projection"
     title: "Human projection export"
     purpose: "Ortholog-map mouse→human (babelgene, pinned) and freeze the human-symbol projection contract under 03_results/human_projection/."
+  - id: "12_hsr_decomp"
+    title: "Heat-response three-lens decomposition"
+    purpose: "Decompose the WT 39-vs-37 response into thermal HSR vs TCR/activation vs shared, using the curated HSR core, the TCR/IEG activation panel, and the empirical WT_heat_up; leading-edge attribution + gene overlap + rank concordance + competitive/conditional GSEA."
 
 # =============================================================================
 # INPUT/OUTPUT PATHS (relative to project root)
