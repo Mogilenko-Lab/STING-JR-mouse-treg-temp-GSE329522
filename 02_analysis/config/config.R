@@ -152,8 +152,7 @@ AXIS_LABELS <- c(
 # so the repressed core now gets a distinct cool hue (dark teal) that is clearly
 # unlike the orange UP-set and the purple heat-shock contamination -- and is NOT
 # the IFN navy (#2166AC), so it cannot be confused with the IFN axis. Heat-shock
-# stays purple (out-of-family contamination). Design spec:
-#   docs/_internal/reasoning/2026-06-09-comp-bio-value-and-hif-program-reality/04-figure-design-spec.md (§5)
+# stays purple (out-of-family contamination).
 MODULE_COLORS <- c(
   "heatshock_stress"     = "#762A83",  # purple -- the contamination (Hspa1a/Timp1/Sdc1/Cdkn1a/Serpine1/Eno2)
   "shared_angio_glucose" = "#E08214",  # orange -- Vegfa/Slc2a1 (shared HIF1/HIF2 angio-glucose; UP, least diagnostic)
@@ -178,8 +177,7 @@ HEAT_AXIS_COLORS <- c(
 ISG_MARKERS <- c("Ifit1", "Isg15", "Irf7", "Oasl2", "Mx1", "Stat1", "Cxcl10")
 
 # HIF / glycolysis arm (shows NO DETECTABLE cGAS-dependence at n=5 -- an
-# asymmetry vs the cGAS-dependent IFN arm, NOT proven independence; see
-# docs/_internal/reasoning/ and the two-arms framing constraint).
+# asymmetry vs the cGAS-dependent IFN arm, NOT proven independence).
 #   HIF-specific:      Slc2a1, Vegfa, Egln3, Bnip3
 #   shared-glycolytic: Pgk1,  Ldha,  Aldoa, Hk2   (carried by many programs, not HIF-exclusive)
 HIF_GLYCO_MARKERS <- c(
@@ -200,13 +198,16 @@ KEY_TFS <- c("Irf3", "Irf7", "Irf1", "Stat1", "Stat2", "Hif1a", "Epas1", "Nfkb1"
 KEY_PROGENY <- c("Hypoxia", "JAK-STAT", "NFkB", "TNFa")
 
 # ============================================================================
-# PROVISIONAL CAPTION (single source of truth; every figure uses this)
+# SAMPLE-MAPPING CAPTION (single source of truth; every figure uses this)
 # ============================================================================
 
-#' Standard PROVISIONAL stamp for every figure caption/subtitle.
+#' Standard sample-provenance stamp for every figure caption/subtitle.
+#' The 12630-RS-021..040 -> genotype x temperature mapping is owner-confirmed
+#' (2026-07-22 sample sheet; see 00_data/processed/PROVENANCE.md). It matched the
+#' Hspa1b/Hsph1 thermometer + Cgas inference exactly (20/20).
 #' @return Single character string.
 provisional_caption <- function() {
-  "PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet"
+  "Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)"
 }
 
 # ============================================================================

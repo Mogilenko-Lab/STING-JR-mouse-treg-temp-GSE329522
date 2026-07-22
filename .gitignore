@@ -3,6 +3,7 @@
 !00_data/raw/.gitkeep
 00_data/processed/*
 !00_data/processed/.gitkeep
+!00_data/processed/PROVENANCE.md
 00_data/references/*
 !00_data/references/.gitkeep
 

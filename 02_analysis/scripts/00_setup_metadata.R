@@ -1,37 +1,38 @@
 #!/usr/bin/env Rscript
 # 00_setup_metadata.R - Build the sample-metadata object for GSE329522
 # Project: STING-cGAS-GSE329522 (2x2 genotype x temperature iTreg bulk RNA-seq)
-# Phase:   0 (Scaffold / infrastructure)
 # Inputs:
 #   - 02_analysis/config/analysis_config.yaml (via config.R)
 #   - GSE329522 deposited CPM column order (12630-RS-021 .. 040) [knowledge, not read here]
+#   - Owner sample sheet (2026-07-22) -- see 00_data/processed/PROVENANCE.md
 # Outputs:
 #   - 03_results/objects/sample_metadata.rds
 #   - 03_results/master/sample_metadata.csv
 # Dependencies: yaml (via config.R). No heavy packages required.
 #
 # ----------------------------------------------------------------------------
-# TWO ORDERINGS (the crux of the mapping risk):
+# TWO ORDERINGS (the historical mapping risk, now resolved):
 #
 #  (A) CPM column order = TEMPERATURE-MAJOR (this is what the analysis uses).
-#      Inferred from the Hspa1b/Hsph1 heat-shock thermometer + Cgas (WT>KO):
+#      OWNER-CONFIRMED by the 2026-07-22 sample sheet; the Hspa1b/Hsph1 heat-shock
+#      thermometer + Cgas (WT>KO) inference matched it exactly, 20/20:
 #        021-025 = WT_37     026-030 = cGASKO_37
 #        031-035 = WT_39     036-040 = cGASKO_39
 #
-#  (B) GEO GSM accession order = GENOTYPE-MAJOR (stored only for the Phase 1
-#      "scramble" exhibit):
+#  (B) GEO GSM accession order = GENOTYPE-MAJOR (stored only to document the
+#      accession-vs-column discrepancy):
 #        GSM9705690..694 = WT 37      GSM9705695..699 = WT 39
 #        GSM9705700..704 = cGAS KO 37 GSM9705705..709 = cGAS KO 39
 #
-#  TRUE GSM per library = match each library's INFERRED genotype+temp to its GSM:
+#  TRUE GSM per library = match each library's confirmed genotype+temp to its GSM:
 #        WT_37     021-025 -> GSM690-694
 #        cGASKO_37 026-030 -> GSM700-704
 #        WT_39     031-035 -> GSM695-699
 #        cGASKO_39 036-040 -> GSM705-709
 #
 #  gsm_id_positional = the GSM accession list (690..709) lined up POSITIONALLY
-#  to columns 021..040 -- i.e. what a naive positional join would (wrongly)
-#  produce. Because (A) and (B) differ, this mislabels libraries 026-035.
+#  to columns 021..040 -- what a naive positional join would (wrongly) produce.
+#  Because (A) and (B) differ, that naive join mislabels libraries 026-035.
 # ----------------------------------------------------------------------------
 
 source("02_analysis/config/config.R")
@@ -39,7 +40,7 @@ source("02_analysis/config/config.R")
 # ---- Library IDs in deposited CPM column order (temperature-major) ----------
 library_id <- sprintf("12630-RS-%03d", 21:40)
 
-# ---- Inferred group per library (TEMPERATURE-MAJOR; analysis truth) ---------
+# ---- Owner-confirmed group per library (TEMPERATURE-MAJOR; analysis truth) ---
 group <- rep(c("WT_37", "cGASKO_37", "WT_39", "cGASKO_39"), each = 5)
 
 genotype <- ifelse(grepl("^WT_", group), "WT", "cGASKO")
@@ -57,7 +58,7 @@ gsm_id <- unlist(lapply(c("WT_37", "cGASKO_37", "WT_39", "cGASKO_39"),
                         function(g) gsm_true_by_group[[g]]))
 
 # ---- Naive positional GSM (accession order lined up to columns 021..040) ----
-# This is the WRONG join, kept to build the scramble exhibit in Phase 1.
+# This is the WRONG join, kept only to document the naive-positional-join trap.
 gsm_id_positional <- sprintf("GSM%d", 9705690:9705709)
 
 # ---- Assemble data.frame with proper factor reference levels ---------------
@@ -68,7 +69,7 @@ metadata <- data.frame(
   group             = factor(group, levels = c("WT_37", "cGASKO_37", "WT_39", "cGASKO_39")),
   gsm_id            = gsm_id,
   gsm_id_positional = gsm_id_positional,
-  mapping_status    = "INFERRED",
+  mapping_status    = "CONFIRMED",   # owner sample sheet 2026-07-22 (was INFERRED; matched 20/20)
   stringsAsFactors  = FALSE
 )
 rownames(metadata) <- metadata$library_id
@@ -98,4 +99,4 @@ stopifnot(levels(metadata$temp)[1] == "37")
 
 cat("\n[OK] Wrote:", rds_path, "\n")
 cat("[OK] Wrote:", csv_path, "\n")
-cat("[OK] 5/5/5/5 balanced; refs = WT & 37; mapping_status = INFERRED.\n")
+cat("[OK] 5/5/5/5 balanced; refs = WT & 37; mapping_status = CONFIRMED (owner sample sheet 2026-07-22).\n")
