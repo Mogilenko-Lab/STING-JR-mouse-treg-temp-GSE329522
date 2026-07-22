@@ -21,8 +21,8 @@
 ## Run from project root:
 ##   Rscript 02_analysis/scripts/08_coresh_derived_gsea.R
 ##
-## GATED: CoReSh arm requires the ~20 GB mmu Synapse compendium; see
-##   docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md
+## GATED: the CoReSh arm requires the ~20 GB mmu Synapse compendium (consumed read-only
+##   from the shared reference cache); if it has not been run this script stops loudly.
 
 # ============================================================================
 # 0. Environment setup (config.R FIRST, then de_gsea_helpers.R — per contract)
@@ -56,17 +56,15 @@ OVERVIEW_DIR    <- YAML_CONFIG$figures$overview_dir    %||% "_overview"
 # 1. GUARD — the CoReSh-derived sets must exist (NEVER fabricate)
 # ============================================================================
 ## This script is DOWNSTREAM of 07_coresh_search.R, which requires the ~20 GB mmu
-## Synapse compendium (syn66227307) to be provisioned in-container by the owner.
-## Until that is done, coresh_derived_sets.rds will not exist and we stop loudly.
-## See: docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md
+## Synapse compendium (syn66227307), consumed read-only from the shared reference cache.
+## Until 07 has run, coresh_derived_sets.rds will not exist and we stop loudly.
 
 coresh_sets_fp <- file.path(DIR_OBJECTS, "coresh_derived_sets.rds")
 
 if (!file.exists(coresh_sets_fp)) {
   stop(
     "CoReSh-derived sets not found — run 07_coresh_search.R first ",
-    "(requires the mmu compendium; see ",
-    "docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md)"
+    "(requires the mmu compendium mounted read-only from the shared reference cache)."
   )
 }
 
@@ -80,7 +78,7 @@ if (!file.exists(coresh_sets_fp)) {
 ##   * Values — character vectors of mouse gene symbols (already size-filtered to
 ##     [gsea_min_size, gsea_max_size] and Jaccard-deduped in 07_coresh_search.R).
 ##   * The list may be empty (length 0) if all derived sets failed the size/Jaccard
-##     filter — this is a soft-exit case handled below (§3).
+##     filter — this is a soft-exit case handled below.
 
 coresh_sets <- readRDS(coresh_sets_fp)
 
@@ -193,6 +191,12 @@ for (co in focal) {
   # (b)+(c) run fgsea — cached per contrast
   cache_fp <- file.path(DIR_OBJECTS, sprintf("gsea_coresh_%s.rds", co))
 
+  # load_or_compute keys on filename only — it cannot see that the CoReSh-derived set
+  # inventory changed (07 re-derived them from a different query set). Force a recompute
+  # when the cache does not cover every current derived set (mirrors 07's force_sweep).
+  force_gsea <- file.exists(cache_fp) &&
+    !all(names(coresh_sets) %in% unique(as.character(readRDS(cache_fp)$pathway_id)))
+
   gsea_df <- load_or_compute(cache_fp, function() {
     run_fgsea(
       ranked    = ranked,
@@ -201,7 +205,7 @@ for (co in focal) {
       contrast  = co
       # minSize/maxSize/eps/nperm/seed resolved from config inside run_fgsea()
     )
-  })
+  }, force = force_gsea)
 
   if (is.null(gsea_df) || nrow(gsea_df) == 0L) {
     message(sprintf("  [%s] 0 CoReSh-derived sets enriched.", co))

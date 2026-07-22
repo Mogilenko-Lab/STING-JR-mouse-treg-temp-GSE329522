@@ -1,6 +1,21 @@
 "query_name","query_label","gse","gpl","pctVar","pval","size","rank"
-"Q_sig_WT_heat_up","Signature: WT heat up","GSE65083","GPL7202",6.02830499,NA,95,1
-"Q_sig_WT_heat_up","Signature: WT heat up","GSE65084","GPL7202",6.02830499,NA,95,2
-"Q_sig_WT_heat_up","Signature: WT heat up","GSE46185","GPL1261",5.75545582,NA,114,3
-"Q_sig_WT_heat_up","Signature: WT heat up","GSE41833","GPL11533",5.4096561,NA,88,4
-"Q_sig_WT_heat_up","Signature: WT heat up","GSE169006","GPL17021",5.13479191,NA,99,5
+"Q_sig_Interaction_up_fdr_logfc","Signature: Interaction up fdr logfc","GSE89069","GPL19057",13.0825099,NA,3,1
+"Q_sig_Interaction_up_fdr_logfc","Signature: Interaction up fdr logfc","GSE62757","GPL1261",12.0308597,NA,5,2
+"Q_sig_Interaction_up_fdr_logfc","Signature: Interaction up fdr logfc","GSE62756","GPL1261",10.3940938,NA,4,3
+"Q_sig_Interaction_up_fdr_logfc","Signature: Interaction up fdr logfc","GSE62758","GPL1261",8.47861937,NA,3,4
+"Q_sig_Interaction_up_fdr_logfc","Signature: Interaction up fdr logfc","GSE193605","GPL24247",8.22622559,NA,6,5
+"Q_sig_Interaction_up_fdr_only","Signature: Interaction up fdr only","GSE89069","GPL19057",18.4781234,NA,9,1
+"Q_sig_Interaction_up_fdr_only","Signature: Interaction up fdr only","GSE62757","GPL1261",15.8087554,NA,11,2
+"Q_sig_Interaction_up_fdr_only","Signature: Interaction up fdr only","GSE62756","GPL1261",13.186164,NA,11,3
+"Q_sig_Interaction_up_fdr_only","Signature: Interaction up fdr only","GSE193605","GPL24247",11.3662504,NA,15,4
+"Q_sig_Interaction_up_fdr_only","Signature: Interaction up fdr only","GSE94388","GPL13112",10.6216396,NA,7,5
+"Q_sig_WT_heat_up_fdr_logfc","Signature: WT heat up fdr logfc","GSE65083","GPL7202",6.02830499,NA,95,1
+"Q_sig_WT_heat_up_fdr_logfc","Signature: WT heat up fdr logfc","GSE65084","GPL7202",6.02830499,NA,95,2
+"Q_sig_WT_heat_up_fdr_logfc","Signature: WT heat up fdr logfc","GSE46185","GPL1261",5.75545582,NA,114,3
+"Q_sig_WT_heat_up_fdr_logfc","Signature: WT heat up fdr logfc","GSE41833","GPL11533",5.4096561,NA,88,4
+"Q_sig_WT_heat_up_fdr_logfc","Signature: WT heat up fdr logfc","GSE169006","GPL17021",5.13479191,NA,99,5
+"Q_sig_WT_heat_up_fdr_only","Signature: WT heat up fdr only","GSE48870","GPL9273",25.742551,NA,2580,1
+"Q_sig_WT_heat_up_fdr_only","Signature: WT heat up fdr only","GSE80205","GPL17021",25.5780782,NA,2587,2
+"Q_sig_WT_heat_up_fdr_only","Signature: WT heat up fdr only","GSE174225","GPL24247",24.4338395,NA,2614,3
+"Q_sig_WT_heat_up_fdr_only","Signature: WT heat up fdr only","GSE212127","GPL24247",24.0886406,NA,2569,4
+"Q_sig_WT_heat_up_fdr_only","Signature: WT heat up fdr only","GSE163856","GPL17021",23.7346377,NA,2366,5

@@ -1,8 +1,8 @@
 # 07_coresh_search.R — COMPUTE
 ## CoReSh (COregulation REgulation SearcH) — rank the public MOUSE (mmu) GEO compendium
-## by how strongly the project's WT_heat_up signature is CO-REGULATED in each public dataset
-## (PCA-inspired pctVar score), then derive coregulation gene sets from the top hits for
-## downstream GSEA (08_coresh_derived_gsea.R).
+## by how strongly the configured matrix of project signatures is CO-REGULATED in each public
+## dataset (PCA-inspired pctVar score), then derive coregulation gene sets from the top hits
+## for downstream GSEA (08_coresh_derived_gsea.R).
 ##
 ## Per the `coresh-signature-search` skill
 ## (01_modules/SciAgent-toolkit/skills/coresh-signature-search/SKILL.md):
@@ -26,8 +26,9 @@
 ##     NO compendium is fabricated.
 ##
 ## (B) QUERY CONTRACT.
-##     The sole query is coresh.query_signature in analysis_config.yaml:
-##     sets[[contrast]][[direction]][[gate]] from 03_results/objects/17_signature_sets.rds.
+##     Queries are coresh.query_signatures in analysis_config.yaml:
+##     each sets entry resolves sets[[contrast]][[direction]][[gate]] from the shared
+##     03_results/objects/17_signature_sets.rds object.
 ##
 ## (C) CHUNK PATH ASSUMED.
 ##     Default chunk dir = paths.coresh_chunks (if set) else the 14839 convention
@@ -148,48 +149,67 @@ message(sprintf("[07_coresh_search] CoReSh mmu compendium: %d chunk(s) at %s",
                 length(chunk_files), chunk_dir))
 
 # ============================================================================
-# 3. Build the single WT_heat_up signature query
+# 3. Build one signature query per configured matrix entry
 # ============================================================================
 
-qsig <- coresh_cfg$query_signature %||% list()
-required_qsig <- c("object", "contrast", "direction", "gate")
-missing_qsig <- required_qsig[!nzchar(vapply(required_qsig, function(k) qsig[[k]] %||% "", character(1)))]
-if (length(missing_qsig) > 0L)
-  stop("07_coresh_search: coresh.query_signature missing required field(s): ",
-       paste(missing_qsig, collapse = ", "))
+qsigs <- coresh_cfg$query_signatures %||% list()
+if (is.null(qsigs$object) || !nzchar(as.character(qsigs$object)))
+  stop("07_coresh_search: coresh.query_signatures.object is required.")
+if (is.null(qsigs$sets) || !is.list(qsigs$sets) || length(qsigs$sets) == 0L)
+  stop("07_coresh_search: coresh.query_signatures.sets must be a non-empty list.")
 
-sig_fp <- if (startsWith(qsig$object, "/")) qsig$object else file.path(PROJECT_ROOT, qsig$object)
+sig_fp <- if (startsWith(qsigs$object, "/")) qsigs$object else file.path(PROJECT_ROOT, qsigs$object)
 if (!file.exists(sig_fp))
   stop("07_coresh_search: query signature object not found: ", sig_fp)
 
 signature_obj <- readRDS(sig_fp)
 signature_sets <- signature_obj$sets %||% signature_obj
-sig_symbols <- tryCatch(
-  signature_sets[[qsig$contrast]][[qsig$direction]][[qsig$gate]],
-  error = function(e) NULL
-)
-if (is.null(sig_symbols))
-  stop("07_coresh_search: missing query signature slot sets[['", qsig$contrast,
-       "']][['", qsig$direction, "']][['", qsig$gate, "']] in ", sig_fp)
-if (!is.character(sig_symbols) || length(sig_symbols) == 0L)
-  stop("07_coresh_search: query signature slot must be a non-empty character vector; got ",
-       paste(class(sig_symbols), collapse = "/"), " length ", length(sig_symbols))
-sig_symbols <- unique(sig_symbols[nzchar(sig_symbols)])
-if (length(sig_symbols) == 0L)
-  stop("07_coresh_search: query signature contains no non-empty gene symbols.")
 
-query_name <- paste0("Q_sig_", qsig$contrast, "_", qsig$direction)
-query_entrez <- sym2ent(sig_symbols, species = CORESH_SPECIES)
-message(sprintf("  %-28s %d symbols -> %d mouse Entrez",
-                query_name, length(sig_symbols), length(query_entrez)))
+all_queries <- list()
+for (i in seq_along(qsigs$sets)) {
+  spec <- qsigs$sets[[i]]
+  required_spec <- c("contrast", "direction", "gate")
+  missing_spec <- required_spec[!nzchar(vapply(required_spec, function(k) spec[[k]] %||% "", character(1)))]
+  if (length(missing_spec) > 0L)
+    stop("07_coresh_search: coresh.query_signatures.sets[[", i,
+         "]] missing required field(s): ", paste(missing_spec, collapse = ", "))
+
+  contrast <- as.character(spec$contrast)
+  direction <- as.character(spec$direction)
+  gate <- as.character(spec$gate)
+  slot_label <- paste0("sets[['", contrast, "']][['", direction, "']][['", gate, "']]")
+
+  sig_symbols <- tryCatch(
+    signature_sets[[contrast]][[direction]][[gate]],
+    error = function(e) NULL
+  )
+  if (is.null(sig_symbols))
+    stop("07_coresh_search: missing query signature slot ", slot_label, " in ", sig_fp)
+  if (!is.character(sig_symbols) || length(sig_symbols) == 0L)
+    stop("07_coresh_search: query signature slot ", slot_label,
+         " must be a non-empty character vector; got ",
+         paste(class(sig_symbols), collapse = "/"), " length ", length(sig_symbols))
+
+  sig_symbols <- unique(sig_symbols[nzchar(sig_symbols)])
+  if (length(sig_symbols) == 0L)
+    stop("07_coresh_search: query signature slot ", slot_label,
+         " contains no non-empty gene symbols.")
+
+  query_name <- paste0("Q_sig_", contrast, "_", direction, "_", gate)
+  if (query_name %in% names(all_queries))
+    stop("07_coresh_search: duplicate query name from coresh.query_signatures: ", query_name)
+
+  query_entrez <- sym2ent(sig_symbols, species = CORESH_SPECIES)
+  all_queries[[query_name]] <- query_entrez
+  message(sprintf("  %-40s %d symbols -> %d mouse Entrez",
+                  query_name, length(sig_symbols), length(query_entrez)))
+}
 
 # ============================================================================
 # 6. Combine, coerce to integer, drop sub-min queries, run the cached sweep
 # ============================================================================
 ## coresh_batch() asserts is.integer(q) && length(q) >= 3 — coerce + drop singletons/pairs.
 
-all_queries <- list()
-all_queries[[query_name]] <- query_entrez
 all_queries <- lapply(all_queries, as.integer)
 too_small   <- vapply(all_queries, length, integer(1)) < MIN_Q
 if (any(too_small)) {
@@ -199,7 +219,7 @@ if (any(too_small)) {
 }
 if (length(all_queries) == 0L)
   stop("07_coresh_search: no queries pass the size filter (k >= ", MIN_Q,
-       "). Check coresh.query_signature and mouse symbol-to-Entrez mapping.")
+       "). Check coresh.query_signatures and mouse symbol-to-Entrez mapping.")
 message(sprintf("[07_coresh_search] %d queries pass size filter: %s",
                 length(all_queries), paste(names(all_queries), collapse = ", ")))
 

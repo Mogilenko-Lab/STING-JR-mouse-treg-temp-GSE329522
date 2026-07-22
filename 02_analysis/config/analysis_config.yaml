@@ -126,13 +126,15 @@ coresh:
   min_query_size: 3
   n_cores: 4
   n_derive: 50
-  # Query = the project's WT_heat_up signature (same object projected to human & scored on human
-  # T-cell populations), NOT curated marker modules. mmu compendium => mouse-native symbols.
-  query_signature:
+  # Query matrix = project signatures from the mouse-native signature-set object.
+  query_signatures:
     object: 03_results/objects/17_signature_sets.rds
-    contrast: WT_heat
-    direction: up
-    gate: fdr_logfc
+    # `origin` is the biological family label for the figure color strip (config, not row order).
+    sets:
+      - { contrast: WT_heat,     direction: up, gate: fdr_logfc, origin: "WT_heat_up (generic thermal)" }        # 213
+      - { contrast: WT_heat,     direction: up, gate: fdr_only,  origin: "WT_heat_up (generic thermal)" }        # ~4207, broad
+      - { contrast: Interaction, direction: up, gate: fdr_logfc, origin: "Interaction_up (cGAS-specific ISG)" }  # 9, core
+      - { contrast: Interaction, direction: up, gate: fdr_only,  origin: "Interaction_up (cGAS-specific ISG)" }  # 23, gate-sensitivity
 
 # =============================================================================
 # COLOR PALETTES (colorblind-safe)
@@ -299,7 +301,7 @@ stages:
     purpose: "Assemble the two-arms panel and the claim-to-evidence reply memo; no new statistics."
   - id: "08_coresh"
     title: "CoReSh signature search"
-    purpose: "Rank the public mmu compendium by coregulation of the WT_heat_up signature; GSEA on CoReSh-derived gene sets."
+    purpose: "Rank the public mmu compendium by coregulation of configured project signatures; GSEA on CoReSh-derived gene sets."
   - id: "09_gatom"
     title: "GATOM metabolic modules"
     purpose: "Atom-graph MWCS metabolic modules from the DE signal (MitoCarta-corroborating Complex-I / pseudohypoxia mechanism)."

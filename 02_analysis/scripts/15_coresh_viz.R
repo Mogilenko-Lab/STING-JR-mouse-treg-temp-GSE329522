@@ -14,7 +14,7 @@
 ## not been run.
 ##
 ## Figures produced (_overview/):
-##   coresh_pctvar_overview — bar of top-ranked compendium datasets for Q_sig_WT_heat_up.
+##   coresh_pctvar_overview — faceted bars of top-ranked compendium datasets per configured query.
 ##   coresh_nes_dotplot — CoReSh-derived GSEA NES × contrast dotplot (fill=NES,
 ##     size=-log10(padj), outline=FDR sig; y-axis = derived set, x-axis = contrast).
 ##
@@ -90,11 +90,47 @@ SHOWCAT     <- as.integer(YAML_CONFIG$figures$top_n    %||% 20L)  # top sets in 
 FDR         <- as.numeric(YAML_CONFIG$thresholds$gsea_fdr %||% 0.05)
 NES_CAP     <- as.numeric(YAML_CONFIG$figures$nes_cap  %||% 3.5)
 PROV_CAP    <- provisional_caption()    # "PROVISIONAL — inferred sample mapping …"
-qsig_cfg    <- coresh_cfg$query_signature %||% list()
-EXPECTED_QUERY <- paste0("Q_sig_",
-                         qsig_cfg$contrast  %||% "WT_heat",
-                         "_",
-                         qsig_cfg$direction %||% "up")
+qsigs_cfg   <- coresh_cfg$query_signatures %||% list()
+
+.query_specs <- function(cfg) {
+  specs <- cfg$sets %||% list()
+  if (is.null(cfg$object) || !nzchar(as.character(cfg$object)))
+    stop("15_coresh_viz: coresh.query_signatures.object is required.")
+  if (!is.list(specs) || length(specs) == 0L)
+    stop("15_coresh_viz: coresh.query_signatures.sets must be a non-empty list.")
+  out <- lapply(seq_along(specs), function(i) {
+    spec <- specs[[i]]
+    required <- c("contrast", "direction", "gate")
+    missing <- required[!nzchar(vapply(required, function(k) spec[[k]] %||% "", character(1)))]
+    if (length(missing) > 0L)
+      stop("15_coresh_viz: coresh.query_signatures.sets[[", i,
+           "]] missing required field(s): ", paste(missing, collapse = ", "))
+    data.frame(
+      contrast = as.character(spec$contrast),
+      direction = as.character(spec$direction),
+      gate = as.character(spec$gate),
+      origin = as.character(spec$origin %||% paste0(spec$contrast, "_", spec$direction)),
+      stringsAsFactors = FALSE
+    )
+  })
+  dplyr::bind_rows(out) %>%
+    mutate(query_name = paste0("Q_sig_", contrast, "_", direction, "_", gate))
+}
+
+QUERY_SPECS <- .query_specs(qsigs_cfg)
+if (anyDuplicated(QUERY_SPECS$query_name))
+  stop("15_coresh_viz: duplicate query name(s) from coresh.query_signatures: ",
+       paste(unique(QUERY_SPECS$query_name[duplicated(QUERY_SPECS$query_name)]), collapse = ", "))
+EXPECTED_QUERIES <- QUERY_SPECS$query_name
+
+## Origin label is the configured biological family (coresh.query_signatures.sets[].origin),
+## taken per distinct (contrast, direction) — data, not config row order.
+ORIGIN_SPECS <- QUERY_SPECS %>%
+  distinct(contrast, direction, .keep_all = TRUE) %>%
+  transmute(
+    query_prefix = paste0("Q_sig_", contrast, "_", direction, "_"),
+    origin_label = origin
+  )
 
 ## Colors from FIG_CFG (NEVER inline hex — config is the single source of truth)
 NEG <- FIG_CFG$colors$diverging$down    %||% "steelblue4"
@@ -122,11 +158,10 @@ CONTRASTS <- CONTRASTS[nzchar(CONTRASTS)]
 
 ranked <- as.data.frame(readRDS(rk_fp), stringsAsFactors = FALSE)
 stopifnot(all(c("query_name", "gse", "pctVar", "size", "rank") %in% colnames(ranked)))
-if (EXPECTED_QUERY %in% ranked$query_name) {
-  ranked <- ranked[ranked$query_name == EXPECTED_QUERY, , drop = FALSE]
+if (any(EXPECTED_QUERIES %in% ranked$query_name)) {
+  ranked <- ranked[ranked$query_name %in% EXPECTED_QUERIES, , drop = FALSE]
 } else {
-  message("[15_coresh_viz] expected query ", EXPECTED_QUERY,
-          " absent from coresh_ranked.rds; using available rows.")
+  message("[15_coresh_viz] expected queries absent from coresh_ranked.rds; using available rows.")
 }
 
 message(sprintf("[15_coresh_viz] ranked compendium: %d rows, %d queries, %d unique GSEs",
@@ -148,9 +183,9 @@ queries_all     <- unique(ranked$query_name)
 }
 
 # =============================================================================
-# 5. FIGURE A — pctVar overview: top-ranked datasets for Q_sig_WT_heat_up
+# 5. FIGURE A — pctVar overview: top-ranked datasets per configured query
 # =============================================================================
-## Single-query bar plot, sorted by pctVar and capped at TOP_N.
+## Faceted query bar plot, sorted by pctVar within query and capped at TOP_N.
 
 create_pctvar_overview <- function(ranked, top_n = TOP_N) {
   if (nrow(ranked) == 0L) return(invisible(NULL))
@@ -164,9 +199,13 @@ create_pctvar_overview <- function(ranked, top_n = TOP_N) {
       gse_lab     = .gse_label(gse)
     )
 
+  if (nrow(df) == 0L) return(invisible(NULL))
+
   df <- df %>%
-    arrange(pctVar) %>%
-    mutate(row_id = factor(seq_len(n())))
+    group_by(query_name) %>%
+    arrange(pctVar, .by_group = TRUE) %>%
+    mutate(row_id = factor(seq_len(n()))) %>%
+    ungroup()
 
   ggplot(df, aes(x = pctVar, y = row_id)) +
     geom_col(width = 0.7, alpha = 0.88) +
@@ -175,10 +214,11 @@ create_pctvar_overview <- function(ranked, top_n = TOP_N) {
               color = "grey20") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.45)),
                        labels = function(x) paste0(round(x, 1), "%")) +
+    facet_wrap(~ query_label, scales = "free_y") +
     labs(
-      title    = "CoReSh compendium ranking — WT_heat_up signature",
+      title    = "CoReSh compendium ranking — configured signature queries",
       subtitle = sprintf(
-        "top %d public mouse GEO datasets by pctVar | query = Q_sig_WT_heat_up | %s",
+        "top %d public mouse GEO datasets per query by pctVar | %s",
         top_n, PROV_CAP),
       x = "Variance explained by query signature in public GEO dataset (pctVar, %)",
       y = NULL,
@@ -192,15 +232,19 @@ p_pctvar_ov <- tryCatch(create_pctvar_overview(ranked),
                          error = function(e) { message("  pctvar_overview: ", e$message); NULL })
 
 ## Source table for the overview figure
-top_ds_ov <- ranked %>%
-  group_by(query_name) %>%
-  slice_max(pctVar, n = TOP_N, with_ties = FALSE) %>%
-  ungroup() %>%
-  arrange(query_name, rank) %>%
-  mutate(query_label = .query_label(query_name)) %>%
-  select(query_name, query_label, gse, gpl, pctVar, pval, size, rank)
+top_ds_ov <- if (nrow(ranked) > 0L) {
+  ranked %>%
+    group_by(query_name) %>%
+    slice_max(pctVar, n = TOP_N, with_ties = FALSE) %>%
+    ungroup() %>%
+    arrange(query_name, rank) %>%
+    mutate(query_label = .query_label(query_name)) %>%
+    select(query_name, query_label, gse, gpl, pctVar, pval, size, rank)
+} else {
+  NULL
+}
 
-if (!is.null(p_pctvar_ov)) {
+if (!is.null(p_pctvar_ov) && !is.null(top_ds_ov) && nrow(top_ds_ov) > 0L) {
   tryCatch(
     save_overview(
       plot       = p_pctvar_ov,
@@ -208,8 +252,8 @@ if (!is.null(p_pctvar_ov)) {
       name       = "coresh_pctvar_overview",
       table      = top_ds_ov,
       finding    = paste0(
-        "Top public mouse GEO datasets co-regulating the project's WT_heat_up signature ",
-        "(Q_sig_WT_heat_up), ranked by CoReSh pctVar."),
+        "Top public mouse GEO datasets co-regulating each configured project signature query, ",
+        "ranked by CoReSh pctVar."),
       script     = SCRIPT_PATH,
       fn         = "create_pctvar_overview",
       config_kv  = sprintf(
@@ -220,13 +264,13 @@ if (!is.null(p_pctvar_ov)) {
         "Each bar = one public GEO dataset. ",
         "Bar length = pctVar (% of variance in that dataset explained by the query), a PCA-inspired co-regulation score ",
         "(higher = stronger co-regulation); label = GSE accession, mapped query size k, and rank. ",
-        "The query is the mouse-native WT_heat_up signature exported from 17_signature_sets.rds. ",
+        "Facets separate configured signature queries exported from 17_signature_sets.rds. ",
         "Claim tier: L3-DE (data-driven, compendium coregulation score); sample labels PROVISIONAL. ",
         "Sign convention: pctVar >= 0 (variance fraction, not signed)."),
       config     = FIG_CFG),
     error = function(e) message("  coresh_pctvar_overview save_overview: ", e$message))
 } else {
-  message("  coresh_pctvar_overview: plot NULL — skipping save_overview (no ranked rows?).")
+  message("  coresh_pctvar_overview: empty input or plot NULL — skipping save_overview.")
 }
 
 # =============================================================================
@@ -284,20 +328,21 @@ if (is.null(pool) || nrow(pool) == 0L) {
 ## size = -log10(padj), outline = FDR significant.
 ## Query-origin annotation is retained for traceability of the derived sets.
 
-## Pretty-format a CORESH set_id: "CORESH_Q_sig_WT_heat_up_<GSE>" -> "Signature: WT heat up <GSE>"
+## Pretty-format a CORESH set_id: "CORESH_Q_sig_<contrast>_<direction>_<gate>_<GSE>"
 .format_set_id <- function(sid) {
   sid <- sub("^CORESH_", "", sid)
   sid <- sub("^Q_sig_", "Signature: ", sid)
   gsub("_", " ", sid)
 }
 
-## Identify the query origin of a CORESH set_id (for color strip). Derived from the
-## configured query (EXPECTED_QUERY) so repointing coresh.query_signature stays coherent;
-## matches both the raw id ("Q_sig_<contrast>_<dir>") and its .format_set_id() variant.
+## Identify the configured contrast/direction origin of a CORESH set_id for the color strip.
 .query_origin <- function(sid) {
-  formatted <- gsub("_", " ", sub("^Q_sig_", "Signature: ", EXPECTED_QUERY))
-  if (grepl(EXPECTED_QUERY, sid, fixed = TRUE) || grepl(formatted, sid, fixed = TRUE))
-    return(paste0(sub("^Q_sig_", "", EXPECTED_QUERY), " signature"))
+  for (i in seq_len(nrow(ORIGIN_SPECS))) {
+    prefix <- ORIGIN_SPECS$query_prefix[i]
+    formatted <- gsub("_", " ", sub("^Q_sig_", "Signature: ", prefix))
+    if (grepl(prefix, sid, fixed = TRUE) || grepl(formatted, sid, fixed = TRUE))
+      return(ORIGIN_SPECS$origin_label[i])
+  }
   "Other CoReSh query"
 }
 
@@ -334,14 +379,10 @@ create_coresh_nes_dotplot <- function(pool, top_n = SHOWCAT) {
   df$set_lab <- factor(df$set_lab, levels = rev(set_order))  # highest median NES at top
 
   ## Origin palette (Okabe-Ito + grey)
-  origin_levels <- c(
-    "WT_heat_up signature",
-    "Other CoReSh query"
-  )
-  origin_cols <- c(
-    "WT_heat_up signature" = OI[1],
-    "Other CoReSh query"   = "grey75"
-  )
+  origin_levels <- c(ORIGIN_SPECS$origin_label, "Other CoReSh query")
+  origin_cols <- stats::setNames(rep(OI, length.out = length(ORIGIN_SPECS$origin_label)),
+                                 ORIGIN_SPECS$origin_label)
+  origin_cols <- c(origin_cols, "Other CoReSh query" = "grey75")
   df$origin <- factor(df$origin, levels = origin_levels)
 
   n_sets    <- length(unique(df$set_id))
@@ -402,7 +443,7 @@ if (!is.null(p_nes)) {
       finding    = paste0(
         "Cross-contrast enrichment of CoReSh-derived co-regulation sets (NES fill, -log10(padj) size, ",
         "FDR<", FDR, " outline); left strip = seeding query origin. ",
-        "All expected sets are derived from the WT_heat_up signature query."),
+        "Expected sets are derived from the configured signature query matrix."),
       script     = SCRIPT_PATH,
       fn         = "create_coresh_nes_dotplot",
       config_kv  = sprintf(
@@ -418,7 +459,7 @@ if (!is.null(p_nes)) {
         "Circle size = -log10(padj); larger = more significant. ",
         "Black outline = FDR < ", FDR, " (significant); no outline = not significant. ",
         "Left color strip = biological origin of the query that seeded the derived set ",
-        "(WT_heat_up signature for the current CoReSh arm). ",
+        "(configured contrast/direction, grouped across gates). ",
         "Sets ordered by median NES across contrasts (highest at top). ",
         "Claim tier: L3-DE (fgsea, BH-FDR). ",
         "Sample labels PROVISIONAL (inferred from heat-shock thermometer + Cgas expression)."),
@@ -503,7 +544,7 @@ for (co in names(gsea_list)) {
         name       = "coresh_gsea_lollipop",
         table      = loll_tbl,
         finding    = sprintf(
-          "%s: top CoReSh-derived WT_heat_up co-regulation sets by |NES|; positive NES (orange %s) = set enriched among up-regulated genes (numerator-high); negative NES (blue %s) = enriched among down-regulated. Filled dots = FDR < %.2f; open = n.s.",
+          "%s: top CoReSh-derived co-regulation sets from the configured signature-query matrix by |NES|; positive NES (orange %s) = set enriched among up-regulated genes (numerator-high); negative NES (blue %s) = enriched among down-regulated. Filled dots = FDR < %.2f; open = n.s.",
           co, direction_cue(1), direction_cue(-1), FDR),
         script     = SCRIPT_PATH,
         fn         = "create_coresh_lollipop",
@@ -516,7 +557,7 @@ for (co in names(gsea_list)) {
           "Horizontal bar length = NES magnitude; direction = sign: rightward (orange) = up-enriched, ",
           "leftward (blue) = down-enriched in this contrast. ",
           "x-axis clamped at ±", NES_CAP, ". Filled dot = FDR < ", FDR, " (significant). ",
-          "Set name format: 'Signature: WT heat up <GSE>' — GSE is the public dataset ",
+          "Set name format: 'Signature: <contrast> <direction> <gate> <GSE>' — GSE is the public dataset ",
           "whose co-regulation pattern was used to derive the gene set. ",
           "Claim tier: L3-DE (fgsea multilevel, BH-FDR). Sign convention: NES > 0 = ", direction_cue(1),
           "; NES < 0 = ", direction_cue(-1), ". ",
@@ -543,7 +584,7 @@ if (!file.exists(readme_fp)) {
     sprintf("Stage: `%s` | Script: `%s`", STAGE, SCRIPT_PATH),
     "",
     paste0(
-      "**CoReSh value:** tests where the project's mouse-native WT_heat_up signature co-regulates ",
+      "**CoReSh value:** tests where the project's configured mouse-native signatures co-regulate ",
       "across the public mouse mmu GEO compendium, then turns the top public datasets into derived ",
       "gene sets for downstream GSEA."),
     "",
