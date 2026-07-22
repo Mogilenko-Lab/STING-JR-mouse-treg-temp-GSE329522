@@ -1,0 +1,5 @@
+"pathway_id","pathway_name","nes","padj","set_size","sig","direction","contrast"
+"CORESH_Q_sig_WT_heat_up_GSE46185","Coresh Q Sig Wt Heat Up Gse46185",2.79400497,5.8062255e-14,49,TRUE,"Up","KO_heat"
+"CORESH_Q_sig_WT_heat_up_GSE65083","Coresh Q Sig Wt Heat Up Gse65083",2.70715669,2.12918854e-12,46,TRUE,"Up","KO_heat"
+"CORESH_Q_sig_WT_heat_up_GSE41833","Coresh Q Sig Wt Heat Up Gse41833",2.44509048,9.96529336e-09,44,TRUE,"Up","KO_heat"
+"CORESH_Q_sig_WT_heat_up_GSE169006","Coresh Q Sig Wt Heat Up Gse169006",2.43520905,9.96529336e-09,48,TRUE,"Up","KO_heat"

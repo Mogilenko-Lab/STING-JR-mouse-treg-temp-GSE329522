@@ -1,8 +1,8 @@
 # 07_coresh_search.R — COMPUTE
 ## CoReSh (COregulation REgulation SearcH) — rank the public MOUSE (mmu) GEO compendium
-## by how strongly the study's heat / IFN-ISG / HIF signature is CO-REGULATED in each
-## public dataset (PCA-inspired pctVar score), then derive coregulation gene sets from the
-## top hits for downstream GSEA (08_coresh_derived_gsea.R).
+## by how strongly the project's WT_heat_up signature is CO-REGULATED in each public dataset
+## (PCA-inspired pctVar score), then derive coregulation gene sets from the top hits for
+## downstream GSEA (08_coresh_derived_gsea.R).
 ##
 ## Per the `coresh-signature-search` skill
 ## (01_modules/SciAgent-toolkit/skills/coresh-signature-search/SKILL.md):
@@ -16,37 +16,24 @@
 ##   Rscript 02_analysis/scripts/07_coresh_search.R
 ##
 ## ============================================================================
-## !!! LOUD ASSUMPTIONS / PROVISIONING — READ BEFORE RUNNING (this is the most
-##     uncertain sweep arm; the recon flagged the CoReSh compendium may NOT yet be
-##     provisioned in STING) !!!
+## !!! DATA DEPENDENCY — READ BEFORE RUNNING !!!
 ## ----------------------------------------------------------------------------
-## (A) DATA DEPENDENCY NOT YET PROVISIONED IN STING.
-##     There is NO coresh chunk dir under 00_data/references/ at write time
-##     (only gatom/, gene_sets/, networks/ exist). The ~20 GB mmu compendium must be
-##     downloaded from Synapse (syn66227307) by the OWNER in-container — Claude/this
-##     environment CANNOT do the Synapse download (needs a personal access token).
-##     The script GUARDS this with an explicit stop() and points at the provisioning note:
-##         docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md
-##     NO compendium is fabricated. If you see the stop(), provision the data first.
+## (A) THE ~20 GB mmu COMPENDIUM.
+##     The mouse compendium (Synapse syn66227307, ~85 *_full_objects.qs2 chunks) is consumed
+##     read-only from the shared reference cache (resolved from CORESH_CHUNKS / the chunk-dir
+##     convention below). It is NOT downloaded here — that needs a personal Synapse access
+##     token and is done out-of-band. If the chunks are absent the script stops loudly;
+##     NO compendium is fabricated.
 ##
-## (B) CONFIG KEYS NOT YET DECLARED.
-##     analysis_config.yaml has NO `coresh:`, NO `key_genes:`, and `paths:` has NO
-##     `coresh_chunks` at write time (14839 has all three). This script therefore reads
-##     every such key DEFENSIVELY via `%||%` with documented in-script defaults, and
-##     falls back to the config.R gene-vector constants (ISG_MARKERS / HIF_GLYCO_MARKERS /
-##     THERMO_MARKERS / KEY_TFS) for the curated queries. To make this a first-class arm,
-##     the owner should add a `coresh:` block + `paths.coresh_chunks` (see the note). Until
-##     then the in-script defaults reproduce the 14839 behaviour (species=mouse, top_n=5,
-##     min_query_size=3, n_cores=4).
+## (B) QUERY CONTRACT.
+##     The sole query is coresh.query_signature in analysis_config.yaml:
+##     sets[[contrast]][[direction]][[gate]] from 03_results/objects/17_signature_sets.rds.
 ##
 ## (C) CHUNK PATH ASSUMED.
 ##     Default chunk dir = paths.coresh_chunks (if set) else the 14839 convention
 ##     00_data/references/coresh/current/preprocessed_chunks/mmu (overridable via the
 ##     CORESH_CHUNKS env var, per the skill's path convention). Owner: confirm in-container.
 ##
-## (D) DE HUB CONTRACT.
-##     Consumes 03_results/objects/02_de_results.rds (named list of 7 topTables keyed by the
-##     YAML contrast names, gene-SYMBOL rownames + `t`). We NEVER re-fit DE here.
 ## ============================================================================
 ##
 ## Outputs (compute-only; lazy heavy deps; idempotent via load_or_compute)
@@ -55,9 +42,8 @@
 ##   03_results/objects/coresh_derived_sets.rds        — CoReSh-derived gene sets (named list, fgsea
 ##                                                        pathways format) for 08_coresh_derived_gsea.R
 ##   03_results/objects/coresh_query_entrez.rds        — the exact queries searched with (provenance)
-##   03_results/08_coresh/tables/coresh_ranked.csv     — the ranked-compendium table (curated + DE-derived)
+##   03_results/08_coresh/tables/coresh_ranked.csv     — the ranked-compendium table
 ##   03_results/08_coresh/tables/coresh_provenance.csv — derived-set -> source GSE / pctVar trace
-##   03_results/08_coresh/tables/by_contrast/<c>/coresh_ranked.csv — per-contrast DE-derived ranking
 
 # ============================================================================
 # 0. Environment setup  (config.R FIRST, then de_gsea_helpers.R — per contract)
@@ -65,9 +51,8 @@
 
 source("02_analysis/config/config.R")            # PROJECT_ROOT, YAML_CONFIG, DIR_OBJECTS, SPECIES,
                                                   # stage_dir(), load_or_compute (config.R variant), %||%,
-                                                  # ISG_MARKERS, HIF_GLYCO_MARKERS, THERMO_MARKERS, KEY_TFS
-source("02_analysis/helpers/de_gsea_helpers.R")  # path-keyed load_or_compute, load_de_results,
-                                                  # load_custom_geneset, round_numeric_cols
+                                                  # project config constants
+source("02_analysis/helpers/de_gsea_helpers.R")  # path-keyed load_or_compute, round_numeric_cols
                                                   # (build_ranked_vector / gene_universe are GSEA-arm
                                                   #  helpers; CoReSh queries are integer-Entrez sets,
                                                   #  not ranked vectors, so they are not used here)
@@ -81,7 +66,6 @@ options(stringsAsFactors = FALSE)
 
 STAGE   <- "08_coresh"                            # declared in analysis_config.yaml:stages
 tbl_dir <- stage_dir(STAGE, "tables")            # 03_results/08_coresh/tables/ (created)
-by_contrast_dir_name <- YAML_CONFIG$figures$by_contrast_dir %||% "by_contrast"
 
 # ----------------------------------------------------------------------------
 # 0a. CoReSh config (DEFENSIVE — coresh: block may be absent; see assumption (B))
@@ -96,7 +80,6 @@ MIN_SET        <- as.integer(GSEA_MIN_SIZE)                        # derived-set
 MAX_SET        <- as.integer(GSEA_MAX_SIZE)                        # derived-set size ceiling (500)
 N_DERIVE       <- as.integer(coresh_cfg$n_derive        %||% 50L)  # genes/derived set BEFORE size filter
 JACCARD_THRESH <- as.numeric(coresh_cfg$jaccard         %||% 0.8)  # dedupe near-identical derived sets
-DE_TOP_N       <- as.integer(coresh_cfg$de_top_n        %||% 20L)  # top up-genes/contrast for DE-derived queries
 
 if (!identical(CORESH_SPECIES, "mouse"))
   stop("07_coresh_search: CORESH_SPECIES must be 'mouse' (mmu chunks demand mouse Entrez); got '",
@@ -147,6 +130,12 @@ if (!dir.exists(chunk_dir)) {
   )
 }
 chunk_files <- list.files(chunk_dir, pattern = "_full_objects\\.qs2$", full.names = TRUE)
+if (length(chunk_files) == 0L &&
+    dir.exists(file.path(chunk_dir, "mmu")) &&
+    length(list.files(file.path(chunk_dir, "mmu"), pattern = "_full_objects\\.qs2$", full.names = TRUE)) > 0L) {
+  chunk_dir <- file.path(chunk_dir, "mmu")
+  chunk_files <- list.files(chunk_dir, pattern = "_full_objects\\.qs2$", full.names = TRUE)
+}
 if (length(chunk_files) == 0L) {
   stop(
     "CoReSh mmu compendium NOT provisioned — no *_full_objects.qs2 chunks in:\n    ", chunk_dir,
@@ -159,114 +148,48 @@ message(sprintf("[07_coresh_search] CoReSh mmu compendium: %d chunk(s) at %s",
                 length(chunk_files), chunk_dir))
 
 # ============================================================================
-# 3. Load the DE hub (the GSEA/CoReSh ranking source — NEVER re-fit DE here)
+# 3. Build the single WT_heat_up signature query
 # ============================================================================
 
-de_results <- load_de_results()                  # asserts Symbol rownames + `t` per contrast
-stopifnot(length(de_results) >= 1L)
-message(sprintf("[07_coresh_search] DE hub: %d contrasts (%s)",
-                length(de_results), paste(names(de_results), collapse = ", ")))
+qsig <- coresh_cfg$query_signature %||% list()
+required_qsig <- c("object", "contrast", "direction", "gate")
+missing_qsig <- required_qsig[!nzchar(vapply(required_qsig, function(k) qsig[[k]] %||% "", character(1)))]
+if (length(missing_qsig) > 0L)
+  stop("07_coresh_search: coresh.query_signature missing required field(s): ",
+       paste(missing_qsig, collapse = ", "))
 
-# ============================================================================
-# 4. CURATED queries — the heat / IFN-ISG / HIF signatures of interest
-# ============================================================================
-## Mirrors 14839's curated CoReSh queries (Q_curated_<group>) but built from STING's
-## biology (the science-design brief §5): the IFN/ISG arm (cGAS-dependent), the HIF /
-## glycolysis arm (no detectable cGAS-dependence at n=5), the heat-shock thermometer,
-## the cGAS-STING sensor TFs, and — the FLAGSHIP query — the PUBLISHED Lombardi 2022
-## 48-gene consensus HIF set. The recon's headline rationale for running CoReSh at all:
-## it EXPOSES Biomni's hand-made 16-gene HIF list by quantifying whether a HIF signature
-## is a real co-regulated module (positive control = a HIF query ranks hypoxia/VHL/
-## tumor-hypoxia GEO studies in the top 20). The Lombardi-48 set is the curation-
-## independent benchmark for exactly that test.
-##
-## Source of the curated symbol vectors (config, not hardcoded):
-##   * If a `key_genes:` block exists in config, use it (14839 idiom).
-##   * Else fall back to the config.R analysis constants (the single source of truth here).
+sig_fp <- if (startsWith(qsig$object, "/")) qsig$object else file.path(PROJECT_ROOT, qsig$object)
+if (!file.exists(sig_fp))
+  stop("07_coresh_search: query signature object not found: ", sig_fp)
 
-key_genes <- YAML_CONFIG$key_genes
-if (is.null(key_genes)) {
-  key_genes <- list(
-    isg_ifn      = ISG_MARKERS,        # Ifit1, Isg15, Irf7, Oasl2, Mx1, Stat1, Cxcl10  (cGAS-dependent arm)
-    hif_glyco    = HIF_GLYCO_MARKERS,  # Slc2a1, Vegfa, Egln3, Bnip3, Pgk1, Ldha, Aldoa, Hk2
-    heat_shock   = THERMO_MARKERS,     # Hspa1b, Hsph1, Hspa1a, Dnajb1  (the true thermal program)
-    sensor_tfs   = KEY_TFS             # Irf3/7/1, Stat1/2, Hif1a, Epas1, Nfkb1, Rela
-  )
-  message("[07_coresh_search] coresh.key_genes absent — using config.R constants ",
-          "(ISG_MARKERS / HIF_GLYCO_MARKERS / THERMO_MARKERS / KEY_TFS).")
-} else {
-  message("[07_coresh_search] using config key_genes block (", length(key_genes), " groups).")
-}
-key_genes <- lapply(key_genes, function(v) unique(as.character(unlist(v))))
+signature_obj <- readRDS(sig_fp)
+signature_sets <- signature_obj$sets %||% signature_obj
+sig_symbols <- tryCatch(
+  signature_sets[[qsig$contrast]][[qsig$direction]][[qsig$gate]],
+  error = function(e) NULL
+)
+if (is.null(sig_symbols))
+  stop("07_coresh_search: missing query signature slot sets[['", qsig$contrast,
+       "']][['", qsig$direction, "']][['", qsig$gate, "']] in ", sig_fp)
+if (!is.character(sig_symbols) || length(sig_symbols) == 0L)
+  stop("07_coresh_search: query signature slot must be a non-empty character vector; got ",
+       paste(class(sig_symbols), collapse = "/"), " length ", length(sig_symbols))
+sig_symbols <- unique(sig_symbols[nzchar(sig_symbols)])
+if (length(sig_symbols) == 0L)
+  stop("07_coresh_search: query signature contains no non-empty gene symbols.")
 
-## FLAGSHIP curated query: the Lombardi-2022 48-gene consensus HIF set (the published,
-## curation-independent HIF benchmark — built by 00b_curate_lombardi_hif.R). Loaded from
-## databases.custom if declared; warned-and-skipped if absent (do not error the whole arm).
-lombardi_genes <- tryCatch({
-  custom <- YAML_CONFIG$databases$custom %||% list()
-  hit <- Filter(function(d) identical(d$name, "Lombardi2022_HIF"), custom)
-  if (length(hit) == 0L) {
-    message("[07_coresh_search] Lombardi2022_HIF not in databases.custom — skipping the flagship HIF query.")
-    character(0)
-  } else {
-    p <- file.path(PROJECT_ROOT, hit[[1]]$path)
-    if (!file.exists(p)) {
-      warning("[07_coresh_search] Lombardi2022_HIF rds missing (", p,
-              ") — run 00b_curate_lombardi_hif.R first. Skipping the flagship HIF query.")
-      character(0)
-    } else {
-      sets <- load_custom_geneset(p)            # list(Lombardi2022_HIF = <mouse symbols>)
-      unique(as.character(unlist(sets, use.names = FALSE)))
-    }
-  }
-}, error = function(e) {
-  warning("[07_coresh_search] could not load Lombardi2022_HIF: ", conditionMessage(e)); character(0)
-})
-if (length(lombardi_genes) > 0L) key_genes$lombardi_hif <- lombardi_genes
-
-## symbol -> integer mouse Entrez (sym2ent warns on unmapped; does not error)
-queries_curated <- lapply(key_genes, sym2ent, species = CORESH_SPECIES)
-names(queries_curated) <- paste0("Q_curated_", names(key_genes))
-for (nm in names(queries_curated))
-  message(sprintf("  %-28s %d symbols -> %d mouse Entrez", nm,
-                  length(key_genes[[sub("^Q_curated_", "", nm)]]), length(queries_curated[[nm]])))
-
-# ============================================================================
-# 5. DE-DERIVED queries — top-N up genes per contrast (covariation seed)
-# ============================================================================
-## Mirror 14839 §5.5: seed the sweep from EVERY contrast (covariation is meaningful for
-## all directions). Headline layout is WT_heat | KO_heat | Interaction (+ Temp_main), but
-## we run all 7 so the per-contrast tables are complete. Filter MOUSE housekeeping
-## (ribosomal Rps/Rpl, mito-encoded mt-, haemoglobin Hb*) before conversion — these
-## co-regulate everywhere and would confound pctVar (skill Common-Pitfalls).
-
-top_n_entrez <- function(de_df, label, n = DE_TOP_N, species = CORESH_SPECIES) {
-  if (is.null(de_df) || nrow(de_df) == 0L) { message("  skip ", label, ": empty DE"); return(NULL) }
-  stat_col <- intersect(c("t", "stat", "statistic"), colnames(de_df))[1]
-  if (is.na(stat_col)) { message("  skip ", label, ": no t/stat column"); return(NULL) }
-  ord  <- order(de_df[[stat_col]], decreasing = TRUE)             # top up-regulated (numerator-high)
-  syms <- rownames(de_df)
-  if (is.null(syms) && "gene_symbol" %in% colnames(de_df)) syms <- as.character(de_df$gene_symbol)
-  syms <- syms[ord][seq_len(min(n, nrow(de_df)))]
-  syms <- syms[!grepl("^(Rp[sl]\\d+|mt-|Hb[abdeg]\\d*)", syms)]   # MOUSE Title-case housekeeping
-  if (length(syms) == 0L) { message("  skip ", label, ": all housekeeping"); return(NULL) }
-  e <- sym2ent(syms, species = species)
-  message(sprintf("  %-28s %d symbols -> %d mouse Entrez", label, length(syms), length(e)))
-  e
-}
-
-queries_derived <- list()
-for (co in names(de_results)) {
-  q <- top_n_entrez(de_results[[co]], paste0("Q_de_", co))
-  if (!is.null(q)) queries_derived[[paste0("Q_de_", co)]] <- q
-}
+query_name <- paste0("Q_sig_", qsig$contrast, "_", qsig$direction)
+query_entrez <- sym2ent(sig_symbols, species = CORESH_SPECIES)
+message(sprintf("  %-28s %d symbols -> %d mouse Entrez",
+                query_name, length(sig_symbols), length(query_entrez)))
 
 # ============================================================================
 # 6. Combine, coerce to integer, drop sub-min queries, run the cached sweep
 # ============================================================================
 ## coresh_batch() asserts is.integer(q) && length(q) >= 3 — coerce + drop singletons/pairs.
 
-all_queries <- c(queries_curated, queries_derived)
+all_queries <- list()
+all_queries[[query_name]] <- query_entrez
 all_queries <- lapply(all_queries, as.integer)
 too_small   <- vapply(all_queries, length, integer(1)) < MIN_Q
 if (any(too_small)) {
@@ -276,7 +199,7 @@ if (any(too_small)) {
 }
 if (length(all_queries) == 0L)
   stop("07_coresh_search: no queries pass the size filter (k >= ", MIN_Q,
-       "). Check key_genes / DE hub.")
+       "). Check coresh.query_signature and mouse symbol-to-Entrez mapping.")
 message(sprintf("[07_coresh_search] %d queries pass size filter: %s",
                 length(all_queries), paste(names(all_queries), collapse = ", ")))
 
@@ -285,8 +208,8 @@ saveRDS(all_queries, file.path(DIR_OBJECTS, "coresh_query_entrez.rds"))
 
 ## ---- cached sweep over the mmu chunks (variance-only by default; rule 4 / >1 min) ----
 ## The path-keyed load_or_compute (from de_gsea_helpers.R) keys on filename only — it
-## cannot see that the query SET grew. Force a recompute when the cache does not cover
-## every current query (e.g. newly added contrasts / a newly provisioned Lombardi set).
+## cannot see that the query SET changed. Force a recompute when the cache does not cover
+## every current query.
 sweep_fp <- file.path(DIR_OBJECTS, "coresh_ranked.rds")
 force_sweep <- file.exists(sweep_fp) &&
   !all(names(all_queries) %in% unique(as.character(readRDS(sweep_fp)$query_name)))
@@ -356,8 +279,7 @@ message(sprintf("[07_coresh_search] derived sets: %d -> %s", length(derived_sets
 # 8. Ranked-compendium table -> 03_results/08_coresh/tables/coresh_ranked.csv
 # ============================================================================
 ## The contract deliverable: the ranked public-mmu compendium for the study signature.
-## Ordered by query then rank so curated (Q_curated_*) and DE-derived (Q_de_*) blocks are
-## contiguous and human-readable.
+## Ordered by query then rank.
 
 ranked_out <- res_df[order(res_df$query_name, res_df$rank), , drop = FALSE]
 ranked_out <- round_numeric_cols(ranked_out)      # byte-stable doubles (de_gsea_helpers.R)
@@ -390,30 +312,14 @@ prov <- if (length(set_names) == 0L) {
     pctVar     = if (nrow(hit)) as.numeric(hit$pctVar[1]) else NA_real_)
 }))
 readr::write_csv(prov, file.path(tbl_dir, "coresh_provenance.csv"))
+if (nrow(prov) > 0L && any(!prov$query_name %in% names(all_queries)))
+  stop("07_coresh_search: derived-set provenance parser produced unknown query_name(s): ",
+       paste(unique(prov$query_name[!prov$query_name %in% names(all_queries)]), collapse = ", "))
 message(sprintf("[07_coresh_search] provenance -> %s (%d derived sets)",
                 file.path(tbl_dir, "coresh_provenance.csv"), nrow(prov)))
 
 # ============================================================================
-# 10. Per-contrast DE-derived rankings -> tables/by_contrast/<contrast>/coresh_ranked.csv
-# ============================================================================
-## One ranking per seeded contrast (the headline three-column read WT_heat | KO_heat |
-## Interaction plus Temp_main are all here). Curated cross-contrast rankings stay at the
-## tables/ root (coresh_ranked.csv above). Mirrors 14839 §5.8b + the house Results convention.
-
-for (co in names(de_results)) {
-  qn <- paste0("Q_de_", co)
-  if (!qn %in% res_df$query_name) next            # query dropped (sub-min / housekeeping) — no empty dir
-  rk  <- res_df[res_df$query_name == qn, , drop = FALSE]
-  rk  <- round_numeric_cols(rk[order(rk$rank), , drop = FALSE])
-  cdir <- file.path(tbl_dir, by_contrast_dir_name, co)
-  dir.create(cdir, recursive = TRUE, showWarnings = FALSE)
-  readr::write_csv(rk, file.path(cdir, "coresh_ranked.csv"))
-}
-message("[07_coresh_search] per-contrast DE-derived rankings written under tables/",
-        by_contrast_dir_name, "/")
-
-# ============================================================================
-# 11. Final structural asserts
+# 10. Final structural asserts
 # ============================================================================
 
 stopifnot(

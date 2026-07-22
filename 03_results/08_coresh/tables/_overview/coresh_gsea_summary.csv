@@ -1,0 +1,8 @@
+contrast,n_sets_tested,n_sig_fdr,n_up_sig,n_down_sig,top_set,top_nes
+KO_heat,4,4,4,0,CORESH_Q_sig_WT_heat_up_GSE46185,2.79400497
+Temp_main,4,4,4,0,CORESH_Q_sig_WT_heat_up_GSE46185,2.78400295
+WT_heat,4,4,4,0,CORESH_Q_sig_WT_heat_up_GSE46185,2.76760807
+Geno_at_37,4,0,0,0,CORESH_Q_sig_WT_heat_up_GSE169006,1.22991247
+Geno_at_39,4,0,0,0,CORESH_Q_sig_WT_heat_up_GSE65083,1.44315504
+Geno_main,4,0,0,0,CORESH_Q_sig_WT_heat_up_GSE169006,1.39815939
+Interaction,4,0,0,0,CORESH_Q_sig_WT_heat_up_GSE41833,0.898067241

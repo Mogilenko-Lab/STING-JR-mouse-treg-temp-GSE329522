@@ -1,0 +1,5 @@
+pathway_id,pathway_name,database,nes,pvalue,padj,set_size,core_enrichment,contrast,direction
+CORESH_Q_sig_WT_heat_up_GSE41833,Coresh Q Sig Wt Heat Up Gse41833,CoReSh_derived,0.898067241,0.654188948,0.985940246,44,Serpinb2/Ccl5/Trem1,Interaction,Up
+CORESH_Q_sig_WT_heat_up_GSE46185,Coresh Q Sig Wt Heat Up Gse46185,CoReSh_derived,-0.826148308,0.811926606,0.985940246,49,Sdr39u1/Mpzl2/Crabp2/Gm2663/Il31/Mmp13/Pou2af1/Xcl1/Serpinb6b/Stfa3,Interaction,Down
+CORESH_Q_sig_WT_heat_up_GSE65083,Coresh Q Sig Wt Heat Up Gse65083,CoReSh_derived,0.762147636,0.885918004,0.985940246,46,Ccl9/Cd160/C2cd4b/Cxcl10/Il17f/Ccl3/Inhba/Tnfsf11/Acod1/Ifng/Bdh2/Il6/Bcl2a1b/Egr3/Myh7/Rhov/Egr2/Srxn1/Rgs16/Areg/Timp1/Ccl4/Egr1,Interaction,Up
+CORESH_Q_sig_WT_heat_up_GSE169006,Coresh Q Sig Wt Heat Up Gse169006,CoReSh_derived,0.616537904,0.985940246,0.985940246,48,Il21/Depdc1a/Fam171b/H3f3c/Plscr1/Gja1,Interaction,Up

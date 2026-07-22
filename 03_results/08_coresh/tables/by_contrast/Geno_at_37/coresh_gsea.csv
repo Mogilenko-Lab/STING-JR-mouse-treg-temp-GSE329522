@@ -1,0 +1,5 @@
+pathway_id,pathway_name,database,nes,pvalue,padj,set_size,core_enrichment,contrast,direction
+CORESH_Q_sig_WT_heat_up_GSE169006,Coresh Q Sig Wt Heat Up Gse169006,CoReSh_derived,1.22991247,0.120901639,0.421052632,48,Serpine1/Crabp2/Gls2/Sema3b/Mir155hg/Ccn4/Lilrb4a/Lif/Atf3/Aspm/Adh4/Srxn1/Il3/Ska1/Il2/Fads2/Cth/Serpinb5/Csf2,Geno_at_37,Up
+CORESH_Q_sig_WT_heat_up_GSE46185,Coresh Q Sig Wt Heat Up Gse46185,CoReSh_derived,1.14450096,0.210526316,0.421052632,49,Sdr39u1/Crabp2/Pou2af1/Dusp4/Serpinb6b/Olr1/Cd83/Il31/Mmp13/Il3/Il6/Il2/Mpzl2/Cth/Inhba/Il4/Siglecf/Csf2/Cd70/Xcl1/Cxcl2/Plek,Geno_at_37,Up
+CORESH_Q_sig_WT_heat_up_GSE41833,Coresh Q Sig Wt Heat Up Gse41833,CoReSh_derived,1.05082817,0.358490566,0.477987421,44,Serpine1/Ccl5/Plat/Olr1/Gm6377/Gem/Gbp5/Lif,Geno_at_37,Up
+CORESH_Q_sig_WT_heat_up_GSE65083,Coresh Q Sig Wt Heat Up Gse65083,CoReSh_derived,0.92000909,0.612765957,0.612765957,46,Havcr2/Il1r2/Wnt3/Il17f/Zeb2/Cd83/Ccn4/Rhov/Penk/Il31/Mst1r/Srxn1/Il3/Il6/Il2/Mpzl2/Inhba/Sphk1/Ubd,Geno_at_37,Up

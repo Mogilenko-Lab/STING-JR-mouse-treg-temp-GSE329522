@@ -8,18 +8,13 @@
 ## database="CoReSh_derived".  Never re-runs coresh_batch/build_coresh_gmt/fgsea;
 ## never touches 02_de_results.rds.
 ##
-## GATED: the CoReSh arm requires the ~20 GB mmu Synapse compendium (syn66227307)
-## provisioned in-container by the owner before 07_coresh_search.R / 08_coresh_derived_gsea.R
-## can be run. This script GUARDS on the first compute output and stops with an explicit
-## pointer to the provisioning note if the arm has not been run.
-## See: docs/_internal/reasoning/2026-06-24_02_coresh-provisioning.md
+## GATED: the CoReSh arm requires the ~20 GB mmu Synapse compendium (syn66227307), consumed
+## read-only from the shared reference cache, before 07_coresh_search.R / 08_coresh_derived_gsea.R
+## can be run. This script GUARDS on the first compute output and stops loudly if the arm has
+## not been run.
 ##
 ## Figures produced (_overview/):
-##   coresh_pctvar_overview — lollipop/bar of top-ranked compendium datasets per query,
-##     with the Lombardi-48 HIF flagship query and bespoke-16 gene queries highlighted
-##     side-by-side (the provenance panel: publication-anchored vs hand-made).
-##   coresh_provenance_panel — Lombardi-48 vs bespoke-16 (Q_curated_hif_glyco) pctVar
-##     comparison: the quantitative provenance critique of the hand-made 16-gene HIF list.
+##   coresh_pctvar_overview — bar of top-ranked compendium datasets for Q_sig_WT_heat_up.
 ##   coresh_nes_dotplot — CoReSh-derived GSEA NES × contrast dotplot (fill=NES,
 ##     size=-log10(padj), outline=FDR sig; y-axis = derived set, x-axis = contrast).
 ##
@@ -95,6 +90,11 @@ SHOWCAT     <- as.integer(YAML_CONFIG$figures$top_n    %||% 20L)  # top sets in 
 FDR         <- as.numeric(YAML_CONFIG$thresholds$gsea_fdr %||% 0.05)
 NES_CAP     <- as.numeric(YAML_CONFIG$figures$nes_cap  %||% 3.5)
 PROV_CAP    <- provisional_caption()    # "PROVISIONAL — inferred sample mapping …"
+qsig_cfg    <- coresh_cfg$query_signature %||% list()
+EXPECTED_QUERY <- paste0("Q_sig_",
+                         qsig_cfg$contrast  %||% "WT_heat",
+                         "_",
+                         qsig_cfg$direction %||% "up")
 
 ## Colors from FIG_CFG (NEVER inline hex — config is the single source of truth)
 NEG <- FIG_CFG$colors$diverging$down    %||% "steelblue4"
@@ -121,30 +121,22 @@ CONTRASTS <- CONTRASTS[nzchar(CONTRASTS)]
 # =============================================================================
 
 ranked <- as.data.frame(readRDS(rk_fp), stringsAsFactors = FALSE)
-stopifnot(all(c("query_name", "gse", "pctVar", "rank") %in% colnames(ranked)))
+stopifnot(all(c("query_name", "gse", "pctVar", "size", "rank") %in% colnames(ranked)))
+if (EXPECTED_QUERY %in% ranked$query_name) {
+  ranked <- ranked[ranked$query_name == EXPECTED_QUERY, , drop = FALSE]
+} else {
+  message("[15_coresh_viz] expected query ", EXPECTED_QUERY,
+          " absent from coresh_ranked.rds; using available rows.")
+}
 
 message(sprintf("[15_coresh_viz] ranked compendium: %d rows, %d queries, %d unique GSEs",
                 nrow(ranked), length(unique(ranked$query_name)), length(unique(ranked$gse))))
 
-## Detect the two headline queries for the provenance panel:
-## — Q_curated_lombardi_hif : the Lombardi 2022 48-gene published consensus HIF set
-## — Q_curated_hif_glyco    : the bespoke-16 HIF/glycolysis gene list from config.R
 queries_all     <- unique(ranked$query_name)
-QUERY_LOMBARDI  <- grep("lombardi", queries_all, value = TRUE, ignore.case = TRUE)[1]  # may be NA
-QUERY_BESPOKE   <- grep("hif_glyco|hif", queries_all, value = TRUE, ignore.case = TRUE)
-QUERY_BESPOKE   <- QUERY_BESPOKE[!grepl("lombardi", QUERY_BESPOKE, ignore.case = TRUE)][1]  # may be NA
-
-have_lombardi <- !is.na(QUERY_LOMBARDI) && QUERY_LOMBARDI %in% queries_all
-have_bespoke  <- !is.na(QUERY_BESPOKE)  && QUERY_BESPOKE  %in% queries_all
-
-message(sprintf("[15_coresh_viz] Lombardi query: %s | bespoke HIF query: %s",
-                if (have_lombardi) QUERY_LOMBARDI else "(absent — skipping provenance panel)",
-                if (have_bespoke)  QUERY_BESPOKE  else "(absent)"))
 
 ## Pretty label helper: replace underscore-heavy internal names with human-readable forms
 .query_label <- function(q) {
-  q <- sub("^Q_curated_", "Curated: ", q)
-  q <- sub("^Q_de_",      "DE-derived: ", q)
+  q <- sub("^Q_sig_", "Signature: ", q)
   q <- gsub("_", " ", q)
   q
 }
@@ -156,75 +148,37 @@ message(sprintf("[15_coresh_viz] Lombardi query: %s | bespoke HIF query: %s",
 }
 
 # =============================================================================
-# 5. FIGURE A — pctVar overview: top-ranked datasets per query (all queries)
+# 5. FIGURE A — pctVar overview: top-ranked datasets for Q_sig_WT_heat_up
 # =============================================================================
-## One facet per query, bars sorted by pctVar, capped at TOP_N.
-## Highlights the Lombardi-48 and bespoke-16 queries with a strip background color
-## (the provenance-in-context story: two HIF queries, different origins).
+## Single-query bar plot, sorted by pctVar and capped at TOP_N.
 
 create_pctvar_overview <- function(ranked, top_n = TOP_N) {
   if (nrow(ranked) == 0L) return(invisible(NULL))
 
-  ## Take top-N per query by pctVar
   df <- ranked %>%
     group_by(query_name) %>%
     slice_max(pctVar, n = top_n, with_ties = FALSE) %>%
     ungroup() %>%
     mutate(
       query_label = .query_label(query_name),
-      gse_lab     = .gse_label(gse),
-      ## Provenance flag for fill color (the two HIF queries are the provenance comparison)
-      query_type  = case_when(
-        grepl("lombardi", query_name, ignore.case = TRUE) ~ "Lombardi-48 (published)",
-        grepl("hif_glyco|hif", query_name, ignore.case = TRUE) &
-          !grepl("lombardi", query_name, ignore.case = TRUE) ~ "Bespoke-16 (hand-made)",
-        TRUE ~ "Other query"
-      )
+      gse_lab     = .gse_label(gse)
     )
 
-  ## Order queries: Lombardi first, then bespoke, then the rest alphabetically
-  q_levels <- c(
-    grep("lombardi", unique(df$query_label), value = TRUE, ignore.case = TRUE),
-    grep("hif", unique(df$query_label)[!grepl("lombardi", unique(df$query_label), ignore.case = TRUE)],
-         value = TRUE, ignore.case = TRUE),
-    sort(grep("lombardi|hif", unique(df$query_label), value = TRUE,
-              ignore.case = TRUE, invert = TRUE))
-  )
-  df$query_label <- factor(df$query_label, levels = unique(q_levels))
-
-  ## Within each facet, order bars by pctVar (highest at top)
   df <- df %>%
-    arrange(query_label, pctVar) %>%
-    group_by(query_label) %>%
-    mutate(row_id = factor(seq_len(n()))) %>%
-    ungroup()
+    arrange(pctVar) %>%
+    mutate(row_id = factor(seq_len(n())))
 
-  ## Strip fill for the two provenance queries (highlight in facet header)
-  prov_pal <- c(
-    "Lombardi-48 (published)" = OI[1],   # orange (the published benchmark)
-    "Bespoke-16 (hand-made)"  = OI[2],   # sky blue (the hand-made list)
-    "Other query"             = "grey70"
-  )
-  ## Color the bars: Lombardi = orange gradient, bespoke = blue gradient, rest = grey
-  df$fill_type <- factor(df$query_type,
-                         levels = c("Lombardi-48 (published)", "Bespoke-16 (hand-made)", "Other query"))
-
-  n_queries <- length(unique(df$query_label))
-  facet_h   <- max(3, n_queries * 1.8)   # dynamic height hint (unused here, for caller)
-
-  ggplot(df, aes(x = pctVar, y = row_id, fill = fill_type)) +
+  ggplot(df, aes(x = pctVar, y = row_id)) +
     geom_col(width = 0.7, alpha = 0.88) +
-    geom_text(aes(label = gse_lab), hjust = -0.06,
-              size = FIG_CFG$figures$label_size %||% 3.0, color = "grey20") +
-    scale_fill_manual(values = prov_pal, name = "Query type") +
+    geom_text(aes(label = sprintf("%s (k=%d, rank=%d)", gse_lab, size, rank)),
+              hjust = -0.06, size = FIG_CFG$figures$label_size %||% 3.0,
+              color = "grey20") +
     scale_x_continuous(expand = expansion(mult = c(0, 0.45)),
                        labels = function(x) paste0(round(x, 1), "%")) +
-    facet_wrap(~ query_label, ncol = 1, scales = "free_y",
-               labeller = label_wrap_gen(width = 55)) +
     labs(
-      title    = "CoReSh compendium ranking — top public mouse datasets per query",
+      title    = "CoReSh compendium ranking — WT_heat_up signature",
       subtitle = sprintf(
-        "top %d datasets/query by pctVar | orange = Lombardi-48 published HIF | blue = bespoke-16 HIF | grey = other | %s",
+        "top %d public mouse GEO datasets by pctVar | query = Q_sig_WT_heat_up | %s",
         top_n, PROV_CAP),
       x = "Variance explained by query signature in public GEO dataset (pctVar, %)",
       y = NULL,
@@ -243,13 +197,8 @@ top_ds_ov <- ranked %>%
   slice_max(pctVar, n = TOP_N, with_ties = FALSE) %>%
   ungroup() %>%
   arrange(query_name, rank) %>%
-  mutate(query_label = .query_label(query_name),
-         query_type  = case_when(
-           grepl("lombardi", query_name, ignore.case = TRUE) ~ "Lombardi-48 (published)",
-           grepl("hif_glyco|hif", query_name, ignore.case = TRUE) &
-             !grepl("lombardi", query_name, ignore.case = TRUE) ~ "Bespoke-16 (hand-made)",
-           TRUE ~ "Other query")) %>%
-  select(query_name, query_label, query_type, gse, gpl, pctVar, pval, size, rank)
+  mutate(query_label = .query_label(query_name)) %>%
+  select(query_name, query_label, gse, gpl, pctVar, pval, size, rank)
 
 if (!is.null(p_pctvar_ov)) {
   tryCatch(
@@ -259,12 +208,8 @@ if (!is.null(p_pctvar_ov)) {
       name       = "coresh_pctvar_overview",
       table      = top_ds_ov,
       finding    = paste0(
-        "Top public mouse GEO datasets co-regulating the study signatures (by CoReSh pctVar): ",
-        "the Lombardi-48 published HIF consensus set (orange) and the bespoke-16 HIF/glycolysis ",
-        "query (blue) are plotted side-by-side; if the Lombardi-48 query robustly ranks ",
-        "hypoxia/VHL/tumour-hypoxia datasets while the bespoke-16 list ranks fewer or lower-pctVar ",
-        "datasets, this quantifies the provenance gap between the published benchmark and the ",
-        "hand-made gene list, making the critique of the 16-gene signature a data-driven result."),
+        "Top public mouse GEO datasets co-regulating the project's WT_heat_up signature ",
+        "(Q_sig_WT_heat_up), ranked by CoReSh pctVar."),
       script     = SCRIPT_PATH,
       fn         = "create_pctvar_overview",
       config_kv  = sprintf(
@@ -272,13 +217,10 @@ if (!is.null(p_pctvar_ov)) {
         TOP_N, SHOWCAT, FDR),
       input      = "03_results/objects/coresh_ranked.rds",
       how_to_read = paste0(
-        "Each facet = one CoReSh query (curated gene list or DE-derived top-N genes); each bar = one public GEO dataset. ",
+        "Each bar = one public GEO dataset. ",
         "Bar length = pctVar (% of variance in that dataset explained by the query), a PCA-inspired co-regulation score ",
-        "(higher = stronger co-regulation); GSE accession labeled on bar. ",
-        "Orange = Lombardi-48 query (published Lombardi 2022 48-gene consensus HIF set, doi:10.1016/j.celrep.2022.111652); ",
-        "blue = bespoke-16 HIF/glycolysis query (hand-made list from config.R analysis constants). ",
-        "A positive-control HIF query should rank hypoxia/VHL/tumour-hypoxia GEO studies at high pctVar. ",
-        "If the bespoke-16 fails this test while Lombardi-48 passes, the failure is itself the result. ",
+        "(higher = stronger co-regulation); label = GSE accession, mapped query size k, and rank. ",
+        "The query is the mouse-native WT_heat_up signature exported from 17_signature_sets.rds. ",
         "Claim tier: L3-DE (data-driven, compendium coregulation score); sample labels PROVISIONAL. ",
         "Sign convention: pctVar >= 0 (variance fraction, not signed)."),
       config     = FIG_CFG),
@@ -288,144 +230,7 @@ if (!is.null(p_pctvar_ov)) {
 }
 
 # =============================================================================
-# 6. FIGURE B — Lombardi-48 vs Bespoke-16 provenance panel
-# =============================================================================
-## The headline CoReSh claim: place the two HIF queries on the SAME plot so the
-## reader can compare top-5 GSEs and their pctVar directly. This is the quantitative
-## provenance critique — "Lombardi-48 ranks known hypoxia/VHL studies; bespoke-16
-## ranks ?? studies at ?? pctVar" — as a side-by-side bar panel.
-
-create_provenance_panel <- function(ranked, q_lomb, q_besp, top_n = TOP_N) {
-  if (!q_lomb %in% ranked$query_name && !q_besp %in% ranked$query_name)
-    return(invisible(NULL))
-
-  ## Gather the rows for the two queries (whichever exist)
-  present_qs <- intersect(c(q_lomb, q_besp), ranked$query_name)
-  df <- ranked %>%
-    filter(query_name %in% present_qs) %>%
-    group_by(query_name) %>%
-    slice_max(pctVar, n = top_n, with_ties = FALSE) %>%
-    ungroup() %>%
-    mutate(
-      panel = case_when(
-        grepl("lombardi", query_name, ignore.case = TRUE) ~ "Lombardi-48\n(published, Lombardi 2022)",
-        TRUE                                               ~ "Bespoke-16\n(hand-made, analysis constants)"
-      ),
-      gse_lab = .gse_label(gse, n = 45L)
-    )
-
-  ## Shared pctVar x-axis range for comparability between panels
-  x_max <- max(df$pctVar, na.rm = TRUE) * 1.5
-
-  ## Order bars within each panel by pctVar
-  df <- df %>%
-    arrange(panel, pctVar) %>%
-    group_by(panel) %>%
-    mutate(bar_id = factor(seq_len(n()))) %>%
-    ungroup()
-
-  ggplot(df, aes(x = pctVar, y = bar_id, fill = panel)) +
-    geom_col(width = 0.7, alpha = 0.9, show.legend = FALSE) +
-    geom_text(aes(label = sprintf("%s (k=%d, rank=%d)", gse_lab, size, rank)),
-              hjust = -0.05, size = FIG_CFG$figures$label_size %||% 3.0,
-              color = "grey15") +
-    scale_fill_manual(values = c(
-      "Lombardi-48\n(published, Lombardi 2022)"      = OI[1],
-      "Bespoke-16\n(hand-made, analysis constants)"  = OI[2]
-    )) +
-    scale_x_continuous(limits = c(0, x_max), expand = expansion(mult = c(0, 0.05)),
-                       labels = function(x) paste0(round(x, 1), "%")) +
-    facet_wrap(~ panel, ncol = 1, scales = "free_y") +
-    labs(
-      title = "CoReSh provenance panel: Lombardi-48 (published) vs bespoke-16 (hand-made) HIF query",
-      subtitle = sprintf(
-        "top %d public mouse GEO datasets by pctVar for each HIF query | %s",
-        top_n, PROV_CAP),
-      x = "pctVar (% variance explained by query in public GEO dataset)",
-      y = NULL,
-      caption = paste0(
-        "The Lombardi-48 set is the published Ratcliffe/Mole 48-gene consensus HIF signature ",
-        "(Lombardi et al. 2022, doi:10.1016/j.celrep.2022.111652), built by 00b_curate_lombardi_hif.R.\n",
-        "The bespoke-16 set is the study's analysis constant list (HIF_GLYCO_MARKERS in config.R): ",
-        "Slc2a1, Vegfa, Egln3, Bnip3, Pgk1, Ldha, Aldoa, Hk2.\n",
-        "If the published 48-gene set co-regulates known hypoxia/VHL datasets at high pctVar but the ",
-        "hand-made 16-gene list does not, the difference quantifies the provenance gap.\n",
-        "k = query gene count mapped to mouse Entrez; rank = compendium rank of that dataset.\n",
-        PROV_CAP)
-    ) +
-    project_theme(config = FIG_CFG)
-}
-
-have_either_prov <- have_lombardi || have_bespoke
-prov_q_lomb <- if (have_lombardi) QUERY_LOMBARDI else "__absent__"
-prov_q_besp <- if (have_bespoke)  QUERY_BESPOKE  else "__absent__"
-
-p_prov <- if (have_either_prov) {
-  tryCatch(create_provenance_panel(ranked, prov_q_lomb, prov_q_besp, top_n = TOP_N),
-           error = function(e) { message("  provenance_panel: ", e$message); NULL })
-} else {
-  message("  provenance_panel: neither Lombardi nor bespoke HIF query detected — skipping.")
-  NULL
-}
-
-## Sidecar table for the provenance panel
-prov_tbl <- if (have_either_prov) {
-  ranked %>%
-    filter(query_name %in% c(prov_q_lomb, prov_q_besp)) %>%
-    group_by(query_name) %>%
-    slice_max(pctVar, n = TOP_N, with_ties = FALSE) %>%
-    ungroup() %>%
-    mutate(
-      query_label = case_when(
-        grepl("lombardi", query_name, ignore.case = TRUE) ~ "Lombardi-48 (published)",
-        TRUE                                               ~ "Bespoke-16 (hand-made)")) %>%
-    arrange(query_label, rank) %>%
-    select(query_name, query_label, gse, gpl, pctVar, pval, size, rank)
-} else NULL
-
-if (!is.null(p_prov)) {
-  tryCatch(
-    save_overview(
-      plot       = p_prov,
-      stage      = STAGE,
-      name       = "coresh_provenance_panel",
-      table      = prov_tbl,
-      finding    = paste0(
-        "Provenance comparison of two HIF query strategies via CoReSh compendium ranking: ",
-        "the published Lombardi-2022 48-gene consensus HIF set (Lombardi et al. 2022, ",
-        "doi:10.1016/j.celrep.2022.111652) vs the study's hand-made 16-gene HIF/glycolysis ",
-        "list (HIF_GLYCO_MARKERS from config.R). ",
-        "If the Lombardi-48 query co-regulates known hypoxia/VHL/tumour datasets at markedly higher ",
-        "pctVar than the bespoke-16 list, this is a data-driven, quantitative demonstration that the ",
-        "published benchmark out-performs the selectively-subset hand-made list — exposing the provenance ",
-        "gap in Biomni's 16-gene variant without any assertion that the genes themselves are wrong."),
-      script     = SCRIPT_PATH,
-      fn         = "create_provenance_panel",
-      config_kv  = sprintf(
-        "coresh.top_n_hits=%d; databases.custom['Lombardi2022_HIF']; colors.okabe_ito",
-        TOP_N),
-      input      = paste0(
-        "03_results/objects/coresh_ranked.rds; ",
-        "00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds"),
-      how_to_read = paste0(
-        "Two-panel figure: top panel = Lombardi-48 HIF query (published benchmark, orange); ",
-        "bottom panel = bespoke-16 HIF query (hand-made config.R constants, blue). ",
-        "Each bar = one GEO dataset; bar length = pctVar (% variance explained by query); ",
-        "label = GSE accession + gene-count (k) + compendium rank. ",
-        "Shared x-axis: same pctVar scale for direct comparison. ",
-        "A real HIF co-regulation module should rank hypoxia/VHL/tumour-hypoxia GEO datasets at high pctVar. ",
-        "If the Lombardi-48 panel shows clearly higher pctVar or better-known hypoxia GSEs than the ",
-        "bespoke-16 panel, this quantifies the provenance gap between the published and hand-made lists. ",
-        "Claim tier: L3-DE (CoReSh coregulation score, compendium-wide); sample labels PROVISIONAL. ",
-        "No signed direction (pctVar >= 0)."),
-      config     = FIG_CFG),
-    error = function(e) message("  coresh_provenance_panel save_overview: ", e$message))
-} else {
-  message("  coresh_provenance_panel: plot NULL or absent queries — skipping.")
-}
-
-# =============================================================================
-# 7. Load per-contrast CoReSh GSEA caches (VIZ reads cached .rds; no recompute)
+# 6. Load per-contrast CoReSh GSEA caches (VIZ reads cached .rds; no recompute)
 # =============================================================================
 
 gsea_list <- list()
@@ -477,27 +282,23 @@ if (is.null(pool) || nrow(pool) == 0L) {
 # =============================================================================
 ## Pooled cross-contrast dotplot: y = derived set, x = contrast, fill = NES,
 ## size = -log10(padj), outline = FDR significant.
-## Query-type annotation: the Lombardi / bespoke / ISG / heat queries get distinct
-## y-strip colors so the reader can trace the biological provenance of each set.
+## Query-origin annotation is retained for traceability of the derived sets.
 
-## Pretty-format a CORESH set_id: "CORESH_Q_curated_<group>_<GSE>" -> "<group> | <GSE>"
+## Pretty-format a CORESH set_id: "CORESH_Q_sig_WT_heat_up_<GSE>" -> "Signature: WT heat up <GSE>"
 .format_set_id <- function(sid) {
   sid <- sub("^CORESH_", "", sid)
-  sid <- sub("^Q_curated_", "Curated: ", sid)
-  sid <- sub("^Q_de_", "DE: ", sid)
+  sid <- sub("^Q_sig_", "Signature: ", sid)
   gsub("_", " ", sid)
 }
 
-## Identify the query origin of a CORESH set_id (for color strip)
+## Identify the query origin of a CORESH set_id (for color strip). Derived from the
+## configured query (EXPECTED_QUERY) so repointing coresh.query_signature stays coherent;
+## matches both the raw id ("Q_sig_<contrast>_<dir>") and its .format_set_id() variant.
 .query_origin <- function(sid) {
-  if (grepl("lombardi", sid, ignore.case = TRUE)) return("Lombardi-48 (published HIF)")
-  if (grepl("hif_glyco|hif",  sid, ignore.case = TRUE) &&
-      !grepl("lombardi", sid, ignore.case = TRUE))     return("Bespoke-16 (hand-made HIF)")
-  if (grepl("isg|ifn", sid, ignore.case = TRUE))       return("IFN/ISG (cGAS-dependent)")
-  if (grepl("heat|thermo|hsf|hsp", sid, ignore.case = TRUE)) return("Heat-shock/thermometer")
-  if (grepl("sensor|tf", sid, ignore.case = TRUE))     return("Sensor TFs (Irf/Stat/Nfkb)")
-  if (grepl("Q_de|DE:", sid))                          return("DE-derived query")
-  "Other curated"
+  formatted <- gsub("_", " ", sub("^Q_sig_", "Signature: ", EXPECTED_QUERY))
+  if (grepl(EXPECTED_QUERY, sid, fixed = TRUE) || grepl(formatted, sid, fixed = TRUE))
+    return(paste0(sub("^Q_sig_", "", EXPECTED_QUERY), " signature"))
+  "Other CoReSh query"
 }
 
 create_coresh_nes_dotplot <- function(pool, top_n = SHOWCAT) {
@@ -532,24 +333,14 @@ create_coresh_nes_dotplot <- function(pool, top_n = SHOWCAT) {
     pull(set_lab)
   df$set_lab <- factor(df$set_lab, levels = rev(set_order))  # highest median NES at top
 
-  ## Origin palette (Okabe-Ito + grey; order: IFN > Lombardi > bespoke > heat > sensors > DE > other)
+  ## Origin palette (Okabe-Ito + grey)
   origin_levels <- c(
-    "IFN/ISG (cGAS-dependent)",
-    "Lombardi-48 (published HIF)",
-    "Bespoke-16 (hand-made HIF)",
-    "Heat-shock/thermometer",
-    "Sensor TFs (Irf/Stat/Nfkb)",
-    "DE-derived query",
-    "Other curated"
+    "WT_heat_up signature",
+    "Other CoReSh query"
   )
   origin_cols <- c(
-    "IFN/ISG (cGAS-dependent)"      = OI[5],   # blue
-    "Lombardi-48 (published HIF)"    = OI[1],   # orange
-    "Bespoke-16 (hand-made HIF)"     = OI[2],   # sky blue
-    "Heat-shock/thermometer"         = OI[7],   # reddish purple
-    "Sensor TFs (Irf/Stat/Nfkb)"    = OI[3],   # bluish green
-    "DE-derived query"               = "grey75",
-    "Other curated"                  = "grey90"
+    "WT_heat_up signature" = OI[1],
+    "Other CoReSh query"   = "grey75"
   )
   df$origin <- factor(df$origin, levels = origin_levels)
 
@@ -610,11 +401,8 @@ if (!is.null(p_nes)) {
       table      = nes_tbl,
       finding    = paste0(
         "Cross-contrast enrichment of CoReSh-derived co-regulation sets (NES fill, -log10(padj) size, ",
-        "FDR<", FDR, " outline); left strip = biological origin of the seeding query. ",
-        "The IFN/ISG-seeded derived sets are expected to be positively enriched in WT_heat and ",
-        "flat/blunted in KO_heat (cGAS-dependence), while the HIF/glycolysis-seeded sets should ",
-        "be enriched in both WT_heat and KO_heat (no detectable cGAS-dependence at n=5), ",
-        "mirroring the two-arms cGAS-dependence asymmetry at the level of co-regulation modules."),
+        "FDR<", FDR, " outline); left strip = seeding query origin. ",
+        "All expected sets are derived from the WT_heat_up signature query."),
       script     = SCRIPT_PATH,
       fn         = "create_coresh_nes_dotplot",
       config_kv  = sprintf(
@@ -630,12 +418,9 @@ if (!is.null(p_nes)) {
         "Circle size = -log10(padj); larger = more significant. ",
         "Black outline = FDR < ", FDR, " (significant); no outline = not significant. ",
         "Left color strip = biological origin of the query that seeded the derived set ",
-        "(orange = Lombardi-48 published HIF; blue = Bespoke-16 hand-made HIF; ",
-        "navy = IFN/ISG cGAS-dependent; purple = heat-shock/thermometer; etc.). ",
+        "(WT_heat_up signature for the current CoReSh arm). ",
         "Sets ordered by median NES across contrasts (highest at top). ",
-        "Expected pattern: IFN/ISG-seeded sets enriched in WT_heat, blunted in KO_heat (interaction-positive); ",
-        "HIF/glycolysis-seeded sets similar in WT_heat and KO_heat (flat interaction). ",
-        "Claim tier: L3-DE (fgsea, BH-FDR); framing: no detectable cGAS-dependence at n=5 (not cGAS-independent). ",
+        "Claim tier: L3-DE (fgsea, BH-FDR). ",
         "Sample labels PROVISIONAL (inferred from heat-shock thermometer + Cgas expression)."),
       config     = FIG_CFG),
     error = function(e) message("  coresh_nes_dotplot save_overview: ", e$message))
@@ -718,7 +503,7 @@ for (co in names(gsea_list)) {
         name       = "coresh_gsea_lollipop",
         table      = loll_tbl,
         finding    = sprintf(
-          "%s: top CoReSh-derived co-regulation sets by |NES|; positive NES (orange %s) = set enriched among up-regulated genes (numerator-high); negative NES (blue %s) = enriched among down-regulated. Filled dots = FDR < %.2f; open = n.s. Expected: IFN/ISG-seeded sets positive in WT_heat; flat or negative in KO_heat/Interaction (cGAS-dependence asymmetry).",
+          "%s: top CoReSh-derived WT_heat_up co-regulation sets by |NES|; positive NES (orange %s) = set enriched among up-regulated genes (numerator-high); negative NES (blue %s) = enriched among down-regulated. Filled dots = FDR < %.2f; open = n.s.",
           co, direction_cue(1), direction_cue(-1), FDR),
         script     = SCRIPT_PATH,
         fn         = "create_coresh_lollipop",
@@ -731,7 +516,7 @@ for (co in names(gsea_list)) {
           "Horizontal bar length = NES magnitude; direction = sign: rightward (orange) = up-enriched, ",
           "leftward (blue) = down-enriched in this contrast. ",
           "x-axis clamped at ±", NES_CAP, ". Filled dot = FDR < ", FDR, " (significant). ",
-          "Set name format: 'Curated: <group> <GSE>' or 'DE: <contrast> <GSE>' — GSE is the public dataset ",
+          "Set name format: 'Signature: WT heat up <GSE>' — GSE is the public dataset ",
           "whose co-regulation pattern was used to derive the gene set. ",
           "Claim tier: L3-DE (fgsea multilevel, BH-FDR). Sign convention: NES > 0 = ", direction_cue(1),
           "; NES < 0 = ", direction_cue(-1), ". ",
@@ -758,12 +543,9 @@ if (!file.exists(readme_fp)) {
     sprintf("Stage: `%s` | Script: `%s`", STAGE, SCRIPT_PATH),
     "",
     paste0(
-      "**CoReSh value:** validates that a gene list is a real co-regulated module, not a confabulation. ",
-      "Run the Lombardi-48 published HIF set and the bespoke-16 HIF/glycolysis list through the public ",
-      "mouse mmu GEO compendium; positive control = a HIF signature ranks hypoxia/VHL/tumour-hypoxia ",
-      "GEO studies in the top-N. The flagship result is a quantitative provenance critique: if the ",
-      "published 48-gene Lombardi set co-regulates known hypoxia datasets at high pctVar while the ",
-      "hand-made 16-gene list does not, the difference exposes the provenance gap in Biomni's gene list."),
+      "**CoReSh value:** tests where the project's mouse-native WT_heat_up signature co-regulates ",
+      "across the public mouse mmu GEO compendium, then turns the top public datasets into derived ",
+      "gene sets for downstream GSEA."),
     "",
     paste0("**PROVISIONAL sample labels:** sample assignments are inferred from heat-shock thermometer genes ",
            "(Hspa1b, Hsph1) + Cgas expression, NOT from a deposited sample sheet. All captions floor at ",
@@ -786,28 +568,7 @@ if (!file.exists(readme_fp)) {
 # 11. Console biology sanity (findings, NOT crashes)
 # =============================================================================
 
-## (a) Lombardi-48 vs bespoke-16 pctVar comparison (the headline provenance check)
-if (have_lombardi && have_bespoke) {
-  lomb_top <- ranked[ranked$query_name == QUERY_LOMBARDI, ]
-  besp_top <- ranked[ranked$query_name == QUERY_BESPOKE, ]
-  message(sprintf(
-    "Provenance check: Lombardi-48 top pctVar=%.2f%% (%s) | bespoke-16 top pctVar=%.2f%% (%s)",
-    max(lomb_top$pctVar, na.rm = TRUE),
-    lomb_top$gse[which.max(lomb_top$pctVar)],
-    max(besp_top$pctVar, na.rm = TRUE),
-    besp_top$gse[which.max(besp_top$pctVar)]))
-}
-
-## (b) ISG query: should co-regulate a public IFN-stimulation dataset
-isg_q <- grep("isg|ifn", queries_all, value = TRUE, ignore.case = TRUE)
-for (q in isg_q) {
-  d <- ranked[ranked$query_name == q, ]
-  if (nrow(d) > 0L)
-    message(sprintf("ISG query %-30s top pctVar=%.2f%% (%s), n=%d datasets",
-                    q, max(d$pctVar, na.rm = TRUE), d$gse[which.max(d$pctVar)], nrow(d)))
-}
-
-## (c) CoReSh GSEA cGAS-dependence asymmetry check
+## CoReSh GSEA contrast spread check
 if (!is.null(pool) && nrow(pool) > 0L) {
   wt_max <- if ("WT_heat" %in% pool$contrast)
     max(pool$nes[pool$contrast == "WT_heat"], na.rm = TRUE) else NA_real_
@@ -815,7 +576,7 @@ if (!is.null(pool) && nrow(pool) > 0L) {
     max(pool$nes[pool$contrast == "KO_heat"], na.rm = TRUE) else NA_real_
   if (!is.na(wt_max) && !is.na(ko_max))
     message(sprintf(
-      "NES asymmetry check: max CoReSh NES WT_heat=%.2f vs KO_heat=%.2f (expect WT_heat higher if IFN sets significant)",
+      "NES spread check: max CoReSh NES WT_heat=%.2f vs KO_heat=%.2f",
       wt_max, ko_max))
 }
 

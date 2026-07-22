@@ -1,0 +1,5 @@
+set_name,query_name,gse,rank,pctVar
+CORESH_Q_sig_WT_heat_up_GSE65083,Q_sig_WT_heat_up,GSE65083,1,6.028304994034942
+CORESH_Q_sig_WT_heat_up_GSE46185,Q_sig_WT_heat_up,GSE46185,3,5.7554558207396385
+CORESH_Q_sig_WT_heat_up_GSE41833,Q_sig_WT_heat_up,GSE41833,4,5.409656101471199
+CORESH_Q_sig_WT_heat_up_GSE169006,Q_sig_WT_heat_up,GSE169006,5,5.134791908600109
