@@ -396,6 +396,11 @@ decisions:
     # stringent config gate); `fdr_only` = adj.P.Val < de_fdr, |logFC| gate off (split by
     # DE direction). Ranked .rnk lists are ALWAYS the full signed-t list regardless.
     gate: fdr_logfc                   # fdr_only | fdr_logfc  (pending the review)
+    # Thin comparator contrasts also exported at a SECOND (looser) gate for gate-sensitivity.
+    # Interaction is 1 df / thin at fdr_logfc; carry its fdr_only variant alongside so the
+    # human side can score both the 7-gene core and the ~23-gene gate-sensitivity set.
+    secondary_gate: fdr_only
+    secondary_gate_contrasts: ["Interaction"]
     # Collision policy for the mouse→human map (mirrors ortholog_utils::default_ortholog_policy).
     ortholog_ambiguity:
       one_mouse_to_many_human: union      # binary sets union; ranked list assigns t to each human

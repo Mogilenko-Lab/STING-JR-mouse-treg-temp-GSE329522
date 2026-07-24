@@ -8,3 +8,5 @@ KO_heat,comparator,ranked,fdr_logfc,19679,12986,6510,101,signatures/KO_heat/KO_h
 Interaction,comparator,up,fdr_logfc,9,7,1,0,signatures/Interaction/Interaction_up.txt
 Interaction,comparator,down,fdr_logfc,0,0,0,0,signatures/Interaction/Interaction_down.txt
 Interaction,comparator,ranked,fdr_logfc,19679,12986,6510,101,signatures/Interaction/Interaction_ranked.rnk
+Interaction,comparator,up,fdr_only,23,18,2,1,signatures/Interaction/Interaction_fdrOnly_up.txt
+Interaction,comparator,down,fdr_only,0,0,0,0,signatures/Interaction/Interaction_fdrOnly_down.txt

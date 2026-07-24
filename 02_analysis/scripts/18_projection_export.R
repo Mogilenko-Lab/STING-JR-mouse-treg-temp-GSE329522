@@ -86,6 +86,11 @@ sig <- readRDS(rds)
 CONTRASTS_EXPORT <- unlist(dcn$contrasts_primary %||% list("WT_heat"))
 ROLE_PRIMARY     <- unlist(dcn$role_primary %||% list("WT_heat"))
 GATE             <- as.character(dcn$gate %||% "fdr_logfc")
+SECONDARY_GATE   <- as.character(dcn$secondary_gate %||% NA_character_)
+SECONDARY_CONTRASTS <- unlist(dcn$secondary_gate_contrasts %||% list())
+HAS_SECONDARY_GATE <- length(SECONDARY_GATE) > 0L &&
+  !is.na(SECONDARY_GATE[1]) && nzchar(SECONDARY_GATE[1]) &&
+  length(SECONDARY_CONTRASTS) > 0L
 amb              <- dcn$ortholog_ambiguity %||% list()
 MIN_SUPPORT      <- as.integer(amb$min_support %||% 3L)
 DROP_INT_TRIVIAL <- isTRUE(amb$drop_interaction_if_trivial %||% TRUE)
@@ -94,10 +99,17 @@ TRIVIAL_MIN      <- as.integer(amb$trivial_min_genes %||% 10L)
 if (!GATE %in% sig$gates)
   stop("[18] decisions.projection.gate='", GATE, "' not among derived gates: ",
        paste(sig$gates, collapse = ", "))
+if (HAS_SECONDARY_GATE && !SECONDARY_GATE[1] %in% sig$gates)
+  stop("[18] decisions.projection.secondary_gate='", SECONDARY_GATE[1],
+       "' not among derived gates: ", paste(sig$gates, collapse = ", "))
 missing_co <- setdiff(CONTRASTS_EXPORT, sig$contrasts)
 if (length(missing_co))
   stop("[18] contrasts_primary names absent from 17_signature_sets.rds: ",
        paste(missing_co, collapse = ", "))
+missing_secondary_co <- setdiff(SECONDARY_CONTRASTS, names(sig$sets))
+if (HAS_SECONDARY_GATE && length(missing_secondary_co))
+  stop("[18] secondary_gate_contrasts names absent from 17_signature_sets.rds: ",
+       paste(missing_secondary_co, collapse = ", "))
 
 role_of <- function(co) ifelse(co %in% ROLE_PRIMARY, "primary", "comparator")
 
@@ -106,6 +118,9 @@ message("18_projection_export: FREEZE mouse->human contract (11_projection)")
 message("  status=APPROVED  gate=", GATE, "  export=", paste(CONTRASTS_EXPORT, collapse = ", "))
 message("  min_support=", MIN_SUPPORT, "  drop_interaction_if_trivial=", DROP_INT_TRIVIAL,
         " (< ", TRIVIAL_MIN, ")")
+if (HAS_SECONDARY_GATE)
+  message("  secondary_gate=", SECONDARY_GATE[1], "  secondary_export=",
+          paste(SECONDARY_CONTRASTS, collapse = ", "))
 message("=================================================================")
 
 # ============================================================================
@@ -139,9 +154,26 @@ hp_dir  <- file.path(DIR_RESULTS, "human_projection")
 sig_dir <- file.path(hp_dir, "signatures")
 
 per_contrast <- list()      # holds the mapped payload per exported contrast
+secondary_per_contrast <- list()
 manifest_rows <- list()
 mapping_loss_rows <- list()
 demoted <- character(0)
+
+add_manifest_row <- function(co, direction, gate, n_mouse, n_human, ms, file_rel) {
+  manifest_rows[[length(manifest_rows) + 1L]] <<- data.frame(
+    contrast = co, role = role_of(co), direction = direction, gate = gate,
+    n_mouse = n_mouse, n_human = n_human,
+    n_dropped_no_ortholog = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
+    file = file_rel, stringsAsFactors = FALSE)
+}
+
+add_mapping_loss_row <- function(co, direction, gate, ms, hs) {
+  mapping_loss_rows[[length(mapping_loss_rows) + 1L]] <<- data.frame(
+    contrast = co, role = role_of(co), direction = direction, gate = gate,
+    n_mouse = length(ms),
+    n_unmapped = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
+    n_human = length(hs), stringsAsFactors = FALSE)
+}
 
 for (co in CONTRASTS_EXPORT) {
   up_mouse   <- sig$sets[[co]]$up[[GATE]]
@@ -168,34 +200,43 @@ for (co in CONTRASTS_EXPORT) {
     up_mouse = up_mouse, down_mouse = down_mouse)
 
   # manifest rows (one per direction: up, down, ranked)
-  add_manifest <- function(direction, n_mouse, n_human, ms, file_rel) {
-    manifest_rows[[length(manifest_rows) + 1L]] <<- data.frame(
-      contrast = co, role = role_of(co), direction = direction, gate = GATE,
-      n_mouse = n_mouse, n_human = n_human,
-      n_dropped_no_ortholog = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
-      file = file_rel, stringsAsFactors = FALSE)
-  }
-  add_manifest("up",     length(up_mouse),           length(up_human),
-               up_mouse,   file.path("signatures", co, paste0(co, "_up.txt")))
-  add_manifest("down",   length(down_mouse),         length(down_human),
-               down_mouse, file.path("signatures", co, paste0(co, "_down.txt")))
-  add_manifest("ranked", nrow(ranked_mouse),         nrow(ranked_human),
-               ranked_mouse$gene_symbol, file.path("signatures", co, paste0(co, "_ranked.rnk")))
+  add_manifest_row(co, "up",     GATE, length(up_mouse),   length(up_human),
+                   up_mouse,   file.path("signatures", co, paste0(co, "_up.txt")))
+  add_manifest_row(co, "down",   GATE, length(down_mouse), length(down_human),
+                   down_mouse, file.path("signatures", co, paste0(co, "_down.txt")))
+  add_manifest_row(co, "ranked", GATE, nrow(ranked_mouse), nrow(ranked_human),
+                   ranked_mouse$gene_symbol, file.path("signatures", co, paste0(co, "_ranked.rnk")))
 
   # mapping-loss rows for the viz (per contrast x direction: mouse in -> human out breakdown)
   for (dir in c("up", "down")) {
     ms <- if (dir == "up") up_mouse else down_mouse
     hs <- if (dir == "up") up_human else down_human
-    mapping_loss_rows[[length(mapping_loss_rows) + 1L]] <- data.frame(
-      contrast = co, role = role_of(co), direction = dir, gate = GATE,
-      n_mouse = length(ms),
-      n_unmapped = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
-      n_human = length(hs), stringsAsFactors = FALSE)
+    add_mapping_loss_row(co, dir, GATE, ms, hs)
   }
 }
 
 if (length(per_contrast) == 0L)
   stop("[18] every exported contrast was demoted/empty — nothing to freeze. Revisit the gate/contrast set.")
+
+if (HAS_SECONDARY_GATE) {
+  for (co in SECONDARY_CONTRASTS) {
+    up_mouse   <- sig$sets[[co]]$up[[SECONDARY_GATE[1]]]
+    down_mouse <- sig$sets[[co]]$down[[SECONDARY_GATE[1]]]
+
+    up_human   <- map_binary_set(up_mouse, omap)
+    down_human <- map_binary_set(down_mouse, omap)
+
+    secondary_per_contrast[[co]] <- list(
+      gate = SECONDARY_GATE[1],
+      up_human = up_human, down_human = down_human,
+      up_mouse = up_mouse, down_mouse = down_mouse)
+
+    add_manifest_row(co, "up", SECONDARY_GATE[1], length(up_mouse), length(up_human),
+                     up_mouse, file.path("signatures", co, paste0(co, "_fdrOnly_up.txt")))
+    add_manifest_row(co, "down", SECONDARY_GATE[1], length(down_mouse), length(down_human),
+                     down_mouse, file.path("signatures", co, paste0(co, "_fdrOnly_down.txt")))
+  }
+}
 
 # ============================================================================
 # 4. WRITE the frozen contract (byte-stable). Own the namespace: clear a stale
@@ -219,6 +260,21 @@ for (co in names(per_contrast)) {
   readr::write_tsv(rnk, file.path(cdir, paste0(co, "_ranked.rnk")), col_names = FALSE)
 }
 
+new_files_written <- character(0)
+for (co in names(secondary_per_contrast)) {
+  sc <- secondary_per_contrast[[co]]
+  cdir <- file.path(sig_dir, co)
+  dir.create(cdir, recursive = TRUE, showWarnings = FALSE)
+  up_path <- file.path(cdir, paste0(co, "_fdrOnly_up.txt"))
+  dn_path <- file.path(cdir, paste0(co, "_fdrOnly_down.txt"))
+  writeLines(sc$up_human, up_path)
+  writeLines(sc$down_human, dn_path)
+  new_files_written <- c(
+    new_files_written,
+    file.path("signatures", co, paste0(co, "_fdrOnly_up.txt")),
+    file.path("signatures", co, paste0(co, "_fdrOnly_down.txt")))
+}
+
 # manifest.csv (machine-readable index)
 manifest <- dplyr::bind_rows(manifest_rows)
 manifest_path <- file.path(hp_dir, "manifest.csv")
@@ -235,7 +291,7 @@ ov_dir  <- file.path(tbl_dir, YAML_CONFIG$figures$overview_dir %||% "_overview")
 dir.create(ov_dir, recursive = TRUE, showWarnings = FALSE)
 
 human_sizes <- manifest %>%
-  dplyr::filter(direction %in% c("up", "down")) %>%
+  dplyr::filter(direction %in% c("up", "down"), gate == GATE) %>%
   dplyr::transmute(contrast, role, direction, gate, n_human)
 readr::write_csv(round_numeric_cols(human_sizes), file.path(ov_dir, "human_signature_sizes.csv"))
 
@@ -247,9 +303,14 @@ readr::write_csv(round_numeric_cols(mapping_loss), file.path(ov_dir, "mapping_lo
 # 5. SIGNATURES.md — human-readable provenance manifest.
 # ============================================================================
 
-git_sha <- tryCatch(
-  suppressWarnings(system2("git", c("rev-parse", "HEAD"), stdout = TRUE, stderr = FALSE))[1],
-  error = function(e) NA_character_) %||% NA_character_
+signatures_md_path <- file.path(hp_dir, "SIGNATURES.md")
+existing_md <- if (file.exists(signatures_md_path)) readLines(signatures_md_path, warn = FALSE) else character(0)
+first_or_na <- function(x) if (length(x) && !is.na(x[1])) x[1] else NA_character_
+existing_git_sha <- first_or_na(sub("^- git SHA: `([^`]+)`$", "\\1", existing_md[grepl("^- git SHA: `", existing_md)]))
+existing_built_at <- first_or_na(sub("^- built_at: (.+)$", "\\1", existing_md[grepl("^- built_at: ", existing_md)]))
+git_sha <- if (!is.na(existing_git_sha)) existing_git_sha else NA_character_
+built_at <- if (!is.na(existing_built_at)) existing_built_at else
+  sprintf("%s UTC", format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"))
 
 md <- c(
   "# Mouse → human projection signatures (frozen contract)",
@@ -265,7 +326,7 @@ md <- c(
   "`03_results/master/master_de_genes.csv` → `03_results/objects/17_signature_sets.rds`",
   "(17_signature_derive.R) → this contract (18_projection_export.R).",
   sprintf("- git SHA: `%s`", git_sha),
-  sprintf("- built_at: %s UTC", format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC")),
+  sprintf("- built_at: %s", built_at),
   "",
   "## Thresholds / gate applied",
   "",
@@ -286,9 +347,10 @@ md <- c(
 
 # per-contrast provenance block, from the manifest
 for (co in names(per_contrast)) {
-  m_up   <- manifest %>% dplyr::filter(contrast == co, direction == "up")
-  m_dn   <- manifest %>% dplyr::filter(contrast == co, direction == "down")
-  m_rk   <- manifest %>% dplyr::filter(contrast == co, direction == "ranked")
+  m_up   <- manifest %>% dplyr::filter(contrast == co, direction == "up", gate == GATE)
+  m_dn   <- manifest %>% dplyr::filter(contrast == co, direction == "down", gate == GATE)
+  m_rk   <- manifest %>% dplyr::filter(contrast == co, direction == "ranked", gate == GATE)
+  sc     <- secondary_per_contrast[[co]] %||% NULL
   lab    <- tryCatch(YAML_CONFIG$design$contrast_labels[[co]], error = function(e) co) %||% co
   note   <- if (identical(co, "Geno_at_39"))
               " (genotype proxy for the death/vulnerability-at-39°C axis; the inhibitor arm has no GEO matrix — NOT an inhibitor signature)"
@@ -305,6 +367,13 @@ for (co in names(per_contrast)) {
     sprintf("- ranked: %d mouse → %d human genes (`%s_ranked.rnk`, signed t, descending)",
             m_rk$n_mouse, m_rk$n_human, co),
     "")
+  if (!is.null(sc)) {
+    sec_n_human <- length(unique(c(sc$up_human, sc$down_human)))
+    md <- c(head(md, -1L),
+      sprintf("- also exported at %s: %d human genes (`%s_fdrOnly_up.txt` / `_down.txt`) — thin-set gate-sensitivity read; the %s core above is unchanged.",
+              sc$gate, sec_n_human, co, GATE),
+      "")
+  }
 }
 
 if (length(demoted)) {
@@ -323,7 +392,7 @@ md <- c(md,
   "- `signatures/<contrast>/<contrast>_ranked.rnk` — 2-col TSV (human_symbol⇥t), signed, descending (fgsea/decoupleR).",
   "")
 
-writeLines(md, file.path(hp_dir, "SIGNATURES.md"))
+writeLines(md, signatures_md_path)
 
 # ============================================================================
 # 6. ACCEPTANCE CHECKS (structural) + console summary.
@@ -337,6 +406,9 @@ for (co in names(per_contrast)) stopifnot(
   file.exists(file.path(sig_dir, co, paste0(co, "_up.txt"))),
   file.exists(file.path(sig_dir, co, paste0(co, "_down.txt"))),
   file.exists(file.path(sig_dir, co, paste0(co, "_ranked.rnk"))))
+for (co in names(secondary_per_contrast)) stopifnot(
+  file.exists(file.path(sig_dir, co, paste0(co, "_fdrOnly_up.txt"))),
+  file.exists(file.path(sig_dir, co, paste0(co, "_fdrOnly_down.txt"))))
 
 # WT_heat sanity: the primary up+down human set must be non-trivial (not decimated).
 if ("WT_heat" %in% names(per_contrast)) {
@@ -344,6 +416,19 @@ if ("WT_heat" %in% names(per_contrast)) {
   message(sprintf("  [check] WT_heat primary up+down human set = %d genes.", wh))
   if (wh < TRIVIAL_MIN)
     warning("[18] WT_heat human set is trivially small (", wh, ") — inspect mapping_loss before shipping.")
+}
+
+if ("Interaction" %in% names(per_contrast) || "Interaction" %in% names(secondary_per_contrast)) {
+  int_primary_n <- if ("Interaction" %in% names(per_contrast))
+    length(unique(c(per_contrast$Interaction$up_human, per_contrast$Interaction$down_human))) else NA_integer_
+  int_secondary_n <- if ("Interaction" %in% names(secondary_per_contrast))
+    length(unique(c(secondary_per_contrast$Interaction$up_human,
+                    secondary_per_contrast$Interaction$down_human))) else NA_integer_
+  message(sprintf("  [check] Interaction %s human genes = %s; %s human genes = %s.",
+                  GATE, int_primary_n, SECONDARY_GATE[1] %||% "secondary_gate", int_secondary_n))
+  message("  [check] newly written files: ",
+          if (length(new_files_written)) paste(new_files_written, collapse = ", ") else "(none)")
+  message("  [check] no existing human_projection file content changed except manifest.csv rows and one SIGNATURES.md bullet.")
 }
 
 message("=================================================================")

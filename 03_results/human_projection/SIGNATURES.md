@@ -45,6 +45,7 @@ for presence, never a claim that fever/HIF/STING drives human disease.
 - up:   9 mouse → 7 human (dropped 1, many-mapped 0)
 - down: 0 mouse → 0 human (dropped 0, many-mapped 0)
 - ranked: 19679 mouse → 12986 human genes (`Interaction_ranked.rnk`, signed t, descending)
+- also exported at fdr_only: 18 human genes (`Interaction_fdrOnly_up.txt` / `_down.txt`) — thin-set gate-sensitivity read; the fdr_logfc core above is unchanged.
 
 ## Files
 
