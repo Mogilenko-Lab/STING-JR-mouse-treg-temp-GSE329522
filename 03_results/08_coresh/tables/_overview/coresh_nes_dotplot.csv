@@ -1,99 +1,99 @@
-"set_id","set_name","origin","contrast","nes","padj","set_size","sig"
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.63723735,1.6957829e-07,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.54326009,6.40059751e-07,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.50773316,6.40059751e-07,47,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.258475,1.11185488e-05,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.10642106,0.000111468757,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","Geno_at_37",-1.65109832,0.0264090835,37,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","Geno_at_37",-1.55787874,0.0593476987,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","Geno_at_37",-1.34752194,0.14943074,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","Geno_at_37",1.22991247,0.188069217,48,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","Geno_at_37",1.14450096,0.294736842,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","Geno_at_37",1.05082817,0.45626072,44,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","Geno_at_37",0.92000909,0.714893617,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","Geno_at_37",-0.689332625,0.976653696,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","Geno_at_37",-0.615350819,0.976653696,48,FALSE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.39251505,4.0623982e-28,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.33624873,5.11202897e-25,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.3149696,3.20878788e-24,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.18163436,1.3973736e-19,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.0937441,1.516284e-16,47,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","Geno_at_39",-1.60711471,0.0504565992,37,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","Geno_at_39",1.44315504,0.0972222222,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","Geno_at_39",1.42977399,0.0972222222,44,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","Geno_at_39",-1.38069084,0.101010101,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","Geno_at_39",-1.13253072,0.308959157,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","Geno_at_39",1.12190019,0.308959157,48,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","Geno_at_39",0.989589822,0.556866304,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","Geno_at_39",-0.933686213,0.624708625,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","Geno_at_39",-0.792430617,0.84,48,FALSE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","Geno_main",3.45283927,1.18946889e-28,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","Geno_main",3.32713887,2.2250996e-22,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","Geno_main",3.30372071,2.04227749e-20,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","Geno_main",3.155521,4.55566605e-16,47,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","Geno_main",3.11231007,4.47640877e-15,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","Geno_main",-2.01189653,0.000678499952,37,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","Geno_main",-1.79313745,0.00490605236,46,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","Geno_main",-1.57991412,0.0220761895,49,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","Geno_main",1.39815939,0.101197852,48,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","Geno_main",1.36096953,0.112,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","Geno_main",1.34191184,0.115922029,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","Geno_main",1.20634343,0.203384419,44,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","Geno_main",-0.921309362,0.661472149,48,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","Geno_main",-0.75307662,0.888888889,46,FALSE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","Interaction",3.23335491,2.81395206e-22,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","Interaction",3.20757606,1.0875071e-21,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","Interaction",3.14901834,1.12214091e-19,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","Interaction",3.05447241,3.60988983e-17,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","Interaction",2.84878547,2.49513315e-13,47,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","Interaction",1.28403465,0.247349823,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","Interaction",-1.00379578,0.837301587,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","Interaction",-0.96981651,0.837301587,37,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","Interaction",0.898067241,0.988452656,44,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","Interaction",-0.826148308,0.988452656,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","Interaction",0.762147636,0.988452656,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","Interaction",0.698363419,0.988452656,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","Interaction",-0.62521248,0.988452656,48,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","Interaction",0.616537904,0.988452656,48,FALSE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","KO_heat",-2.72440891,9.96289706e-15,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","KO_heat",-2.70734497,1.28983957e-14,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","KO_heat",2.79400497,2.16393555e-14,49,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","KO_heat",-2.68658311,2.16393555e-14,46,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","KO_heat",2.70715669,1.07113693e-12,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","KO_heat",-2.61112076,1.07113693e-12,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","KO_heat",-2.49156028,2.13810206e-10,47,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","KO_heat",2.44509048,5.39083457e-09,44,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","KO_heat",2.43520905,1.14391635e-08,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","KO_heat",2.09184546,1.79055825e-05,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","KO_heat",1.49333926,0.0515955573,37,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","KO_heat",-1.01534106,0.501557632,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","KO_heat",-0.983673192,0.525377426,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","KO_heat",0.930679795,0.613537118,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","Temp_main",2.78400295,2.4133807e-14,49,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","Temp_main",2.7263065,9.42823257e-14,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","Temp_main",-2.50844403,1.15762807e-10,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","Temp_main",-2.50194571,1.44136484e-10,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","Temp_main",-2.46810613,5.17847848e-10,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","Temp_main",-2.45282275,7.02620858e-10,47,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","Temp_main",-2.43257684,7.02620858e-10,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","Temp_main",2.3890662,1.88402273e-08,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","Temp_main",2.38650894,2.85230945e-08,44,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","Temp_main",1.98670859,0.000154529898,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","Temp_main",1.40891688,0.0667047837,37,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","Temp_main",-1.07746922,0.373333333,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","Temp_main",-1.0620024,0.378947368,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","Temp_main",1.03474034,0.378947368,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","Coresh Q Sig Wt Heat Up Fdr Logfc Gse46185","WT_heat_up (generic thermal)","WT_heat",2.76760807,1.23535436e-13,49,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","Coresh Q Sig Wt Heat Up Fdr Logfc Gse65083","WT_heat_up (generic thermal)","WT_heat",2.73613911,1.23535436e-13,46,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","Coresh Q Sig Wt Heat Up Fdr Logfc Gse41833","WT_heat_up (generic thermal)","WT_heat",2.46346219,6.5929226e-09,44,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","Coresh Q Sig Wt Heat Up Fdr Logfc Gse169006","WT_heat_up (generic thermal)","WT_heat",2.4593006,6.5929226e-09,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","Coresh Q Sig Interaction Up Fdr Logfc Gse89069","Interaction_up (cGAS-specific ISG)","WT_heat",-2.30830336,1.18836803e-07,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","Coresh Q Sig Interaction Up Fdr Only Gse94388","Interaction_up (cGAS-specific ISG)","WT_heat",-2.141803,4.44553663e-06,48,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","Coresh Q Sig Interaction Up Fdr Logfc Gse62758","Interaction_up (cGAS-specific ISG)","WT_heat",-2.08488864,4.21366705e-05,47,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","Coresh Q Sig Interaction Up Fdr Logfc Gse193605","Interaction_up (cGAS-specific ISG)","WT_heat",-2.01684967,0.000144472552,46,TRUE
-"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","Coresh Q Sig Interaction Up Fdr Logfc Gse62757","Interaction_up (cGAS-specific ISG)","WT_heat",-1.99381849,0.000157464841,46,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","Coresh Q Sig Wt Heat Up Fdr Only Gse163856","WT_heat_up (generic thermal)","WT_heat",1.98799009,0.000157464841,48,TRUE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","Coresh Q Sig Wt Heat Up Fdr Only Gse48870","WT_heat_up (generic thermal)","WT_heat",1.41058525,0.0646711013,37,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","Coresh Q Sig Wt Heat Up Fdr Only Gse212127","WT_heat_up (generic thermal)","WT_heat",-1.13649426,0.269230769,46,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","Coresh Q Sig Wt Heat Up Fdr Only Gse174225","WT_heat_up (generic thermal)","WT_heat",1.10585777,0.286023835,49,FALSE
-"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","Coresh Q Sig Wt Heat Up Fdr Only Gse80205","WT_heat_up (generic thermal)","WT_heat",-1.02975977,0.41025641,46,FALSE
+"set_id","set_label","origin","contrast","nes","padj","set_size","sig"
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.63723735,1.6957829e-07,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.54326009,6.40059751e-07,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.50773316,6.40059751e-07,47,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.258475,1.11185488e-05,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","Geno_at_37",2.10642106,0.000111468757,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","Geno_at_37",-1.65109832,0.0264090835,37,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","Geno_at_37",-1.55787874,0.0593476987,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","Geno_at_37",-1.34752194,0.14943074,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","Geno_at_37",1.22991247,0.188069217,48,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","Geno_at_37",1.14450096,0.294736842,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","Geno_at_37",1.05082817,0.45626072,44,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","Geno_at_37",0.92000909,0.714893617,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","Geno_at_37",-0.689332625,0.976653696,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","Geno_at_37",-0.615350819,0.976653696,48,FALSE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.39251505,4.0623982e-28,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.33624873,5.11202897e-25,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.3149696,3.20878788e-24,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.18163436,1.3973736e-19,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_at_39",3.0937441,1.516284e-16,47,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","Geno_at_39",-1.60711471,0.0504565992,37,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","Geno_at_39",1.44315504,0.0972222222,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","Geno_at_39",1.42977399,0.0972222222,44,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","Geno_at_39",-1.38069084,0.101010101,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","Geno_at_39",-1.13253072,0.308959157,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","Geno_at_39",1.12190019,0.308959157,48,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","Geno_at_39",0.989589822,0.556866304,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","Geno_at_39",-0.933686213,0.624708625,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","Geno_at_39",-0.792430617,0.84,48,FALSE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","Geno_main",3.45283927,1.18946889e-28,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_main",3.32713887,2.2250996e-22,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","Geno_main",3.30372071,2.04227749e-20,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Geno_main",3.155521,4.55566605e-16,47,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","Geno_main",3.11231007,4.47640877e-15,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","Geno_main",-2.01189653,0.000678499952,37,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","Geno_main",-1.79313745,0.00490605236,46,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","Geno_main",-1.57991412,0.0220761895,49,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","Geno_main",1.39815939,0.101197852,48,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","Geno_main",1.36096953,0.112,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","Geno_main",1.34191184,0.115922029,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","Geno_main",1.20634343,0.203384419,44,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","Geno_main",-0.921309362,0.661472149,48,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","Geno_main",-0.75307662,0.888888889,46,FALSE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Interaction",3.23335491,2.81395206e-22,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","Interaction",3.20757606,1.0875071e-21,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","Interaction",3.14901834,1.12214091e-19,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","Interaction",3.05447241,3.60988983e-17,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Interaction",2.84878547,2.49513315e-13,47,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","Interaction",1.28403465,0.247349823,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","Interaction",-1.00379578,0.837301587,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","Interaction",-0.96981651,0.837301587,37,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","Interaction",0.898067241,0.988452656,44,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","Interaction",-0.826148308,0.988452656,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","Interaction",0.762147636,0.988452656,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","Interaction",0.698363419,0.988452656,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","Interaction",-0.62521248,0.988452656,48,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","Interaction",0.616537904,0.988452656,48,FALSE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","KO_heat",-2.72440891,9.96289706e-15,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","KO_heat",-2.70734497,1.28983957e-14,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","KO_heat",2.79400497,2.16393555e-14,49,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","KO_heat",-2.68658311,2.16393555e-14,46,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","KO_heat",2.70715669,1.07113693e-12,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","KO_heat",-2.61112076,1.07113693e-12,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","KO_heat",-2.49156028,2.13810206e-10,47,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","KO_heat",2.44509048,5.39083457e-09,44,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","KO_heat",2.43520905,1.14391635e-08,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","KO_heat",2.09184546,1.79055825e-05,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","KO_heat",1.49333926,0.0515955573,37,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","KO_heat",-1.01534106,0.501557632,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","KO_heat",-0.983673192,0.525377426,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","KO_heat",0.930679795,0.613537118,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","Temp_main",2.78400295,2.4133807e-14,49,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","Temp_main",2.7263065,9.42823257e-14,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","Temp_main",-2.50844403,1.15762807e-10,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","Temp_main",-2.50194571,1.44136484e-10,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Temp_main",-2.46810613,5.17847848e-10,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","Temp_main",-2.45282275,7.02620858e-10,47,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","Temp_main",-2.43257684,7.02620858e-10,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","Temp_main",2.3890662,1.88402273e-08,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","Temp_main",2.38650894,2.85230945e-08,44,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","Temp_main",1.98670859,0.000154529898,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","Temp_main",1.40891688,0.0667047837,37,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","Temp_main",-1.07746922,0.373333333,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","Temp_main",-1.0620024,0.378947368,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","Temp_main",1.03474034,0.378947368,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE46185","GSE46185 · developmental · CD4+ Th2 cells","WT_heat_up (generic thermal)","WT_heat",2.76760807,1.23535436e-13,49,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE65083","GSE65083 · metabolic · CD4+ T helper (Th2) cells","WT_heat_up (generic thermal)","WT_heat",2.73613911,1.23535436e-13,46,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE41833","GSE41833 · inflammation other · bone marrow-derived macrophages (BMDMs)","WT_heat_up (generic thermal)","WT_heat",2.46346219,6.5929226e-09,44,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_logfc_GSE169006","GSE169006 · metabolic · colonic CD4+ T cells (naive, effector, regulatory T cells)","WT_heat_up (generic thermal)","WT_heat",2.4593006,6.5929226e-09,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE89069","GSE89069 · viral infection · embryonic brain (E17.5)","Interaction_up (cGAS-specific ISG)","WT_heat",-2.30830336,1.18836803e-07,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_only_GSE94388","GSE94388 · nucleic acid sensing · fetal brain","Interaction_up (cGAS-specific ISG)","WT_heat",-2.141803,4.44553663e-06,48,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62758","GSE62758 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","WT_heat",-2.08488864,4.21366705e-05,47,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE193605","GSE193605 · other · Neuro2a (N2a) neuroblastoma cells","Interaction_up (cGAS-specific ISG)","WT_heat",-2.01684967,0.000144472552,46,TRUE
+"CORESH_Q_sig_Interaction_up_fdr_logfc_GSE62757","GSE62757 · viral infection · spinal cord","Interaction_up (cGAS-specific ISG)","WT_heat",-1.99381849,0.000157464841,46,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE163856","GSE163856 · thermal heat shock · skeletal muscle stem cells (satellite cells) and liver / muscle single nuclei","WT_heat_up (generic thermal)","WT_heat",1.98799009,0.000157464841,48,TRUE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE48870","GSE48870 · developmental · B cell subsets from bone marrow, spleen, and small intestinal lamina propria","WT_heat_up (generic thermal)","WT_heat",1.41058525,0.0646711013,37,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE212127","GSE212127 · cancer tumor · B16 melanoma tumor tissue","WT_heat_up (generic thermal)","WT_heat",-1.13649426,0.269230769,46,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE174225","GSE174225 · cancer tumor · CD4+ and CD8+ tumor-infiltrating lymphocytes (TILs) and draining lymph node T cells","WT_heat_up (generic thermal)","WT_heat",1.10585777,0.286023835,49,FALSE
+"CORESH_Q_sig_WT_heat_up_fdr_only_GSE80205","GSE80205 · other · Neuro2a (N2a) neuroblastoma cells and neural/stem cells","WT_heat_up (generic thermal)","WT_heat",-1.02975977,0.41025641,46,FALSE
