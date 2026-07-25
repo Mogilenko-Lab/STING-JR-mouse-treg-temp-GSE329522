@@ -3,7 +3,7 @@
   "python.defaultInterpreterPath": "/opt/venvs/base/bin/python",
   "python.terminal.launchArgs": [],
   "python.REPL.enableREPLSmartSend": true,
-  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvironment": false,
   "python.terminal.runInDedicatedTerminal": true,
   "terminal.integrated.bracketedPasteMode": true,
   "python.terminal.executeInFileDir": true,
@@ -17,5 +17,40 @@
   "r.lsp.diagnostics": false,
 
   // Terminal
-  "terminal.integrated.defaultProfile.linux": "bash"
+  "terminal.integrated.defaultProfile.linux": "bash",
+  // --- Remote-SSH / Dev-Container stability (managed by vscode-sync-settings) ---
+  // Git: umbrella/superprojects nest many repos, each carrying vendored
+  // 01_modules toolkit copies. On defaults the Git extension opens a separate
+  // repository model + file watcher for EVERY nested repo, spiking CPU on the
+  // initial scan and starving the remote server heartbeat -> the ~3-5 min
+  // Remote-SSH / Dev-Container reconnect drops. Cap discovery to the root repo.
+  "git.detectSubmodules": false,
+  "git.autoRepositoryDetection": "openEditors",
+  "git.repositoryScanMaxDepth": 1,
+  "git.scanRepositories": [],
+
+  // Performance: keep the file watcher off large machine-generated trees.
+  // inotify watches are a HOST-WIDE budget shared across every VS Code window +
+  // every dev container (all run as the same host UID). Excluding a path does
+  // NOT hide it (Explorer/open/preview still work) and does NOT affect any venv
+  // -- it only stops inotify polling. 03_results stays watched so figures
+  // live-refresh; only its many-small-file checkpoints are dropped.
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/00_data/**": true,
+    "**/01_modules/**": true,
+    "**/.venv/**": true,
+    "**/*-env/**": true,
+    "**/__pycache__/**": true,
+    "**/.ipynb_checkpoints/**": true,
+    "**/renv/library/**": true,
+    "**/03_results/checkpoints/**": true
+  },
+  "search.exclude": {
+    "**/00_data": true,
+    "**/01_modules": true,
+    "**/03_results": true,
+    "**/__pycache__": true
+  }
 }

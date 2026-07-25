@@ -91,6 +91,10 @@ venv/
 Thumbs.db
 .vscode/*.log
 
+# Timestamped backup copies the provisioner drops beside a file it rewrites
+# (e.g. .devcontainer/docker-compose.yml.provc.1784934767) — never project state.
+*.provc.*
+
 .venv_pkgs/
 # BEGIN SCIAGENT:GITIGNORE
 docs/_internal/

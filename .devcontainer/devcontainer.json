@@ -27,5 +27,5 @@
       ]
     }
   },
-  "postStartCommand": "bash -lc 'chmod +x .devcontainer/scripts/*.sh && .devcontainer/scripts/poststart_sanity.sh && .devcontainer/scripts/setup_ai_env.sh && .devcontainer/scripts/configure_pi_models.sh'"
+  "postStartCommand": "bash -lc 'chmod +x .devcontainer/scripts/*.sh && .devcontainer/scripts/poststart_sanity.sh && .devcontainer/scripts/setup_ai_env.sh && .devcontainer/scripts/configure_pi_models.sh' && { [ -x /opt/dev-env/rollout.sh ] && /opt/dev-env/rollout.sh --copy --no-sync || true; }"
 }
