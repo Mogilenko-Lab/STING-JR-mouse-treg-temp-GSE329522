@@ -10,12 +10,22 @@
 #   (project_theme(config=FIG_CFG) + save_overview()). No inline ggsave()/theme()/
 #   raw hex; colors from FIG_CFG$colors.
 #
+# GATE-AWARE BY CONSTRUCTION. The contract exports each contrast at one or more
+#   THRESHOLD GATES (the primary gate for every contrast, plus a looser secondary
+#   gate for the thin comparators named in decisions.projection.secondary_gate_contrasts).
+#   The plotted unit is therefore the (contrast, gate) pair, ordered as manifest.csv
+#   orders it, so a contrast exported at two gates gets two bars rather than one of
+#   its two rows being silently dropped. No gate NAME is written into this script:
+#   the gate levels come from the tables/manifest, and the primary/secondary ROLE
+#   wording is read from decisions.projection.{gate,secondary_gate}.
+#
 # Figures (each _overview, each carrying its same-stem source table):
-#   _overview/human_signature_sizes  up/down set size per exported contrast AFTER mapping
-#                                     (human-space counterpart of the stage-17 size bars)
-#   _overview/mapping_loss           per contrast, mouse-set size -> human-set size waterfall
-#                                     (1:1 kept / many-mapped / dropped-no-ortholog): the
-#                                     sanity check that mapping did not decimate the signature
+#   _overview/human_signature_sizes  up/down set size per exported (contrast, gate) AFTER
+#                                     mapping (human-space counterpart of the stage-17 size bars)
+#   _overview/mapping_loss           per (contrast, gate) and direction, mouse-set size ->
+#                                     human-set size waterfall (1:1 kept / many-mapped /
+#                                     dropped-no-ortholog): the sanity check that mapping
+#                                     did not decimate the signature
 #
 # Inputs (read-only; produced by 18_projection_export.R):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss}.csv
@@ -50,6 +60,16 @@ LOSS_COLORS <- c(
 # Alarm line: flag a contrast/direction that loses > this fraction to no-ortholog drops.
 ALARM_FRAC <- 0.5
 
+# Gate ROLE wording comes from the decision block, never from a literal gate name here.
+.dcn <- FIG_CFG$decisions$projection %||% list()
+GATE_PRIMARY   <- as.character(.dcn$gate           %||% NA_character_)[1]
+GATE_SECONDARY <- as.character(.dcn$secondary_gate %||% NA_character_)[1]
+
+gate_role <- function(g) {
+  ifelse(!is.na(GATE_PRIMARY)   & g == GATE_PRIMARY,   "primary gate",
+  ifelse(!is.na(GATE_SECONDARY) & g == GATE_SECONDARY, "gate-sensitivity", "gate"))
+}
+
 # ============================================================================
 # 1. GUARD + READ.
 # ============================================================================
@@ -59,31 +79,75 @@ f_loss  <- file.path(OV_DIR, "mapping_loss.csv")
 for (f in c(f_sizes, f_loss))
   if (!file.exists(f))
     stop("[18_viz] missing table: ", f,
-         " — run 18_projection_export.R first (it only runs after BREAKPOINT-10 sign-off).")
+         " — run 18_projection_export.R first (it only runs after the signature freeze is signed off).")
 
 sizes_df <- readr::read_csv(f_sizes, show_col_types = FALSE, progress = FALSE)
 loss_df  <- readr::read_csv(f_loss,  show_col_types = FALSE, progress = FALSE)
 
-# Exported-contrast order = manifest order (falls back to appearance order).
+# ============================================================================
+# 2. PLOTTING UNIT = (contrast, gate), ordered as the manifest orders it.
+#    The manifest is the contract index; the stage tables must cover every one of
+#    its up/down rows. If they do not, the compute sibling and this viz have drifted
+#    apart — refuse to render a figure that quietly omits an exported gate.
+# ============================================================================
+
+unit_of <- function(contrast, gate) paste(contrast, gate, sep = "@")
+
 man_path <- file.path("03_results", "human_projection", "manifest.csv")
-CONTRASTS <- if (file.exists(man_path)) {
-  unique(readr::read_csv(man_path, show_col_types = FALSE, progress = FALSE)$contrast)
-} else {
-  unique(sizes_df$contrast)
+man <- if (file.exists(man_path))
+  readr::read_csv(man_path, show_col_types = FALSE, progress = FALSE) else NULL
+
+if (!is.null(man)) {
+  expected <- man %>%
+    dplyr::filter(direction %in% c("up", "down")) %>%
+    dplyr::transmute(key = paste(contrast, gate, direction, sep = "@")) %>%
+    dplyr::pull(key)
+  for (nm in c("human_signature_sizes", "mapping_loss")) {
+    df  <- if (nm == "human_signature_sizes") sizes_df else loss_df
+    got <- paste(df$contrast, df$gate, df$direction, sep = "@")
+    gap <- setdiff(expected, got)
+    if (length(gap))
+      stop("[18_viz] ", nm, ".csv is missing manifest row(s): ", paste(gap, collapse = ", "),
+           " — re-run 18_projection_export.R so the stage tables cover every exported gate.")
+  }
 }
-ord <- function(x) factor(x, levels = CONTRASTS)
 
-message("[18_viz] loaded human sizes (", nrow(sizes_df), ") + mapping loss (", nrow(loss_df), ") rows.")
+UNITS <- if (!is.null(man)) {
+  unique(unit_of(man$contrast, man$gate))
+} else {
+  unique(unit_of(sizes_df$contrast, sizes_df$gate))
+}
+GATES <- if (!is.null(man)) unique(man$gate) else unique(sizes_df$gate)
+
+# A contrast exported at more than one gate needs the gate spelled out on its tick;
+# a single-gate contrast keeps the plain display label.
+.unit_contrast <- sub("@[^@]*$", "", UNITS)
+MULTI_GATE <- names(which(table(.unit_contrast) > 1L))
+
+unit_label <- function(u) {
+  co  <- sub("@[^@]*$", "", u)
+  ga  <- sub("^.*@", "", u)
+  lab <- contrast_label(co, short = TRUE)
+  ifelse(co %in% MULTI_GATE, paste0(lab, "\n[", ga, "]"), lab)
+}
+
+as_unit <- function(df) df %>%
+  dplyr::mutate(unit = factor(unit_of(contrast, gate), levels = UNITS),
+                direction = factor(direction, levels = c("up", "down"))) %>%
+  droplevels()
+
+GATE_NOTE <- paste(sprintf("%s (%s)", GATES, gate_role(GATES)), collapse = " + ")
+
+message("[18_viz] loaded human sizes (", nrow(sizes_df), ") + mapping loss (", nrow(loss_df),
+        ") rows over ", length(UNITS), " exported (contrast, gate) unit(s): ", GATE_NOTE, ".")
 
 # ============================================================================
-# 2. FIGURE (a): human_signature_sizes — up/down human-set size per exported contrast.
+# 3. FIGURE (a): human_signature_sizes — up/down human-set size per exported unit.
 # ============================================================================
 
-sizes_p <- sizes_df %>%
-  dplyr::mutate(contrast = ord(contrast),
-                direction = factor(direction, levels = c("up", "down")))
+sizes_p <- as_unit(sizes_df)
 
-fig_sizes <- ggplot(sizes_p, aes(x = contrast, y = n_human, fill = direction)) +
+fig_sizes <- ggplot(sizes_p, aes(x = unit, y = n_human, fill = direction)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.72) +
   geom_text(aes(label = n_human),
             position = position_dodge(width = 0.8), vjust = -0.35,
@@ -91,43 +155,39 @@ fig_sizes <- ggplot(sizes_p, aes(x = contrast, y = n_human, fill = direction)) +
   scale_fill_manual(values = c(up = POS, down = NEG),
                     labels = c(up = "up (39 > 37 / numerator)", down = "down"),
                     name = "DE direction") +
-  scale_x_discrete(labels = function(x) contrast_label(x, short = TRUE)) +
+  scale_x_discrete(labels = unit_label) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(title = "Human projection signature sizes (after ortholog mapping)",
-       subtitle = paste0("Frozen human-symbol up/down set sizes per exported contrast, gate = ",
-                        unique(sizes_df$gate)[1], "."),
+       subtitle = paste0("Frozen human-symbol up/down set sizes per exported contrast; gates = ",
+                        GATE_NOTE, "."),
        x = NULL, y = "human genes in set",
        caption = "Human HGNC symbols after mouse->human mapping (babelgene). Claim tier: L3 (DE statistics).") +
   project_theme(config = FIG_CFG) +
   theme(axis.text.x = element_text(angle = 0))
 
 # ============================================================================
-# 3. FIGURE (b): mapping_loss — mouse-set -> human-set waterfall per contrast/direction.
+# 4. FIGURE (b): mapping_loss — mouse-set -> human-set waterfall per unit/direction.
 # ============================================================================
 
-loss_long <- loss_df %>%
+loss_long <- as_unit(loss_df) %>%
   tidyr::pivot_longer(cols = c(n_mapped_1to1, n_many_mapped, n_unmapped),
                       names_to = "category", values_to = "n") %>%
-  dplyr::mutate(contrast = ord(contrast),
-                direction = factor(direction, levels = c("up", "down")),
-                category = factor(category,
+  dplyr::mutate(category = factor(category,
                                   levels = c("n_mapped_1to1", "n_many_mapped", "n_unmapped")))
 
-# human-out annotation + alarm flag per contrast/direction
-loss_ann <- loss_df %>%
-  dplyr::mutate(contrast = ord(contrast),
-                direction = factor(direction, levels = c("up", "down")),
-                frac_unmapped = ifelse(n_mouse > 0, n_unmapped / n_mouse, 0),
+# human-out annotation + alarm flag per unit/direction
+loss_ann <- as_unit(loss_df) %>%
+  dplyr::mutate(frac_unmapped = ifelse(n_mouse > 0, n_unmapped / n_mouse, 0),
                 alarm = frac_unmapped > ALARM_FRAC)
 
-fig_loss <- ggplot(loss_long, aes(x = contrast, y = n, fill = category)) +
+fig_loss <- ggplot(loss_long, aes(x = unit, y = n, fill = category)) +
   geom_col(width = 0.72) +
   geom_text(data = loss_ann,
-            aes(x = contrast, y = n_mouse, fill = NULL,
+            aes(x = unit, y = n_mouse, fill = NULL,
                 label = sprintf("->%d", n_human)),
             vjust = -0.35, size = (FIG_CFG$figures$label_size %||% 4) * 0.8, colour = "grey15") +
   geom_point(data = dplyr::filter(loss_ann, alarm),
-             aes(x = contrast, y = n_mouse, fill = NULL),
+             aes(x = unit, y = n_mouse, fill = NULL),
              shape = 8, size = 2.4, colour = "red3", show.legend = FALSE) +
   facet_wrap(~ direction, nrow = 1,
              labeller = labeller(direction = c(up = "UP set", down = "DOWN set"))) +
@@ -135,11 +195,12 @@ fig_loss <- ggplot(loss_long, aes(x = contrast, y = n, fill = category)) +
                     labels = c(n_mapped_1to1 = "mapped 1:1", n_many_mapped = "one mouse -> many human",
                                n_unmapped = "dropped (no human ortholog)"),
                     name = "mouse gene fate") +
-  scale_x_discrete(labels = function(x) contrast_label(x, short = TRUE)) +
+  scale_x_discrete(labels = unit_label) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
   labs(title = "Ortholog mapping loss: mouse set -> human set",
        subtitle = paste0("Each bar = the mouse up/down set decomposed by fate; '->N' = resulting human ",
-                        "set size. Red * = > ", round(100 * ALARM_FRAC), "% dropped (alarm)."),
+                        "set size.\nGates = ", GATE_NOTE, ". Red * = > ",
+                        round(100 * ALARM_FRAC), "% dropped (alarm)."),
        x = NULL, y = "mouse genes in set",
        caption = paste0("Bar height = mouse-set size; green kept 1:1, orange one->many (each human gets ",
                         "the mouse t), grey dropped. Claim tier: L3. Correlative input, not a causal claim.")) +
@@ -147,7 +208,7 @@ fig_loss <- ggplot(loss_long, aes(x = contrast, y = n, fill = category)) +
   theme(axis.text.x = element_text(angle = 0))
 
 # ============================================================================
-# 4. SAVE via save_overview (figure + same-stem source table + README caption).
+# 5. SAVE via save_overview (figure + same-stem source table + README caption).
 # ============================================================================
 
 purge_figures(STAGE, "human_signature_sizes", overview = TRUE, config = FIG_CFG)
@@ -156,14 +217,16 @@ purge_figures(STAGE, "mapping_loss",          overview = TRUE, config = FIG_CFG)
 save_overview(
   fig_sizes, STAGE, "human_signature_sizes",
   table   = sizes_df,
-  finding = "Frozen human up/down set sizes per exported contrast after mouse->human ortholog mapping.",
+  finding = "Frozen human up/down set sizes per exported contrast and threshold gate, after mouse->human ortholog mapping.",
   script  = SCRIPT, fn = "ggplot(geom_col)",
-  config_kv = "decisions.projection.gate; colors.diverging",
+  config_kv = "decisions.projection.gate; decisions.projection.secondary_gate; colors.diverging",
   input   = f_sizes,
   how_to_read = paste0("Grouped bars per exported contrast; orange = up (higher in numerator / 39 C), blue ",
-                       "= down; numbers = human genes in the frozen set. This is the human-space counterpart ",
-                       "of the stage-17 (mouse) size bars. Claim tier: L3 (DE statistics); provisional ",
-                       "sample mapping, n=5/group."),
+                       "= down; numbers = human genes in the frozen set. A contrast carried at two threshold ",
+                       "gates gets one bar pair per gate, with the gate named in square brackets under its ",
+                       "tick — the looser gate is the sensitivity read, not a second result. This is the ",
+                       "human-space counterpart of the mouse-side size bars. Claim tier: L3 (DE statistics); ",
+                       "provisional sample mapping, n=5/group."),
   width = 11, height = 6.5,
   config = FIG_CFG)
 
@@ -172,19 +235,24 @@ save_overview(
   table   = loss_df,
   finding = "Mapping did not decimate the primary signature: most mouse genes map 1:1; dropped/many-mapped fractions are small (alarm-flagged if > half lost).",
   script  = SCRIPT, fn = "ggplot(geom_col)",
-  config_kv = paste0("alarm_frac=", ALARM_FRAC, "; babelgene(offline); decisions.projection.ortholog_ambiguity"),
+  config_kv = paste0("alarm_frac=", ALARM_FRAC, "; babelgene(offline); decisions.projection.ortholog_ambiguity; ",
+                     "decisions.projection.secondary_gate"),
   input   = f_loss,
-  how_to_read = paste0("Per contrast (x) and direction (facet), the mouse up/down set is stacked by fate: ",
-                       "green = mapped 1:1, orange = one-mouse->many-human (each human ortholog inherits the ",
-                       "mouse t in the ranked list; unioned in the binary set), grey = dropped (no human ",
-                       "ortholog). Bar height = mouse-set size; '->N' above = resulting human-set size. A red ",
-                       "* marks > ", round(100 * ALARM_FRAC), "% dropped — a decimated signature to demote. ",
-                       "Read it as the sanity check that the frozen human sets are not hollow. Claim tier: L3."),
-  width = 11, height = 6.5,
+  how_to_read = paste0("Per exported contrast (x) and direction (facet), the mouse up/down set is stacked by ",
+                       "fate: green = mapped 1:1, orange = one-mouse->many-human (each human ortholog inherits ",
+                       "the mouse t in the ranked list; unioned in the binary set), grey = dropped (no human ",
+                       "ortholog). A contrast carried at two threshold gates gets one bar per gate, with the ",
+                       "gate named in square brackets under its tick. Bar height = mouse-set size; '->N' above ",
+                       "= resulting human-set size. A red * marks > ", round(100 * ALARM_FRAC),
+                       "% dropped — a decimated signature to demote. Read it as the sanity check that the ",
+                       "frozen human sets are not hollow. Claim tier: L3."),
+  # Two direction facets x every exported (contrast, gate) unit: the canvas widens with
+  # the unit count so the full contrast+gate ticks stay legible and untruncated.
+  width = max(11, 3.0 + 1.6 * 2 * length(UNITS)), height = 6.5,
   config = FIG_CFG)
 
 # ============================================================================
-# 5. FINAL SUMMARY
+# 6. FINAL SUMMARY
 # ============================================================================
 
 n_fig <- length(list.files(file.path("03_results", STAGE, "figures"),

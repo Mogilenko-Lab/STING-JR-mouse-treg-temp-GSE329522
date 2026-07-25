@@ -5,3 +5,5 @@
 "KO_heat","comparator","down","fdr_logfc",113
 "Interaction","comparator","up","fdr_logfc",7
 "Interaction","comparator","down","fdr_logfc",0
+"Interaction","comparator","up","fdr_only",18
+"Interaction","comparator","down","fdr_only",0

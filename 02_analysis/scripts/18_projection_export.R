@@ -54,7 +54,8 @@
 #   03_results/human_projection/manifest.csv                          (machine index: 1 row / (contrast,direction))
 #   03_results/human_projection/ortholog_map.tsv                      (the applied map)
 #   03_results/human_projection/signatures/<contrast>/<contrast>_up.txt|_down.txt|_ranked.rnk
-#   + stage tables for the viz sibling:
+#   + stage tables for the viz sibling (one row per (contrast, gate, direction) — EVERY
+#     gate the manifest ships, primary and secondary alike, so the two stay in lockstep):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss}.csv
 #
 # IDEMPOTENT + BYTE-STABLE: pure read->map->round->write. Re-running yields identical bytes.
@@ -252,6 +253,14 @@ if (HAS_SECONDARY_GATE) {
                      up_mouse, file.path("signatures", co, paste0(co, "_fdrOnly_up.txt")))
     add_manifest_row(co, "down", SECONDARY_GATE[1], length(down_mouse), length(down_human),
                      down_mouse, file.path("signatures", co, paste0(co, "_fdrOnly_down.txt")))
+
+    # mapping-loss rows for the viz, same as the primary gate: the stage tables carry
+    # EVERY (contrast, gate) the manifest ships, so the figures cannot silently omit a gate.
+    for (dir in c("up", "down")) {
+      ms <- if (dir == "up") up_mouse else down_mouse
+      hs <- if (dir == "up") up_human else down_human
+      add_mapping_loss_row(co, dir, SECONDARY_GATE[1], ms, hs)
+    }
   }
 }
 
@@ -307,8 +316,11 @@ tbl_dir <- stage_dir(STAGE, "tables")
 ov_dir  <- file.path(tbl_dir, YAML_CONFIG$figures$overview_dir %||% "_overview")
 dir.create(ov_dir, recursive = TRUE, showWarnings = FALSE)
 
+# One row per (contrast, gate, direction) the manifest ships — every gate, not just the
+# primary one, so the stage tables stay in lockstep with manifest.csv and the viz sibling
+# can render the gate dimension instead of silently dropping the secondary-gate rows.
 human_sizes <- manifest %>%
-  dplyr::filter(direction %in% c("up", "down"), gate == GATE) %>%
+  dplyr::filter(direction %in% c("up", "down")) %>%
   dplyr::transmute(contrast, role, direction, gate, n_human)
 readr::write_csv(round_numeric_cols(human_sizes), file.path(ov_dir, "human_signature_sizes.csv"))
 
