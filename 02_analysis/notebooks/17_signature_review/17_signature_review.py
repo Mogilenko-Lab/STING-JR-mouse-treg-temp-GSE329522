@@ -1,10 +1,6 @@
 import marimo
 
-# Mouse anchor signature reactive review.
-# Reads frozen tables under 03_results and the projection decision block from
-# analysis_config.yaml. This app only visualizes and narrates the signature freeze;
-# it does not compute statistics that later stages consume.
-
+__generated_with = "0.23.14"
 app = marimo.App(width="full")
 
 
@@ -15,7 +11,7 @@ def _():
     return (mo,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     from pathlib import Path
 
@@ -26,10 +22,10 @@ def _():
     import yaml
     from plotly.subplots import make_subplots
 
-    return Path, go, make_subplots, np, pd, px, yaml
+    return Path, go, make_subplots, pd, yaml
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(Path):
     # Resolve the project root by walking up until the config sentinel appears, so
     # the app loads its tables whether launched from the repo root, the notebook
@@ -55,7 +51,7 @@ def _(Path):
     return CONFIG, RESULTS
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(CONFIG, RESULTS, pd, yaml):
     overview = RESULTS / "10_signature" / "tables" / "_overview"
     projection_overview = RESULTS / "11_projection" / "tables" / "_overview"
@@ -82,13 +78,9 @@ def _(CONFIG, RESULTS, pd, yaml):
     with open(CONFIG) as _fh:
         cfg = yaml.safe_load(_fh)
     projection_decision = cfg.get("decisions", {}).get("projection", {})
-
     return (
         hsr_decomp_conditional,
-        hsr_decomp_lens_nes,
         hsr_decomp_overlap,
-        hsr_decomp_rank_concordance,
-        hsr_decomp_summary,
         human_signature_sizes,
         lens_nes_by_contrast,
         master_de_genes,
@@ -100,7 +92,7 @@ def _(CONFIG, RESULTS, pd, yaml):
     )
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _():
     palette = {
         "green": "#009E73",
@@ -130,7 +122,7 @@ def _():
     return attribution_colors, attribution_order, contrast_order, palette
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, projection_decision):
     _export = ", ".join(projection_decision.get("contrasts_primary", []))
     _gate = projection_decision.get("gate", "fdr_logfc")
@@ -138,16 +130,14 @@ def _(mo, projection_decision):
         rf"""
         # Mouse 39 °C iTreg signature review
 
-        The mouse pipeline is done for GSE329522 iTregs. It gives me DE, GSEA, TF,
-        PROGENy, GATOM, and CoReSh summaries for all seven contrasts. The human
-        compartments need one frozen, ortholog-mapped signature they can all score
-        against.
+        Exploration for GSE329522 iTregs. 
+        The pipline for GSE329522 includes standard DE, battery of GSEA, TF, PROGENy, GATOM, and CoReSh summaries for all seven contrasts. 
+    
+        The human compartments need one frozen, ortholog-mapped signature they can all score against.
 
-        This review reshapes `master_de_genes.csv` into projectable pieces: up/down
-        gene sets and signed-`t` ranked lists. Here I double check what I am about
-        to freeze and make three calls:
+       Here I double check what I am to freeze and make three calls:
 
-        - which contrasts to ship,
+        - which contrasts tell the story,
         - which significance gate to keep,
         - how to handle ortholog ambiguity.
 
@@ -157,25 +147,87 @@ def _(mo, projection_decision):
     return
 
 
-@app.cell
-def _(mo, projection_decision):
+@app.cell(hide_code=True)
+def _(projection_decision):
     _gate = projection_decision.get("gate", "fdr_logfc")
-    mo.md(
-        rf"""
-        ## How big are these sets, and which gate?
-
-        How many genes actually survive each threshold. The two gates give very
-        different answers.
-
-        The freeze keeps **`{_gate}`**. That keeps `WT_heat` lean enough to score
-        as a focused set, while the full signed-`t` ranked lists remain available
-        for ranking-based enrichment.
-        """
-    )
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## How big are the DE sets resulting from different contrasts run?
+
+    How many genes actually survive each threshold. The two gates give very different answers.
+
+    The design of the experiment is 2x2 factorial: genotype WT, cGASKO x temperature 37, 39, n=5/group.
+
+    ### Factor reference levels (set in 00_setup_metadata.R): genotype=WT, temp=37.
+    **groups:**
+    * "WT_37"
+    * "cGASKO_37"
+    * "WT_39"
+    * "cGASKO_39"
+
+    **contrasts:**
+    * Effect of temp in WT and KO
+      * "WT_heat": WT_39 - WT_37
+      * "KO_heat" KO_39 - KO_37
+    * Effect of genotype in temp group
+      * 'Geno_at_37': WT_37 - cGAS-KO_37
+      * 'Geno_at_39': WT_39 - cGAS-KO_39
+    * What genes are in the heat response are cGAS dependent?
+      * 'Interaction': (WT_39 - cGASKO_39) - (WT_37 - cGASKO_37),
+      i.e. genes upregulated are cGAS-dependent
+    * What is the averaged effect of heat across genotypes
+      * 0.5*(WT_39 + cGASKO_39) - 0.5*(WT_37 + cGASKO_37)
+
+    The freeze keeps **`{_gate}`**. That keeps `WT_heat` lean enough to score
+    as a focused set, while the full signed-`t` ranked lists remain available
+    for ranking-based enrichment.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, projection_decision):
+    _gate = projection_decision.get("gate", "fdr_logfc")
+
+    mo.md(rf"""
+    ## How big are the DE sets resulting from different contrasts run?
+
+    How many genes actually survive each threshold. The two gates give very
+    different answers.
+
+    The design of the experiment is 2x2 factorial: genotype WT, cGASKO x temperature 37, 39, n=5/group.
+
+    ### Factor reference levels (set in 00_setup_metadata.R): genotype=WT, temp=37.
+      groups:
+        * "WT_37"
+        * "cGASKO_37"
+        * "WT_39"
+        * "cGASKO_39"
+      contrasts:
+          * Effect of temp in WT and KO
+              * "WT_heat": WT_39 - WT_37
+              * "KO_heat" KO_39 - KO_37
+          * Effect of genotype in temp group 
+              * 'Geno_at_37': WT_37 - cGAS-KO_37
+              * 'Geno_at_39': WT_39 - cGAS-KO_39
+          * What genes are in the heat response are cGAS dependent?
+              * 'Interaction': (WT_39 - cGASKO_39) - (WT_37 - cGASKO_37),
+              i.e. genes upregulated are cGAS-dependent 
+          * What is the averaged effect of heat across genotypes 
+              * 0.5*(WT_39 + cGASKO_39) - 0.5*(WT_37 + cGASKO_37)
+
+    The freeze keeps **`{_gate}`**. That keeps `WT_heat` lean enough to score
+    as a focused set, while the full signed-`t` ranked lists remain available
+    for ranking-based enrichment.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
 def _(go, make_subplots, mo, palette, signature_sizes):
     _gates = ["fdr_logfc", "fdr_only"]
     _fig = make_subplots(
@@ -229,25 +281,23 @@ def _(go, make_subplots, mo, palette, signature_sizes):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Are the contrasts saying different things?
+    mo.md(r"""
+    ## Is the Temp_main averaged temp effect same as the  the contrasts saying different things?
 
-        If `Temp_main` is basically a copy of `WT_heat`, there is little point in
-        shipping both. Jaccard overlap tells me how much the sets share.
+    If `Temp_main` is basically a copy of `WT_heat`, there is little point in
+    shipping both. Jaccard overlap tells me how much the sets share.
 
-        The design is a 2 × 2 factorial: genotype {WT, cGASKO} by temperature
-        {37, 39}, n = 5 per group. `WT_heat` is the heat effect in WT. `KO_heat` is
-        the heat effect in cGAS-KO samples. `Temp_main` is the pooled temperature
-        effect across genotypes. `Interaction` is the cGAS-dependent heat effect.
-        """
-    )
+    The design is a 2 × 2 factorial: genotype {WT, cGASKO} by temperature
+    {37, 39}, n = 5 per group. `WT_heat` is the heat effect in WT. `KO_heat` is
+    the heat effect in cGAS-KO samples. `Temp_main` is the pooled temperature
+    effect across genotypes. `Interaction` is the cGAS-dependent heat effect.
+    """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(contrast_order, go, make_subplots, mo, palette, updown_overlap):
     _gate = "fdr_logfc"
     _dirs = ["up", "down"]
@@ -315,23 +365,28 @@ def _(contrast_order, go, make_subplots, mo, palette, updown_overlap):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Does it survive the trip to human?
+    mo.md(r"""
+    ## Does it survive the trip to human?
 
-        I need to count how many genes survive orthology mapping. The exported
-        sets are mouse-derived, but the human compartments score human symbols.
-        The mapping rule keeps one-to-one orthologs, unions one-mouse-to-many-human
-        mappings, drops unmapped genes, and logs every loss.
-        """
-    )
+    I need to count how many genes survive orthology mapping. The exported
+    sets are mouse-derived, but the human compartments score human symbols.
+    The mapping rule keeps one-to-one orthologs, unions one-mouse-to-many-human
+    mappings, drops unmapped genes, and logs every loss.
+    """)
     return
 
 
-@app.cell
-def _(go, human_signature_sizes, make_subplots, mo, ortholog_coverage, palette):
+@app.cell(hide_code=True)
+def _(
+    go,
+    human_signature_sizes,
+    make_subplots,
+    mo,
+    ortholog_coverage,
+    palette,
+):
     _gates = ["fdr_logfc", "fdr_only"]
     _cats = [
         ("mapped_1to1", "1:1", palette["green"]),
@@ -395,22 +450,20 @@ def _(go, human_signature_sizes, make_subplots, mo, ortholog_coverage, palette):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Does `WT_heat` look like heat-stressed Tregs?
+    mo.md(r"""
+    ## Does `WT_heat` look like heat-stressed Tregs?
 
-        What are the genes sorted by signed `t`: noise or biology?
+    What are the genes sorted by signed `t`: noise or biology?
 
-        This is the hinge. The top genes tell me whether `WT_heat` reads as a
-        clean heat-shock list or as a broader iTreg response at 39 °C.
-        """
-    )
+    This is the hinge. The top genes tell me whether `WT_heat` reads as a
+    clean heat-shock list or as a broader iTreg response at 39 °C.
+    """)
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(go, master_de_genes, mo):
     _wt = master_de_genes[master_de_genes["contrast"] == "WT_heat"].copy()
     _top_up = _wt.sort_values("t", ascending=False).head(30).reset_index(drop=True)
@@ -457,51 +510,43 @@ def _(go, master_de_genes, mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        r"""
-        ## Is `WT_heat_up` heat, or just activation at 39 °C?
+    mo.md(r"""
+    ## Is `WT_heat_up` heat, or just activation at 39 °C?
 
-        `WT_heat_up` is iTregs activated at 39 °C — its top genes are part chaperone (Hspa1a, Hsph1),
-        part activation (complement C3, immediate-early). The list can't separate the two. So I read it
-        through two lenses that can: a clean heat-shock core (HSF1, chaperones) and a separate activation
-        lens, both scored on the same ranking.
+    `WT_heat_up` is iTregs activated at 39 °C — its top genes are part chaperone (Hspa1a, Hsph1),
+    part activation (complement C3, immediate-early). The list can't separate the two. So I read it
+    through two lenses that can: a clean heat-shock core (HSF1, chaperones) and a separate activation
+    lens, both scored on the same ranking.
 
-        They disagree, and the disagreement is the answer.
+    They disagree, and the disagreement is the answer.
 
-        Count the genes: it looks like activation. Of 213 `WT_heat_up` genes, 3 are chaperones, 12 are
-        activation. The gate keeps the sharpest movers, and activation moves sharpest.
+    Count the genes: it looks like activation. Of 213 `WT_heat_up` genes, 3 are chaperones, 12 are
+    activation. The gate keeps the sharpest movers, and activation moves sharpest.
 
-        Weigh the whole ranking: heat wins. `HSR_core` enriches at NES 2.05, activation at 1.72. The
-        chaperone program is broad and coordinated — it runs the length of the ranking, top to bottom.
+    Weigh the whole ranking: heat wins. `HSR_core` enriches at NES 2.05, activation at 1.72. The
+    chaperone program is broad and coordinated — it runs the length of the ranking, top to bottom.
 
-        So the list is activation; the program underneath is heat. A handful of activation genes clear the
-        bar loudly, while a wide chaperone program hums below it.
+    So the list is activation; the program underneath is heat. A handful of activation genes clear the
+    bar loudly, while a wide chaperone program hums below it.
 
-        Two checks confirm two independent signals. They share no genes. And dropping every activation
-        gene leaves `HSR_core` exactly where it was (2.05 → 2.05).
+    Two checks confirm two independent signals. They share no genes. And dropping every activation
+    gene leaves `HSR_core` exactly where it was (2.05 → 2.05).
 
-        The heat program doesn't need cGAS either — it's just as strong in `KO_heat` (2.07) as in
-        `WT_heat`. That points to HSF1 as the driver, the chaperone response, working without the DNA sensor.
+    The heat program doesn't need cGAS either — it's just as strong in `KO_heat` (2.07) as in
+    `WT_heat`. That points to HSF1 as the driver, the chaperone response, working without the DNA sensor.
 
-        The 39 °C response carries a real heat-shock program, stronger than the activation it's tangled
-        with, even though the gene list alone reads as activated. That's what the human data now tests.
-        The core answers proteotoxic stress of any kind — oxidative, proteasomal, thermal — so "heat" here
-        means the program 39 °C induces, measured by the 37/39 contrast.
-        """
-    )
+    The 39 °C response carries a real heat-shock program, stronger than the activation it's tangled
+    with, even though the gene list alone reads as activated. That's what the human data now tests.
+    The core answers proteotoxic stress of any kind — oxidative, proteasomal, thermal — so "heat" here
+    means the program 39 °C induces, measured by the 37/39 contrast.
+    """)
     return
 
 
-@app.cell
-def _(
-    attribution_colors,
-    attribution_order,
-    go,
-    mo,
-    wtheatup_attribution,
-):
+@app.cell(hide_code=True)
+def _(attribution_colors, attribution_order, go, mo, wtheatup_attribution):
     _d = (
         wtheatup_attribution[
             wtheatup_attribution["attribution"].isin(attribution_order)
@@ -543,7 +588,7 @@ def _(
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(lens_nes_by_contrast, mo):
     _contrasts = [
         c
@@ -561,7 +606,7 @@ def _(lens_nes_by_contrast, mo):
     return (heat_contrast,)
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(go, heat_contrast, lens_nes_by_contrast, mo, palette):
     _selected = heat_contrast.value
     _terms = ["HSR_core", "TCR_activation"]
@@ -623,7 +668,7 @@ def _(go, heat_contrast, lens_nes_by_contrast, mo, palette):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(hsr_decomp_conditional, hsr_decomp_overlap, mo):
     _ov = hsr_decomp_overlap[
         (hsr_decomp_overlap["set_a"] == "HSR_core")
@@ -647,7 +692,7 @@ def _(hsr_decomp_conditional, hsr_decomp_overlap, mo):
     return
 
 
-@app.cell
+@app.cell(hide_code=True)
 def _(mo, projection_decision):
     _orth = projection_decision.get("ortholog_ambiguity", {})
     mo.md(

@@ -45,6 +45,10 @@ scratch/
 # Each notebook lives in its own folder, so match nested .html too.
 02_analysis/notebooks/**/*.html
 
+# marimo editor session cache written next to the app source (cell outputs/state).
+# Machine-generated and rewritten on every edit; the .py app IS the notebook.
+__marimo__/
+
 # Keep .gitkeep placeholders everywhere under 03_results/.
 !03_results/**/.gitkeep
 
