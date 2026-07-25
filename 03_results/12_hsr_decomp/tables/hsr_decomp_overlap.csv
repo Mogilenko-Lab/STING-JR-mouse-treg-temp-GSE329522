@@ -1,0 +1,7 @@
+set_a,set_b,n_a,n_b,n_intersect,jaccard
+WT_heat_up,HSR_core,213,47,3,0.0116731518
+WT_heat_up,HSR_sensitivity,213,170,5,0.0132275132
+WT_heat_up,TCR_activation,213,66,12,0.0449438202
+HSR_core,HSR_sensitivity,47,170,47,0.276470588
+HSR_core,TCR_activation,47,66,0,0
+HSR_sensitivity,TCR_activation,170,66,0,0

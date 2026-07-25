@@ -1,0 +1,3 @@
+term,conditioned_on,nes_uncond,nes_cond,delta_nes,padj_cond
+HSR_core,TCR_activation,2.04905631,2.05402006,0.00496374769,1.00316793e-5
+TCR_activation,HSR_core,1.71988216,1.72486437,0.00498220668,0.0011584751

@@ -1,0 +1,4 @@
+set,n_in_ranking,median_rank,median_rank_pct,median_t,wilcox_p,higher_set
+HSR_core,47,4798,0.243774774,2.05361976,0.655861337,HSR_core
+TCR_activation,66,5829,0.29616831,1.50983177,0.655861337,HSR_core
+WT_heat_up,213,282,0.0142799065,10.7986447,0.655861337,HSR_core

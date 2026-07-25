@@ -1,0 +1,5 @@
+lens,attribution,n,fraction,denominator,honest_ceiling,attribution_label,label
+HSR_core,thermal_HSR,3,0.014084507,213,"The HSR lens is proteotoxic-stress-general, not fever-specific; 37/39 contrast supports correlative temperature-response interpretation, not causal fever claims.",Thermal HSR,3 (1.4%)
+HSR_core,activation,12,0.0563380282,213,"The HSR lens is proteotoxic-stress-general, not fever-specific; 37/39 contrast supports correlative temperature-response interpretation, not causal fever claims.",Activation,12 (5.6%)
+HSR_core,shared_both,0,0,213,"The HSR lens is proteotoxic-stress-general, not fever-specific; 37/39 contrast supports correlative temperature-response interpretation, not causal fever claims.",Shared,0 (0.0%)
+HSR_core,neither,198,0.929577465,213,"The HSR lens is proteotoxic-stress-general, not fever-specific; 37/39 contrast supports correlative temperature-response interpretation, not causal fever claims.",Neither,198 (93.0%)
