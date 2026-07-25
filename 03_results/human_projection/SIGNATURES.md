@@ -40,6 +40,17 @@ for presence, never a claim that fever/HIF/STING drives human disease.
 - down: 153 mouse → 113 human (dropped 34, many-mapped 2)
 - ranked: 19679 mouse → 12986 human genes (`KO_heat_ranked.rnk`, signed t, descending)
 
+The three heat contrasts are linearly dependent by construction: WT_heat is the full
+thermal response in cGAS-competent cells, Interaction the cGAS-dependent slice, KO_heat
+what remains with cGAS removed — so WT_heat = KO_heat + Interaction, equivalently
+KO_heat = WT_heat − Interaction, and any two fix the third. KO_heat is retained as the
+cGAS-independent thermal comparator whose primary use is an independent
+negative/specificity control against the SAVI STING gain-of-function reference: when it
+overlaps the SAVI program much as WT_heat does, the heat↔SAVI overlap is consistent with
+a STING-independent (IFN-like) rather than STING-specific signal, keeping the human read
+correlative. The disease-tissue reads lean on WT_heat + Interaction, where KO_heat
+implies nothing new.
+
 ### Interaction — role: comparator
 - definition: Heat × genotype interaction (cGAS-dependence of the heat response) (tests cGAS-dependence of the heat response; 1 df, underpowered at n=5 — labelled by what it TESTS, not a result)
 - up:   9 mouse → 7 human (dropped 1, many-mapped 0)

@@ -391,6 +391,19 @@ decisions:
     role_primary: ["WT_heat"]
     # The exact set of contrasts frozen as the export (the manifest rows). Default per
     # runbook §3.1: the primary axis + the three interpretable comparators.
+    #
+    # The three heat contrasts are linearly dependent by construction:
+    #   WT_heat      = full thermal response in cGAS-competent cells   (the primary axis)
+    #   Interaction  = WT_heat - KO_heat = the cGAS-DEPENDENT slice     (ISG/STING candidate)
+    #   KO_heat      = WT_heat - Interaction = the cGAS-INDEPENDENT thermal comparator
+    # so WT_heat = KO_heat + Interaction and any two of the three fix the third. We still
+    # materialize KO_heat as its own scored contrast because it plays an independent role
+    # the other two cannot: at the cross-dataset integration layer it is the NEGATIVE /
+    # specificity control scored against the SAVI STING gain-of-function reference — if it
+    # overlaps SAVI much as WT_heat does, the heat<->SAVI overlap is STING-INDEPENDENT
+    # (IFN-like), keeping the human read correlative. Inside a single human disease dataset
+    # the story is intentionally TWO threads only (WT_heat + Interaction); KO_heat is not
+    # scored there because KO = WT - Interaction is already implied by the other two.
     contrasts_primary: ["WT_heat", "KO_heat", "Interaction"]
     # Binary up/down gate. `fdr_logfc` = adj.P.Val < de_fdr AND |logFC| >= de_logfc (the
     # stringent config gate); `fdr_only` = adj.P.Val < de_fdr, |logFC| gate off (split by
@@ -399,6 +412,14 @@ decisions:
     # Thin comparator contrasts also exported at a SECOND (looser) gate for gate-sensitivity.
     # Interaction is 1 df / thin at fdr_logfc; carry its fdr_only variant alongside so the
     # human side can score both the 7-gene core and the ~23-gene gate-sensitivity set.
+    #
+    # Gate asymmetry is BY DESIGN, not a smell. Interaction and KO_heat are the two arms of
+    # the same specificity test, not competitors. Interaction rides the looser fdr_only gate
+    # because it is the underpowered POSITIVE candidate — a 1-df interaction term is inherently
+    # low-power and needs the sensitivity read to avoid a false null. KO_heat rides the
+    # stringent combo fdr_logfc gate (the top-level `gate:` above) with NO secondary gate
+    # because it is the well-powered NEGATIVE control and needs no rescue: a well-powered null
+    # is a strong null.
     secondary_gate: fdr_only
     secondary_gate_contrasts: ["Interaction"]
     # Collision policy for the mouse→human map (mirrors ortholog_utils::default_ortholog_policy).

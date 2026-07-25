@@ -12,6 +12,23 @@
 #   byte-stable contract under 03_results/human_projection/. There is NO ggplot/ggsave
 #   here; figures live in 18_projection_export_viz.R.
 #
+# CONTRAST ARITHMETIC & ROLES (why three heat contrasts, what each is for):
+#   The three exported heat contrasts are LINEARLY DEPENDENT by construction —
+#     WT_heat     = the full thermal response in cGAS-competent cells  (role: primary)
+#     Interaction = WT_heat - KO_heat = the cGAS-DEPENDENT slice        (ISG/STING candidate)
+#     KO_heat     = WT_heat - Interaction = the cGAS-INDEPENDENT thermal comparator
+#   so WT_heat = KO_heat + Interaction, and any two of the three determine the third.
+#   KO_heat is still materialized as its own scored contrast because it plays a role the
+#   other two cannot: at the cross-dataset integration layer it is the NEGATIVE /
+#   specificity control scored against the SAVI STING gain-of-function reference — if it
+#   overlaps SAVI much as WT_heat does, the heat<->SAVI overlap is STING-INDEPENDENT
+#   (IFN-like), which keeps the human read correlative. Inside a single human disease
+#   dataset the story is intentionally TWO threads only (WT_heat + Interaction); KO_heat is
+#   not scored there because KO = WT - Interaction is already implied by the other two.
+#   Gate asymmetry (see analysis_config.yaml::decisions.projection) is by design: Interaction
+#   also rides the looser fdr_only secondary gate as the underpowered 1-df POSITIVE candidate;
+#   KO_heat stays on the stringent fdr_logfc gate alone as the well-powered NEGATIVE control.
+#
 # ┏━ BREAKPOINT-10 GATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 # ┃ This script REFUSES TO RUN until the human signs off on the signature          ┃
 # ┃ definitions. It stops unless analysis_config.yaml::decisions.projection.status ┃
@@ -372,6 +389,24 @@ for (co in names(per_contrast)) {
     md <- c(head(md, -1L),
       sprintf("- also exported at %s: %d human genes (`%s_fdrOnly_up.txt` / `_down.txt`) — thin-set gate-sensitivity read; the %s core above is unchanged.",
               sc$gate, sec_n_human, co, GATE),
+      "")
+  }
+  # KO_heat carries the contrast-arithmetic narration: it is the cGAS-independent
+  # thermal comparator, and WT_heat = KO_heat + Interaction makes it algebraically
+  # redundant within a disease dataset — its own scored use is the SAVI negative
+  # control at integration. Emitted in-loop so SIGNATURES.md reproduces byte-stably.
+  if (identical(co, "KO_heat")) {
+    md <- c(md,
+      "The three heat contrasts are linearly dependent by construction: WT_heat is the full",
+      "thermal response in cGAS-competent cells, Interaction the cGAS-dependent slice, KO_heat",
+      "what remains with cGAS removed — so WT_heat = KO_heat + Interaction, equivalently",
+      "KO_heat = WT_heat − Interaction, and any two fix the third. KO_heat is retained as the",
+      "cGAS-independent thermal comparator whose primary use is an independent",
+      "negative/specificity control against the SAVI STING gain-of-function reference: when it",
+      "overlaps the SAVI program much as WT_heat does, the heat↔SAVI overlap is consistent with",
+      "a STING-independent (IFN-like) rather than STING-specific signal, keeping the human read",
+      "correlative. The disease-tissue reads lean on WT_heat + Interaction, where KO_heat",
+      "implies nothing new.",
       "")
   }
 }
