@@ -19,10 +19,24 @@
 #   cGAS-dependence axis (y), so the near-independence of the two threads is
 #   visible as a horizontal band.
 #
+# Encoding (value first, hue second, shape third)
+#   The three classes are ordered by LIGHTNESS so they survive a greyscale print
+#   and deuteranopia/protanopia: pale grey cloud -> vermillion -> near-black, each
+#   with its own glyph (small dot -> ringed circle -> ringed triangle). Hue only
+#   reinforces a separation the value ladder already carries.
+#
+# The stringent gate is drawn as GEOMETRY, not as a fourth colour
+#   Two subsets of the arm both number nine and are NOT the same genes: the
+#   |logFC| >= de_logfc set the frozen mouse->human signature carries, and the set
+#   that reverses sign without cGAS. They share four members. Drawing the gate as
+#   dotted lines (parallel to the identity line in Panel A, horizontal in Panel B)
+#   makes membership exact and readable off the page: highlighted glyph beyond the
+#   line = gate, triangle = reverses, so beyond+triangle = both.
+#
 # Role: DRAWS ONLY. Every number on these panels -- correlations, regression
-#   slope, counts, axis limits, which genes get labelled -- is read from the
-#   tables emitted by 02b_cgas_dependence_geometry.R. No statistic, join, or
-#   count is computed here.
+#   slope, counts, class membership, the gate offset, axis limits, which genes get
+#   labelled -- is read from the tables emitted by 02b_cgas_dependence_geometry.R.
+#   No statistic, join, threshold or count is computed here.
 #
 # Inputs (read only)
 #   03_results/03_de/tables/_overview/cgas_dependence_wide.csv
@@ -41,7 +55,8 @@
 #   at n=5/group, the least-powered contrast in the design, so its 23 genes are a
 #   FLOOR on the cGAS-dependent arm. A gene on the diagonal has no detectable
 #   cGAS-dependence at n=5, which is not a claim of cGAS-independence. The arm is
-#   also one-sided (23 up, 0 down); nothing here may be drawn symmetrically.
+#   also one-sided (23 up, 0 down); nothing here may be drawn symmetrically. The
+#   reader-facing prose lives in the README caption sections, not on the canvas.
 #
 # Dependencies: ggplot2, dplyr, readr, ggrepel
 # Run from project root (after the compute sibling):
@@ -73,21 +88,29 @@ LBL     <- as.numeric(FIG_CFG$figures$label_size %||% 4)
 PT      <- as.numeric(FIG_CFG$figures$point_size %||% 2.4)
 SEED    <- GSEA_SEED    # deterministic ggrepel layout, so re-runs are byte-stable
 
-## DECLARED PALETTE — the only colour literals in this script.
-HL <- FIG_CFG$colors$okabe_ito$vermillion %||% "#D55E00"  # the cGAS-dependent arm
-BG <- "grey72"                                            # every other gene
-AX <- "grey35"                                            # reference lines / rules
-HALO <- "white"                                           # gene-label outline
+## DECLARED PALETTE — the only colour constants in this script, all from FIG_CFG$colors.
+## The three classes are ordered by VALUE, not hue, so the panel separates in pure
+## greyscale as well as in colour. Approximate WCAG relative luminance in brackets:
+##   VAL_LO  pale grey   [Y ~ 0.60]  the 19,656-gene cloud
+##   VAL_MID vermillion  [Y ~ 0.22]  differs between genotypes, same direction
+##   VAL_HI  black       [Y ~ 0.00]  differs AND reverses direction without cGAS
+## Successive greyscale contrast ratios are 2.6 and 5.4, so the ladder is legible
+## before hue is consulted; vermillion-versus-neutral is the deuteranopia-safe cue.
+OI      <- FIG_CFG$colors$okabe_ito %||% list()
+VAL_LO  <- "grey80"
+VAL_MID <- OI$vermillion %||% "#D55E00"
+VAL_HI  <- OI$black      %||% "#000000"
+RING    <- "grey20"     # outline on the two highlighted glyphs (lifts them off the cloud)
+AX      <- "grey35"     # reference lines: identity + gate
+GRID    <- "grey72"     # zero rules
+TXT     <- "grey15"     # in-panel reader text
+LBL_INK <- "grey20"     # gene labels
+HALO    <- "white"      # gene-label outline
 
 CO_WT    <- "WT_heat"
 CO_KO    <- "KO_heat"
 CO_INT   <- "Interaction"
 CO_SHARE <- "Temp_main"
-
-CFG_KV <- sprintf(
-  "thresholds.de_fdr=%.2g; figures.volcano_label_top=%d; figures.point_size=%.1f; colors.okabe_ito",
-  FDR, LBL_TOP, PT
-)
 
 # -----------------------------------------------------------------------------
 # 2. Read the compute sibling's tables (NO recomputation)
@@ -127,25 +150,37 @@ WT_KO   <- paste(CO_WT, CO_KO, sep = "_vs_")
 LIM_A   <- S("axis_lim", WT_KO)          # symmetric, equal on both axes (Panel A)
 LIM_BX  <- S("axis_lim", CO_SHARE)       # Panel B x half-range
 LIM_BY  <- S("axis_lim", CO_INT)         # Panel B y half-range
+GATE    <- S("de_logfc", "gate")         # the |logFC| cut-off drawn as dotted lines
 
-# Point cloud vs highlighted arm: one is 19,679 points, the other 23. Both sizes
-# derive from figures.point_size so the pair scales with the contract.
+CFG_KV <- sprintf(
+  paste0("thresholds.de_fdr=%.2g; thresholds.de_logfc=%g; figures.volcano_label_top=%d; ",
+         "figures.point_size=%.1f; figures.cue_size=%.1f; colors.okabe_ito"),
+  FDR, GATE, LBL_TOP, PT, CUE)
+
+# Point cloud vs highlighted arm: one is 19,679 points, the other 23. All sizes
+# derive from figures.point_size so the family scales with the contract.
 PT_BG <- PT * 0.28
 PT_HL <- PT * 0.95
 
-# Legend keys are sentences, not contrast algebra. Three keys, because the arm splits
-# into genes that keep the same direction and genes that REVERSE without cGAS -- the
-# split is the plainest reading of the panel, so it gets its own glyph and is countable.
-KEY_BG  <- "no detectable difference between genotypes at n=5"
-KEY_HL  <- sprintf("heat response differs between genotypes (adj.P < %.2g)", FDR)
-KEY_REV <- "reverses direction: up with heat in WT, down without cGAS"
-KEYS    <- c(KEY_BG, KEY_HL, KEY_REV)
-# arm_class comes from the compute sibling; the viz only attaches display labels.
+# -----------------------------------------------------------------------------
+# 3. Class keying — legend keys name the GEOMETRY the reader can see
+# -----------------------------------------------------------------------------
+# The old keys ("heat response differs between genotypes", "reverses direction")
+# described the test, not the picture: a reader saw two spatially separate clouds
+# under one generic label. These keys say where each class sits and what that
+# means biologically, in words a wet-lab reader already owns. arm_class comes from
+# the compute sibling; the viz only attaches display labels.
+KEY_BG   <- "no detectable difference between genotypes at n=5"
+KEY_SAME <- "falls with heat in both genotypes, and further without cGAS"
+KEY_REV  <- "rises with heat in WT, falls without cGAS"
+KEYS     <- c(KEY_BG, KEY_SAME, KEY_REV)
 CLASS_KEY <- c(no_detectable_difference = KEY_BG,
-               differs_same_direction   = KEY_HL,
+               differs_same_direction   = KEY_SAME,
                differs_and_reverses     = KEY_REV)
-SHAPES <- setNames(c(16, 16, 17), KEYS)   # filled circle / circle / triangle
-FILLS  <- setNames(c(BG, HL, HL), KEYS)
+# Ordered light -> dark, one glyph each: small dot, ringed circle, ringed triangle.
+SHAPES  <- setNames(c(16, 21, 24),                KEYS)
+FILLS   <- setNames(c(VAL_LO, VAL_MID, VAL_HI),   KEYS)
+COLOURS <- setNames(c(VAL_LO, RING, RING),        KEYS)
 
 gw <- gw %>%
   dplyr::mutate(arm = factor(unname(CLASS_KEY[arm_class]), levels = KEYS))
@@ -153,101 +188,140 @@ gw <- gw %>%
 gw_bg   <- gw %>% dplyr::filter(arm_class == "no_detectable_difference")
 gw_same <- gw %>% dplyr::filter(arm_class == "differs_same_direction")
 gw_rev  <- gw %>% dplyr::filter(arm_class == "differs_and_reverses")
-gw_lab  <- gw %>% dplyr::filter(!is.na(label_rank), label_rank <= LBL_TOP)
 
-message(sprintf("[02b_viz] %s genes; %d in the arm (%d reverse); %d labelled (cap %d)",
-                N("n_genes", "all"), nrow(gw_same) + nrow(gw_rev), nrow(gw_rev),
-                nrow(gw_lab), LBL_TOP))
+# Labels: the compute sibling's evidence ranking capped at the contract's label
+# budget, UNION the stringent-gate set. The gate set is the narrated one -- the genes
+# the frozen mouse->human signature carries -- and it is itself smaller than the cap,
+# so neither label source exceeds figures.volcano_label_top. Naming both subsets is
+# the point: the reader must be able to check which of the two nines a gene is in.
+# Membership is READ from in_stringent_gate / label_rank, never derived here.
+# Gene names of gate members are set BOLD. Four of the nine sit within a hundredth of
+# a log2 unit of the gate line -- a hard threshold cutting a continuum -- so the line
+# alone cannot resolve them at glyph size. Bold is exact, costs no colour and no legend
+# row, and survives greyscale. gate_face is a display attribute of a read column.
+gw_lab <- gw %>%
+  dplyr::filter((!is.na(label_rank) & label_rank <= LBL_TOP) | in_stringent_gate) %>%
+  dplyr::mutate(gate_face = ifelse(in_stringent_gate, "bold", "plain"))
 
-# The one-sidedness of the arm is a finding, not a rounding: state it wherever the
-# arm is described, and never let a panel read as symmetric.
-ARM_SENTENCE <- sprintf(
-  "All %s genes in the arm respond to heat more strongly in WT than in cGAS-KO; %s do the reverse.",
-  N("n_up", CO_INT), N("n_down", CO_INT))
-REVERSE_SENTENCE <- sprintf(
-  paste0("Every one of them falls with heat once cGAS is gone (%s of %s individually ",
-         "significant), and %s rise with heat in WT instead -- an interferon response that heat ",
-         "sustains only when cGAS is present."),
-  N("n_down_with_heat_in_ko_significant", CO_INT, ARM),
-  N("n_down_with_heat_in_ko", CO_INT, ARM),
-  N("n_reverses_without_cgas", CO_INT, ARM))
-FLOOR_SENTENCE <- sprintf(
-  paste0("The genotype comparison of the heat response is a single-degree-of-freedom test at ",
-         "n=5 per group, the least-powered contrast in this design, so %s genes is a floor on ",
-         "the cGAS-dependent arm rather than its full size. Genes on the shared axis have no ",
-         "detectable cGAS-dependence at n=5, which is a weaker statement than independence."),
-  N("n_sig", CO_INT))
-
-# Wrap reader-facing panel text at the contract's caption column so a sentence can
-# never run off the right edge of the canvas (a truncated label is unreadable).
-WRAP <- as.integer(FIG_CFG$figures$caption_wrap_column %||% 70)
-wrap_at <- function(txt, width = WRAP) paste(strwrap(txt, width = width), collapse = "\n")
+message(sprintf("[02b_viz] %s genes; arm %s (%s reverse, %s clear the |logFC| >= %g gate, %s in both)",
+                N("n_genes", "all"), N("n_sig", CO_INT),
+                N("n_reverses_without_cgas", CO_INT, ARM),
+                N("n_stringent_gate", CO_INT, ARM), GATE,
+                N("n_stringent_and_reverses", CO_INT, ARM)))
 
 # -----------------------------------------------------------------------------
-# 3. PANEL A — the heat response in WT against the heat response in cGAS-KO
+# 4. In-panel text — short blocks only; the paragraphs live in the README
+# -----------------------------------------------------------------------------
+# Wrap widths are fractions of the contract's caption column, chosen so each block
+# fits the VERIFIED-EMPTY region it is placed in (see the placement comments below).
+# A block that overruns its region lands on data, which is the failure mode here.
+WRAP     <- as.integer(FIG_CFG$figures$caption_wrap_column %||% 70)
+WRAP_BOX <- as.integer(round(WRAP * 0.66))   # Panel A corner blocks
+WRAP_TAG <- as.integer(round(WRAP * 0.63))   # Panel B lower band
+WRAP_MIN <- as.integer(round(WRAP * 0.54))   # Panel B narrow strip right of the arm
+
+#' Wrap one long string for a title/subtitle.
+wrap_at <- function(txt, width = WRAP) paste(strwrap(txt, width = width), collapse = "\n")
+
+# The arm's symbols read as interferon-stimulated, which is a look, not a result. State
+# the CURATED composition instead: membership of MSigDB Hallmark interferon-alpha/gamma,
+# with the unassigned remainder reported and the reason it is not a negative.
+COMPOSITION_SENTENCE <- sprintf(
+  paste0("Curated composition: %s of the %s are Hallmark interferon-alpha or -gamma members ",
+         "and %s are unassigned, several of them mouse-specific paralogs the human-derived ",
+         "sets omit."),
+  N("n_hallmark_ifn", CO_INT, ARM), N("n_sig", CO_INT),
+  N("n_hallmark_ifn_unassigned", CO_INT, ARM))
+#' Assemble an in-panel block. Each element is wrapped SEPARATELY, so the line count
+#' is predictable: short elements are one line each and long ones break cleanly.
+box_text <- function(..., width = WRAP_BOX)
+  paste(unlist(lapply(c(...), strwrap, width = width)), collapse = "\n")
+#' Guard the block against the region it was placed in. A block that outgrows its
+#' budget lands on data or runs off the canvas, which is this figure's failure mode,
+#' so it fails the run loudly instead of shipping a collision.
+fits <- function(txt, max_lines, max_chars, where) {
+  ln <- strsplit(txt, "\n", fixed = TRUE)[[1]]
+  if (length(ln) > max_lines || max(nchar(ln)) > max_chars)
+    stop(sprintf("[02b_viz] the %s block is %d lines x %d chars; budget is %d x %d.",
+                 where, length(ln), max(nchar(ln)), max_lines, max_chars))
+  invisible(txt)
+}
+
+# -----------------------------------------------------------------------------
+# 5. PANEL A — the heat response in WT against the heat response in cGAS-KO
 # -----------------------------------------------------------------------------
 # Agreement is quoted on the HEAT-RESPONSIVE genes, so the number cannot be carried by
 # the mass of unchanged genes sitting at the origin. The regression slope leads: it is
 # the direct "same response size" statistic and is not inflated by sample size.
-stats_box_a <- paste(
+box_a_stats <- fits(box_text(
   sprintf("%s genes, one dot each", N("n_genes", "all")),
-  sprintf("39 °C changes %s genes in WT, %s in cGAS-KO",
-          N("n_sig", CO_WT), N("n_sig", CO_KO)),
-  sprintf("among heat-responsive genes the cGAS-KO response"),
-  sprintf("is %.2f× the WT response (r = %.2f, n = %s)",
-          S("ols_slope", KO_ON_WT, HR), S("pearson_r", WT_KO, HR),
-          N("n_genes", "all", HR)),
-  sprintf("%s differ by genotype; %s of them reverse (triangles)",
-          N("n_sig", CO_INT), N("n_reverses_without_cgas", CO_INT, ARM)),
-  sep = "\n")
+  sprintf("39 °C changes %s genes in WT", N("n_sig", CO_WT)),
+  sprintf("and %s genes in cGAS-KO", N("n_sig", CO_KO)),
+  sprintf("among heat-responsive genes the cGAS-KO response is %.2f× the WT response (r = %.2f)",
+          S("ols_slope", KO_ON_WT, HR), S("pearson_r", WT_KO, HR)),
+  sprintf("%s genes differ between the genotypes at adj.P < %.2g, and %s the other way",
+          N("n_sig", CO_INT), FDR, N("n_down", CO_INT))),
+  max_lines = 7, max_chars = WRAP_BOX - 1, where = "Panel A upper-left stats")
+
+box_a_read <- fits(box_text(
+  "dashed line = same response in both genotypes",
+  sprintf("all %s highlighted genes lie below it", N("n_sig", CO_INT)),
+  sprintf("dotted lines = %g log2 unit either side", GATE),
+  sprintf("the %s genes in bold, beyond the lower one, go into the frozen human signature",
+          N("n_stringent_gate", CO_INT, ARM))),
+  max_lines = 5, max_chars = WRAP_BOX - 1, where = "Panel A lower-right key")
 
 p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
-                            y = .data[[paste0("logFC_", CO_KO)]])) +
-  geom_hline(yintercept = 0, linewidth = 0.3, colour = BG) +
-  geom_vline(xintercept = 0, linewidth = 0.3, colour = BG) +
-  geom_point(data = gw_bg, aes(colour = arm, shape = arm), size = PT_BG, alpha = 0.35) +
+                            y = .data[[paste0("logFC_", CO_KO)]],
+                            fill = arm, colour = arm, shape = arm)) +
+  geom_hline(yintercept = 0, linewidth = 0.3, colour = GRID) +
+  geom_vline(xintercept = 0, linewidth = 0.3, colour = GRID) +
+  geom_point(data = gw_bg, size = PT_BG, alpha = 0.35) +
+  # Identity line, then the stringent gate as two lines PARALLEL to it: the gate is
+  # |WT - cGAS-KO| >= de_logfc, so it is exactly an offset of the diagonal. Both
+  # offsets are drawn; nothing highlighted lies beyond the upper one, which is the
+  # one-sidedness of the arm shown rather than asserted.
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", linewidth = 0.6, colour = AX) +
-  geom_point(data = gw_same, aes(colour = arm, shape = arm), size = PT_HL) +
-  geom_point(data = gw_rev,  aes(colour = arm, shape = arm), size = PT_HL * 1.25) +
+  geom_abline(slope = 1, intercept = c(-GATE, GATE), linetype = "dotted",
+              linewidth = 0.5, colour = AX) +
+  geom_point(data = gw_same, size = PT_HL) +
+  geom_point(data = gw_rev,  size = PT_HL * 1.25) +
   ggrepel::geom_text_repel(
-    data = gw_lab, aes(label = gene_symbol), colour = HL, size = LBL,
-    seed = SEED, max.overlaps = Inf, force = 8, force_pull = 0.4,
-    box.padding = 0.9, point.padding = 0.6, min.segment.length = 0,
-    segment.colour = HL, segment.linewidth = 0.4,
+    data = gw_lab, aes(label = gene_symbol, fontface = gate_face),
+    colour = LBL_INK, size = LBL,
+    seed = SEED, max.overlaps = Inf, force = 20, force_pull = 0.12,
+    box.padding = 1.2, point.padding = 0.75, min.segment.length = 0,
+    segment.colour = LBL_INK, segment.size = 0.4,
+    # Confine labels to the region left free by the two annotation blocks (verified
+    # empty of both blocks and of data at these bounds), so no label can collide.
+    xlim = c(-0.97 * LIM_A, 0.95 * LIM_A), ylim = c(-0.52 * LIM_A, 0.35 * LIM_A),
     # White halo: gene names stay readable where a leader line or a neighbouring
     # dot passes under them, without a filled box hiding data.
     bg.colour = HALO, bg.r = 0.14, show.legend = FALSE) +
-  # Plain-language reading instructions, placed as fractions of the axis range.
+  # Both blocks sit in regions with zero data points at these bounds: the upper-left
+  # triangle above the cloud, and the lower-right strip under it.
   annotate("text", x = -0.97 * LIM_A, y = 0.97 * LIM_A, hjust = 0, vjust = 1,
-           size = CUE, label = stats_box_a) +
-  annotate("text", x = 0.40 * LIM_A, y = 0.40 * LIM_A, angle = 45, vjust = -0.9,
-           size = CUE, colour = AX, label = "on the line: same response in both genotypes") +
-  # The quadrant reading in plain language. Triangles sit right of 0 and below 0 by
-  # construction, and the legend key names what that means, so this block only has to
-  # point at the region -- the count lives in the stats box, never implied as all 23.
-  annotate("text", x = 0.98 * LIM_A, y = -0.78 * LIM_A, hjust = 1, vjust = 1,
-           size = CUE, colour = HL,
-           label = paste("triangles, right of 0 and below 0:",
-                         "heat raises these in WT, lowers them without cGAS",
-                         sep = "\n")) +
-  annotate("text", x = 0.98 * LIM_A, y = -0.97 * LIM_A, hjust = 1, vjust = 1,
-           size = CUE, colour = AX,
-           label = "distance from the line = WT minus cGAS-KO") +
-  scale_colour_manual(values = FILLS,  breaks = KEYS, name = NULL, drop = FALSE) +
-  scale_shape_manual(values  = SHAPES, breaks = KEYS, name = NULL, drop = FALSE) +
-  guides(colour = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1)),
-         shape  = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1))) +
+           size = CUE, colour = TXT, label = box_a_stats) +
+  annotate("text", x = 0.97 * LIM_A, y = -0.97 * LIM_A, hjust = 1, vjust = 0,
+           size = CUE, colour = TXT, label = box_a_read) +
+  scale_fill_manual(values   = FILLS,   breaks = KEYS, name = NULL, drop = FALSE) +
+  scale_colour_manual(values = COLOURS, breaks = KEYS, name = NULL, drop = FALSE) +
+  scale_shape_manual(values  = SHAPES,  breaks = KEYS, name = NULL, drop = FALSE) +
+  # One merged key per class. fill carries the size/alpha override; colour and shape
+  # only have to agree on the layout for ggplot to fold all three into that one key.
+  guides(fill   = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1)),
+         colour = guide_legend(ncol = 1),
+         shape  = guide_legend(ncol = 1)) +
+  scale_discrete_identity(aesthetics = "fontface") +   # bold = inside the gate
   coord_fixed(ratio = 1, xlim = c(-LIM_A, LIM_A), ylim = c(-LIM_A, LIM_A)) +
   labs(
     title    = paste("Warming to 39 °C changes the same genes",
-                      "with and without cGAS — apart from one interferon arm", sep = "\n"),
+                      "with and without cGAS — apart from 23", sep = "\n"),
     subtitle = wrap_at(paste0(
       "Each dot is one gene. Both axes are its log2 fold change at 39 versus 37 °C, ",
-      "measured in WT (x) and in cGAS-KO (y). The dashed line marks an identical ",
-      "response in the two genotypes.")),
+      "measured in WT (x) and in cGAS-KO (y).")),
     x = sprintf("%s — log2 fold change", contrast_label(CO_WT)),
-    y = sprintf("%s — log2 fold change", contrast_label(CO_KO)),
-    caption = wrap_at(paste(ARM_SENTENCE, REVERSE_SENTENCE, FLOOR_SENTENCE))
+    y = sprintf("%s — log2 fold change", contrast_label(CO_KO))
   ) +
   project_theme(config = FIG_CFG) +
   ggplot2::theme(legend.position = "bottom")
@@ -259,7 +333,8 @@ tbl_a <- gw %>%
                 dplyr::all_of(c(paste0("logFC_", CO_WT), paste0("adjP_", CO_WT),
                                 paste0("logFC_", CO_KO), paste0("adjP_", CO_KO),
                                 paste0("logFC_", CO_INT), paste0("adjP_", CO_INT))),
-                cgas_dependent, interaction_rank)
+                cgas_dependent, in_stringent_gate, reverses_without_cgas,
+                arm_class, interaction_rank)
 
 save_overview(
   plot      = p_a,
@@ -269,92 +344,117 @@ save_overview(
   finding   = sprintf(
     paste0("Warming iTregs to 39 °C changes %s genes in WT and %s in cGAS-KO, and it changes ",
            "them in step: among the %s heat-responsive genes the cGAS-KO response is %.2f× the ",
-           "WT response (r = %.2f, Spearman %.2f), so the dots pile onto the identity line. ",
-           "%s %s Claim tier: L3."),
+           "WT response (r = %.2f, Spearman %.2f), so the dots pile onto the identity line. A ",
+           "one-sided minority behaves differently. All %s genes that pass the genotype ",
+           "comparison of the heat response lie below the line, a weaker heat response without ",
+           "cGAS, and %s lie above. %s keep that direction in both genotypes and %s flip sign: ",
+           "up with heat in WT, down without cGAS. Claim tier: L3."),
     N("n_sig", CO_WT), N("n_sig", CO_KO), N("n_genes", "all", HR),
     S("ols_slope", KO_ON_WT, HR), S("pearson_r", WT_KO, HR), S("spearman_rho", WT_KO, HR),
-    ARM_SENTENCE, REVERSE_SENTENCE
+    N("n_up", CO_INT), N("n_down", CO_INT),
+    N("n_differs_same_direction", CO_INT, ARM), N("n_reverses_without_cgas", CO_INT, ARM)
   ),
   script    = SCRIPT,
-  fn        = "geom_point + geom_abline (effect-versus-effect scatter, equal axes)",
+  fn        = "geom_point + geom_abline (effect-versus-effect scatter, equal axes, gate as parallels)",
   config_kv = CFG_KV,
   input     = "03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv",
   how_to_read = sprintf(
-    paste0("One dot per gene. x = log2 fold change at 39 vs 37 °C in WT, y = the same in ",
-           "cGAS-KO, equal scales so the dashed identity line runs at 45°. Grey circles = no ",
-           "detectable difference between genotypes at n=5. Vermillion circles = the heat ",
-           "response differs (adj.P < %.2g); triangles = it also reverses sign, positive in WT ",
-           "and negative in cGAS-KO, so they sit right of 0 and below 0. %s of those %s ",
-           "reversals are individually significant in WT on their own. Labels put reversing ",
-           "genes first, then evidence, capped at %d. Distance from the line = WT minus cGAS-KO. ",
-           "Gate: FDR only. Claim tier: L3. PROVISIONAL sample labels; n=5/group."),
-    FDR, N("n_reverses_wt_significant", CO_INT, ARM),
-    N("n_reverses_without_cgas", CO_INT, ARM), LBL_TOP),
+    paste0("One dot per gene: x = log2 fold change at 39 vs 37 °C in WT, y = the same in ",
+           "cGAS-KO, equal scales, so the dashed identity line runs at 45°. Glyphs run pale to ",
+           "dark: pale dots have no detectable cGAS-dependence at n=5, vermillion circles fall ",
+           "with heat in both genotypes and further without cGAS, black triangles rise with heat ",
+           "in WT and fall without it. Highlighted genes pass at adj.P < %.2g. Dotted lines lie ",
+           "%g log2 unit either side; the %s highlighted genes beyond the lower one, names in ",
+           "bold, are those the frozen human signature carries, %s of them triangles. Claim tier: ",
+           "L3. PROVISIONAL sample labels; n=5/group."),
+    FDR, GATE, N("n_stringent_gate", CO_INT, ARM),
+    N("n_stringent_and_reverses", CO_INT, ARM)),
   config    = FIG_CFG,
   # Square canvas: coord_fixed keeps the identity line at 45°, which is the whole point.
   width = 9.5, height = 9.5
 )
 
 # -----------------------------------------------------------------------------
-# 4. PANEL B — the shared temperature axis against the cGAS-dependence axis
+# 6. PANEL B — the shared temperature axis against the cGAS-dependence axis
 # -----------------------------------------------------------------------------
-stats_box_b <- paste(
+box_b_gate <- fits(box_text(
+  sprintf("the %s genes in bold, above the upper dotted line, go into the frozen human signature",
+          N("n_stringent_gate", CO_INT, ARM)),
+  width = WRAP_MIN),
+  max_lines = 4, max_chars = WRAP_MIN - 1, where = "Panel B gate note")
+
+box_b_shared <- fits(box_text(
+  "the dense band on the dashed line: the heat response shared by both genotypes",
+  "the lower half is empty — no gene's heat response is stronger without cGAS",
+  width = WRAP_TAG),
+  max_lines = 4, max_chars = WRAP_TAG - 1, where = "Panel B lower-left note")
+
+box_b_stats <- fits(box_text(
   sprintf("%s genes, one dot each", N("n_genes", "all")),
-  sprintf("the two axes are near-independent: r = %.2f",
+  sprintf("the axes are near-independent: r = %.2f",
           S("pearson_r", paste(CO_SHARE, CO_INT, sep = "_vs_"))),
-  sprintf("%s of %s heat-responsive genes differ by genotype",
+  sprintf("%s of %s heat-responsive genes differ between genotypes at adj.P < %.2g",
           N("n_heat_responsive_cgas_dependent", CO_INT),
-          N("n_heat_responsive", paste(CO_WT, CO_KO, sep = "_or_"))),
-  sprintf("%s of those %s reverse direction (triangles)",
-          N("n_reverses_without_cgas", CO_INT, ARM), N("n_sig", CO_INT)),
-  sep = "\n")
+          N("n_heat_responsive", paste(CO_WT, CO_KO, sep = "_or_")), FDR),
+  sprintf("%s of the %s reverse direction; %s of those are individually significant in WT",
+          N("n_reverses_without_cgas", CO_INT, ARM), N("n_sig", CO_INT),
+          N("n_reverses_wt_significant", CO_INT, ARM)),
+  width = WRAP_TAG),
+  max_lines = 6, max_chars = WRAP_TAG - 1, where = "Panel B lower-right stats")
 
 p_b <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_SHARE)]],
-                            y = .data[[paste0("logFC_", CO_INT)]])) +
-  geom_vline(xintercept = 0, linewidth = 0.3, colour = BG) +
-  geom_point(data = gw_bg, aes(colour = arm, shape = arm), size = PT_BG, alpha = 0.35) +
+                            y = .data[[paste0("logFC_", CO_INT)]],
+                            fill = arm, colour = arm, shape = arm)) +
+  geom_vline(xintercept = 0, linewidth = 0.3, colour = GRID) +
+  geom_point(data = gw_bg, size = PT_BG, alpha = 0.35) +
+  # y = 0 is "same response in both genotypes"; the gate is |y| >= de_logfc, so here it
+  # is two horizontal lines. Nothing highlighted lies below the lower one.
   geom_hline(yintercept = 0, linetype = "dashed", linewidth = 0.6, colour = AX) +
-  geom_point(data = gw_same, aes(colour = arm, shape = arm), size = PT_HL) +
-  geom_point(data = gw_rev,  aes(colour = arm, shape = arm), size = PT_HL * 1.25) +
+  geom_hline(yintercept = c(-GATE, GATE), linetype = "dotted",
+             linewidth = 0.5, colour = AX) +
+  geom_point(data = gw_same, size = PT_HL) +
+  geom_point(data = gw_rev,  size = PT_HL * 1.25) +
   ggrepel::geom_text_repel(
-    data = gw_lab, aes(label = gene_symbol), colour = HL, size = LBL,
-    seed = SEED, max.overlaps = Inf, force = 8, force_pull = 0.4,
-    box.padding = 0.9, point.padding = 0.6, min.segment.length = 0,
-    segment.colour = HL, segment.linewidth = 0.4,
-    # White halo: gene names stay readable where a leader line or a neighbouring
-    # dot passes under them, without a filled box hiding data.
+    data = gw_lab, aes(label = gene_symbol, fontface = gate_face),
+    colour = LBL_INK, size = LBL,
+    seed = SEED, max.overlaps = Inf, force = 20, force_pull = 0.12,
+    box.padding = 1.2, point.padding = 0.75, min.segment.length = 0,
+    segment.colour = LBL_INK, segment.size = 0.4,
+    # Labels stay left of the narrow strip the gate note occupies and above the
+    # empty lower half the two text blocks occupy.
+    xlim = c(-0.98 * LIM_BX, 0.20 * LIM_BX), ylim = c(0.13 * LIM_BY, 0.98 * LIM_BY),
     bg.colour = HALO, bg.r = 0.14, show.legend = FALSE) +
-  # Placed on separate rows of the empty lower half so no two blocks can collide.
-  annotate("text", x = 0.98 * LIM_BX, y = -0.46 * LIM_BY, hjust = 1, vjust = 1,
-           size = CUE, label = stats_box_b) +
-  annotate("text", x = 0.97 * LIM_BX, y = 0.97 * LIM_BY, hjust = 1, vjust = 1,
-           size = CUE, colour = HL,
-           label = paste("above the line: heat response stronger in WT",
-                         "— the cGAS-dependent arm, with no mirror below",
-                         sep = "\n")) +
-  annotate("text", x = -0.98 * LIM_BX, y = -0.30 * LIM_BY, hjust = 0, vjust = 1,
-           size = CUE, colour = AX,
-           label = paste("the dense band on the dashed line:",
-                         "heat response shared by both genotypes",
-                         sep = "\n")) +
-  scale_colour_manual(values = FILLS,  breaks = KEYS, name = NULL, drop = FALSE) +
-  scale_shape_manual(values  = SHAPES, breaks = KEYS, name = NULL, drop = FALSE) +
-  guides(colour = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1)),
-         shape  = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1))) +
+  # Three blocks, three verified-empty regions: the strip right of the arm and above
+  # the upper gate line, and the left and right halves of the lower band BELOW the
+  # lower gate line, so no block sits on a reference line or on a data point.
+  annotate("text", x = 0.98 * LIM_BX, y = GATE, hjust = 1, vjust = -0.25,
+           size = CUE, colour = TXT, label = box_b_gate) +
+  annotate("text", x = -0.98 * LIM_BX, y = -0.57 * LIM_BY, hjust = 0, vjust = 1,
+           size = CUE, colour = AX, label = box_b_shared) +
+  annotate("text", x = 0.98 * LIM_BX, y = -0.57 * LIM_BY, hjust = 1, vjust = 1,
+           size = CUE, colour = TXT, label = box_b_stats) +
+  scale_fill_manual(values   = FILLS,   breaks = KEYS, name = NULL, drop = FALSE) +
+  scale_colour_manual(values = COLOURS, breaks = KEYS, name = NULL, drop = FALSE) +
+  scale_shape_manual(values  = SHAPES,  breaks = KEYS, name = NULL, drop = FALSE) +
+  # One merged key per class. fill carries the size/alpha override; colour and shape
+  # only have to agree on the layout for ggplot to fold all three into that one key.
+  guides(fill   = guide_legend(ncol = 1, override.aes = list(size = PT_HL * 2, alpha = 1)),
+         colour = guide_legend(ncol = 1),
+         shape  = guide_legend(ncol = 1)) +
+  scale_discrete_identity(aesthetics = "fontface") +   # bold = inside the gate
   coord_cartesian(xlim = c(-LIM_BX, LIM_BX), ylim = c(-LIM_BY, LIM_BY)) +
   labs(
     title    = paste("Two separate threads: a shared temperature response",
                       "and a small cGAS-dependent arm", sep = "\n"),
     subtitle = wrap_at(sprintf(
-      paste0("Each dot is one gene, in log2 fold change. x = its heat response averaged ",
-             "over both genotypes, y = how much stronger that response is in WT than in ",
-             "cGAS-KO. Typical sizes: %.2f on x against %.2f on y, and the vertical axis is ",
-             "drawn %.1f× the horizontal so the small arm is visible at all."),
-      S("median_abs_logfc", CO_WT), S("median_abs_logfc", CO_INT),
+      paste0("Each dot is one gene, in log2 fold change. x = its heat response pooled over ",
+             "genotypes, y = how much stronger it is in WT than in cGAS-KO. y is capped ",
+             "%.1f× narrower than x."),
       S("y_expansion", paste(CO_SHARE, CO_INT, sep = "_over_")))),
     x = sprintf("Shared heat response — %s", contrast_label(CO_SHARE)),
-    y = "WT minus cGAS-KO heat response",
-    caption = wrap_at(paste(ARM_SENTENCE, REVERSE_SENTENCE, FLOOR_SENTENCE))
+    # Plain language first, then the contrast's configured short label, so the panel
+    # names the term it plots without spending an axis title on contrast algebra.
+    y = sprintf("WT minus cGAS-KO heat response — %s", contrast_label(CO_INT, short = TRUE))
   ) +
   project_theme(config = FIG_CFG) +
   ggplot2::theme(legend.position = "bottom")
@@ -365,7 +465,8 @@ tbl_b <- gw %>%
   dplyr::select(gene_symbol, ensembl,
                 dplyr::all_of(c(paste0("logFC_", CO_SHARE), paste0("adjP_", CO_SHARE),
                                 paste0("logFC_", CO_INT), paste0("adjP_", CO_INT))),
-                heat_responsive, cgas_dependent, interaction_rank)
+                heat_responsive, cgas_dependent, in_stringent_gate,
+                reverses_without_cgas, arm_class, interaction_rank)
 
 save_overview(
   plot      = p_b,
@@ -375,56 +476,70 @@ save_overview(
   finding   = sprintf(
     paste0("Splitting the same fold changes into a shared temperature axis and a ",
            "cGAS-dependence axis separates two threads that barely overlap: the two are ",
-           "near-independent (r = %.2f), the shared response is the larger of the two ",
-           "(median |log2FC| %.2f against %.2f), and %s of the %s heat-responsive genes also ",
-           "differ by genotype. Every one of them sits above the line and none below. %s ",
-           "Claim tier: L3."),  # %s = the reversal reading
+           "near-independent (r = %.2f), the shared response is the larger (median |log2FC| ",
+           "%.2f against %.2f), and %s of the %s heat-responsive genes also differ between ",
+           "genotypes. Every one sits above the line and none below, so the lower half of the ",
+           "panel is empty by result rather than by construction. The %s genes above the upper ",
+           "dotted line are the set the frozen mouse-to-human signature carries. Claim tier: L3."),
     S("pearson_r", paste(CO_SHARE, CO_INT, sep = "_vs_")),
     S("median_abs_logfc", CO_WT), S("median_abs_logfc", CO_INT),
     N("n_heat_responsive_cgas_dependent", CO_INT),
     N("n_heat_responsive", paste(CO_WT, CO_KO, sep = "_or_")),
-    REVERSE_SENTENCE
+    N("n_stringent_gate", CO_INT, ARM)
   ),
   script    = SCRIPT,
-  fn        = "geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter)",
+  fn        = "geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter, gate as rules)",
   config_kv = CFG_KV,
   input     = "03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv",
   how_to_read = sprintf(
-    paste0("One dot per gene. x = heat response pooled over genotypes, y = the WT heat ",
-           "response minus the cGAS-KO heat response, both log2. The dashed line is y = 0: a ",
-           "gene on it responded to heat identically in the two genotypes. Grey circles = no ",
-           "detectable difference at n=5. Vermillion circles = differs by genotype ",
-           "(adj.P < %.2g); triangles = also reverses sign, up with heat in WT and down without ",
-           "cGAS (%s of the %s, %s significant in WT on their own). Top %d labelled, reversing ",
-           "genes first. The y axis is drawn %.1f× the x axis, so vertical spread is magnified ",
-           "on purpose. Gate: FDR only. Claim tier: L3. PROVISIONAL sample labels."),
-    FDR, N("n_reverses_without_cgas", CO_INT, ARM), N("n_sig", CO_INT),
-    N("n_reverses_wt_significant", CO_INT, ARM), LBL_TOP,
+    paste0("One dot per gene: x = heat response pooled over genotypes, y = the WT heat response ",
+           "minus the cGAS-KO one, both log2. On the dashed line the response was identical in ",
+           "both. Pale dots have no detectable cGAS-dependence at n=5; vermillion circles fall ",
+           "with heat in both genotypes and further without cGAS; black triangles rise with heat ",
+           "in WT and fall without it. Dotted lines mark |y| = %g: the %s genes above the upper ",
+           "one are the frozen signature's, %s of them triangles, and their names are bold. y is ",
+           "capped %.1f× narrower than x. Claim tier: L3. PROVISIONAL sample labels; n=5/group."),
+    GATE, N("n_stringent_gate", CO_INT, ARM), N("n_stringent_and_reverses", CO_INT, ARM),
     S("y_expansion", paste(CO_SHARE, CO_INT, sep = "_over_"))),
   config    = FIG_CFG,
-  wide = TRUE, width = 11, height = 8.5
+  # Taller than the wide preset: the empty lower half is where the reader text lives,
+  # and it has to hold six lines without touching the lower gate line.
+  wide = TRUE, width = 11, height = 9.5
 )
 
 # -----------------------------------------------------------------------------
-# 5. Captions for the sibling artifacts save_overview does not key on
+# 7. Captions for the sibling artifacts save_overview does not key on
 #    (it captions the .png; the vector companion and the plotted source table
 #    each need their own section so every file under 03_results/ is captioned).
+#    These sections carry the power and membership prose that used to sit on the
+#    canvas as a nine-line figure caption.
 # -----------------------------------------------------------------------------
+FLOOR_SENTENCE <- sprintf(
+  paste0("The genotype comparison of the heat response is a single-degree-of-freedom test at ",
+         "n=5 per group, the least-powered contrast in this design, so %s genes is a floor on ",
+         "the cGAS-dependent arm rather than its full size. A gene on the shared axis has no ",
+         "detectable cGAS-dependence at n=5, which is weaker than independence."),
+  N("n_sig", CO_INT))
+
+MEMBERSHIP_SENTENCE <- sprintf(
+  paste0("Two subsets of the arm both number %s and are not the same genes: %s clear |logFC| >= ",
+         "%g and go into the frozen signature, %s reverse sign without cGAS, and %s belong to ",
+         "both. Of the reversing genes %s are individually significant in the WT heat contrast ",
+         "and %s in both genotypes, so the flip is a direction read off fitted effects rather ",
+         "than %s independent significant flips."),
+  N("n_stringent_gate", CO_INT, ARM), N("n_stringent_gate", CO_INT, ARM), GATE,
+  N("n_reverses_without_cgas", CO_INT, ARM), N("n_stringent_and_reverses", CO_INT, ARM),
+  N("n_reverses_wt_significant", CO_INT, ARM),
+  N("n_reverses_both_significant", CO_INT, ARM),
+  N("n_reverses_without_cgas", CO_INT, ARM))
+
 panel_meta <- list(
   list(stem = "heat_response_wt_vs_ko",
        what = "the WT heat response plotted against the cGAS-KO heat response",
-       read = paste0("Grey = no detectable difference between genotypes at n=5, vermillion = ",
-                     "passes the genotype comparison of the heat response. On the dashed ",
-                     "identity line = same response with and without cGAS; distance from it = ",
-                     "the WT effect minus the cGAS-KO effect."),
-       fn   = "geom_point + geom_abline (effect-versus-effect scatter, equal axes)"),
+       fn   = "geom_point + geom_abline (effect-versus-effect scatter, equal axes, gate as parallels)"),
   list(stem = "heat_response_shared_vs_cgas_arm",
        what = "the shared temperature axis plotted against the cGAS-dependence axis",
-       read = paste0("Grey = no detectable difference between genotypes at n=5, vermillion = ",
-                     "passes the genotype comparison of the heat response. y = 0 marks an ",
-                     "identical response in both genotypes, and every highlighted gene lies ",
-                     "above it."),
-       fn   = "geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter)")
+       fn   = "geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter, gate as rules)")
 )
 
 for (m in panel_meta) {
@@ -433,12 +548,14 @@ for (m in panel_meta) {
     filename = file.path("figures", OVD, paste0(m$stem, ".pdf")),
     finding  = sprintf(paste0("Vector companion to figures/%s/%s.png, %s. Same plot object, ",
                               "with the dense dot layer rasterised so the file stays small and ",
-                              "the axes and text stay editable. Claim tier: L3."),
-                       OVD, m$stem, m$what),
+                              "the axes and text stay editable. %s Claim tier: L3."),
+                       OVD, m$stem, m$what, FLOOR_SENTENCE),
     script      = SCRIPT, fn = m$fn, config_kv = CFG_KV,
     input       = "03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv",
-    how_to_read = sprintf("%s Gate: adj.P < %.2g, no fold-change cut-off. %s Claim tier: L3.",
-                          m$read, FDR, ARM_SENTENCE),
+    how_to_read = sprintf(paste0("%s Labels name the top %d genes by evidence plus every gene ",
+                                 "inside the gate, so both subsets are readable by name. ",
+                                 "Claim tier: L3. PROVISIONAL sample labels; n=5/group."),
+                          MEMBERSHIP_SENTENCE, LBL_TOP),
     config = FIG_CFG
   )
   write_caption(
@@ -453,15 +570,19 @@ for (m in panel_meta) {
     input       = "03_results/03_de/tables/_overview/cgas_dependence_wide.csv",
     how_to_read = sprintf(paste0("logFC_ / adjP_ columns are the log2 fold change and BH-adjusted ",
                                  "p-value per contrast. cgas_dependent = adj.P < %.2g on the genotype ",
-                                 "comparison of the heat response (FDR only, no fold-change cut-off). ",
-                                 "interaction_rank orders that arm by evidence and is NA elsewhere; ",
-                                 "the panel labels its top %d. Claim tier: L3."), FDR, LBL_TOP),
+                                 "comparison of the heat response. in_stringent_gate adds |logFC| >= ",
+                                 "%g and is the panel's dotted-line set; reverses_without_cgas is the ",
+                                 "sign flip drawn as triangles; arm_class folds the two into the three ",
+                                 "plotted classes. interaction_rank orders the arm by evidence and is ",
+                                 "NA elsewhere. hallmark_ifn flags membership of a curated interferon ",
+                                 "set and is annotation, never a selection rule. Claim tier: L3."),
+                                 FDR, GATE),
     config = FIG_CFG
   )
 }
 
 # -----------------------------------------------------------------------------
-# 6. Read-only captions for the compute sibling's two tables
+# 8. Read-only captions for the compute sibling's two tables
 # -----------------------------------------------------------------------------
 write_caption(
   stage    = STAGE,
@@ -471,23 +592,24 @@ write_caption(
            "ensembl: the WT and cGAS-KO heat responses, their shared average, and the genotype ",
            "comparison of the heat response. %s genes, all tested in every contrast. This is the ",
            "single source for both scatter panels and the table in which the panels' geometric ",
-           "claim is checkable: wt_minus_ko equals logFC_Interaction gene by gene. Claim tier: L3."),
-    N("n_genes", "all")),
+           "claim is checkable: wt_minus_ko equals logFC_Interaction gene by gene. %s ",
+           "Claim tier: L3."),
+    N("n_genes", "all"), COMPOSITION_SENTENCE),
   script      = "02_analysis/scripts/02b_cgas_dependence_geometry.R",
   fn          = "inner_join on ensembl (read-only here; produced by the compute sibling)",
   config_kv   = CFG_KV,
   input       = "03_results/objects/02_de_results.rds",
   how_to_read = sprintf(
     paste0("Columns: ensembl, gene_symbol, then logFC_/adjP_/sig_ per contrast (%s, %s, %s, %s). ",
-           "sig_ = adj.P.Val < %.2g, no fold-change cut-off. heat_responsive = significant for ",
-           "heat in at least one genotype. cgas_dependent = passes the genotype comparison of the ",
-           "heat response. up_with_heat_in_wt and down_with_heat_in_ko are logFC signs, ",
-           "reverses_without_cgas is both at once, and arm_class folds these into the three ",
-           "classes the panels draw. wt_minus_ko = the WT effect minus the cGAS-KO effect. ",
-           "interaction_rank orders the arm by evidence and label_rank puts reversing genes ",
-           "first; both are NA off the arm. Positive logFC = higher at 39 °C, except the ",
-           "genotype comparison, where positive = a larger heat response in WT. Claim tier: L3."),
-    CO_WT, CO_KO, CO_INT, CO_SHARE, FDR),
+           "sig_ = adj.P.Val < %.2g. heat_responsive = significant for heat in at least one ",
+           "genotype. cgas_dependent = passes the genotype comparison of the heat response. ",
+           "up_with_heat_in_wt and down_with_heat_in_ko are logFC signs, reverses_without_cgas ",
+           "is both at once, in_stringent_gate adds |logFC| >= %g, and gate_class and arm_class ",
+           "fold these into the classes the panels draw. wt_minus_ko = the WT effect minus the ",
+           "cGAS-KO effect. interaction_rank and label_rank order the arm and are NA off it. ",
+           "Positive logFC = higher at 39 °C, except the genotype comparison, where positive = ",
+           "a larger heat response in WT. Claim tier: L3."),
+    CO_WT, CO_KO, CO_INT, CO_SHARE, FDR, GATE),
   config = FIG_CFG
 )
 
@@ -510,16 +632,16 @@ write_caption(
     "Long format: metric, scope, subset, value, note, so a lookup is (metric, scope, subset). ",
     "subset is all_genes, heat_responsive or cgas_dependent_arm and must always be read -- ",
     "pearson_r appears under two of them. The arm rows count how many of the significant genes ",
-    "fall with heat in cGAS-KO, how many reverse sign, and how many of those hold up ",
-    "individually in each genotype. axis_lim gives each panel's symmetric half-range and ",
-    "y_expansion the ratio between them. max_abs_identity_residual is 0 to numerical precision, ",
-    "which is what licenses reading distance from the identity line as the genotype difference. ",
-    "Every count uses adj.P.Val < de_fdr with no fold-change cut-off. Claim tier: L3."),
+    "fall with heat in cGAS-KO, how many reverse sign, how many clear the stringent |logFC| ",
+    "gate, and how far the two nine-gene subsets overlap. axis_lim gives each panel's symmetric ",
+    "half-range, y_expansion the ratio between them, and de_logfc the offset the panels draw as ",
+    "dotted lines. max_abs_identity_residual is 0 to numerical precision, which is what ",
+    "licenses reading distance from the identity line as the genotype difference. Claim tier: L3."),
   config = FIG_CFG
 )
 
 # -----------------------------------------------------------------------------
-# 7. Structural asserts (LOUD)
+# 9. Structural asserts (LOUD)
 # -----------------------------------------------------------------------------
 fig_ovw <- overview_path(STAGE, "figures", FIG_CFG)
 expected <- c(file.path(fig_ovw, paste0("heat_response_wt_vs_ko.", c("pdf", "png"))),

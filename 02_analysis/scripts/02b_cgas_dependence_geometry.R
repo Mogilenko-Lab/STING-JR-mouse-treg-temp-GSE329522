@@ -154,6 +154,22 @@ wide <- wide %>%
     reverses_without_cgas = up_with_heat_in_wt & down_with_heat_in_ko
   )
 
+# WHICH cGAS-dependence set is being narrated. The frozen mouse-to-human projection
+# carries the Interaction at the STRINGENT gate (adj.P < de_fdr AND |logFC| >= de_logfc),
+# a subset of the FDR-only arm. Both circulate as "the interaction", so mark the stringent
+# subset per gene: a panel that lights up the FDR-only arm while the text cites the
+# stringent one invites the reader to merge two different gene sets.
+wide <- wide %>%
+  dplyr::mutate(
+    in_stringent_gate = cgas_dependent &
+      abs(.data[[paste0("logFC_", CO_INT)]]) >= DE_LOGFC,
+    gate_class = dplyr::case_when(
+      in_stringent_gate ~ "fdr_and_logfc",
+      cgas_dependent    ~ "fdr_only",
+      TRUE              ~ "not_significant"
+    )
+  )
+
 # Plot-ready three-way class, so the viz maps a column instead of re-deriving a rule.
 wide <- wide %>%
   dplyr::mutate(arm_class = dplyr::case_when(
@@ -180,6 +196,36 @@ wide$label_rank       <- rank_over_arm(order(!wide$reverses_without_cgas,
                                              adjp_int, -abs(lfc_int)))
 
 wide <- wide %>% dplyr::arrange(.data[[paste0("adjP_", CO_INT)]])
+
+# -----------------------------------------------------------------------------
+# 3b. COMPOSITION of the arm against curated, versioned gene sets.
+#     House rule: a set is named by how it was DERIVED, and its composition is
+#     established before anyone interprets it. The arm's gene symbols look
+#     interferon-ish, which is not evidence; partition it against MSigDB Hallmark
+#     (built by 04_gsea_set_prep.R from a pinned msigdbr) and report the
+#     UNASSIGNED remainder. Hallmark is human-derived and ortholog-mapped, so
+#     mouse-specific paralogs are absent from it by construction -- that is a
+#     curation gap in the reference, not evidence against a gene's identity, and
+#     the remainder must be read with that in mind rather than as a negative.
+# -----------------------------------------------------------------------------
+hallmark_path <- file.path(DIR_OBJECTS, "geneset_msigdb_Hallmark.rds")
+IFN_TERMS <- c("HALLMARK_INTERFERON_ALPHA_RESPONSE", "HALLMARK_INTERFERON_GAMMA_RESPONSE")
+if (file.exists(hallmark_path)) {
+  hm <- readRDS(hallmark_path)
+  miss_terms <- setdiff(IFN_TERMS, names(hm))
+  if (length(miss_terms) > 0L)
+    stop("[02b] Hallmark object lacks term(s): ", paste(miss_terms, collapse = ", "))
+  ifn_union <- unique(unlist(hm[IFN_TERMS], use.names = FALSE))
+  wide$hallmark_ifn_alpha <- wide$gene_symbol %in% hm[[IFN_TERMS[1]]]
+  wide$hallmark_ifn_gamma <- wide$gene_symbol %in% hm[[IFN_TERMS[2]]]
+  wide$hallmark_ifn       <- wide$gene_symbol %in% ifn_union
+  message(sprintf("[02b] curated composition: Hallmark IFN-a/g union = %d genes", length(ifn_union)))
+} else {
+  wide$hallmark_ifn_alpha <- NA
+  wide$hallmark_ifn_gamma <- NA
+  wide$hallmark_ifn       <- NA
+  message("[02b] curated composition SKIPPED (geneset_msigdb_Hallmark.rds absent).")
+}
 
 # -----------------------------------------------------------------------------
 # 4. Scalars the panels print (correlation, slope, counts, axis limits)
@@ -217,12 +263,13 @@ cnt <- vapply(CONTRASTS, count_of, numeric(3))
 # the two genotypes has to be reported on the genes that actually respond to heat --
 # an all-genes correlation could be carried by the null mass sitting at the origin.
 # Both scopes are emitted so the comparison is auditable rather than asserted.
+arm <- wide[wide$cgas_dependent, , drop = FALSE]
 hr <- wide[wide$heat_responsive, , drop = FALSE]
 hr_x <- hr[[paste0("logFC_", CO_WT)]]
 hr_y <- hr[[paste0("logFC_", CO_KO)]]
 fit_hr <- stats::lm(hr_y ~ hr_x)
 
-arm <- wide[wide$cgas_dependent, , drop = FALSE]
+ARM_SUBSET <- "cgas_dependent_arm"
 
 stat_row <- function(metric, scope, value, note, subset = "all_genes")
   tibble::tibble(metric = metric, scope = scope, subset = subset,
@@ -258,26 +305,71 @@ stats_tbl <- dplyr::bind_rows(
   ## --- anatomy of the cGAS-dependent arm ---------------------------------------
   stat_row("n_genes", CO_INT, nrow(arm),
            "Genes passing the genotype comparison of the heat response.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
   stat_row("n_down_with_heat_in_ko", CO_INT, sum(arm$down_with_heat_in_ko, na.rm = TRUE),
            "Of the arm, how many fall with heat once cGAS is gone.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
   stat_row("n_down_with_heat_in_ko_significant", CO_INT,
            sum(arm$down_with_heat_in_ko & arm[[paste0("sig_", CO_KO)]], na.rm = TRUE),
            "Of those, how many are individually significant in the cGAS-KO heat contrast.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
   stat_row("n_reverses_without_cgas", CO_INT, sum(arm$reverses_without_cgas, na.rm = TRUE),
            "Of the arm, how many move up with heat in WT and down in cGAS-KO.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
   stat_row("n_reverses_wt_significant", CO_INT,
            sum(arm$reverses_without_cgas & arm[[paste0("sig_", CO_WT)]], na.rm = TRUE),
            "Of the reversing genes, how many are individually significant in the WT heat contrast.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
+  stat_row("n_stringent_gate", CO_INT, sum(arm$in_stringent_gate, na.rm = TRUE),
+           "Of the arm, how many also clear |logFC| >= de_logfc -- the set the frozen projection carries.",
+           subset = ARM_SUBSET),
+  stat_row("n_stringent_and_reverses", CO_INT,
+           sum(arm$in_stringent_gate & arm$reverses_without_cgas, na.rm = TRUE),
+           "Genes in BOTH the stringent-gate set and the reversing set.",
+           subset = ARM_SUBSET),
+  stat_row("n_stringent_not_reverses", CO_INT,
+           sum(arm$in_stringent_gate & !arm$reverses_without_cgas, na.rm = TRUE),
+           "Stringent-gate genes that keep the same direction in both genotypes.",
+           subset = ARM_SUBSET),
+  stat_row("n_reverses_not_stringent", CO_INT,
+           sum(!arm$in_stringent_gate & arm$reverses_without_cgas, na.rm = TRUE),
+           "Reversing genes that miss the stringent gate.",
+           subset = ARM_SUBSET),
+  stat_row("jaccard_stringent_vs_reverses", CO_INT,
+           sum(arm$in_stringent_gate & arm$reverses_without_cgas, na.rm = TRUE) /
+             sum(arm$in_stringent_gate | arm$reverses_without_cgas, na.rm = TRUE),
+           "Overlap of the two subsets, which share a COUNT without sharing membership.",
+           subset = ARM_SUBSET),
+  stat_row("de_logfc", "gate", DE_LOGFC,
+           "The |logFC| cut-off that separates the stringent set from the FDR-only arm."),
+  stat_row("n_differs_same_direction", CO_INT,
+           sum(!arm$reverses_without_cgas, na.rm = TRUE),
+           "Of the arm, how many keep the same direction in both genotypes (the circles).",
+           subset = ARM_SUBSET),
+  stat_row("n_clears_logfc_not_significant", CO_INT,
+           sum(!wide$cgas_dependent &
+               abs(wide[[paste0("logFC_", CO_INT)]]) >= DE_LOGFC, na.rm = TRUE),
+           "Genes clearing |logFC| >= de_logfc WITHOUT passing FDR -- the gate is a conjunction, so these sit beyond the panel gate lines unhighlighted.",
+           subset = "all_genes"),
+  stat_row("n_hallmark_ifn", CO_INT, sum(arm$hallmark_ifn, na.rm = TRUE),
+           "Of the arm, how many are members of MSigDB Hallmark interferon-alpha or -gamma response.",
+           subset = ARM_SUBSET),
+  stat_row("n_hallmark_ifn_unassigned", CO_INT, sum(!arm$hallmark_ifn, na.rm = TRUE),
+           "The UNASSIGNED remainder: arm genes in neither curated interferon set, several of them mouse-specific paralogs absent from the human-derived Hallmark sets.",
+           subset = ARM_SUBSET),
+  stat_row("n_hallmark_ifn_stringent", CO_INT,
+           sum(arm$in_stringent_gate & arm$hallmark_ifn, na.rm = TRUE),
+           "Of the stringent-gate set the projection carries, how many are curated interferon members.",
+           subset = ARM_SUBSET),
+  stat_row("n_hallmark_ifn_reverses", CO_INT,
+           sum(arm$reverses_without_cgas & arm$hallmark_ifn, na.rm = TRUE),
+           "Of the reversing set, how many are curated interferon members.",
+           subset = ARM_SUBSET),
   stat_row("n_reverses_both_significant", CO_INT,
            sum(arm$reverses_without_cgas & arm[[paste0("sig_", CO_WT)]] &
                arm[[paste0("sig_", CO_KO)]], na.rm = TRUE),
            "Of the reversing genes, how many are significant in BOTH per-genotype contrasts.",
-           subset = "cgas_dependent_arm"),
+           subset = ARM_SUBSET),
   stat_row("ols_slope", paste(CO_KO, "on", CO_WT),
            unname(stats::coef(fit_ko_on_wt)[2]),
            "Slope of KO heat logFC regressed on WT heat logFC (1 = identical response size)."),
@@ -314,6 +406,34 @@ stats_tbl <- dplyr::bind_rows(
 )
 
 # -----------------------------------------------------------------------------
+# 4b. Provenance check: does the stringent gate reproduce the FROZEN set?
+#     17_signature_sets.rds is written later in the pipeline, so this is a check
+#     when present and a message when not -- never a gate on this script running.
+# -----------------------------------------------------------------------------
+sig_path <- file.path(DIR_OBJECTS, "17_signature_sets.rds")
+if (file.exists(sig_path)) {
+  sig <- readRDS(sig_path)
+  frozen_fdr_only  <- sig$sets[[CO_INT]]$up$fdr_only
+  frozen_stringent <- sig$sets[[CO_INT]]$up$fdr_logfc
+  here_fdr_only  <- wide$gene_symbol[wide$cgas_dependent &
+                                     wide[[paste0("logFC_", CO_INT)]] > 0]
+  here_stringent <- wide$gene_symbol[wide$in_stringent_gate &
+                                     wide[[paste0("logFC_", CO_INT)]] > 0]
+  ok_fdr  <- setequal(here_fdr_only,  frozen_fdr_only)
+  ok_strg <- setequal(here_stringent, frozen_stringent)
+  message(sprintf("[02b] frozen-set check: fdr_only %s (%d vs %d), stringent %s (%d vs %d)",
+                  if (ok_fdr) "MATCH" else "MISMATCH",
+                  length(here_fdr_only), length(frozen_fdr_only),
+                  if (ok_strg) "MATCH" else "MISMATCH",
+                  length(here_stringent), length(frozen_stringent)))
+  if (!ok_fdr || !ok_strg)
+    warning("[02b] gate membership here differs from 17_signature_sets.rds -- ",
+            "the panels and the projection contract would light up different genes.")
+} else {
+  message("[02b] frozen-set check SKIPPED (17_signature_sets.rds not present yet).")
+}
+
+# -----------------------------------------------------------------------------
 # 5. Write
 # -----------------------------------------------------------------------------
 wide_path  <- file.path(OUT_DIR, "cgas_dependence_wide.csv")
@@ -334,6 +454,9 @@ message(sprintf("[02b] WT vs KO heat logFC, %d heat-responsive: r = %.4f, rho = 
                 unname(stats::coef(fit_hr)[2])))
 message(sprintf("[02b] %s: %d sig (%d up, %d down) -- 1 df at n=5, a floor",
                 CO_INT, cnt["n_sig", CO_INT], cnt["n_up", CO_INT], cnt["n_down", CO_INT]))
+message(sprintf("[02b] gate split: %d in the arm, %d clear |logFC| >= %.1f (the narrated set); %d of those also reverse",
+                nrow(arm), sum(arm$in_stringent_gate), DE_LOGFC,
+                sum(arm$in_stringent_gate & arm$reverses_without_cgas)))
 message(sprintf("[02b] arm anatomy: %d/%d fall with heat in cGAS-KO; %d reverse (up in WT, down in KO), %d of those significant in both",
                 sum(arm$down_with_heat_in_ko), nrow(arm),
                 sum(arm$reverses_without_cgas),

@@ -12,6 +12,18 @@ n_down_with_heat_in_ko,Interaction,cgas_dependent_arm,23,"Of the arm, how many f
 n_down_with_heat_in_ko_significant,Interaction,cgas_dependent_arm,22,"Of those, how many are individually significant in the cGAS-KO heat contrast."
 n_reverses_without_cgas,Interaction,cgas_dependent_arm,9,"Of the arm, how many move up with heat in WT and down in cGAS-KO."
 n_reverses_wt_significant,Interaction,cgas_dependent_arm,6,"Of the reversing genes, how many are individually significant in the WT heat contrast."
+n_stringent_gate,Interaction,cgas_dependent_arm,9,"Of the arm, how many also clear |logFC| >= de_logfc -- the set the frozen projection carries."
+n_stringent_and_reverses,Interaction,cgas_dependent_arm,4,Genes in BOTH the stringent-gate set and the reversing set.
+n_stringent_not_reverses,Interaction,cgas_dependent_arm,5,Stringent-gate genes that keep the same direction in both genotypes.
+n_reverses_not_stringent,Interaction,cgas_dependent_arm,5,Reversing genes that miss the stringent gate.
+jaccard_stringent_vs_reverses,Interaction,cgas_dependent_arm,0.285714286,"Overlap of the two subsets, which share a COUNT without sharing membership."
+de_logfc,gate,all_genes,1,The |logFC| cut-off that separates the stringent set from the FDR-only arm.
+n_differs_same_direction,Interaction,cgas_dependent_arm,14,"Of the arm, how many keep the same direction in both genotypes (the circles)."
+n_clears_logfc_not_significant,Interaction,all_genes,2,"Genes clearing |logFC| >= de_logfc WITHOUT passing FDR -- the gate is a conjunction, so these sit beyond the panel gate lines unhighlighted."
+n_hallmark_ifn,Interaction,cgas_dependent_arm,12,"Of the arm, how many are members of MSigDB Hallmark interferon-alpha or -gamma response."
+n_hallmark_ifn_unassigned,Interaction,cgas_dependent_arm,11,"The UNASSIGNED remainder: arm genes in neither curated interferon set, several of them mouse-specific paralogs absent from the human-derived Hallmark sets."
+n_hallmark_ifn_stringent,Interaction,cgas_dependent_arm,3,"Of the stringent-gate set the projection carries, how many are curated interferon members."
+n_hallmark_ifn_reverses,Interaction,cgas_dependent_arm,6,"Of the reversing set, how many are curated interferon members."
 n_reverses_both_significant,Interaction,cgas_dependent_arm,5,"Of the reversing genes, how many are significant in BOTH per-genotype contrasts."
 ols_slope,KO_heat on WT_heat,all_genes,0.95525357,Slope of KO heat logFC regressed on WT heat logFC (1 = identical response size).
 ols_intercept,KO_heat on WT_heat,all_genes,-0.00288557323,Intercept of the same regression.
