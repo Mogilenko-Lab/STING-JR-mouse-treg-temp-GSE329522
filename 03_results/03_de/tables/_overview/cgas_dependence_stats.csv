@@ -1,29 +1,40 @@
-metric,scope,value,note
-n_genes,all,19679,Genes tested in every contrast (shared universe after the ensembl join).
-pearson_r,WT_heat_vs_KO_heat,0.924797833,"Correlation of the two per-genotype heat responses, one point per gene."
-spearman_rho,WT_heat_vs_KO_heat,0.862799985,Rank correlation of the two per-genotype heat responses.
-ols_slope,KO_heat on WT_heat,0.95525357,Slope of KO heat logFC regressed on WT heat logFC (1 = identical response size).
-ols_intercept,KO_heat on WT_heat,-0.00288557323,Intercept of the same regression.
-pearson_r,Temp_main_vs_Interaction,-0.0848722644,Correlation of the shared temperature axis with the cGAS-dependence axis.
-median_abs_logfc,WT_heat,0.147224652,Typical size of the heat response in WT.
-median_abs_logfc,Interaction,0.0592653616,Typical size of the cGAS-dependent component.
-n_heat_responsive,WT_heat_or_KO_heat,10418,Genes significant for heat in at least one genotype.
-n_heat_responsive_cgas_dependent,Interaction,23,"Of those, the ones that also pass the cGAS-dependence test."
-axis_lim,WT_heat_vs_KO_heat,3,"Symmetric axis half-range for the WT-vs-KO panel (both axes, equal scale)."
-axis_lim,Temp_main,3,Symmetric x half-range for the decomposition panel.
-axis_lim,Interaction,2,Symmetric y half-range for the decomposition panel.
-y_expansion,Temp_main_over_Interaction,1.5,How much the cGAS-dependence axis is expanded relative to the shared temperature axis.
-n_sig,WT_heat,8723,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
-n_up,WT_heat,4207,"Of those, logFC > 0."
-n_down,WT_heat,4516,"Of those, logFC < 0."
-n_sig,KO_heat,8901,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
-n_up,KO_heat,4281,"Of those, logFC > 0."
-n_down,KO_heat,4620,"Of those, logFC < 0."
-n_sig,Interaction,23,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
-n_up,Interaction,23,"Of those, logFC > 0."
-n_down,Interaction,0,"Of those, logFC < 0."
-n_sig,Temp_main,11153,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
-n_up,Temp_main,5444,"Of those, logFC > 0."
-n_down,Temp_main,5709,"Of those, logFC < 0."
-de_fdr,gate,0.05,The FDR-only gate used for every count in this table.
-max_abs_identity_residual,WT_heat_minus_KO_heat_vs_Interaction,8.8817842e-16,Largest per-gene departure from WT_heat - KO_heat = Interaction (0 = exact).
+metric,scope,subset,value,note
+n_genes,all,all_genes,19679,Genes tested in every contrast (shared universe after the ensembl join).
+pearson_r,WT_heat_vs_KO_heat,all_genes,0.924797833,"Correlation of the two per-genotype heat responses, one point per gene."
+spearman_rho,WT_heat_vs_KO_heat,all_genes,0.862799985,Rank correlation of the two per-genotype heat responses.
+n_genes,all,heat_responsive,10418,Genes significant for heat in at least one genotype.
+pearson_r,WT_heat_vs_KO_heat,heat_responsive,0.952617564,Correlation of the two heat responses among heat-responsive genes only.
+spearman_rho,WT_heat_vs_KO_heat,heat_responsive,0.933175521,Rank correlation among heat-responsive genes only.
+ols_slope,KO_heat on WT_heat,heat_responsive,0.985127089,Slope of KO on WT among heat-responsive genes (1 = identical response size).
+ols_intercept,KO_heat on WT_heat,heat_responsive,-0.00675957457,"Intercept of the same regression, heat-responsive genes only."
+n_genes,Interaction,cgas_dependent_arm,23,Genes passing the genotype comparison of the heat response.
+n_down_with_heat_in_ko,Interaction,cgas_dependent_arm,23,"Of the arm, how many fall with heat once cGAS is gone."
+n_down_with_heat_in_ko_significant,Interaction,cgas_dependent_arm,22,"Of those, how many are individually significant in the cGAS-KO heat contrast."
+n_reverses_without_cgas,Interaction,cgas_dependent_arm,9,"Of the arm, how many move up with heat in WT and down in cGAS-KO."
+n_reverses_wt_significant,Interaction,cgas_dependent_arm,6,"Of the reversing genes, how many are individually significant in the WT heat contrast."
+n_reverses_both_significant,Interaction,cgas_dependent_arm,5,"Of the reversing genes, how many are significant in BOTH per-genotype contrasts."
+ols_slope,KO_heat on WT_heat,all_genes,0.95525357,Slope of KO heat logFC regressed on WT heat logFC (1 = identical response size).
+ols_intercept,KO_heat on WT_heat,all_genes,-0.00288557323,Intercept of the same regression.
+pearson_r,Temp_main_vs_Interaction,all_genes,-0.0848722644,Correlation of the shared temperature axis with the cGAS-dependence axis.
+median_abs_logfc,WT_heat,all_genes,0.147224652,Typical size of the heat response in WT.
+median_abs_logfc,Interaction,all_genes,0.0592653616,Typical size of the cGAS-dependent component.
+n_heat_responsive,WT_heat_or_KO_heat,all_genes,10418,Genes significant for heat in at least one genotype.
+n_heat_responsive_cgas_dependent,Interaction,all_genes,23,"Of those, the ones that also pass the cGAS-dependence test."
+axis_lim,WT_heat_vs_KO_heat,all_genes,3,"Symmetric axis half-range for the WT-vs-KO panel (both axes, equal scale)."
+axis_lim,Temp_main,all_genes,3,Symmetric x half-range for the decomposition panel.
+axis_lim,Interaction,all_genes,2,Symmetric y half-range for the decomposition panel.
+y_expansion,Temp_main_over_Interaction,all_genes,1.5,How much the cGAS-dependence axis is expanded relative to the shared temperature axis.
+n_sig,WT_heat,all_genes,8723,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
+n_up,WT_heat,all_genes,4207,"Of those, logFC > 0."
+n_down,WT_heat,all_genes,4516,"Of those, logFC < 0."
+n_sig,KO_heat,all_genes,8901,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
+n_up,KO_heat,all_genes,4281,"Of those, logFC > 0."
+n_down,KO_heat,all_genes,4620,"Of those, logFC < 0."
+n_sig,Interaction,all_genes,23,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
+n_up,Interaction,all_genes,23,"Of those, logFC > 0."
+n_down,Interaction,all_genes,0,"Of those, logFC < 0."
+n_sig,Temp_main,all_genes,11153,"Genes at adj.P.Val < the configured FDR, no fold-change cut-off."
+n_up,Temp_main,all_genes,5444,"Of those, logFC > 0."
+n_down,Temp_main,all_genes,5709,"Of those, logFC < 0."
+de_fdr,gate,all_genes,0.05,The FDR-only gate used for every count in this table.
+max_abs_identity_residual,WT_heat_minus_KO_heat_vs_Interaction,all_genes,8.8817842e-16,Largest per-gene departure from WT_heat - KO_heat = Interaction (0 = exact).

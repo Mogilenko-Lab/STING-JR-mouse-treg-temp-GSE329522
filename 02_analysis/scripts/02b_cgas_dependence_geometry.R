@@ -142,16 +142,42 @@ wide <- wide %>%
     # Signed distance from the identity line in the WT-vs-KO panel IS the interaction
     # effect (WT_heat - KO_heat = Interaction), materialized so the panel's geometric
     # claim is checkable in the table.
-    wt_minus_ko     = .data[[paste0("logFC_", CO_WT)]] - .data[[paste0("logFC_", CO_KO)]]
+    wt_minus_ko     = .data[[paste0("logFC_", CO_WT)]] - .data[[paste0("logFC_", CO_KO)]],
+    # Direction of the heat response in each genotype, and whether it REVERSES: heat
+    # moves the gene up in WT and down once cGAS is gone. This is the plainest reading
+    # of a cGAS-dependent gene for a reader with no contrast vocabulary, so it is
+    # materialized per gene rather than inferred from a plot region. Individual
+    # per-genotype directions are not required to be significant on their own -- the
+    # test that gates the arm is the genotype comparison (cgas_dependent).
+    up_with_heat_in_wt   = .data[[paste0("logFC_", CO_WT)]] > 0,
+    down_with_heat_in_ko = .data[[paste0("logFC_", CO_KO)]] < 0,
+    reverses_without_cgas = up_with_heat_in_wt & down_with_heat_in_ko
   )
 
-# Label ranking: significant interaction genes ordered by evidence then effect size.
-# The viz caps this with figures.volcano_label_top; ranking is a compute decision.
-int_order <- order(wide[[paste0("adjP_", CO_INT)]],
-                   -abs(wide[[paste0("logFC_", CO_INT)]]))
-wide$interaction_rank <- NA_integer_
-sig_rows <- int_order[wide$cgas_dependent[int_order]]
-wide$interaction_rank[sig_rows] <- seq_along(sig_rows)
+# Plot-ready three-way class, so the viz maps a column instead of re-deriving a rule.
+wide <- wide %>%
+  dplyr::mutate(arm_class = dplyr::case_when(
+    !cgas_dependent                        ~ "no_detectable_difference",
+    cgas_dependent & reverses_without_cgas ~ "differs_and_reverses",
+    TRUE                                   ~ "differs_same_direction"
+  ))
+
+# Two rankings over the arm, both capped by figures.volcano_label_top in the viz:
+#   interaction_rank -- pure evidence, then effect size (the audit ordering).
+#   label_rank       -- reversing genes first, then evidence, so the labelled set is
+#                       the one the panel's plain-language reading points at, with the
+#                       strongest remaining hits filling the cap.
+rank_over_arm <- function(ord) {
+  out <- rep(NA_integer_, nrow(wide))
+  rows <- ord[wide$cgas_dependent[ord]]
+  out[rows] <- seq_along(rows)
+  out
+}
+adjp_int <- wide[[paste0("adjP_", CO_INT)]]
+lfc_int  <- wide[[paste0("logFC_", CO_INT)]]
+wide$interaction_rank <- rank_over_arm(order(adjp_int, -abs(lfc_int)))
+wide$label_rank       <- rank_over_arm(order(!wide$reverses_without_cgas,
+                                             adjp_int, -abs(lfc_int)))
 
 wide <- wide %>% dplyr::arrange(.data[[paste0("adjP_", CO_INT)]])
 
@@ -187,8 +213,20 @@ count_of <- function(co) {
 }
 cnt <- vapply(CONTRASTS, count_of, numeric(3))
 
-stat_row <- function(metric, scope, value, note)
-  tibble::tibble(metric = metric, scope = scope, value = value, note = note)
+# Every scalar carries the SUBSET it was measured on, because the agreement between
+# the two genotypes has to be reported on the genes that actually respond to heat --
+# an all-genes correlation could be carried by the null mass sitting at the origin.
+# Both scopes are emitted so the comparison is auditable rather than asserted.
+hr <- wide[wide$heat_responsive, , drop = FALSE]
+hr_x <- hr[[paste0("logFC_", CO_WT)]]
+hr_y <- hr[[paste0("logFC_", CO_KO)]]
+fit_hr <- stats::lm(hr_y ~ hr_x)
+
+arm <- wide[wide$cgas_dependent, , drop = FALSE]
+
+stat_row <- function(metric, scope, value, note, subset = "all_genes")
+  tibble::tibble(metric = metric, scope = scope, subset = subset,
+                 value = value, note = note)
 
 stats_tbl <- dplyr::bind_rows(
   stat_row("n_genes", "all", nrow(wide),
@@ -199,6 +237,47 @@ stats_tbl <- dplyr::bind_rows(
   stat_row("spearman_rho", paste(CO_WT, CO_KO, sep = "_vs_"),
            stats::cor(x_wt, y_ko, method = "spearman", use = "complete.obs"),
            "Rank correlation of the two per-genotype heat responses."),
+  ## --- the same three, restricted to genes that respond to heat at all ---------
+  stat_row("n_genes", "all", nrow(hr),
+           "Genes significant for heat in at least one genotype.",
+           subset = "heat_responsive"),
+  stat_row("pearson_r", paste(CO_WT, CO_KO, sep = "_vs_"),
+           stats::cor(hr_x, hr_y, method = "pearson", use = "complete.obs"),
+           "Correlation of the two heat responses among heat-responsive genes only.",
+           subset = "heat_responsive"),
+  stat_row("spearman_rho", paste(CO_WT, CO_KO, sep = "_vs_"),
+           stats::cor(hr_x, hr_y, method = "spearman", use = "complete.obs"),
+           "Rank correlation among heat-responsive genes only.",
+           subset = "heat_responsive"),
+  stat_row("ols_slope", paste(CO_KO, "on", CO_WT), unname(stats::coef(fit_hr)[2]),
+           "Slope of KO on WT among heat-responsive genes (1 = identical response size).",
+           subset = "heat_responsive"),
+  stat_row("ols_intercept", paste(CO_KO, "on", CO_WT), unname(stats::coef(fit_hr)[1]),
+           "Intercept of the same regression, heat-responsive genes only.",
+           subset = "heat_responsive"),
+  ## --- anatomy of the cGAS-dependent arm ---------------------------------------
+  stat_row("n_genes", CO_INT, nrow(arm),
+           "Genes passing the genotype comparison of the heat response.",
+           subset = "cgas_dependent_arm"),
+  stat_row("n_down_with_heat_in_ko", CO_INT, sum(arm$down_with_heat_in_ko, na.rm = TRUE),
+           "Of the arm, how many fall with heat once cGAS is gone.",
+           subset = "cgas_dependent_arm"),
+  stat_row("n_down_with_heat_in_ko_significant", CO_INT,
+           sum(arm$down_with_heat_in_ko & arm[[paste0("sig_", CO_KO)]], na.rm = TRUE),
+           "Of those, how many are individually significant in the cGAS-KO heat contrast.",
+           subset = "cgas_dependent_arm"),
+  stat_row("n_reverses_without_cgas", CO_INT, sum(arm$reverses_without_cgas, na.rm = TRUE),
+           "Of the arm, how many move up with heat in WT and down in cGAS-KO.",
+           subset = "cgas_dependent_arm"),
+  stat_row("n_reverses_wt_significant", CO_INT,
+           sum(arm$reverses_without_cgas & arm[[paste0("sig_", CO_WT)]], na.rm = TRUE),
+           "Of the reversing genes, how many are individually significant in the WT heat contrast.",
+           subset = "cgas_dependent_arm"),
+  stat_row("n_reverses_both_significant", CO_INT,
+           sum(arm$reverses_without_cgas & arm[[paste0("sig_", CO_WT)]] &
+               arm[[paste0("sig_", CO_KO)]], na.rm = TRUE),
+           "Of the reversing genes, how many are significant in BOTH per-genotype contrasts.",
+           subset = "cgas_dependent_arm"),
   stat_row("ols_slope", paste(CO_KO, "on", CO_WT),
            unname(stats::coef(fit_ko_on_wt)[2]),
            "Slope of KO heat logFC regressed on WT heat logFC (1 = identical response size)."),
@@ -245,10 +324,21 @@ readr::write_csv(round_numeric_cols(as.data.frame(stats_tbl)), stats_path)
 
 message(sprintf("[02b] %s  (%d genes x %d columns)", wide_path, nrow(wide), ncol(wide)))
 message(sprintf("[02b] %s  (%d scalars)", stats_path, nrow(stats_tbl)))
-message(sprintf("[02b] WT vs KO heat logFC: Pearson r = %.4f, OLS slope = %.4f",
-                stats::cor(x_wt, y_ko), unname(stats::coef(fit_ko_on_wt)[2])))
+message(sprintf("[02b] WT vs KO heat logFC, all %d genes: r = %.4f, rho = %.4f, slope = %.4f",
+                nrow(wide), stats::cor(x_wt, y_ko),
+                stats::cor(x_wt, y_ko, method = "spearman"),
+                unname(stats::coef(fit_ko_on_wt)[2])))
+message(sprintf("[02b] WT vs KO heat logFC, %d heat-responsive: r = %.4f, rho = %.4f, slope = %.4f",
+                nrow(hr), stats::cor(hr_x, hr_y),
+                stats::cor(hr_x, hr_y, method = "spearman"),
+                unname(stats::coef(fit_hr)[2])))
 message(sprintf("[02b] %s: %d sig (%d up, %d down) -- 1 df at n=5, a floor",
                 CO_INT, cnt["n_sig", CO_INT], cnt["n_up", CO_INT], cnt["n_down", CO_INT]))
+message(sprintf("[02b] arm anatomy: %d/%d fall with heat in cGAS-KO; %d reverse (up in WT, down in KO), %d of those significant in both",
+                sum(arm$down_with_heat_in_ko), nrow(arm),
+                sum(arm$reverses_without_cgas),
+                sum(arm$reverses_without_cgas & arm[[paste0("sig_", CO_WT)]] &
+                    arm[[paste0("sig_", CO_KO)]])))
 
 stopifnot("wide table is empty"  = nrow(wide) > 0L,
           "stats table is empty" = nrow(stats_tbl) > 0L)

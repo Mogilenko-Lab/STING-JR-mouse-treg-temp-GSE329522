@@ -986,24 +986,25 @@ independence. Claim tier: L3. PROVISIONAL sample labels.
 ## figures/_overview/heat_response_wt_vs_ko.png
 
 Warming iTregs to 39 °C changes 8,723 genes in WT and 8,901 in
-cGAS-KO, and it changes them in step: per-gene log2 fold changes
-correlate at r = 0.92 (Spearman 0.86) with a best-fit slope of 0.96,
-so the dots pile onto the identity line. 23 genes respond to heat
-more strongly in WT than in cGAS-KO; 0 do the reverse. Distance from
-that line is exactly the WT-minus-cGAS-KO difference, an arithmetic
-identity in this balanced design. The 23-gene arm is ISG-weighted and
-one-sided. Claim tier: L3.
+cGAS-KO, and it changes them in step: among the 10,418
+heat-responsive genes the cGAS-KO response is 0.99× the WT response
+(r = 0.95, Spearman 0.93), so the dots pile onto the identity line.
+All 23 genes in the arm respond to heat more strongly in WT than in
+cGAS-KO; 0 do the reverse. Every one of them falls with heat once
+cGAS is gone (22 of 23 individually significant), and 9 rise with
+heat in WT instead -- an interferon response that heat sustains only
+when cGAS is present. Claim tier: L3.
 
 **How to read:** One dot per gene. x = log2 fold change at 39 vs 37 °C in WT, y = the
 same in cGAS-KO, equal scales so the dashed identity line runs at
-45°. Grey = no detectable difference between genotypes at n=5.
-Vermillion = passes the genotype comparison of the heat response at
-adj.P < 0.05, top 10 labelled. On the line = same response with and
-without cGAS. Distance from the line = the WT effect minus the
-cGAS-KO effect, so dots below it responded more strongly in WT. Gate:
-FDR only, no fold-change cut-off. A dot on the line carries no claim
-of cGAS-independence. Claim tier: L3. PROVISIONAL sample labels;
-n=5/group.
+45°. Grey circles = no detectable difference between genotypes at
+n=5. Vermillion circles = the heat response differs (adj.P < 0.05);
+triangles = it also reverses sign, positive in WT and negative in
+cGAS-KO, so they sit right of 0 and below 0. 6 of those 9 reversals
+are individually significant in WT on their own. Labels put reversing
+genes first, then evidence, capped at 10. Distance from the line = WT
+minus cGAS-KO. Gate: FDR only. Claim tier: L3. PROVISIONAL sample
+labels; n=5/group.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1014,23 +1015,23 @@ n=5/group.
 Splitting the same fold changes into a shared temperature axis and a
 cGAS-dependence axis separates two threads that barely overlap: the
 two are near-independent (r = -0.08), the shared response is the
-larger of the two (median |log2FC| 0.15 vs 0.06), and 23 of the
-10,418 heat-responsive genes also pass the genotype comparison. 23
-genes respond to heat more strongly in WT than in cGAS-KO; 0 do the
-reverse. The highlighted arm sits entirely above the line.
-Interaction is ISG-weighted and one-sided (23 up, 0 down). Claim
-tier: L3.
+larger of the two (median |log2FC| 0.15 against 0.06), and 23 of the
+10,418 heat-responsive genes also differ by genotype. Every one of
+them sits above the line and none below. Every one of them falls with
+heat once cGAS is gone (22 of 23 individually significant), and 9
+rise with heat in WT instead -- an interferon response that heat
+sustains only when cGAS is present. Claim tier: L3.
 
 **How to read:** One dot per gene. x = heat response pooled over genotypes, y = the WT
-heat response minus the cGAS-KO heat response, both in log2 units.
-The dashed horizontal line is y = 0: a gene on it responded to heat
-identically in the two genotypes. Grey = no detectable difference at
-n=5. Vermillion = passes the genotype comparison of the heat response
-at adj.P < 0.05, top 10 labelled. The y axis is expanded 1.5×
-relative to x, so vertical spread is magnified on purpose. Every
-highlighted gene lies ABOVE the line (stronger in WT) and none below,
-so the arm is directional. Gate: FDR only, no fold-change cut-off.
-Claim tier: L3. PROVISIONAL sample labels; n=5/group.
+heat response minus the cGAS-KO heat response, both log2. The dashed
+line is y = 0: a gene on it responded to heat identically in the two
+genotypes. Grey circles = no detectable difference at n=5. Vermillion
+circles = differs by genotype (adj.P < 0.05); triangles = also
+reverses sign, up with heat in WT and down without cGAS (9 of the 23,
+6 significant in WT on their own). Top 10 labelled, reversing genes
+first. The y axis is drawn 1.5× the x axis, so vertical spread is
+magnified on purpose. Gate: FDR only. Claim tier: L3. PROVISIONAL
+sample labels.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1047,14 +1048,16 @@ claim is checkable: wt_minus_ko equals logFC_Interaction gene by
 gene. Claim tier: L3.
 
 **How to read:** Columns: ensembl, gene_symbol, then logFC_/adjP_/sig_ per contrast
-(WT_heat, KO_heat, Interaction, Temp_main). sig_ = adj.P.Val < 0.05
-with NO fold-change cut-off. heat_responsive = significant for heat
-in at least one genotype. cgas_dependent = passes the genotype
-comparison of the heat response. wt_minus_ko = the WT effect minus
-the cGAS-KO effect. interaction_rank orders the cGAS-dependent arm by
-evidence then effect size and is NA elsewhere; the panels label its
-top 10. Positive logFC = higher at 39 °C, except for the genotype
-comparison, where positive = the heat response is larger in WT. Claim
+(WT_heat, KO_heat, Interaction, Temp_main). sig_ = adj.P.Val < 0.05,
+no fold-change cut-off. heat_responsive = significant for heat in at
+least one genotype. cgas_dependent = passes the genotype comparison
+of the heat response. up_with_heat_in_wt and down_with_heat_in_ko are
+logFC signs, reverses_without_cgas is both at once, and arm_class
+folds these into the three classes the panels draw. wt_minus_ko = the
+WT effect minus the cGAS-KO effect. interaction_rank orders the arm
+by evidence and label_rank puts reversing genes first; both are NA
+off the arm. Positive logFC = higher at 39 °C, except the genotype
+comparison, where positive = a larger heat response in WT. Claim
 tier: L3.
 
 | Script | Function | Config | Input |
@@ -1063,20 +1066,25 @@ tier: L3.
 
 ## tables/_overview/cgas_dependence_stats.csv
 
-The scalars both scatter panels print in-panel, so no number on a
-figure is computed at draw time: correlations and the regression
-slope between the two per-genotype heat responses, per-contrast
-significant/up/down counts at the FDR-only gate, typical effect
-sizes, the axis half-ranges the panels use, and the residual of the
-WT-minus-cGAS-KO = interaction identity. Claim tier: L3.
+The scalars both scatter panels print, so no number on a figure is
+computed at draw time. Correlations and the regression slope between
+the two per-genotype heat responses are reported twice, over all
+genes and over the heat-responsive ones only, because agreement
+measured on the whole universe could be carried by unchanged genes
+sitting at the origin. The restricted scope is the one the panels
+quote, and it is the higher of the two. Also carries per-contrast
+counts, the anatomy of the cGAS-dependent arm, typical effect sizes,
+the panel axis ranges, and the identity residual. Claim tier: L3.
 
-**How to read:** Long format: metric, scope, value, note. `scope` names the contrast
-or contrast pair the metric belongs to, so a lookup is (metric,
-scope). pearson_r / spearman_rho / ols_slope describe the
-WT-versus-cGAS-KO scatter. axis_lim rows give the symmetric
-half-range each panel draws, and y_expansion is the ratio between
-them. max_abs_identity_residual is 0 to numerical precision, which is
-what licenses reading distance from the identity line as the genotype
+**How to read:** Long format: metric, scope, subset, value, note, so a lookup is
+(metric, scope, subset). subset is all_genes, heat_responsive or
+cgas_dependent_arm and must always be read -- pearson_r appears under
+two of them. The arm rows count how many of the significant genes
+fall with heat in cGAS-KO, how many reverse sign, and how many of
+those hold up individually in each genotype. axis_lim gives each
+panel's symmetric half-range and y_expansion the ratio between them.
+max_abs_identity_residual is 0 to numerical precision, which is what
+licenses reading distance from the identity line as the genotype
 difference. Every count uses adj.P.Val < de_fdr with no fold-change
 cut-off. Claim tier: L3.
 
@@ -1095,8 +1103,8 @@ and the axes and text stay editable. Claim tier: L3.
 = passes the genotype comparison of the heat response. On the dashed
 identity line = same response with and without cGAS; distance from it
 = the WT effect minus the cGAS-KO effect. Gate: adj.P < 0.05, no
-fold-change cut-off. 23 genes respond to heat more strongly in WT
-than in cGAS-KO; 0 do the reverse. Claim tier: L3.
+fold-change cut-off. All 23 genes in the arm respond to heat more
+strongly in WT than in cGAS-KO; 0 do the reverse. Claim tier: L3.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1129,8 +1137,8 @@ and the axes and text stay editable. Claim tier: L3.
 **How to read:** Grey = no detectable difference between genotypes at n=5, vermillion
 = passes the genotype comparison of the heat response. y = 0 marks an
 identical response in both genotypes, and every highlighted gene lies
-above it. Gate: adj.P < 0.05, no fold-change cut-off. 23 genes
-respond to heat more strongly in WT than in cGAS-KO; 0 do the
+above it. Gate: adj.P < 0.05, no fold-change cut-off. All 23 genes in
+the arm respond to heat more strongly in WT than in cGAS-KO; 0 do the
 reverse. Claim tier: L3.
 
 | Script | Function | Config | Input |
