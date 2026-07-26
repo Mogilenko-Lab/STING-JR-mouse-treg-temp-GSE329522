@@ -29,9 +29,8 @@ All 7 contrasts are built generically from `analysis_config.yaml:design.contrast
 ## Artifacts produced by `02b_cgas_dependence_geometry{,_viz}.R`
 
 - `tables/_overview/cgas_dependence_wide.csv` — one row per gene, the four heat-relevant contrasts side by side (joined on `ensembl`)
-- `tables/_overview/cgas_dependence_stats.csv` — the scalars the two panels print in-panel
+- `tables/_overview/cgas_dependence_stats.csv` — the scalars the panel prints in-panel
 - `figures/_overview/heat_response_wt_vs_ko.*` — WT heat response against cGAS-KO heat response, identity line drawn
-- `figures/_overview/heat_response_shared_vs_cgas_arm.*` — shared temperature axis against the cGAS-dependence axis
 
 ## Headline panels (bespoke, owner-curated)
 
@@ -1002,39 +1001,20 @@ cGAS-dependence at n=5, vermillion circles fall with heat in both
 genotypes and further without cGAS, black triangles rise with heat in
 WT and fall without it. Highlighted genes pass at adj.P < 0.05.
 Dotted lines lie 1 log2 unit either side; the 9 highlighted genes
-beyond the lower one, names in bold, are those the frozen human
-signature carries, 4 of them triangles. Claim tier: L3. PROVISIONAL
+beyond the lower one, names in bold, are the ones that also clear
+|logFC| >= 1, 4 of them triangles. The gate is not the set that
+travels to human: the frozen 03_results/human_projection/ contract
+exports this arm at BOTH gates, these 9 at fdr_logfc and all 23 at
+fdr_only, the sensitivity read a 1 df term at n=5 needs, so bold
+marks the stringent core and not the whole export (per-gate ortholog
+counts: human_projection/manifest.csv). Read one-sidedness as a
+statement about the HIGHLIGHTED arm only — the pale cloud straddles
+the dashed line in both directions. Claim tier: L3. PROVISIONAL
 sample labels; n=5/group.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_abline (effect-versus-effect scatter, equal axes, gate as parallels)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
-
-## figures/_overview/heat_response_shared_vs_cgas_arm.png
-
-Splitting the same fold changes into a shared temperature axis and a
-cGAS-dependence axis separates two threads that barely overlap: the
-two are near-independent (r = -0.08), the shared response is the
-larger (median |log2FC| 0.15 against 0.06), and 23 of the 10,418
-heat-responsive genes also differ between genotypes. Every one sits
-above the line and none below, so the lower half of the panel is
-empty by result rather than by construction. The 9 genes above the
-upper dotted line are the set the frozen mouse-to-human signature
-carries. Claim tier: L3.
-
-**How to read:** One dot per gene: x = heat response pooled over genotypes, y = the WT
-heat response minus the cGAS-KO one, both log2. On the dashed line
-the response was identical in both. Pale dots have no detectable
-cGAS-dependence at n=5; vermillion circles fall with heat in both
-genotypes and further without cGAS; black triangles rise with heat in
-WT and fall without it. Dotted lines mark |y| = 1: the 9 genes above
-the upper one are the frozen signature's, 4 of them triangles, and
-their names are bold. y is capped 1.5× narrower than x. Claim tier:
-L3. PROVISIONAL sample labels; n=5/group.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter, gate as rules)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
 
 ## tables/_overview/cgas_dependence_wide.csv
 
@@ -1042,11 +1022,11 @@ One row per gene with the four heat-relevant contrasts side by side,
 joined on ensembl: the WT and cGAS-KO heat responses, their shared
 average, and the genotype comparison of the heat response. 19,679
 genes, all tested in every contrast. This is the single source for
-both scatter panels and the table in which the panels' geometric
-claim is checkable: wt_minus_ko equals logFC_Interaction gene by
-gene. Curated composition: 12 of the 23 are Hallmark interferon-alpha
-or -gamma members and 11 are unassigned, several of them
-mouse-specific paralogs the human-derived sets omit. Claim tier: L3.
+the scatter panel and the table in which the panel's geometric claim
+is checkable: wt_minus_ko equals logFC_Interaction gene by gene.
+Curated composition: 12 of the 23 are Hallmark interferon-alpha or
+-gamma members and 11 are unassigned, several of them mouse-specific
+paralogs the human-derived sets omit. Claim tier: L3.
 
 **How to read:** Columns: ensembl, gene_symbol, then logFC_/adjP_/sig_ per contrast
 (WT_heat, KO_heat, Interaction, Temp_main). sig_ = adj.P.Val < 0.05.
@@ -1055,7 +1035,8 @@ cgas_dependent = passes the genotype comparison of the heat response.
 up_with_heat_in_wt and down_with_heat_in_ko are logFC signs,
 reverses_without_cgas is both at once, in_stringent_gate adds |logFC|
 >= 1, and gate_class and arm_class fold these into the classes the
-panels draw. wt_minus_ko = the WT effect minus the cGAS-KO effect.
+panel draws. Temp_main is a scored contrast the panel does not plot.
+wt_minus_ko = the WT effect minus the cGAS-KO effect.
 interaction_rank and label_rank order the arm and are NA off it.
 Positive logFC = higher at 39 °C, except the genotype comparison,
 where positive = a larger heat response in WT. Claim tier: L3.
@@ -1066,15 +1047,16 @@ where positive = a larger heat response in WT. Claim tier: L3.
 
 ## tables/_overview/cgas_dependence_stats.csv
 
-The scalars both scatter panels print, so no number on a figure is
+The scalars the scatter panel prints, so no number on a figure is
 computed at draw time. Correlations and the regression slope between
 the two per-genotype heat responses are reported twice, over all
 genes and over the heat-responsive ones only, because agreement
 measured on the whole universe could be carried by unchanged genes
-sitting at the origin. The restricted scope is the one the panels
-quote, and it is the higher of the two. Also carries per-contrast
-counts, the anatomy of the cGAS-dependent arm, typical effect sizes,
-the panel axis ranges, and the identity residual. Claim tier: L3.
+sitting at the origin. The restricted scope is the one the panel
+quotes, and it is the higher of the two. Also carries per-contrast
+counts with their up/down split, the anatomy of the cGAS-dependent
+arm, typical effect sizes, axis ranges, and the identity residual.
+Claim tier: L3.
 
 **How to read:** Long format: metric, scope, subset, value, note, so a lookup is
 (metric, scope, subset). subset is all_genes, heat_responsive or
@@ -1082,11 +1064,12 @@ cgas_dependent_arm and must always be read -- pearson_r appears under
 two of them. The arm rows count how many of the significant genes
 fall with heat in cGAS-KO, how many reverse sign, how many clear the
 stringent |logFC| gate, and how far the two nine-gene subsets
-overlap. axis_lim gives each panel's symmetric half-range,
-y_expansion the ratio between them, and de_logfc the offset the
-panels draw as dotted lines. max_abs_identity_residual is 0 to
-numerical precision, which is what licenses reading distance from the
-identity line as the genotype difference. Claim tier: L3.
+overlap. axis_lim gives a symmetric half-range per contrast and
+de_logfc the offset the panel draws as dotted lines; y_expansion and
+the Temp_main/Interaction axis_lim rows are unused.
+max_abs_identity_residual is 0 to numerical precision, which is what
+licenses reading distance from the identity line as the genotype
+difference. Claim tier: L3.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1101,18 +1084,17 @@ and the axes and text stay editable. The genotype comparison of the
 heat response is a single-degree-of-freedom test at n=5 per group,
 the least-powered contrast in this design, so 23 genes is a floor on
 the cGAS-dependent arm rather than its full size. A gene on the
-shared axis has no detectable cGAS-dependence at n=5, which is weaker
-than independence. Claim tier: L3.
+identity line has no detectable cGAS-dependence at n=5, which is
+weaker than independence. Claim tier: L3.
 
 **How to read:** Two subsets of the arm both number 9 and are not the same genes: 9
-clear |logFC| >= 1 and go into the frozen signature, 9 reverse sign
-without cGAS, and 4 belong to both. Of the reversing genes 6 are
-individually significant in the WT heat contrast and 5 in both
-genotypes, so the flip is a direction read off fitted effects rather
-than 9 independent significant flips. Labels name the top 10 genes by
-evidence plus every gene inside the gate, so both subsets are
-readable by name. Claim tier: L3. PROVISIONAL sample labels;
-n=5/group.
+clear |logFC| >= 1, the stringent export gate, 9 reverse sign without
+cGAS, and 4 belong to both. Of the reversing genes 6 are individually
+significant in the WT heat contrast and 5 in both genotypes, so the
+flip is a direction read off fitted effects rather than 9 independent
+significant flips. Labels name the top 10 genes by evidence plus
+every gene inside the gate, so both subsets are readable by name.
+Claim tier: L3. PROVISIONAL sample labels; n=5/group.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1122,53 +1104,6 @@ n=5/group.
 
 Plotted values behind figures/_overview/heat_response_wt_vs_ko.png:
 one row per gene, the columns the panel draws, sliced from
-cgas_dependence_wide.csv. 19,679 genes. Claim tier: L3.
-
-**How to read:** logFC_ / adjP_ columns are the log2 fold change and BH-adjusted
-p-value per contrast. cgas_dependent = adj.P < 0.05 on the genotype
-comparison of the heat response. in_stringent_gate adds |logFC| >= 1
-and is the panel's dotted-line set; reverses_without_cgas is the sign
-flip drawn as triangles; arm_class folds the two into the three
-plotted classes. interaction_rank orders the arm by evidence and is
-NA elsewhere. hallmark_ifn flags membership of a curated interferon
-set and is annotation, never a selection rule. Claim tier: L3.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `save_overview (writes the figure's same-stem source table)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv` |
-
-## figures/_overview/heat_response_shared_vs_cgas_arm.pdf
-
-Vector companion to
-figures/_overview/heat_response_shared_vs_cgas_arm.png, the shared
-temperature axis plotted against the cGAS-dependence axis. Same plot
-object, with the dense dot layer rasterised so the file stays small
-and the axes and text stay editable. The genotype comparison of the
-heat response is a single-degree-of-freedom test at n=5 per group,
-the least-powered contrast in this design, so 23 genes is a floor on
-the cGAS-dependent arm rather than its full size. A gene on the
-shared axis has no detectable cGAS-dependence at n=5, which is weaker
-than independence. Claim tier: L3.
-
-**How to read:** Two subsets of the arm both number 9 and are not the same genes: 9
-clear |logFC| >= 1 and go into the frozen signature, 9 reverse sign
-without cGAS, and 4 belong to both. Of the reversing genes 6 are
-individually significant in the WT heat contrast and 5 in both
-genotypes, so the flip is a direction read off fitted effects rather
-than 9 independent significant flips. Labels name the top 10 genes by
-evidence plus every gene inside the gate, so both subsets are
-readable by name. Claim tier: L3. PROVISIONAL sample labels;
-n=5/group.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter, gate as rules)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
-
-## tables/_overview/heat_response_shared_vs_cgas_arm.csv
-
-Plotted values behind
-figures/_overview/heat_response_shared_vs_cgas_arm.png: one row per
-gene, the columns the panel draws, sliced from
 cgas_dependence_wide.csv. 19,679 genes. Claim tier: L3.
 
 **How to read:** logFC_ / adjP_ columns are the log2 fold change and BH-adjusted
