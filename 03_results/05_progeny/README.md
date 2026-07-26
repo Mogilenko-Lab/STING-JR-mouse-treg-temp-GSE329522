@@ -1,6 +1,6 @@
 # 05_progeny — artifact captions
 
-Stage 05: PROGENy MLM pathway activity inference (14 pathways, all contrasts)
+PROGENy MLM pathway activity inference (14 pathways, all contrasts)
 + CollecTRI ULM TF activity (decoupleR). Key result: Hypoxia (PROGENy) is flat in
 the Interaction contrast — no detectable cGAS-dependence at n=5 (PROVISIONAL);
 JAK-STAT/NFkB/TNFa are positive in the Interaction (cGAS-dependent arm).
@@ -52,7 +52,7 @@ JAK-STAT/NFkB/TNFa are positive in the Interaction (cGAS-dependent arm). This
 orthogonal pathway footprint corroborates the two-arms DE/TF result. PROVISIONAL;
 n=5/group.
 
-**How to read:** Grouped bar chart; x-axis = 4 headline contrasts with two-line labels ("WT heat / 39 vs 37 C", "KO heat / 39 vs 37 C", "Interaction / cGAS-dependence", "Temp main / average heat"); fill = PROGENy pathway (Hypoxia = orange via `POS` config color; JAK-STAT = steelblue4; NFkB = cornflowerblue; TNFa = lightsteelblue); bar height = MLM activity score (positive = numerator activation). Figure subtitle: "Hypoxia (orange): flat Interaction (no detectable cGAS-dependence). JAK-STAT/NFkB/TNFa (blue): positive Interaction (cGAS-dependent). PROVISIONAL." Glyph: `*` nudged above bar = raw p < 0.05. Sign convention: positive score = pathway more active in numerator (e.g., for Interaction, numerator = WT_heat, so positive = cGAS-dependent). CAUTION: a flat Interaction for Hypoxia is NOT proven cGAS-independence; the study is underpowered for that comparison at n=5/group. Claim tier: L3 (provisional).
+**How to read:** Grouped bar chart; x-axis = 3 headline contrasts with two-line labels ("WT heat / 39 vs 37 C", "KO heat / 39 vs 37 C", "Interaction / cGAS-dependence"); fill = PROGENy pathway (Hypoxia = orange via `POS` config color; JAK-STAT = steelblue4; NFkB = cornflowerblue; TNFa = lightsteelblue); bar height = MLM activity score (positive = numerator activation). Figure subtitle: "Hypoxia (orange): flat Interaction (no detectable cGAS-dependence). JAK-STAT/NFkB/TNFa (blue): positive Interaction (cGAS-dependent). PROVISIONAL." Glyph: `*` nudged above bar = raw p < 0.05. Sign convention: positive score = pathway more active in numerator (e.g., for Interaction, numerator = WT_heat, so positive = cGAS-dependent). CAUTION: a flat Interaction for Hypoxia is NOT proven cGAS-independence; the study is underpowered for that comparison at n=5/group. Claim tier: L3 (provisional).
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -67,14 +67,14 @@ the Interaction (cGAS-dependent arm). This orthogonal pathway
 footprint corroborates the two-arms DE/TF result. PROVISIONAL;
 n=5/group.
 
-**How to read:** Grouped bars: x = contrast (4 headline contrasts), fill = PROGENy
-pathway. Orange (Hypoxia) bars should be similar in WT_heat and
-KO_heat and near-zero in the Interaction panel - meaning no
-detectable cGAS-dependence. Blue bars (JAK-STAT/NFkB/TNFa) should be
-taller in WT_heat than KO_heat and positive in Interaction -
-cGAS-dependent. * = raw p < 0.05. CAUTION: 'flat Interaction' is NOT
-proven cGAS-independence; the study is powered at n=5/group. Claim
-tier: L3 (provisional).
+**How to read:** Grouped bars: x = contrast (3 headline contrasts: WT_heat, KO_heat,
+Interaction), fill = PROGENy pathway. Orange (Hypoxia) bars should be
+similar in WT_heat and KO_heat and near-zero in the Interaction panel
+- meaning no detectable cGAS-dependence. Blue bars
+(JAK-STAT/NFkB/TNFa) should be taller in WT_heat than KO_heat and
+positive in Interaction - cGAS-dependent. * = raw p < 0.05. CAUTION:
+'flat Interaction' is NOT proven cGAS-independence; the study is
+powered at n=5/group. Claim tier: L3 (provisional).
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -117,12 +117,12 @@ no detectable cGAS-dependence at n=5; NOT proven independence).
 ## figures/_overview/progeny_tf_combined.pdf
 
 Combined PROGENy (top panel) + CollecTRI TF (bottom panel) activity for key
-pathways/TFs across 4 headline contrasts: Hypoxia (PROGENy) and Hif1a (TF) are
+pathways/TFs across 3 headline contrasts: Hypoxia (PROGENy) and Hif1a (TF) are
 active in both heat arms and flat in the Interaction (no detectable cGAS-dependence
 at n=5); JAK-STAT/IFN/Stat1/Irf3 are positive in the Interaction (cGAS-dependent).
 PROVISIONAL.
 
-**How to read:** `facet_grid(entity_type ~ contrast)`: row facets = PROGENy (top) vs CollecTRI TF (bottom); column facets = 4 headline contrasts. Figure subtitle: "PROGENy MLM (top) + CollecTRI ULM (bottom). Orange = HIF arm; blue = IFN/NFkB arm. PROVISIONAL." Lollipop color via `scale_color_manual(values = AXIS_COLORS)`: orange = HIF axis (Hypoxia pathway; Hif1a/Epas1 TFs), steelblue4 = IFN/NFkB axis (JAK-STAT/NFkB/TNFa pathways; Irf1/Irf3/Irf7/Stat1/Stat2/Nfkb1/Rela TFs), grey = other. Shape: diamond (`pch=18`) = PROGENy pathway, filled circle (`pch=16`) = TF. Direction: rightward (positive x) = activated in numerator condition. Glyph: `*` = p < 0.05 (raw p for PROGENy pathways; BH padj for TFs). Source rows ordered by mean score across contrasts within each entity-type facet. CAUTION: n=5/group; absence of significant Interaction for HIF arm is NOT proven cGAS-independence. Claim tier: L3 (provisional).
+**How to read:** `facet_grid(entity_type ~ contrast)`: row facets = PROGENy (top) vs CollecTRI TF (bottom); column facets = 3 headline contrasts. Figure subtitle: "PROGENy MLM (top) + CollecTRI ULM (bottom). Orange = HIF arm; blue = IFN/NFkB arm. PROVISIONAL." Lollipop color via `scale_color_manual(values = AXIS_COLORS)`: orange = HIF axis (Hypoxia pathway; Hif1a/Epas1 TFs), steelblue4 = IFN/NFkB axis (JAK-STAT/NFkB/TNFa pathways; Irf1/Irf3/Irf7/Stat1/Stat2/Nfkb1/Rela TFs), grey = other. Shape: diamond (`pch=18`) = PROGENy pathway, filled circle (`pch=16`) = TF. Direction: rightward (positive x) = activated in numerator condition. Glyph: `*` = p < 0.05 (raw p for PROGENy pathways; BH padj for TFs). Source rows ordered by mean score across contrasts within each entity-type facet. CAUTION: n=5/group; absence of significant Interaction for HIF arm is NOT proven cGAS-independence. Claim tier: L3 (provisional).
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -131,7 +131,7 @@ PROVISIONAL.
 ## figures/_overview/progeny_tf_combined.png
 
 Combined PROGENy (top panel) + CollecTRI TF (bottom panel) activity
-for key pathways/TFs across 4 headline contrasts: Hypoxia (PROGENy)
+for key pathways/TFs across 3 headline contrasts: Hypoxia (PROGENy)
 and Hif1a (TF) are active in both heat arms and flat in the
 Interaction (no detectable cGAS-dependence at n=5);
 JAK-STAT/IFN/Stat1/Irf3 are positive in the Interaction
@@ -399,8 +399,8 @@ p-values for all 14 PROGENy pathways × all contrasts, after score clamping to �
 
 Source table for `figures/_overview/progeny_interaction_split.pdf` and
 `figures/_overview/progeny_interaction_split.png`; long-format activity scores for
-the four key PROGENy pathways (Hypoxia, JAK-STAT, NFkB, TNFa) across the 4
-headline contrasts.
+the four key PROGENy pathways (Hypoxia, JAK-STAT, NFkB, TNFa) across 3 headline
+contrasts (WT_heat, KO_heat, Interaction).
 
 **How to read:** Columns: `pathway` (PROGENy pathway name), `contrast`, `score` (MLM activity score — NOT a GSEA-NES), `p_value` (raw), `significant` (logical; raw p < 0.05). One row per pathway × contrast. Same-stem neighbor of the split bar chart figure. Claim tier: L3.
 
@@ -426,7 +426,8 @@ axis-family label, and significance flag for TFs significant in ≥2 contrasts
 Source table for `figures/_overview/progeny_tf_combined.pdf` and
 `figures/_overview/progeny_tf_combined.png`; unified long-format activity scores
 for key PROGENy pathways (Hypoxia, JAK-STAT, NFkB, TNFa) and key TFs (Irf3, Irf7,
-Irf1, Stat1, Stat2, Nfkb1, Rela, Hif1a, Epas1) across the 4 headline contrasts.
+Irf1, Stat1, Stat2, Nfkb1, Rela, Hif1a, Epas1) across 3 headline contrasts (WT_heat,
+KO_heat, Interaction).
 
 **How to read:** Columns: `entity_type` (PROGENy or TF), `source` (pathway or TF gene symbol), `axis` (HIF/IFN/other), `contrast`, `score` (MLM or ULM activity score — NOT a GSEA-NES), `p` (raw p for PROGENy; BH padj for TF), `significant` (logical; p < 0.05). One row per entity × contrast. Same-stem neighbor of the combined lollipop panel. Claim tier: L3.
 

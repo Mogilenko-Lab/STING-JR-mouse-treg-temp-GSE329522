@@ -83,7 +83,7 @@ AXIS_COLORS <- c(
   "other" = "grey55"
 )
 
-# Headline contrasts (config order; the four named in Plan §2/§5)
+# Headline contrasts (config order)
 HEADLINE_CONTRASTS <- c("WT_heat", "KO_heat", "Interaction", "Temp_main")
 
 # Key PROGENy pathways for the Hypoxia-vs-immune split
@@ -623,11 +623,12 @@ tryCatch({
 message("[13_activity_viz] --- Hypoxia-vs-immune split panel (Interaction) ---")
 
 tryCatch({
+  CO_SPLIT <- setdiff(CO_HEADLINE, "Temp_main")
   key_df <- prog_long %>%
     dplyr::filter(source %in% KEY_PROGENY,
-                  contrast %in% CO_HEADLINE) %>%
+                  contrast %in% CO_SPLIT) %>%
     dplyr::mutate(
-      contrast = factor(contrast, levels = CO_HEADLINE),
+      contrast = factor(contrast, levels = CO_SPLIT),
       source   = factor(source,
                         levels = c("Hypoxia", "JAK-STAT", "NFkB", "TNFa")),
       is_sig   = !is.na(p_value) & p_value < FDR,
@@ -661,8 +662,7 @@ tryCatch({
       scale_x_discrete(labels = c(
         WT_heat     = "WT heat\n(39 vs 37 C)",
         KO_heat     = "KO heat\n(39 vs 37 C)",
-        Interaction = "Interaction\n(cGAS-dependence)",
-        Temp_main   = "Temp main\n(average heat)"
+        Interaction = "Interaction\n(cGAS-dependence)"
       )) +
       labs(
         title    = "PROGENy pathway activity: Hypoxia vs immune split (MLM)",
@@ -692,7 +692,7 @@ tryCatch({
                                      "; colors.diverging; design.contrasts"),
                   input     = "03_results/objects/09_progeny_activity.rds",
                   how_to_read = paste0(
-                    "Grouped bars: x = contrast (4 headline contrasts), fill = PROGENy pathway. ",
+                    "Grouped bars: x = contrast (3 headline contrasts: WT_heat, KO_heat, Interaction), fill = PROGENy pathway. ",
                     "Orange (Hypoxia) bars should be similar in WT_heat and KO_heat and near-zero in ",
                     "the Interaction panel - meaning no detectable cGAS-dependence. Blue bars ",
                     "(JAK-STAT/NFkB/TNFa) should be taller in WT_heat than KO_heat and positive in ",
@@ -818,9 +818,12 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
   message("[13_activity_viz] --- Combined PROGENy+TF panel ---")
 
   tryCatch({
+    CO_COMBINED <- setdiff(CO_HEADLINE, "Temp_main")
+    CO_TF_COMBINED <- setdiff(CO_TF_HEADLINE, "Temp_main")
+
     # Build a unified long table: entity_type (PROGENy / TF), source, contrast, score, padj/p_value
     prog_sel <- prog_long %>%
-      dplyr::filter(source %in% KEY_PROGENY, contrast %in% CO_HEADLINE) %>%
+      dplyr::filter(source %in% KEY_PROGENY, contrast %in% CO_COMBINED) %>%
       dplyr::select(source, contrast, score, p_value) %>%
       dplyr::rename(p = p_value) %>%
       dplyr::mutate(entity_type = "PROGENy",
@@ -830,7 +833,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                       TRUE                          ~ "other"))
 
     tf_sel <- tf_long %>%
-      dplyr::filter(source %in% KEY_TFS, contrast %in% CO_TF_HEADLINE) %>%
+      dplyr::filter(source %in% KEY_TFS, contrast %in% CO_TF_COMBINED) %>%
       dplyr::select(source, contrast, score, padj) %>%
       dplyr::rename(p = padj) %>%
       dplyr::mutate(entity_type = "TF",
@@ -841,7 +844,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
 
     comb_df <- dplyr::bind_rows(prog_sel, tf_sel) %>%
       dplyr::mutate(
-        contrast    = factor(contrast, levels = CO_HEADLINE),
+        contrast    = factor(contrast, levels = CO_COMBINED),
         entity_type = factor(entity_type, levels = c("PROGENy", "TF")),
         is_sig      = !is.na(p) & p < FDR,
         star        = .sig_star(p),
@@ -873,8 +876,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                      contrast = c(
                        WT_heat     = "WT heat",
                        KO_heat     = "KO heat",
-                       Interaction = "Interaction",
-                       Temp_main   = "Temp main"
+                       Interaction = "Interaction"
                      )
                    )) +
         scale_color_manual(values = AXIS_COLORS, name = "Axis family") +
@@ -904,7 +906,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                     table     = side_comb,
                     finding   = paste0(
                       "Combined PROGENy (top panel) + CollecTRI TF (bottom panel) activity for ",
-                      "key pathways/TFs across ", length(CO_HEADLINE), " headline contrasts: ",
+                      "key pathways/TFs across ", length(CO_COMBINED), " headline contrasts: ",
                       "Hypoxia (PROGENy) and Hif1a (TF) are active in both heat arms and flat in ",
                       "the Interaction (no detectable cGAS-dependence at n=5); JAK-STAT/IFN/Stat1/Irf3 ",
                       "are positive in the Interaction (cGAS-dependent). PROVISIONAL."),
