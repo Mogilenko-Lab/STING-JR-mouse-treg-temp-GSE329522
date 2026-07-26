@@ -256,8 +256,7 @@ for (co in CONTRASTS) {
     subtitle      = panel_subtitle(co),
     x_breaks      = x_step,
     max.overlaps  = 15,
-    annotate_counts = TRUE             # toolkit appends sig ↑/↓ counts under the
-                                       # highest-priority populated legend line
+    annotate_counts = TRUE             # toolkit places ↑/↓ counts in bottom corners
   ) +
     labs(caption = NULL) +
     project_theme(config = FIG_CFG)
@@ -276,7 +275,7 @@ for (co in CONTRASTS) {
     table     = tbl_volc,
     contrast  = co,
     finding   = sprintf(
-      "limma-trend volcano for %s (%s): %d genes pass adj.P < %.2g & |log2FC| >= %.1f (%d up in numerator, %d up in denominator). cGAS-STING/ISG + HIF watchlist genes always labelled; sig up/down counts appended (toolkit) as a second line under the highest-priority populated significance line in the legend; x-tick step chosen dynamically to avoid label crowding.%s",
+      "limma-trend volcano for %s (%s): %d genes pass adj.P < %.2g & |log2FC| >= %.1f (%d up in numerator, %d up in denominator). cGAS-STING/ISG + HIF watchlist genes always labelled; sig up/down counts shown in the bottom corners of the panel (toolkit annotate_counts); x-tick step chosen dynamically to avoid label crowding.%s",
       co, contrast_label(co), n_sig, FDR, LFC, n_up, n_down, interp_note(co)
     ),
     script    = SCRIPT,
