@@ -264,30 +264,22 @@ fits <- function(txt, max_lines, max_chars, where) {
 # 5. THE PANEL — the heat response in WT against the heat response in cGAS-KO
 # -----------------------------------------------------------------------------
 # The counts block is NUMBERS, not sentences: one row per quantity the geometry is built
-# from, so a reader can check the picture against the arithmetic without parsing prose.
-# Delta is defined on its last line and in the subtitle; the per-direction split uses bare
-# arrow glyphs rather than direction_cue()'s "arrow + word" form because the two counts sit
-# adjacent on one line and disambiguate each other, and the worded form overruns the block's
-# verified-empty region (bare-glyph precedent: 15_coresh_viz.R facet labels).
-# Agreement is quoted on the HEAT-RESPONSIVE genes, so the number cannot be carried by
-# the mass of unchanged genes sitting at the origin. The regression slope leads: it is
-# the direct "same response size" statistic and is not inflated by sample size.
-# Line order is load-bearing, not stylistic: Δ is defined before it is used, and the SHORTEST
-# line lands last, because the block sits in the upper-left triangle where the upper gate line
-# closes in from the right as you go down. A long final line collides with that reference line.
+# from, so a reader can check the picture against the arithmetic without parsing prose. It
+# carries counts ONLY. Δ and the significance cut-off are defined in the subtitle, and the
+# agreement statistics (r, slope) are left to the README caption — the dots piling onto the
+# identity line already show the agreement, so printing r beside it spends canvas on a
+# number the picture makes. The per-direction split uses bare arrow glyphs rather than
+# direction_cue()'s "arrow + word" form because the two counts sit adjacent on one line and
+# disambiguate each other (bare-glyph precedent: 15_coresh_viz.R facet labels).
 box_a_stats <- fits(box_text(
-  sprintf("Δ = log2 fold change, 39 vs 37 °C; sig at adj.P < %.2g", FDR),
-  sprintf("%s genes, one dot each", N("n_genes", "all")),
+  sprintf("%s genes", N("n_genes", "all")),
   sprintf("ΔWT: %s sig  ↑ %s  ↓ %s",
           N("n_sig", CO_WT), N("n_up", CO_WT), N("n_down", CO_WT)),
   sprintf("ΔcGAS-KO: %s sig  ↑ %s  ↓ %s",
           N("n_sig", CO_KO), N("n_up", CO_KO), N("n_down", CO_KO)),
   sprintf("ΔWT − ΔcGAS-KO: %s sig  ↑ %s  ↓ %s",
-          N("n_sig", CO_INT), N("n_up", CO_INT), N("n_down", CO_INT)),
-  "ΔWT vs ΔcGAS-KO, heat-responsive only:",
-  sprintf("r = %.2f, slope %.2f",
-          S("pearson_r", WT_KO, HR), S("ols_slope", KO_ON_WT, HR))),
-  max_lines = 8, max_chars = WRAP_BOX - 1, where = "upper-left counts")
+          N("n_sig", CO_INT), N("n_up", CO_INT), N("n_down", CO_INT))),
+  max_lines = 5, max_chars = WRAP_BOX - 1, where = "upper-left counts")
 
 # The key states the two reference lines as EQUATIONS on the same Δ vocabulary as the
 # counts block, so the geometry is self-defining. Both claims are scoped to the
@@ -348,9 +340,15 @@ p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
   labs(
     title    = paste("Warming to 39 °C changes the same genes",
                       "with and without cGAS — apart from 23", sep = "\n"),
-    subtitle = wrap_at(paste0(
-      "Each dot is one gene. Both axes are its log2 fold change at 39 versus 37 °C, ",
-      "measured in WT (x) and in cGAS-KO (y).")),
+    # Two blocks, hard-separated: the axes, then the notation the counts block uses. Δ is
+    # bound to the quantity the first line just defined rather than re-stating it, so the
+    # counts block can be pure numbers.
+    subtitle = paste(
+      wrap_at(paste0(
+        "Each dot is one gene. Both axes are its log2 fold change at 39 versus 37 °C, ",
+        "measured in WT (x) and in cGAS-KO (y).")),
+      wrap_at(sprintf("Δ = that log2 fold change; sig = adj.P < %.2g.", FDR)),
+      sep = "\n"),
     x = sprintf("%s — log2 fold change", contrast_label(CO_WT)),
     y = sprintf("%s — log2 fold change", contrast_label(CO_KO))
   ) +
