@@ -261,28 +261,46 @@ fits <- function(txt, max_lines, max_chars, where) {
 }
 
 # -----------------------------------------------------------------------------
-# 5. PANEL A — the heat response in WT against the heat response in cGAS-KO
+# 5. THE PANEL — the heat response in WT against the heat response in cGAS-KO
 # -----------------------------------------------------------------------------
+# The counts block is NUMBERS, not sentences: one row per quantity the geometry is built
+# from, so a reader can check the picture against the arithmetic without parsing prose.
+# Delta is defined on its last line and in the subtitle; the per-direction split uses bare
+# arrow glyphs rather than direction_cue()'s "arrow + word" form because the two counts sit
+# adjacent on one line and disambiguate each other, and the worded form overruns the block's
+# verified-empty region (bare-glyph precedent: 15_coresh_viz.R facet labels).
 # Agreement is quoted on the HEAT-RESPONSIVE genes, so the number cannot be carried by
 # the mass of unchanged genes sitting at the origin. The regression slope leads: it is
 # the direct "same response size" statistic and is not inflated by sample size.
+# Line order is load-bearing, not stylistic: Δ is defined before it is used, and the SHORTEST
+# line lands last, because the block sits in the upper-left triangle where the upper gate line
+# closes in from the right as you go down. A long final line collides with that reference line.
 box_a_stats <- fits(box_text(
+  sprintf("Δ = log2 fold change, 39 vs 37 °C; sig at adj.P < %.2g", FDR),
   sprintf("%s genes, one dot each", N("n_genes", "all")),
-  sprintf("39 °C changes %s genes in WT", N("n_sig", CO_WT)),
-  sprintf("and %s genes in cGAS-KO", N("n_sig", CO_KO)),
-  sprintf("among heat-responsive genes the cGAS-KO response is %.2f× the WT response (r = %.2f)",
-          S("ols_slope", KO_ON_WT, HR), S("pearson_r", WT_KO, HR)),
-  sprintf("%s genes differ between the genotypes at adj.P < %.2g, and %s the other way",
-          N("n_sig", CO_INT), FDR, N("n_down", CO_INT))),
-  max_lines = 7, max_chars = WRAP_BOX - 1, where = "Panel A upper-left stats")
+  sprintf("ΔWT: %s sig  ↑ %s  ↓ %s",
+          N("n_sig", CO_WT), N("n_up", CO_WT), N("n_down", CO_WT)),
+  sprintf("ΔcGAS-KO: %s sig  ↑ %s  ↓ %s",
+          N("n_sig", CO_KO), N("n_up", CO_KO), N("n_down", CO_KO)),
+  sprintf("ΔWT − ΔcGAS-KO: %s sig  ↑ %s  ↓ %s",
+          N("n_sig", CO_INT), N("n_up", CO_INT), N("n_down", CO_INT)),
+  "ΔWT vs ΔcGAS-KO, heat-responsive only:",
+  sprintf("r = %.2f, slope %.2f",
+          S("pearson_r", WT_KO, HR), S("ols_slope", KO_ON_WT, HR))),
+  max_lines = 8, max_chars = WRAP_BOX - 1, where = "upper-left counts")
 
+# The key states the two reference lines as EQUATIONS on the same Δ vocabulary as the
+# counts block, so the geometry is self-defining. Both claims are scoped to the
+# HIGHLIGHTED arm: the pale cloud straddles the dashed line in both directions, so an
+# unscoped "none below" would be contradicted by the picture it annotates. Where the gated
+# genes go downstream is deliberately NOT here — the frozen export carries the arm at two
+# gates, and one canvas line cannot say that without misleading (see the header note).
 box_a_read <- fits(box_text(
-  "dashed line = same response in both genotypes",
-  sprintf("all %s highlighted genes lie below it", N("n_sig", CO_INT)),
-  sprintf("dotted lines = %g log2 unit either side", GATE),
-  sprintf("the %s genes in bold, beyond the lower one, go into the frozen human signature",
-          N("n_stringent_gate", CO_INT, ARM))),
-  max_lines = 5, max_chars = WRAP_BOX - 1, where = "Panel A lower-right key")
+  "dashed line: ΔWT = ΔcGAS-KO",
+  sprintf("dotted lines: ΔWT − ΔcGAS-KO = ±%g", GATE),
+  sprintf("all %s highlighted genes lie below the dashed line; the %s in bold also clear ±%g",
+          N("n_sig", CO_INT), N("n_stringent_gate", CO_INT, ARM), GATE)),
+  max_lines = 5, max_chars = WRAP_BOX - 1, where = "lower-right key")
 
 p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
                             y = .data[[paste0("logFC_", CO_KO)]],
