@@ -1,4 +1,4 @@
-# Stage 03_de — limma-trend differential expression
+# Differential expression — the 39 °C heat response in WT and cGAS-KO iTregs
 
 **Method:** limma-trend on log2(CPM+0.5) (no voom — input is pre-normalized CPM deposit).
 Model: `~0 + group`, trend=TRUE, robust=TRUE. n=5/group. Sample→group labels are PROVISIONAL (no sample sheet confirmed).
@@ -911,67 +911,67 @@ tested. Claim tier: L3. PROVISIONAL sample labels.
 
 ## figures/_overview/de_counts_summary.png
 
-DE gene counts per contrast (adj.P < 0.05; NO logFC gate) across 7
-contrasts. Signed bar chart: positive orange bars = genes up in
-numerator; negative blue bars = genes up in denominator. IMPORTANT:
-the master significant flag = adj.P < 0.05 ONLY (no |logFC| gate),
-unlike the per-contrast volcano panels which combine adj.P < 0.05 AND
-|logFC| >= 1.0; volcano counts will therefore be lower than the
-summary bars here. Interaction contrast (1 df, n=5) is expected to
-have the fewest significant genes (lowest power): non-significant
-gene = no detectable cGAS-dependence at n=5, NOT independence.
+Heat dominates this design and the cGAS-dependent arm is small and
+one-sided: WT heat changes 8,723 genes and cGAS-KO heat 8,901, while
+the interaction that tests cGAS-dependence of the heat response
+changes 23 -- all 23 up, 0 down. Every bar prints its own gene count,
+so that contrast reads without opening the table. Counts pass adj.P <
+0.05 with no fold-change cut-off; the frozen mouse-to-human
+projection signature adds |log2FC| >= 1.0 and lists 213 up / 126 down
+for the same WT heat contrast
+(10_signature/tables/_overview/signature_sizes.csv, gate fdr_logfc)
+-- a stricter gate on the same statistics, not a different result.
+The interaction is 1 df at n=5, the least-powered term: 23 is a
+floor. Claim tier: L3.
 
-**How to read:** x = contrast (config order; short display labels); y = gene count
-(absolute value on axis). Orange bars above zero = up in numerator
-side; blue bars below zero = up in denominator side. Threshold for
-this panel: adj.P < 0.05 (no logFC filter). Threshold for
-by_contrast/*/volcano panels: adj.P < 0.05 AND |logFC| >= 1.0 -- the
-panels are complementary, NOT contradictory. Interaction contrast is
-the cGAS-dependence payoff: 1 df, n=5, lowest power. Claim tier: L3.
+**How to read:** x = comparison (config order, short display labels); y = number of
+genes. Orange above zero = up, blue below zero = down, both relative
+to the first-named side of the comparison; for the interaction, up =
+heat response larger in WT. The printed label on each bar end gives
+the exact count per direction, including a measured 0. Gate for this
+panel: adj.P < 0.05, no fold-change cut-off -- the |log2FC| >= 1.0
+gate used by the projection export is stricter and keeps far fewer
+genes. A non-significant interaction gene = no detectable
+cGAS-dependence at n=5, never independence. Claim tier: L3.
 PROVISIONAL sample labels.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col (signed bar chart)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
+| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
 
 ## figures/_overview/de_counts_summary.pdf
 
-Print-format companion to `figures/_overview/de_counts_summary.png`.
-Same signed bar chart of DE gene counts per contrast (adj.P < 0.05; no
-logFC gate) across 7 contrasts. PDF format for publication; wide canvas
-(12×8 in) so the 7 two-line short contrast labels sit side-by-side
-without colliding.
+Vector companion to `figures/_overview/de_counts_summary.png`, same bars
+and the same printed per-direction gene counts. Wide canvas (12×8 in)
+so the seven two-line comparison labels sit side by side without
+colliding.
 
-**How to read:** Same content as `de_counts_summary.png`; PDF format for print.
-Orange = up in numerator; blue = down (bars below zero). Threshold:
-adj.P < 0.05 only (no logFC gate). Sign convention: positive y = up in
-numerator. Claim tier: L3. PROVISIONAL sample labels.
+**How to read:** Same content as `de_counts_summary.png`, in vector form for print.
+Orange above zero = up, blue below zero = down, relative to the
+first-named side of each comparison. Gate: adj.P < 0.05 with no
+fold-change cut-off. Claim tier: L3. PROVISIONAL sample labels.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col (signed bar chart) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
+| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
 
 ## tables/_overview/de_counts_summary.csv
 
-Cross-contrast DE count summary table: per-contrast tallies of genes
-tested, total significant (adj.P < 0.05, no logFC gate), up in
-numerator, and down in numerator, across all 7 contrasts. This is the
-source table for figures/_overview/de_counts_summary.png.
-Derived from master_de_genes.csv; significant flag = adj.P < 0.05
-ONLY (no |logFC| gate — intentionally different from the volcano
-threshold to give a more complete count overview). Claim tier: L3.
+Per-comparison tallies of genes tested, genes significant at adj.P <
+0.05 with no fold-change cut-off, and the split of those into up and
+down. Source table for figures/_overview/de_counts_summary.png, whose
+printed bar labels are exactly n_up and n_down. Claim tier: L3.
 PROVISIONAL sample labels.
 
-**How to read:** Columns: contrast (one of the 7 config contrasts), n_tested (total genes
-in that contrast's topTable; 19,679 for all contrasts), n_sig (genes with adj.P.Val
-< 0.05 regardless of logFC), n_up (significant genes with direction = Up in numerator),
-n_down (significant genes with direction = Down in numerator). Note n_up + n_down = n_sig.
-The per-contrast volcano and MD figures use the stricter adj.P.Val < 0.05 AND |logFC|
->= 1.0 threshold; counts here will exceed figure-panel counts. Interaction contrast
-(1 df, n=5): n_sig = 23; non-significant genes = no detectable cGAS-dependence at n=5,
-NOT independence. Claim tier: L3. PROVISIONAL sample labels.
+**How to read:** Columns: contrast (config key), n_tested (19,679 genes in every
+contrast's topTable), n_sig (adj.P.Val < 0.05, any fold change), n_up and n_down
+(that split, relative to the first-named side of the comparison; n_up + n_down =
+n_sig). The volcano and MD panels apply the stricter adj.P.Val < 0.05 AND |logFC|
+>= 1.0 gate, so their counts run lower. Interaction: n_sig = 23, all up. A
+non-significant interaction gene = no detectable cGAS-dependence at n=5, never
+independence. Claim tier: L3. PROVISIONAL sample labels.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col (signed bar chart) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
+| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
 

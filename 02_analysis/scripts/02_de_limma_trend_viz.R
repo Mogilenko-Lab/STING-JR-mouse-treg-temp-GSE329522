@@ -30,7 +30,7 @@
 #           03_results/03_de/tables/_overview/de_counts_summary.csv
 #           03_results/03_de/README.md                       (captions, idempotent)
 #
-# NOTE on PCA: the reference (11_de_viz.R §5.6) emits an _overview/pca panel, but
+# NOTE on PCA: the reference DE viz (11_de_viz.R) emits an _overview/pca panel, but
 #           that needs a filtered DGEList / logCPM matrix. Only the 7 topTables
 #           (02_de_results.rds) exist in 03_results/objects/ -- NO DGEList and NO
 #           MArrayLM fit. PCA is therefore SKIPPED (it would force a compute
@@ -114,7 +114,7 @@ interp_note <- function(co) {
 
 #' Per-panel subtitle: contract label + direction key (+ the Interaction caveat).
 #' Direction text is generic (no n-badge) -- the sig counts are annotated inside
-#' the panel via direction_cue glyphs (mirrors reference 11_de_viz.R §5.4).
+#' the panel via direction_cue glyphs (mirrors the reference DE viz, 11_de_viz.R).
 panel_subtitle <- function(co) {
   paste0(contrast_label(co),
          "  |  logFC>0 = up in numerator; logFC<0 = up in denominator",
@@ -124,7 +124,7 @@ panel_subtitle <- function(co) {
 }
 
 #' Pick a "nice" x-break step (1-2-5 ladder) targeting ~10 ticks over the full
-#' symmetric ±range so volcano x-axis labels never crowd. LOCAL (ref §5.3a).
+#' symmetric ±range so volcano x-axis labels never crowd. LOCAL to this script.
 .volcano_x_step <- function(x_range) {
   n_target_half <- 5L
   raw_step   <- x_range / n_target_half
@@ -206,7 +206,7 @@ write_caption(
 # -----------------------------------------------------------------------------
 # 6. Purge stale flat figures (the redundant flat volcano trio + any old fig2)
 #    The flat volcano_{WT_heat,KO_heat,Interaction}.pdf are now SUPERSEDED by the
-#    full by_contrast/<c>/volcano sweep (§7) for all 7 contrasts. Remove them so
+#    full by_contrast/<c>/volcano sweep below for all 7 contrasts. Remove them so
 #    the run owns its figure namespace (avoids stale off-contract leftovers).
 # -----------------------------------------------------------------------------
 purge_figures(STAGE, "volcano_", config = FIG_CFG)
@@ -260,12 +260,7 @@ for (co in CONTRASTS) {
                                        # highest-priority populated legend line
   ) +
     labs(caption = NULL) +
-    project_theme(config = FIG_CFG) +
-    # Give the appended count line ("↑ n  ↓ m") a little air below its sig line —
-    # the legend label's second line was sitting too tight against the first.
-    # Volcano-only (merges onto project_theme's legend.text); leaves single-line
-    # and running-sum wrapped legends unaffected.
-    theme(legend.text = element_text(lineheight = 1.5))
+    project_theme(config = FIG_CFG)
 
   # Source table: key columns, ordered by significance then effect size.
   tbl_volc <- tt[order(tt$adj.P.Val, -abs(tt$logFC)),
@@ -312,7 +307,7 @@ for (co in CONTRASTS) {
 # -----------------------------------------------------------------------------
 # 8. Per-contrast MD (mean-difference) sweep over ALL 7 contrasts (NEW)
 # -----------------------------------------------------------------------------
-# Mirrors reference 11_de_viz.R §5.5 (create_MD_plot). The reference passes the
+# Mirrors the reference DE viz (11_de_viz.R, create_MD_plot). The reference passes the
 # MArrayLM `fit`, but NO fit object exists in 03_results/objects/ (VIZ-ONLY; we
 # must not re-run the compute script to emit one). The topTables already carry
 # AveExpr + logFC + adj.P.Val -- exactly what create_MD_plot needs -- so we drive
@@ -433,54 +428,91 @@ if (!file.exists(master_de_path)) {
         # Factor in config order for stable facet/axis ordering
         dplyr::mutate(contrast = factor(contrast, levels = contrasts_avail))
 
-      # Signed bar chart: up positive (orange), -down negative (blue)
+      # Signed bar chart: up positive (orange), -down negative (blue).
+      # The GENE COUNTS ARE PRINTED ON THE PANEL (one label per direction per
+      # contrast) so the narrative reads without opening the source table: the
+      # small comparisons (Interaction, the two Geno simple effects) have bars
+      # that are invisible next to Temp_main on a shared count scale, and the
+      # printed number is then the only readable channel.
+      dir_up   <- direction_cue(1)    # "↑ up"    — glyph vocabulary from the contract
+      dir_down <- direction_cue(-1)   # "↓ down"
+
       de_counts_long <- de_counts %>%
         dplyr::select(contrast, n_up, n_down) %>%
         tidyr::pivot_longer(
           cols      = c(n_up, n_down),
-          names_to  = "direction",
+          names_to  = "arm",
           values_to = "n"
         ) %>%
         dplyr::mutate(
-          n_signed  = ifelse(direction == "n_down", -n, n),
-          direction = factor(direction,
-                             levels = c("n_up", "n_down"),
-                             labels = c("Up in numerator", "Down in numerator"))
+          n_signed  = ifelse(arm == "n_down", -n, n),
+          # Label = count + direction glyph. The glyph is keyed on the ARM, never on n,
+          # so a genuine zero still reads "0 ↓ down" (a measured absence of down genes)
+          # rather than direction_cue(0)'s "n.s." (which would be a different claim).
+          count_lab = sprintf("%s %s", format(n, big.mark = ",", trim = TRUE),
+                              ifelse(arm == "n_up", dir_up, dir_down)),
+          # vjust is in TEXT-HEIGHT units, so up/down labels stay separated even when
+          # both bars are ~0 (Interaction: 23 up, 0 down) at any y scale.
+          lab_vjust = ifelse(arm == "n_up", -0.45, 1.45),
+          direction = factor(arm, levels = c("n_up", "n_down"),
+                             labels = c(dir_up, dir_down))
         )
 
       y_abs <- max(abs(de_counts_long$n_signed), na.rm = TRUE)
       y_abs <- max(y_abs, 1L)   # guard against all-zero data
+      y_pad <- y_abs * 1.14     # headroom so the outermost count labels are not clipped
 
       p_de_counts <- ggplot(de_counts_long,
                             aes(x = contrast, y = n_signed, fill = direction)) +
         geom_col(position = "stack", width = 0.8) +
         geom_hline(yintercept = 0, linewidth = 0.4, colour = "grey40") +
+        geom_text(aes(label = count_lab, vjust = lab_vjust),
+                  size = CUE, show.legend = FALSE) +
         scale_x_discrete(labels = function(x) contrast_label(x, short = TRUE)) +
         scale_fill_manual(
-          values = c("Up in numerator"   = POS,
-                     "Down in numerator" = NEG),
+          values = setNames(c(POS, NEG), c(dir_up, dir_down)),
           name   = "Direction"
         ) +
         scale_y_continuous(
-          limits = c(-y_abs, y_abs),
+          limits = c(-y_pad, y_pad),
           oob    = scales::squish,
           labels = function(x) as.character(abs(x))  # display absolute values on axis
         ) +
         labs(
-          title    = sprintf("DE gene counts per contrast (adj.P < %.2g; no |logFC| gate)", FDR),
-          subtitle = NULL,
+          title    = sprintf("Genes changed per comparison (adj.P < %.2g, no fold-change cut-off)", FDR),
+          subtitle = paste0(
+            "Up and down are relative to the first-named side of each comparison. ",
+            "For the interaction, up = heat response larger in WT than in cGAS-KO.\n",
+            "All comparisons share one count scale, so the small ones read as printed numbers rather than visible bars."),
           x        = NULL,
-          y        = sprintf("Gene count (adj.P < %.2g; |bars| = absolute count)", FDR),
-          caption  = NULL
+          y        = sprintf("Number of genes (adj.P < %.2g)", FDR),
+          # Wrapped at the contract's caption column so the gate note can never run
+          # off the right edge of the canvas (a truncated caption is unreadable).
+          caption  = paste(strwrap(sprintf(
+            paste0("Every count on this panel uses adj.P < %.2g with NO fold-change cut-off. ",
+                   "The frozen mouse-to-human projection signature also requires |log2FC| >= %.1f, ",
+                   "so it keeps only a few hundred genes per contrast — a stricter gate on the ",
+                   "same statistics, not a different result."),
+            FDR, LFC),
+            width = as.integer(FIG_CFG$figures$caption_wrap_column %||% 70)),
+            collapse = "\n")
         ) +
         project_theme(config = FIG_CFG) +
         ggplot2::theme(
           # Short labels are already two-line wrapped (contrast_labels_short carries
           # an embedded newline); keep them HORIZONTAL so the 7 wrapped ticks do not
-          # collide (a 45deg rotation of two-line labels overlaps badly).
-          axis.text.x     = ggplot2::element_text(angle = 0, hjust = 0.5, size = 10),
+          # collide (a 45deg rotation of two-line labels overlaps badly). Font size
+          # stays with project_theme (axis_text_size floor), never overridden here.
           legend.position = "bottom"
         )
+
+      # Caption numbers are READ back out of the very table this panel plots (a row/
+      # column lookup, no new statistics), so the prose can never drift from the bars.
+      .cnt <- function(co, col) {
+        v <- de_counts[[col]][match(co, as.character(de_counts$contrast))]
+        if (length(v) == 0 || is.na(v)) NA_integer_ else as.integer(v)
+      }
+      .fmt <- function(x) if (is.na(x)) "n/a" else format(x, big.mark = ",", trim = TRUE)
 
       save_overview(
         plot      = p_de_counts,
@@ -490,31 +522,37 @@ if (!file.exists(master_de_path)) {
         # no contrast= argument -> routes to _overview/
         finding   = sprintf(
           paste0(
-            "DE gene counts per contrast (adj.P < %.2g; NO logFC gate) across %d contrasts. ",
-            "Signed bar chart: positive orange bars = genes up in numerator; negative blue bars = genes up in denominator. ",
-            "IMPORTANT: the master significant flag = adj.P < %.2g ONLY (no |logFC| gate), unlike the ",
-            "per-contrast volcano panels which combine adj.P < %.2g AND |logFC| >= %.1f; ",
-            "volcano counts will therefore be lower than the summary bars here. ",
-            "Interaction contrast (1 df, n=5) is expected to have the fewest significant genes ",
-            "(lowest power): non-significant gene = no detectable cGAS-dependence at n=5, NOT independence."
+            "Heat dominates this design and the cGAS-dependent arm is small and one-sided: ",
+            "WT heat changes %s genes and cGAS-KO heat %s, while the interaction that tests ",
+            "cGAS-dependence of the heat response changes %s -- all %s up, %s down. ",
+            "Every bar prints its own gene count, so that contrast reads without opening the table. ",
+            "Counts pass adj.P < %.2g with no fold-change cut-off; the frozen mouse-to-human ",
+            "projection signature adds |log2FC| >= %.1f and lists 213 up / 126 down for the same ",
+            "WT heat contrast (10_signature/tables/_overview/signature_sizes.csv, gate fdr_logfc) -- ",
+            "a stricter gate on the same statistics, not a different result. ",
+            "The interaction is 1 df at n=5, the least-powered term: %s is a floor. Claim tier: L3."
           ),
-          FDR, length(contrasts_avail), FDR, FDR, LFC
+          .fmt(.cnt("WT_heat", "n_sig")), .fmt(.cnt("KO_heat", "n_sig")),
+          .fmt(.cnt("Interaction", "n_sig")), .fmt(.cnt("Interaction", "n_up")),
+          .fmt(.cnt("Interaction", "n_down")), FDR, LFC,
+          .fmt(.cnt("Interaction", "n_sig"))
         ),
         script    = SCRIPT,
-        fn        = "geom_col (signed bar chart)",
+        fn        = "geom_col + geom_text (signed bars with printed per-direction counts)",
         config_kv = CFG_KV,
         input     = "03_results/master/master_de_genes.csv",
         how_to_read = sprintf(
           paste0(
-            "x = contrast (config order; short display labels); y = gene count (absolute value on axis). ",
-            "Orange bars above zero = up in numerator side; blue bars below zero = up in denominator side. ",
-            "Threshold for this panel: adj.P < %.2g (no logFC filter). ",
-            "Threshold for by_contrast/*/volcano panels: adj.P < %.2g AND |logFC| >= %.1f -- ",
-            "the panels are complementary, NOT contradictory. ",
-            "Interaction contrast is the cGAS-dependence payoff: 1 df, n=5, lowest power. ",
+            "x = comparison (config order, short display labels); y = number of genes. ",
+            "Orange above zero = up, blue below zero = down, both relative to the first-named ",
+            "side of the comparison; for the interaction, up = heat response larger in WT. ",
+            "The printed label on each bar end gives the exact count per direction, including a ",
+            "measured 0. Gate for this panel: adj.P < %.2g, no fold-change cut-off -- the ",
+            "|log2FC| >= %.1f gate used by the projection export is stricter and keeps far fewer genes. ",
+            "A non-significant interaction gene = no detectable cGAS-dependence at n=5, never independence. ",
             "Claim tier: L3. PROVISIONAL sample labels."
           ),
-          FDR, FDR, LFC
+          FDR, LFC
         ),
         config    = FIG_CFG,
         # Wide canvas so the 7 two-line short contrast labels sit side-by-side
