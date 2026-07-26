@@ -26,6 +26,13 @@ All 7 contrasts are built generically from `analysis_config.yaml:design.contrast
 - `tables/by_contrast/<contrast>/md.csv` — source table for each MD panel (x7)
 - `tables/_overview/de_counts_summary.csv` — per-contrast signed DE-count summary table
 
+## Artifacts produced by `02b_cgas_dependence_geometry{,_viz}.R`
+
+- `tables/_overview/cgas_dependence_wide.csv` — one row per gene, the four heat-relevant contrasts side by side (joined on `ensembl`)
+- `tables/_overview/cgas_dependence_stats.csv` — the scalars the two panels print in-panel
+- `figures/_overview/heat_response_wt_vs_ko.*` — WT heat response against cGAS-KO heat response, identity line drawn
+- `figures/_overview/heat_response_shared_vs_cgas_arm.*` — shared temperature axis against the cGAS-dependence axis
+
 ## Headline panels (bespoke, owner-curated)
 
 - `tables/marker_cgas_dependence.csv` — ISG / HIF marker statistics across WT_heat, KO_heat, Interaction
@@ -974,4 +981,176 @@ independence. Claim tier: L3. PROVISIONAL sample labels.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
+
+
+## figures/_overview/heat_response_wt_vs_ko.png
+
+Warming iTregs to 39 °C changes 8,723 genes in WT and 8,901 in
+cGAS-KO, and it changes them in step: per-gene log2 fold changes
+correlate at r = 0.92 (Spearman 0.86) with a best-fit slope of 0.96,
+so the dots pile onto the identity line. 23 genes respond to heat
+more strongly in WT than in cGAS-KO; 0 do the reverse. Distance from
+that line is exactly the WT-minus-cGAS-KO difference, an arithmetic
+identity in this balanced design. The 23-gene arm is ISG-weighted and
+one-sided. Claim tier: L3.
+
+**How to read:** One dot per gene. x = log2 fold change at 39 vs 37 °C in WT, y = the
+same in cGAS-KO, equal scales so the dashed identity line runs at
+45°. Grey = no detectable difference between genotypes at n=5.
+Vermillion = passes the genotype comparison of the heat response at
+adj.P < 0.05, top 10 labelled. On the line = same response with and
+without cGAS. Distance from the line = the WT effect minus the
+cGAS-KO effect, so dots below it responded more strongly in WT. Gate:
+FDR only, no fold-change cut-off. A dot on the line carries no claim
+of cGAS-independence. Claim tier: L3. PROVISIONAL sample labels;
+n=5/group.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_abline (effect-versus-effect scatter, equal axes)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
+
+## figures/_overview/heat_response_shared_vs_cgas_arm.png
+
+Splitting the same fold changes into a shared temperature axis and a
+cGAS-dependence axis separates two threads that barely overlap: the
+two are near-independent (r = -0.08), the shared response is the
+larger of the two (median |log2FC| 0.15 vs 0.06), and 23 of the
+10,418 heat-responsive genes also pass the genotype comparison. 23
+genes respond to heat more strongly in WT than in cGAS-KO; 0 do the
+reverse. The highlighted arm sits entirely above the line.
+Interaction is ISG-weighted and one-sided (23 up, 0 down). Claim
+tier: L3.
+
+**How to read:** One dot per gene. x = heat response pooled over genotypes, y = the WT
+heat response minus the cGAS-KO heat response, both in log2 units.
+The dashed horizontal line is y = 0: a gene on it responded to heat
+identically in the two genotypes. Grey = no detectable difference at
+n=5. Vermillion = passes the genotype comparison of the heat response
+at adj.P < 0.05, top 10 labelled. The y axis is expanded 1.5×
+relative to x, so vertical spread is magnified on purpose. Every
+highlighted gene lies ABOVE the line (stronger in WT) and none below,
+so the arm is directional. Gate: FDR only, no fold-change cut-off.
+Claim tier: L3. PROVISIONAL sample labels; n=5/group.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
+
+## tables/_overview/cgas_dependence_wide.csv
+
+One row per gene with the four heat-relevant contrasts side by side,
+joined on ensembl: the WT and cGAS-KO heat responses, their shared
+average, and the genotype comparison of the heat response. 19,679
+genes, all tested in every contrast. This is the single source for
+both scatter panels and the table in which the panels' geometric
+claim is checkable: wt_minus_ko equals logFC_Interaction gene by
+gene. Claim tier: L3.
+
+**How to read:** Columns: ensembl, gene_symbol, then logFC_/adjP_/sig_ per contrast
+(WT_heat, KO_heat, Interaction, Temp_main). sig_ = adj.P.Val < 0.05
+with NO fold-change cut-off. heat_responsive = significant for heat
+in at least one genotype. cgas_dependent = passes the genotype
+comparison of the heat response. wt_minus_ko = the WT effect minus
+the cGAS-KO effect. interaction_rank orders the cGAS-dependent arm by
+evidence then effect size and is NA elsewhere; the panels label its
+top 10. Positive logFC = higher at 39 °C, except for the genotype
+comparison, where positive = the heat response is larger in WT. Claim
+tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry.R` | `inner_join on ensembl (read-only here; produced by the compute sibling)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/objects/02_de_results.rds` |
+
+## tables/_overview/cgas_dependence_stats.csv
+
+The scalars both scatter panels print in-panel, so no number on a
+figure is computed at draw time: correlations and the regression
+slope between the two per-genotype heat responses, per-contrast
+significant/up/down counts at the FDR-only gate, typical effect
+sizes, the axis half-ranges the panels use, and the residual of the
+WT-minus-cGAS-KO = interaction identity. Claim tier: L3.
+
+**How to read:** Long format: metric, scope, value, note. `scope` names the contrast
+or contrast pair the metric belongs to, so a lookup is (metric,
+scope). pearson_r / spearman_rho / ols_slope describe the
+WT-versus-cGAS-KO scatter. axis_lim rows give the symmetric
+half-range each panel draws, and y_expansion is the ratio between
+them. max_abs_identity_residual is 0 to numerical precision, which is
+what licenses reading distance from the identity line as the genotype
+difference. Every count uses adj.P.Val < de_fdr with no fold-change
+cut-off. Claim tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry.R` | `cor + lm + tallies (read-only here; produced by the compute sibling)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/objects/02_de_results.rds` |
+
+## figures/_overview/heat_response_wt_vs_ko.pdf
+
+Vector companion to figures/_overview/heat_response_wt_vs_ko.png, the
+WT heat response plotted against the cGAS-KO heat response. Same plot
+object, with the dense dot layer rasterised so the file stays small
+and the axes and text stay editable. Claim tier: L3.
+
+**How to read:** Grey = no detectable difference between genotypes at n=5, vermillion
+= passes the genotype comparison of the heat response. On the dashed
+identity line = same response with and without cGAS; distance from it
+= the WT effect minus the cGAS-KO effect. Gate: adj.P < 0.05, no
+fold-change cut-off. 23 genes respond to heat more strongly in WT
+than in cGAS-KO; 0 do the reverse. Claim tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_abline (effect-versus-effect scatter, equal axes)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
+
+## tables/_overview/heat_response_wt_vs_ko.csv
+
+Plotted values behind figures/_overview/heat_response_wt_vs_ko.png:
+one row per gene, the columns the panel draws, sliced from
+cgas_dependence_wide.csv. 19,679 genes. Claim tier: L3.
+
+**How to read:** logFC_ / adjP_ columns are the log2 fold change and BH-adjusted
+p-value per contrast. cgas_dependent = adj.P < 0.05 on the genotype
+comparison of the heat response (FDR only, no fold-change cut-off).
+interaction_rank orders that arm by evidence and is NA elsewhere; the
+panel labels its top 10. Claim tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `save_overview (writes the figure's same-stem source table)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv` |
+
+## figures/_overview/heat_response_shared_vs_cgas_arm.pdf
+
+Vector companion to
+figures/_overview/heat_response_shared_vs_cgas_arm.png, the shared
+temperature axis plotted against the cGAS-dependence axis. Same plot
+object, with the dense dot layer rasterised so the file stays small
+and the axes and text stay editable. Claim tier: L3.
+
+**How to read:** Grey = no detectable difference between genotypes at n=5, vermillion
+= passes the genotype comparison of the heat response. y = 0 marks an
+identical response in both genotypes, and every highlighted gene lies
+above it. Gate: adj.P < 0.05, no fold-change cut-off. 23 genes
+respond to heat more strongly in WT than in cGAS-KO; 0 do the
+reverse. Claim tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_hline (shared-axis versus cGAS-dependence-axis scatter)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
+
+## tables/_overview/heat_response_shared_vs_cgas_arm.csv
+
+Plotted values behind
+figures/_overview/heat_response_shared_vs_cgas_arm.png: one row per
+gene, the columns the panel draws, sliced from
+cgas_dependence_wide.csv. 19,679 genes. Claim tier: L3.
+
+**How to read:** logFC_ / adjP_ columns are the log2 fold change and BH-adjusted
+p-value per contrast. cgas_dependent = adj.P < 0.05 on the genotype
+comparison of the heat response (FDR only, no fold-change cut-off).
+interaction_rank orders that arm by evidence and is NA elsewhere; the
+panel labels its top 10. Claim tier: L3.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `save_overview (writes the figure's same-stem source table)` | `thresholds.de_fdr=0.05; figures.volcano_label_top=10; figures.point_size=2.4; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv` |
 
