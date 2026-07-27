@@ -4,9 +4,9 @@
 # Mouse three-lens heat-response decomposition (stage 12_hsr_decomp).
 #
 # Purpose
-#   Decompose the WT_heat response (WT activated iTregs, 39 C vs 37 C) into:
+#   Decompose the WT_heat response (WT activated iTregs, 39 °C vs 37 °C) into:
 #     1. WT_heat_up, the empirical up signature and activation-heavy by construction;
-#     2. HSR_core / HSR_sensitivity, curated thermal proteostasis lenses;
+#     2. HSR_core / HSR_sensitivity, curated heat-shock-response lenses;
 #     3. TCR_activation, the activation / IEG pole.
 #
 # Inputs (frozen; read only)
@@ -23,11 +23,13 @@
 #   03_results/12_hsr_decomp/tables/hsr_decomp_overlap.csv
 #   03_results/12_hsr_decomp/tables/hsr_decomp_rank_concordance.csv
 #   03_results/12_hsr_decomp/tables/hsr_decomp_conditional.csv
+#   03_results/12_hsr_decomp/tables/hsr_rank_position_panel.csv
+#   03_results/12_hsr_decomp/tables/hsr_lens_membership.csv
 #   03_results/objects/19_hsr_decomp_gsea.rds
 #
 # Method
 #   Uses frozen limma topTables only; no DE model is re-fit. Ranked GSEA uses the
-#   pipeline-standard signed t statistic (NES/t > 0 = up at 39 C) with
+#   pipeline-standard signed t statistic (NES/t > 0 = up at 39 °C) with
 #   clusterProfiler::GSEA(by = "fgsea") on symbol-space TERM2GENE and a low
 #   minGSSize floor so the 47-gene HSR_core is scored. RNG is seeded with GSEA_SEED.
 #   Gene-set attribution and overlap are direct set operations.
@@ -66,14 +68,14 @@ MAX_SIZE <- GSEA_MAX_SIZE
 SEED <- GSEA_SEED
 RANK_COL <- RANK_METRIC
 HONEST_CEILING <- paste(
-  "The HSR lens is proteotoxic-stress-general, not fever-specific;",
-  "37/39 contrast supports correlative temperature-response interpretation, not causal fever claims."
+  "The HSR lens is a curated stress-response reference;",
+  "the 37/39 contrast supports the experimental response interpretation, not a human fever claim."
 )
-ATTR_LEVELS <- c("thermal_HSR", "activation", "shared_both", "neither")
+ATTR_LEVELS <- c("HSR_core_only", "TCR_activation_only", "shared_both", "neither")
 
 message("=================================================================")
 message("19_hsr_decomposition: three-lens decomposition (12_hsr_decomp)")
-message("  rank metric: ", RANK_COL, " (NES/t > 0 = up at 39 C)")
+message("  rank metric: ", RANK_COL, " (NES/t > 0 = up at 39 °C)")
 message("  GSEA seed: ", SEED, "  minGSSize: ", MIN_SIZE, "  maxGSSize: ", MAX_SIZE)
 message("=================================================================")
 
@@ -204,8 +206,8 @@ attrib_for <- function(genes, thermal_set, activation_set) {
   in_hsr <- genes %in% thermal_set
   in_act <- genes %in% activation_set
   dplyr::case_when(
-    in_hsr & !in_act ~ "thermal_HSR",
-    !in_hsr & in_act ~ "activation",
+    in_hsr & !in_act ~ "HSR_core_only",
+    !in_hsr & in_act ~ "TCR_activation_only",
     in_hsr & in_act ~ "shared_both",
     TRUE ~ "neither"
   )
@@ -311,6 +313,78 @@ rank_conc <- rank_conc %>%
 readr::write_csv(round_numeric_cols(rank_conc, sig = 9),
                  file.path(TBL_DIR, "hsr_decomp_rank_concordance.csv"))
 
+# F2 source table: gene-level positions in the WT_heat signed-t ranking plus
+# row-summary and empirical gate-span metadata. The guard proves the plotted gate
+# and frozen WT_heat_up set are the same object.
+md_path <- file.path("03_results", "03_de", "tables", "by_contrast", "WT_heat", "md.csv")
+if (!file.exists(md_path)) stop("[19] Missing WT_heat DE table for rank-position panel: ", md_path)
+md <- readr::read_csv(md_path, show_col_types = FALSE, progress = FALSE) %>%
+  dplyr::arrange(dplyr::desc(.data$t)) %>%
+  dplyr::mutate(rank = dplyr::row_number(),
+                n_ranking = dplyr::n(),
+                rank_pct = 100 * .data$rank / .data$n_ranking)
+if (nrow(md) != 19679L)
+  stop("[19] WT_heat ranking has ", nrow(md), " genes; expected 19679 for the F2 axis.")
+
+gate_md <- md %>%
+  dplyr::filter(.data$adj.P.Val < sig$thresholds$de_fdr,
+                .data$logFC >= sig$thresholds$de_logfc)
+if (nrow(gate_md) != 213L)
+  stop("[19] WT_heat_up gate guard failed: md.csv gives ", nrow(gate_md), " genes, expected 213.")
+if (!setequal(gate_md$gene_symbol, wt_heat_up))
+  stop("[19] WT_heat_up gate guard failed: md.csv gate genes do not match 17_signature_sets.rds.")
+
+gate_deepest <- gate_md %>%
+  dplyr::arrange(dplyr::desc(.data$rank)) %>%
+  dplyr::slice(1)
+if (!identical(gate_deepest$gene_symbol[1], "Cpne6") || gate_deepest$rank[1] != 2010L)
+  stop("[19] WT_heat_up gate span changed: deepest gate gene is ",
+       gate_deepest$gene_symbol[1], " at rank ", gate_deepest$rank[1],
+       "; expected Cpne6 at rank 2010.")
+
+rank_sets <- list(
+  WT_heat_up = wt_heat_up,
+  HSR_core = sets$HSR_core,
+  TCR_activation = sets$TCR_activation
+)
+rank_detail <- dplyr::bind_rows(lapply(names(rank_sets), function(nm) {
+  md %>%
+    dplyr::filter(.data$gene_symbol %in% rank_sets[[nm]]) %>%
+    dplyr::transmute(set = nm, gene = .data$gene_symbol, rank = .data$rank,
+                     rank_pct = .data$rank_pct, t = .data$t,
+                     logFC = .data$logFC, adj.P.Val = .data$adj.P.Val)
+}))
+rank_position_panel <- rank_detail %>%
+  dplyr::left_join(rank_conc %>%
+                     dplyr::transmute(set, n_in_ranking, median_rank,
+                                      median_rank_pct = 100 * .data$median_rank_pct,
+                                      median_t),
+                   by = "set") %>%
+  dplyr::mutate(
+    set_label = dplyr::case_when(
+      .data$set == "WT_heat_up" ~ sprintf("WT_heat_up (gate output; n=%d)", .data$n_in_ranking),
+      .data$set == "HSR_core" ~ sprintf("HSR_core (n=%d)", .data$n_in_ranking),
+      .data$set == "TCR_activation" ~ sprintf("TCR_activation (n=%d)", .data$n_in_ranking),
+      TRUE ~ .data$set
+    ),
+    gate_pass_n = nrow(gate_md),
+    gate_span_n = gate_deepest$rank[1],
+    gate_min_rank = min(gate_md$rank),
+    gate_max_rank = max(gate_md$rank),
+    gate_min_rank_pct = min(gate_md$rank_pct),
+    gate_max_rank_pct = max(gate_md$rank_pct),
+    gate_deepest_gene = gate_deepest$gene_symbol[1],
+    gate_deepest_t = gate_deepest$t[1],
+    gate_deepest_logFC = gate_deepest$logFC[1],
+    gate_inner_pass_n = nrow(gate_md),
+    gate_inner_total_n = gate_deepest$rank[1],
+    ranking_total_n = nrow(md)
+  ) %>%
+  dplyr::arrange(factor(.data$set, levels = c("WT_heat_up", "HSR_core", "TCR_activation")),
+                 .data$rank, .data$gene)
+readr::write_csv(round_numeric_cols(rank_position_panel, sig = 9),
+                 file.path(TBL_DIR, "hsr_rank_position_panel.csv"))
+
 get_nes <- function(gsea_obj, term) {
   rr <- as.data.frame(gsea_obj@result, stringsAsFactors = FALSE)
   rr <- rr[rr$ID == term, , drop = FALSE]
@@ -339,13 +413,91 @@ conditional <- dplyr::bind_rows(conditional_rows)
 readr::write_csv(round_numeric_cols(conditional, sig = 9),
                  file.path(TBL_DIR, "hsr_decomp_conditional.csv"))
 
+# F3 source table: three-set membership counts for WT_heat_up / HSR_core /
+# TCR_activation, with the human WT_heat_up-HSR_core overlap carried only when the
+# external compartment table is present and well-formed.
+overlap_n <- function(a, b) {
+  rr <- overlap_df %>%
+    dplyr::filter((.data$set_a == a & .data$set_b == b) |
+                    (.data$set_a == b & .data$set_b == a))
+  if (nrow(rr) != 1L) stop("[19] Missing overlap row for ", a, " and ", b)
+  rr$n_intersect[1]
+}
+wt_hsr <- overlap_n("WT_heat_up", "HSR_core")
+wt_tcr <- overlap_n("WT_heat_up", "TCR_activation")
+hsr_tcr <- overlap_n("HSR_core", "TCR_activation")
+triple <- length(Reduce(intersect, list(wt_heat_up, sets$HSR_core, sets$TCR_activation)))
+
+human_overlap_path <- "/workspaces/STING-JR/human_treg_arthritis/03_results/10_hsr_lens/tables/hsr_wtheatup_overlap.csv"
+human_wt_heatup_n <- NA_real_
+human_hsr_n <- NA_real_
+human_wt_hsr_intersect <- NA_real_
+human_overlap_note <- "human overlap table absent or malformed"
+if (file.exists(human_overlap_path)) {
+  human_overlap <- tryCatch(readr::read_csv(human_overlap_path, show_col_types = FALSE, progress = FALSE),
+                            error = function(e) NULL)
+  if (!is.null(human_overlap) &&
+      all(c("set_a", "set_b", "n_a", "n_b", "n_intersect") %in% names(human_overlap))) {
+    hr <- human_overlap %>%
+      dplyr::filter((.data$set_a == "WT_heat_up" & .data$set_b == "HSR_core") |
+                      (.data$set_a == "HSR_core" & .data$set_b == "WT_heat_up")) %>%
+      dplyr::slice(1)
+    if (nrow(hr) == 1L) {
+      human_wt_heatup_n <- ifelse(hr$set_a[1] == "WT_heat_up", hr$n_a[1], hr$n_b[1])
+      human_hsr_n <- ifelse(hr$set_a[1] == "HSR_core", hr$n_a[1], hr$n_b[1])
+      human_wt_hsr_intersect <- hr$n_intersect[1]
+      human_overlap_note <- human_overlap_path
+    }
+  }
+}
+
+conditional_wide <- conditional %>%
+  dplyr::select("term", "delta_nes", "nes_uncond", "nes_cond") %>%
+  tidyr::pivot_wider(names_from = "term",
+                     values_from = c("delta_nes", "nes_uncond", "nes_cond"))
+
+membership <- data.frame(
+  component = c("WT_heat_up only", "WT_heat_up ∩ HSR_core", "WT_heat_up ∩ TCR_activation",
+                "HSR_core only", "TCR_activation only", "HSR_core ∩ TCR_activation",
+                "shared by all three"),
+  n_mouse = c(length(wt_heat_up) - wt_hsr - wt_tcr + triple,
+              wt_hsr - triple,
+              wt_tcr - triple,
+              length(sets$HSR_core) - wt_hsr - hsr_tcr + triple,
+              length(sets$TCR_activation) - wt_tcr - hsr_tcr + triple,
+              hsr_tcr - triple,
+              triple),
+  glyph = c("region", "overlap", "overlap", "region", "region", "empty_lens_overlap", "empty_triple"),
+  wt_heat_up_n = length(wt_heat_up),
+  hsr_core_n = length(sets$HSR_core),
+  tcr_activation_n = length(sets$TCR_activation),
+  human_wt_heatup_n = human_wt_heatup_n,
+  human_hsr_n = human_hsr_n,
+  human_wt_hsr_intersect = human_wt_hsr_intersect,
+  human_overlap_source = human_overlap_note,
+  stringsAsFactors = FALSE
+) %>%
+  dplyr::mutate(
+    hsr_core_tcr_activation_intersect = hsr_tcr,
+    conditional_delta_nes_HSR_core = conditional_wide$delta_nes_HSR_core[1],
+    conditional_delta_nes_TCR_activation = conditional_wide$delta_nes_TCR_activation[1],
+    conditional_nes_uncond_HSR_core = conditional_wide$nes_uncond_HSR_core[1],
+    conditional_nes_cond_HSR_core = conditional_wide$nes_cond_HSR_core[1],
+    conditional_nes_uncond_TCR_activation = conditional_wide$nes_uncond_TCR_activation[1],
+    conditional_nes_cond_TCR_activation = conditional_wide$nes_cond_TCR_activation[1]
+  )
+readr::write_csv(round_numeric_cols(membership, sig = 9),
+                 file.path(TBL_DIR, "hsr_lens_membership.csv"))
+
 expected <- file.path(TBL_DIR, c(
   "hsr_decomp_lens_nes.csv",
   "hsr_decomp_wtheatup_attribution.csv",
   "hsr_decomp_summary.csv",
   "hsr_decomp_overlap.csv",
   "hsr_decomp_rank_concordance.csv",
-  "hsr_decomp_conditional.csv"
+  "hsr_decomp_conditional.csv",
+  "hsr_rank_position_panel.csv",
+  "hsr_lens_membership.csv"
 ))
 missing <- expected[!file.exists(expected)]
 if (length(missing) > 0L) stop("[19] Missing expected output(s): ", paste(missing, collapse = ", "))

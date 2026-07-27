@@ -6,7 +6,7 @@ Frozen human up/down set sizes per exported contrast and threshold
 gate, after mouse->human ortholog mapping.
 
 **How to read:** Grouped bars per exported contrast; orange = up (higher in numerator
-/ 39 C), blue = down; numbers = human genes in the frozen set. A
+/ 39 °C), blue = down; numbers = human genes in the frozen set. A
 contrast carried at two threshold gates gets one bar pair per gate,
 with the gate named in square brackets under its tick — the looser
 gate is the sensitivity read, not a second result. This is the
@@ -37,4 +37,27 @@ tier: L3.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/18_projection_export_viz.R` | `ggplot(geom_col)` | `alarm_frac=0.5; babelgene(offline); decisions.projection.ortholog_ambiguity; decisions.projection.secondary_gate` | `03_results/11_projection/tables/_overview/mapping_loss.csv` |
+
+## figures/_overview/projection_overlap_ledger.png
+
+The projected WT_heat and KO_heat up arms share 182 of 235 human
+genes, while both Interaction gates remain disjoint from the heat-set
+union.
+
+**How to read:** Facets separate up and down arms. The left stacked bar partitions the
+WT_heat/KO_heat union into WT_heat-only, shared, and KO_heat-only
+slices; the two right bars show Interaction at the primary and
+secondary gates. Counts are printed on the bars; open diamond means
+structurally empty. The up-arm heat sets share 182 of 235 genes
+(Jaccard 0.774), so their enrichment scores from the same ranked list
+are not independent; seeing both move together is close to guaranteed
+and is not corroboration. The down-arm heat sets share 80 of 127
+genes (Jaccard 0.630). The WT-only up-arm slice has 17 projected
+human genes; 0 map from mouse genes flagged cgas_dependent in
+cgas_dependence_wide.csv. The separate HSR/TCR lens-membership
+question is shown by `hsr_lens_membership`.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/18_projection_export_viz.R` | `ggplot(geom_col + structural-empty glyph)` | `decisions.projection.gate; decisions.projection.secondary_gate; colors.diverging; colors.okabe_ito` | `03_results/11_projection/tables/_overview/projection_overlap_ledger.csv` |
 

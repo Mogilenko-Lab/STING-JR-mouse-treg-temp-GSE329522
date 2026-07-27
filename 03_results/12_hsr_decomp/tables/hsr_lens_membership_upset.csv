@@ -1,0 +1,8 @@
+component,n,degree,is_empty,combo,WT_heat_up,HSR_core,TCR_activation,axis_position,set_size_WT_heat_up,set_size_HSR_core,set_size_TCR_activation
+WT_heat_up only,198,1,FALSE,WT_heat_up,TRUE,FALSE,FALSE,1,213,47,66
+TCR_activation only,54,1,FALSE,TCR_activation,FALSE,FALSE,TRUE,2,213,47,66
+HSR_core only,44,1,FALSE,HSR_core,FALSE,TRUE,FALSE,3,213,47,66
+WT_heat_up ∩ TCR_activation,12,2,FALSE,WT_heat_up&TCR_activation,TRUE,FALSE,TRUE,4,213,47,66
+WT_heat_up ∩ HSR_core,3,2,FALSE,WT_heat_up&HSR_core,TRUE,TRUE,FALSE,5,213,47,66
+HSR_core ∩ TCR_activation,0,2,TRUE,HSR_core&TCR_activation,FALSE,TRUE,TRUE,6,213,47,66
+shared by all three,0,3,TRUE,WT_heat_up&HSR_core&TCR_activation,TRUE,TRUE,TRUE,7,213,47,66

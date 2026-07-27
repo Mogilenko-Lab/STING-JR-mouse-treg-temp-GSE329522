@@ -26,9 +26,12 @@
 #                                     human-set size waterfall (1:1 kept / many-mapped /
 #                                     dropped-no-ortholog): the sanity check that mapping
 #                                     did not decimate the signature
+#   _overview/projection_overlap_ledger
+#                                     overlap ledger for the frozen projected human sets:
+#                                     WT/KO heat-set sharing plus both Interaction gates
 #
 # Inputs (read-only; produced by 18_projection_export.R):
-#   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss}.csv
+#   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss,projection_overlap_ledger}.csv
 #   03_results/human_projection/manifest.csv
 #
 # Run from project root (after 18_projection_export.R):
@@ -76,13 +79,15 @@ gate_role <- function(g) {
 
 f_sizes <- file.path(OV_DIR, "human_signature_sizes.csv")
 f_loss  <- file.path(OV_DIR, "mapping_loss.csv")
-for (f in c(f_sizes, f_loss))
+f_ledger <- file.path(OV_DIR, "projection_overlap_ledger.csv")
+for (f in c(f_sizes, f_loss, f_ledger))
   if (!file.exists(f))
     stop("[18_viz] missing table: ", f,
          " — run 18_projection_export.R first (it only runs after the signature freeze is signed off).")
 
 sizes_df <- readr::read_csv(f_sizes, show_col_types = FALSE, progress = FALSE)
 loss_df  <- readr::read_csv(f_loss,  show_col_types = FALSE, progress = FALSE)
+ledger_df <- readr::read_csv(f_ledger, show_col_types = FALSE, progress = FALSE)
 
 # ============================================================================
 # 2. PLOTTING UNIT = (contrast, gate), ordered as the manifest orders it.
@@ -221,7 +226,7 @@ save_overview(
   script  = SCRIPT, fn = "ggplot(geom_col)",
   config_kv = "decisions.projection.gate; decisions.projection.secondary_gate; colors.diverging",
   input   = f_sizes,
-  how_to_read = paste0("Grouped bars per exported contrast; orange = up (higher in numerator / 39 C), blue ",
+  how_to_read = paste0("Grouped bars per exported contrast; orange = up (higher in numerator / 39 °C), blue ",
                        "= down; numbers = human genes in the frozen set. A contrast carried at two threshold ",
                        "gates gets one bar pair per gate, with the gate named in square brackets under its ",
                        "tick — the looser gate is the sensitivity read, not a second result. This is the ",
@@ -249,6 +254,98 @@ save_overview(
   # Two direction facets x every exported (contrast, gate) unit: the canvas widens with
   # the unit count so the full contrast+gate ticks stay legible and untruncated.
   width = max(11, 3.0 + 1.6 * 2 * length(UNITS)), height = 6.5,
+  config = FIG_CFG)
+
+# ============================================================================
+# 5c. FIGURE (c): projection_overlap_ledger — Panel 1D.
+# ============================================================================
+
+ledger_groups <- unique(ledger_df$display_group)
+ledger_p <- ledger_df %>%
+  dplyr::mutate(
+    display_group = factor(display_group, levels = ledger_groups),
+    direction = factor(direction, levels = c("up", "down"),
+                       labels = c("up arm", "down arm")),
+    component = factor(component,
+                       levels = c("WT_heat only", "WT_heat ∩ KO_heat", "KO_heat only",
+                                  "Interaction")),
+    label = ifelse(glyph == "structural_empty", "0 structural", as.character(n_human))
+  )
+ledger_bars <- ledger_p %>% dplyr::filter(glyph == "bar")
+ledger_empty <- ledger_p %>% dplyr::filter(glyph == "structural_empty")
+
+ledger_cols <- c(
+  "WT_heat only" = POS,
+  "WT_heat ∩ KO_heat" = FIG_CFG$colors$okabe_ito$bluish_green,
+  "KO_heat only" = NEG,
+  "Interaction" = FIG_CFG$colors$okabe_ito$reddish_purple
+)
+
+up_shared <- ledger_df %>%
+  dplyr::filter(direction == "up", component == "WT_heat ∩ KO_heat") %>%
+  dplyr::slice(1)
+down_shared <- ledger_df %>%
+  dplyr::filter(direction == "down", component == "WT_heat ∩ KO_heat") %>%
+  dplyr::slice(1)
+cgas_note <- ledger_df %>%
+  dplyr::filter(direction == "up", component == "WT_heat only") %>%
+  dplyr::slice(1)
+cgas_sentence <- if (!is.na(cgas_note$wt_only_up_cgas_dependent_n[1])) {
+  sprintf("The WT-only up-arm slice has %d projected human genes; %d map from mouse genes flagged cgas_dependent in cgas_dependence_wide.csv.",
+          cgas_note$wt_only_up_n[1], cgas_note$wt_only_up_cgas_dependent_n[1])
+} else {
+  "No cgas_dependent flag was available in the projection tables, so no WT-only cGAS-dependence claim is made."
+}
+
+fig_ledger <- ggplot(ledger_bars, aes(x = display_group, y = n_human, fill = component)) +
+  geom_col(width = 0.68) +
+  geom_text(aes(label = label), position = position_stack(vjust = 0.5),
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.78, colour = "grey10") +
+  geom_point(data = ledger_empty, aes(x = display_group, y = 0, shape = glyph),
+             fill = "white", colour = "grey20", size = 3.4, stroke = 1.1,
+             inherit.aes = FALSE) +
+  geom_text(data = ledger_empty, aes(x = display_group, y = 13, label = label),
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.72, colour = "grey20",
+            inherit.aes = FALSE) +
+  facet_wrap(~ direction, nrow = 1) +
+  scale_fill_manual(values = ledger_cols, name = "Projected set slice",
+                    labels = c("WT_heat only", "shared WT_heat/KO_heat",
+                               "KO_heat only", "Interaction")) +
+  scale_shape_manual(values = c(structural_empty = 5), name = "Zero glyph",
+                     labels = c(structural_empty = "structural empty")) +
+  scale_y_continuous(expand = expansion(mult = c(0.04, 0.12))) +
+  labs(
+    title = "Projected human set ledger",
+    subtitle = "WT_heat and KO_heat overlap after ortholog mapping; Interaction is shown at both exported gates.",
+    x = NULL,
+    y = "human genes",
+    caption = "Counts are read from the frozen one-symbol-per-line signature files. Open diamond = structurally empty set."
+  ) +
+  project_theme(config = FIG_CFG)
+
+purge_figures(STAGE, "projection_overlap_ledger", overview = TRUE, config = FIG_CFG)
+save_overview(
+  fig_ledger, STAGE, "projection_overlap_ledger",
+  table = ledger_df,
+  finding = sprintf(
+    "The projected WT_heat and KO_heat up arms share %d of %d human genes, while both Interaction gates remain disjoint from the heat-set union.",
+    up_shared$heat_shared_n[1], up_shared$heat_union_n[1]
+  ),
+  script = SCRIPT, fn = "ggplot(geom_col + structural-empty glyph)",
+  config_kv = "decisions.projection.gate; decisions.projection.secondary_gate; colors.diverging; colors.okabe_ito",
+  input = f_ledger,
+  how_to_read = sprintf(
+    paste0("Facets separate up and down arms. The left stacked bar partitions the WT_heat/KO_heat union into WT_heat-only, ",
+           "shared, and KO_heat-only slices; the two right bars show Interaction at the primary and secondary gates. ",
+           "Counts are printed on the bars; open diamond means structurally empty. ",
+           "The up-arm heat sets share %d of %d genes (Jaccard %.3f), so their enrichment scores from the same ranked list are not independent; ",
+           "seeing both move together is close to guaranteed and is not corroboration. The down-arm heat sets share %d of %d genes (Jaccard %.3f). %s ",
+           "The separate HSR/TCR lens-membership question is shown by `hsr_lens_membership`."),
+    up_shared$heat_shared_n[1], up_shared$heat_union_n[1], up_shared$heat_jaccard[1],
+    down_shared$heat_shared_n[1], down_shared$heat_union_n[1], down_shared$heat_jaccard[1],
+    cgas_sentence
+  ),
+  width = 12, height = 6.5,
   config = FIG_CFG)
 
 # ============================================================================

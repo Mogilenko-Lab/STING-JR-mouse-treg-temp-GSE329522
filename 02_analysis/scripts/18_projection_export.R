@@ -57,6 +57,7 @@
 #   + stage tables for the viz sibling (one row per (contrast, gate, direction) — EVERY
 #     gate the manifest ships, primary and secondary alike, so the two stay in lockstep):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss}.csv
+#   03_results/11_projection/tables/_overview/projection_overlap_ledger.csv
 #
 # IDEMPOTENT + BYTE-STABLE: pure read->map->round->write. Re-running yields identical bytes.
 #
@@ -327,6 +328,125 @@ readr::write_csv(round_numeric_cols(human_sizes), file.path(ov_dir, "human_signa
 mapping_loss <- dplyr::bind_rows(mapping_loss_rows) %>%
   dplyr::mutate(n_mapped_1to1 = n_mouse - n_unmapped - n_many_mapped)
 readr::write_csv(round_numeric_cols(mapping_loss), file.path(ov_dir, "mapping_loss.csv"))
+
+# Panel 1D source table: count from the frozen text files just written, not from
+# in-memory pre-write vectors. This keeps the plotted ledger tied to the public
+# human_projection contract byte-for-byte.
+read_signature_genes <- function(co, direction, gate) {
+  co_arg <- co
+  direction_arg <- direction
+  gate_arg <- gate
+  rr <- manifest %>%
+    dplyr::filter(.data$contrast == .env$co_arg,
+                  .data$direction == .env$direction_arg,
+                  .data$gate == .env$gate_arg)
+  if (nrow(rr) == 0L) return(character(0))
+  path <- file.path(hp_dir, rr$file[1])
+  if (!file.exists(path)) stop("[18] Manifest points to missing signature file: ", path)
+  x <- readr::read_lines(path, progress = FALSE)
+  sort(unique(x[!is.na(x) & x != ""]))
+}
+
+primary_sets <- list(
+  up = list(
+    WT_heat = read_signature_genes("WT_heat", "up", GATE),
+    KO_heat = read_signature_genes("KO_heat", "up", GATE),
+    Interaction = read_signature_genes("Interaction", "up", GATE)
+  ),
+  down = list(
+    WT_heat = read_signature_genes("WT_heat", "down", GATE),
+    KO_heat = read_signature_genes("KO_heat", "down", GATE),
+    Interaction = read_signature_genes("Interaction", "down", GATE)
+  )
+)
+secondary_sets <- list(
+  up = read_signature_genes("Interaction", "up", SECONDARY_GATE[1]),
+  down = read_signature_genes("Interaction", "down", SECONDARY_GATE[1])
+)
+
+wt_only_up <- setdiff(primary_sets$up$WT_heat, primary_sets$up$KO_heat)
+cgas_source <- file.path("03_results", "03_de", "tables", "_overview", "cgas_dependence_wide.csv")
+cgas_dependent_in_wt_only <- NA_integer_
+cgas_flag_note <- "cgas_dependent flag absent"
+if (file.exists(cgas_source)) {
+  cgas_tbl <- readr::read_csv(cgas_source, show_col_types = FALSE, progress = FALSE)
+  if (all(c("gene_symbol", "cgas_dependent") %in% names(cgas_tbl))) {
+    cgas_join <- omap_out %>%
+      dplyr::filter(.data$human_symbol %in% wt_only_up) %>%
+      dplyr::left_join(cgas_tbl %>% dplyr::select("gene_symbol", "cgas_dependent"),
+                       by = c("mouse_symbol" = "gene_symbol")) %>%
+      dplyr::group_by(.data$human_symbol) %>%
+      dplyr::summarise(cgas_dependent = any(.data$cgas_dependent %in% TRUE, na.rm = TRUE),
+                       .groups = "drop")
+    cgas_dependent_in_wt_only <- sum(cgas_join$cgas_dependent %in% TRUE)
+    cgas_flag_note <- cgas_source
+  }
+}
+
+ledger_rows <- list()
+add_ledger_row <- function(direction, display_group, component, gate, n_human,
+                           glyph = "bar", total_human = NA_integer_,
+                           heat_union_n = NA_integer_, heat_shared_n = NA_integer_,
+                           heat_jaccard = NA_real_,
+                           n_intersect_wt = NA_integer_, n_intersect_ko = NA_integer_,
+                           n_intersect_heat_union = NA_integer_,
+                           underpowered = FALSE) {
+  ledger_rows[[length(ledger_rows) + 1L]] <<- data.frame(
+    direction = direction,
+    display_group = display_group,
+    component = component,
+    gate = gate,
+    n_human = n_human,
+    total_human = total_human,
+    heat_union_n = heat_union_n,
+    heat_shared_n = heat_shared_n,
+    heat_jaccard = heat_jaccard,
+    n_intersect_wt = n_intersect_wt,
+    n_intersect_ko = n_intersect_ko,
+    n_intersect_heat_union = n_intersect_heat_union,
+    glyph = glyph,
+    underpowered = underpowered,
+    wt_only_up_n = length(wt_only_up),
+    wt_only_up_cgas_dependent_n = cgas_dependent_in_wt_only,
+    cgas_flag_source = cgas_flag_note,
+    stringsAsFactors = FALSE
+  )
+}
+
+for (dir in c("up", "down")) {
+  wt <- primary_sets[[dir]]$WT_heat
+  ko <- primary_sets[[dir]]$KO_heat
+  shared <- intersect(wt, ko)
+  heat_union <- union(wt, ko)
+  heat_j <- length(shared) / length(heat_union)
+  add_ledger_row(dir, "WT/KO heat union", "WT_heat only", GATE, length(setdiff(wt, ko)),
+                 total_human = length(wt), heat_union_n = length(heat_union),
+                 heat_shared_n = length(shared), heat_jaccard = heat_j)
+  add_ledger_row(dir, "WT/KO heat union", "WT_heat ∩ KO_heat", GATE, length(shared),
+                 total_human = length(heat_union), heat_union_n = length(heat_union),
+                 heat_shared_n = length(shared), heat_jaccard = heat_j)
+  add_ledger_row(dir, "WT/KO heat union", "KO_heat only", GATE, length(setdiff(ko, wt)),
+                 total_human = length(ko), heat_union_n = length(heat_union),
+                 heat_shared_n = length(shared), heat_jaccard = heat_j)
+
+  for (gate_i in c(GATE, SECONDARY_GATE[1])) {
+    int_set <- if (identical(gate_i, GATE)) primary_sets[[dir]]$Interaction else secondary_sets[[dir]]
+    glyph <- if (identical("down", dir) && length(int_set) == 0L) "structural_empty" else "bar"
+    add_ledger_row(
+      dir, paste0("Interaction\n[", gate_i, "]"), "Interaction", gate_i, length(int_set),
+      glyph = glyph, total_human = length(int_set), heat_union_n = length(heat_union),
+      heat_shared_n = length(shared), heat_jaccard = heat_j,
+      n_intersect_wt = length(intersect(int_set, wt)),
+      n_intersect_ko = length(intersect(int_set, ko)),
+      n_intersect_heat_union = length(intersect(int_set, heat_union)),
+      underpowered = length(int_set) > 0L && length(int_set) < TRIVIAL_MIN
+    )
+  }
+}
+
+projection_ledger <- dplyr::bind_rows(ledger_rows)
+readr::write_csv(round_numeric_cols(projection_ledger),
+                 file.path(ov_dir, "projection_overlap_ledger.csv"))
 
 # ============================================================================
 # 5. SIGNATURES.md — human-readable provenance manifest.
