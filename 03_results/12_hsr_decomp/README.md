@@ -22,6 +22,12 @@ The order to read the panels in: `wtheatup_attribution` → `lens_nes_by_contras
 `hsr_rank_position_panel` → `gate_projection_bridge`, with the three `hsr_lens_membership_*` views
 corroborating the first of those.
 
+Re-render order matters for the bridge census. Refresh the human compartments that publish the
+ranked lists and the JIA `hsr_wtheatup_overlap.csv` first, review/update
+`tables/source_hash_manifest.csv`, then re-run `02_analysis/scripts/19_hsr_decomposition.R`. The
+stage writes `tables/source_reads_observed.csv` and stops if a present sibling artifact differs from
+its pinned hash.
+
 **A standing distinction this whole stage rests on.** A lens enriching in a ranking and that lens
 being contained in a thresholded set are two different measurements. Membership here is always
 counted over the whole arm, never over a leading edge: classifying only leading-edge genes and
@@ -338,6 +344,30 @@ and records a census of zero lists.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/19_hsr_decomposition.R` | `bridge_row()` ledger assembly + read-only ranked-list census | `MIN_RANKED_LEN`; `census_roots` | `03_results/human_projection/signatures/WT_heat/WT_heat_up.txt`; curated human HSR/TCR lens RDS files; `../<compartment>/03_results/*/tables/ranked_*.tsv` |
+
+## tables/source_hash_manifest.csv
+
+This manifest pins every sibling artifact the bridge census is allowed to read.
+
+**How to read:** `source_label` names the dependency as used by the stage, `source_path` is relative
+to the umbrella checkout, and `sha256` is the required byte hash. If a listed sibling file is present
+with a different hash, the compute script stops before updating the bridge tables.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/19_hsr_decomposition.R` | `verify_optional_source_hash()` | pinned SHA-256 | JIA HSR overlap table and human compartment ranked lists |
+
+## tables/source_reads_observed.csv
+
+The bridge census read 19 sibling artifacts, and every present file matched its pinned SHA-256.
+
+**How to read:** One row per optional sibling source considered by the bridge census. `status=read`
+means the file existed, matched `source_hash_manifest.csv`, and was read. A standalone clone without
+siblings records missing optional sources instead of failing.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/19_hsr_decomposition.R` | `record_source()` | `MIN_RANKED_LEN=1000`, pinned SHA-256 | `03_results/12_hsr_decomp/tables/source_hash_manifest.csv` |
 
 ## tables/_overview/hsr_lens_membership_euler.csv
 

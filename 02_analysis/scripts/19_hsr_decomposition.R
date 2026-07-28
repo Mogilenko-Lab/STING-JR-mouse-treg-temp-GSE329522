@@ -52,10 +52,18 @@
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/19_hsr_decomposition.R
+#
+# Coupled re-render order:
+#   1. Re-render the human compartments that publish ranked_*.tsv and the JIA
+#      HSR overlap table consumed below.
+#   2. Review/update 03_results/12_hsr_decomp/tables/source_hash_manifest.csv.
+#   3. Re-run this script, which writes source_reads_observed.csv and stops if a
+#      present sibling artifact differs from its pinned hash.
 # =============================================================================
 
 source("02_analysis/config/config.R")
 source("02_analysis/helpers/de_gsea_helpers.R")
+source("02_analysis/helpers/source_hash_manifest.R")
 
 suppressPackageStartupMessages({
   library(clusterProfiler)
@@ -73,6 +81,15 @@ TBL_DIR <- stage_dir(STAGE, "tables")
 TBL_OVW <- file.path(TBL_DIR, "_overview")
 dir.create(TBL_DIR, recursive = TRUE, showWarnings = FALSE)
 dir.create(TBL_OVW, recursive = TRUE, showWarnings = FALSE)
+SOURCE_MANIFEST <- file.path(TBL_DIR, "source_hash_manifest.csv")
+OBSERVED_SOURCES <- file.path(TBL_DIR, "source_reads_observed.csv")
+source_rows <- list()
+record_source <- function(path, source_label) {
+  rec <- verify_optional_source_hash(path, source_label, SOURCE_MANIFEST,
+                                     root = normalizePath("..", mustWork = FALSE))
+  source_rows[[length(source_rows) + 1L]] <<- rec
+  rec
+}
 
 CONTRASTS <- c("WT_heat", "Temp_main", "KO_heat")
 LENS_TERMS <- c("HSR_core", "HSR_sensitivity", "TCR_activation")
@@ -445,12 +462,14 @@ wt_tcr <- overlap_n("WT_heat_up", "TCR_activation")
 hsr_tcr <- overlap_n("HSR_core", "TCR_activation")
 triple <- length(Reduce(intersect, list(wt_heat_up, sets$HSR_core, sets$TCR_activation)))
 
-human_overlap_path <- "/workspaces/STING-JR/human_treg_arthritis/03_results/10_hsr_lens/tables/hsr_wtheatup_overlap.csv"
+human_overlap_path <- file.path("..", "human_treg_arthritis", "03_results",
+                                "10_hsr_lens", "tables", "hsr_wtheatup_overlap.csv")
 human_wt_heatup_n <- NA_real_
 human_hsr_n <- NA_real_
 human_wt_hsr_intersect <- NA_real_
 human_overlap_note <- "human overlap table absent or malformed"
-if (file.exists(human_overlap_path)) {
+human_overlap_source <- record_source(human_overlap_path, "jia_hsr_wtheatup_overlap")
+if (identical(human_overlap_source$status[1], "read")) {
   human_overlap <- tryCatch(readr::read_csv(human_overlap_path, show_col_types = FALSE, progress = FALSE),
                             error = function(e) NULL)
   if (!is.null(human_overlap) &&
@@ -463,7 +482,7 @@ if (file.exists(human_overlap_path)) {
       human_wt_heatup_n <- ifelse(hr$set_a[1] == "WT_heat_up", hr$n_a[1], hr$n_b[1])
       human_hsr_n <- ifelse(hr$set_a[1] == "HSR_core", hr$n_a[1], hr$n_b[1])
       human_wt_hsr_intersect <- hr$n_intersect[1]
-      human_overlap_note <- human_overlap_path
+      human_overlap_note <- human_overlap_source$source_path[1]
     }
   }
 }
@@ -569,9 +588,12 @@ for (comp in names(census_roots)) {
   files <- sort(list.files(census_roots[[comp]], pattern = "^ranked_.*\\.tsv$",
                            full.names = TRUE))
   for (f in files) {
+    label <- paste("ranked", comp, basename(f), sep = ":")
+    src <- record_source(f, label)
+    if (!identical(src$status[1], "read")) next
     genes <- read_ranked(f)
     if (is.null(genes)) next
-    census_lists[[f]] <- list(compartment = comp, genes = genes)
+    census_lists[[f]] <- list(compartment = comp, genes = genes, sha256 = src$sha256[1])
   }
 }
 n_census_lists <- length(census_lists)
@@ -584,6 +606,8 @@ census_rows <- if (n_census_lists > 0L) {
     g <- census_lists[[f]]$genes
     data.frame(compartment = census_lists[[f]]$compartment,
                list_file = basename(f),
+               source_path = manifest_key(f, root = normalizePath("..", mustWork = FALSE)),
+               sha256 = census_lists[[f]]$sha256,
                list_len = length(g),
                n_eff = length(intersect(human_wt_up, g)),
                stringsAsFactors = FALSE)
@@ -676,6 +700,7 @@ bridge <- dplyr::bind_rows(
 )
 readr::write_csv(round_numeric_cols(bridge, sig = 9),
                  file.path(TBL_OVW, "gate_projection_bridge.csv"))
+readr::write_csv(dplyr::bind_rows(source_rows), OBSERVED_SOURCES)
 
 expected <- c(file.path(TBL_DIR, c(
   "hsr_decomp_lens_nes.csv",
@@ -684,7 +709,8 @@ expected <- c(file.path(TBL_DIR, c(
   "hsr_decomp_overlap.csv",
   "hsr_decomp_rank_concordance.csv",
   "hsr_decomp_conditional.csv",
-  "hsr_lens_membership.csv")),
+  "hsr_lens_membership.csv",
+  "source_reads_observed.csv")),
   file.path(TBL_OVW, c("hsr_rank_position_panel.csv", "gate_projection_bridge.csv")))
 missing <- expected[!file.exists(expected)]
 if (length(missing) > 0L) stop("[19] Missing expected output(s): ", paste(missing, collapse = ", "))
