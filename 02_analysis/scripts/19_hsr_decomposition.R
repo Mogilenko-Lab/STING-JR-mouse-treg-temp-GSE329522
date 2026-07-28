@@ -4,17 +4,26 @@
 # Mouse three-lens heat-response decomposition (stage 12_hsr_decomp).
 #
 # Purpose
-#   Decompose the WT_heat response (WT activated iTregs, 39 °C vs 37 °C) into:
-#     1. WT_heat_up, the empirical up signature and activation-heavy by construction;
+#   Ask what the thresholded WT_heat response (WT activated iTregs, 39 °C vs 37 °C)
+#   is made of, by measuring it against two curated lenses:
+#     1. WT_heat_up, the empirical up signature produced by the export gate;
 #     2. HSR_core / HSR_sensitivity, curated heat-shock-response lenses;
 #     3. TCR_activation, the activation / IEG pole.
+#   Membership is counted over the WHOLE arm, never over a leading edge: classifying
+#   only leading-edge genes and re-testing those subsets would test genes selected
+#   because they enriched. What the set is made of and what the response enriches for
+#   are two different measurements and this script keeps them apart.
 #
 # Inputs (frozen; read only)
 #   03_results/objects/02_de_results.rds
 #   03_results/objects/17_signature_sets.rds
 #   00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds
+#   00_data/references/gene_sets/temp_hsr_lens/temp_hsr_human_lens.rds
 #   00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds
+#   00_data/references/gene_sets/tcr_activation_lens/tcr_activation_human.rds
 #   00_data/references/gene_sets/temp_hsr_lens/temp_hsr_gene_taxonomy.csv
+#   03_results/human_projection/signatures/WT_heat/WT_heat_up.txt
+#   ../<compartment>/03_results/*/tables/ranked_*.tsv   (optional; census only)
 #
 # Outputs
 #   03_results/12_hsr_decomp/tables/hsr_decomp_lens_nes.csv
@@ -23,8 +32,9 @@
 #   03_results/12_hsr_decomp/tables/hsr_decomp_overlap.csv
 #   03_results/12_hsr_decomp/tables/hsr_decomp_rank_concordance.csv
 #   03_results/12_hsr_decomp/tables/hsr_decomp_conditional.csv
-#   03_results/12_hsr_decomp/tables/hsr_rank_position_panel.csv
 #   03_results/12_hsr_decomp/tables/hsr_lens_membership.csv
+#   03_results/12_hsr_decomp/tables/hsr_rank_position_panel.csv
+#   03_results/12_hsr_decomp/tables/_overview/gate_projection_bridge.csv
 #   03_results/objects/19_hsr_decomp_gsea.rds
 #
 # Method
@@ -59,7 +69,10 @@ options(stringsAsFactors = FALSE)
 STAGE <- "12_hsr_decomp"
 SCRIPT <- "02_analysis/scripts/19_hsr_decomposition.R"
 TBL_DIR <- stage_dir(STAGE, "tables")
+# Same-stem neighbours of the _overview figures live beside them, under tables/_overview/.
+TBL_OVW <- file.path(TBL_DIR, "_overview")
 dir.create(TBL_DIR, recursive = TRUE, showWarnings = FALSE)
+dir.create(TBL_OVW, recursive = TRUE, showWarnings = FALSE)
 
 CONTRASTS <- c("WT_heat", "Temp_main", "KO_heat")
 LENS_TERMS <- c("HSR_core", "HSR_sensitivity", "TCR_activation")
@@ -489,7 +502,178 @@ membership <- data.frame(
 readr::write_csv(round_numeric_cols(membership, sig = 9),
                  file.path(TBL_DIR, "hsr_lens_membership.csv"))
 
-expected <- file.path(TBL_DIR, c(
+# =============================================================================
+# The handoff ledger: mouse gate -> human projection -> what is testable downstream.
+#
+# Two numbers travel through this project side by side and are easy to conflate:
+# the 213-gene mouse gate output and the 199-gene human set it becomes. This table
+# reconciles them, carries each side's curated-lens membership against the SAME two
+# lenses in each species, and then measures how much of the human set is actually
+# present in the human ranked lists that consume it.
+#
+# The downstream census is a read-only sweep of the sibling compartments and is
+# OPTIONAL: a standalone clone of this repository has no siblings, so the census
+# degrades to zero lists and the panel says so rather than failing. Whatever it
+# finds is recorded with its file count and length range, so the number is
+# checkable rather than remembered.
+# =============================================================================
+human_set_path <- file.path("03_results", "human_projection", "signatures",
+                            "WT_heat", "WT_heat_up.txt")
+if (!file.exists(human_set_path))
+  stop("[19] Missing frozen human projection set: ", human_set_path)
+human_wt_up <- unique(trimws(readLines(human_set_path, warn = FALSE)))
+human_wt_up <- human_wt_up[nzchar(human_wt_up)]
+if (length(human_wt_up) == 0L) stop("[19] Human WT_heat_up set is empty: ", human_set_path)
+
+hsr_human_path <- "00_data/references/gene_sets/temp_hsr_lens/temp_hsr_human_lens.rds"
+tcr_human_path <- "00_data/references/gene_sets/tcr_activation_lens/tcr_activation_human.rds"
+for (p in c(hsr_human_path, tcr_human_path))
+  if (!file.exists(p)) stop("[19] Missing frozen human lens: ", p)
+clean_set <- function(x) {
+  x <- unique(as.character(x))
+  x[!is.na(x) & nzchar(x)]
+}
+human_lens <- list(
+  HSR_core = clean_set(readRDS(hsr_human_path)$HSR_core),
+  TCR_activation = clean_set(readRDS(tcr_human_path)$TCR_activation)
+)
+
+# Read-only census of every ranked list the human compartments have published.
+# Column 1 is the gene symbol; the files carry no header.
+census_roots <- c(
+  human_treg_arthritis = file.path("..", "human_treg_arthritis", "03_results",
+                                   "03_pseudobulk", "tables"),
+  human_pbmc_febrile   = file.path("..", "human_pbmc_febrile", "03_results",
+                                   "03_pseudobulk", "tables"),
+  human_ra_synovium    = file.path("..", "human_ra_synovium", "03_results",
+                                   "04_pseudobulk_de", "tables"),
+  sting_positive_control = file.path("..", "sting_positive_control", "03_results",
+                                     "03_pseudobulk", "tables")
+)
+# A ranked list shorter than this is a partial write, not a short list; skip it
+# rather than let a half-written file move a published count.
+MIN_RANKED_LEN <- 1000L
+read_ranked <- function(path) {
+  con <- tryCatch(readr::read_tsv(path, col_names = FALSE, col_types = readr::cols(.default = "c"),
+                                  progress = FALSE),
+                  error = function(e) NULL)
+  if (is.null(con) || nrow(con) < MIN_RANKED_LEN) return(NULL)
+  clean_set(trimws(con[[1]]))
+}
+census_lists <- list()
+for (comp in names(census_roots)) {
+  files <- sort(list.files(census_roots[[comp]], pattern = "^ranked_.*\\.tsv$",
+                           full.names = TRUE))
+  for (f in files) {
+    genes <- read_ranked(f)
+    if (is.null(genes)) next
+    census_lists[[f]] <- list(compartment = comp, genes = genes)
+  }
+}
+n_census_lists <- length(census_lists)
+if (n_census_lists == 0L)
+  message("[19] Downstream census: no ranked list found under ../<compartment>/03_results/. ",
+          "The bridge ledger will record the mouse->human half only.")
+
+census_rows <- if (n_census_lists > 0L) {
+  per_list <- dplyr::bind_rows(lapply(names(census_lists), function(f) {
+    g <- census_lists[[f]]$genes
+    data.frame(compartment = census_lists[[f]]$compartment,
+               list_file = basename(f),
+               list_len = length(g),
+               n_eff = length(intersect(human_wt_up, g)),
+               stringsAsFactors = FALSE)
+  }))
+  per_list %>%
+    dplyr::group_by(.data$compartment) %>%
+    dplyr::summarise(n_lists = dplyr::n(),
+                     list_len_min = min(.data$list_len),
+                     list_len_max = max(.data$list_len),
+                     n_eff_min = min(.data$n_eff),
+                     n_eff_max = max(.data$n_eff),
+                     .groups = "drop")
+} else {
+  data.frame(compartment = character(), n_lists = integer(),
+             list_len_min = integer(), list_len_max = integer(),
+             n_eff_min = integer(), n_eff_max = integer(),
+             stringsAsFactors = FALSE)
+}
+common_universe <- if (n_census_lists > 0L)
+  Reduce(intersect, lapply(census_lists, `[[`, "genes")) else character(0)
+n_testable_everywhere <- length(intersect(human_wt_up, common_universe))
+
+bridge_row <- function(block, step, side, label, n_genes, denominator, note,
+                       n_lists = NA_integer_, list_len_min = NA_integer_,
+                       list_len_max = NA_integer_) {
+  data.frame(
+    block = block, step = step, side = side, label = label,
+    n_genes = as.integer(n_genes),
+    denominator = as.integer(denominator),
+    pct_of_denominator = if (is.na(denominator) || denominator == 0L) NA_real_
+                         else 100 * n_genes / denominator,
+    n_lists = as.integer(n_lists),
+    list_len_min = as.integer(list_len_min),
+    list_len_max = as.integer(list_len_max),
+    note = note,
+    stringsAsFactors = FALSE
+  )
+}
+
+bridge <- dplyr::bind_rows(
+  bridge_row("funnel", 1L, "mouse", "WT_heat ranking (every measured gene)",
+             nrow(md), nrow(md),
+             "signed-t ranking of the WT 39-vs-37 °C contrast"),
+  bridge_row("funnel", 2L, "mouse", "inside the gate's rank span (rank 1 to 2,010)",
+             gate_deepest$rank[1], nrow(md),
+             sprintf("deepest admitted gene %s at rank %d", gate_deepest$gene_symbol[1],
+                     gate_deepest$rank[1])),
+  bridge_row("funnel", 3L, "mouse", "passed the gate: WT_heat_up",
+             nrow(gate_md), gate_deepest$rank[1],
+             sprintf("gate is adj.P < %g and logFC >= %g",
+                     sig$thresholds$de_fdr, sig$thresholds$de_logfc)),
+  bridge_row("funnel", 4L, "human", "after mouse-to-human ortholog projection",
+             length(human_wt_up), nrow(gate_md),
+             "frozen at 03_results/human_projection/signatures/WT_heat/WT_heat_up.txt"),
+  bridge_row("funnel", 5L, "human",
+             sprintf("present in every one of the %d human ranked lists", n_census_lists),
+             n_testable_everywhere, length(human_wt_up),
+             if (n_census_lists > 0L)
+               sprintf("common universe across the %d lists is %d symbols",
+                       n_census_lists, length(common_universe))
+             else "no ranked list was reachable from this checkout",
+             n_lists = n_census_lists),
+  bridge_row("lens", 3L, "mouse",
+             sprintf("of WT_heat_up, in curated HSR_core (%d genes)", length(sets$HSR_core)),
+             wt_hsr, nrow(gate_md), "mouse lens, direct set membership"),
+  bridge_row("lens", 3L, "mouse",
+             sprintf("of WT_heat_up, in curated TCR_activation (%d genes)",
+                     length(sets$TCR_activation)),
+             wt_tcr, nrow(gate_md), "mouse lens, direct set membership"),
+  bridge_row("lens", 4L, "human",
+             sprintf("of WT_heat_up, in curated HSR_core (%d genes)",
+                     length(human_lens$HSR_core)),
+             length(intersect(human_wt_up, human_lens$HSR_core)), length(human_wt_up),
+             "human ortholog lens, direct set membership"),
+  bridge_row("lens", 4L, "human",
+             sprintf("of WT_heat_up, in curated TCR_activation (%d genes)",
+                     length(human_lens$TCR_activation)),
+             length(intersect(human_wt_up, human_lens$TCR_activation)), length(human_wt_up),
+             "human ortholog lens, direct set membership"),
+  if (nrow(census_rows) > 0L) dplyr::bind_rows(lapply(seq_len(nrow(census_rows)), function(i) {
+    r <- census_rows[i, ]
+    dplyr::bind_rows(
+      bridge_row("downstream_min", 5L, "human", r$compartment, r$n_eff_min,
+                 length(human_wt_up), "fewest of the 199 present in any one of this compartment's lists",
+                 n_lists = r$n_lists, list_len_min = r$list_len_min, list_len_max = r$list_len_max),
+      bridge_row("downstream_max", 5L, "human", r$compartment, r$n_eff_max,
+                 length(human_wt_up), "most of the 199 present in any one of this compartment's lists",
+                 n_lists = r$n_lists, list_len_min = r$list_len_min, list_len_max = r$list_len_max))
+  })) else NULL
+)
+readr::write_csv(round_numeric_cols(bridge, sig = 9),
+                 file.path(TBL_OVW, "gate_projection_bridge.csv"))
+
+expected <- c(file.path(TBL_DIR, c(
   "hsr_decomp_lens_nes.csv",
   "hsr_decomp_wtheatup_attribution.csv",
   "hsr_decomp_summary.csv",
@@ -497,11 +681,17 @@ expected <- file.path(TBL_DIR, c(
   "hsr_decomp_rank_concordance.csv",
   "hsr_decomp_conditional.csv",
   "hsr_rank_position_panel.csv",
-  "hsr_lens_membership.csv"
-))
+  "hsr_lens_membership.csv")),
+  file.path(TBL_OVW, "gate_projection_bridge.csv"))
 missing <- expected[!file.exists(expected)]
 if (length(missing) > 0L) stop("[19] Missing expected output(s): ", paste(missing, collapse = ", "))
 
+message(sprintf("[19] Bridge ledger: mouse gate %d -> human %d; HSR_core %d mouse / %d human; ",
+                nrow(gate_md), length(human_wt_up), wt_hsr,
+                length(intersect(human_wt_up, human_lens$HSR_core))),
+        sprintf("TCR_activation %d mouse / %d human; %d of %d testable across %d ranked lists.",
+                wt_tcr, length(intersect(human_wt_up, human_lens$TCR_activation)),
+                n_testable_everywhere, length(human_wt_up), n_census_lists))
 message("[19] COMPLETE: wrote ", length(expected), " tables and 03_results/objects/19_hsr_decomp_gsea.rds")
 print(summary_df)
 print(dplyr::filter(lens_nes, contrast == "WT_heat", term %in% c("HSR_core", "TCR_activation")))
