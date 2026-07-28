@@ -581,8 +581,8 @@ def _(attribution_colors, attribution_order, go, mo, wtheatup_attribution):
     )
     _fig.update_yaxes(range=[0, int(_d["denominator"].iloc[0]) * 1.12])
     _cap = mo.md(
-        "Counting genes makes the list look activation-heavy: 12 activation genes, "
-        "3 thermal-HSR genes, no shared genes, and 198 genes in neither curated lens."
+        "Counting genes puts almost the whole list outside both curated lenses: "
+        "198 in neither, 12 in the activation lens, 3 in the HSR core, none in both."
     )
     mo.vstack([mo.ui.plotly(_fig), _cap])
     return
@@ -682,10 +682,13 @@ def _(hsr_decomp_conditional, hsr_decomp_overlap, mo):
         f"""
         **Reading the panels.** The membership panel and the ranking panel answer
         different questions. Counting genes says the thresholded `WT_heat_up` list is
-        activation-heavy. Ranking all genes says `HSR_core` is the stronger coordinated
-        program. The independence checks match that reading: `HSR_core` and
-        activation share {int(_ov['n_intersect'])} genes, and conditioning on
-        activation leaves `HSR_core` at {float(_cond['nes_uncond']):.2f} →
+        mostly outside both curated lenses — the largest bar is "neither" at 198 of
+        213, and activation accounts for 12. Ranking all genes says `HSR_core` is the
+        stronger coordinated program. Enrichment of a lens and membership of that lens
+        in the list are separate measurements, so neither panel overrides the other.
+        The independence checks match that reading: `HSR_core` and activation share
+        {int(_ov['n_intersect'])} genes, and conditioning on activation leaves
+        `HSR_core` at {float(_cond['nes_uncond']):.2f} →
         {float(_cond['nes_cond']):.2f}.
         """
     )
