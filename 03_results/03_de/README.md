@@ -14,7 +14,7 @@ All 7 contrasts are built generically from `analysis_config.yaml:design.contrast
 | Interaction | (WT\_39 − cGASKO\_39) − (WT\_37 − cGASKO\_37) | **THE cGAS-dependence test** — 1 df interaction; underpowered at n=5 |
 | Geno_at_39 | WT\_39 − cGASKO\_39 | Genotype effect under heat |
 | Geno_at_37 | WT\_37 − cGASKO\_37 | Genotype effect at baseline |
-| Temp_main | ½(WT\_39+cGASKO\_39) − ½(WT\_37+cGASKO\_37) | Pooled/marginal average heat program — NOT the cGAS-dependence test |
+| Temp_main | ½(WT\_39+cGASKO\_39) − ½(WT\_37+cGASKO\_37) | Pooled/marginal average 39-vs-37 °C response — NOT the cGAS-dependence test |
 | Geno_main | ½(WT\_37+WT\_39) − ½(cGASKO\_37+cGASKO\_39) | Pooled/marginal average genotype effect |
 
 ## Artifacts produced by `02_de_limma_trend_viz.R`
