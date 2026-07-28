@@ -517,7 +517,7 @@ if (nrow(sz_df) > 0L) {
       finding   = paste0(
         "GATOM metabolic module size (reaction edges) per contrast × network: ",
         "contrasts with the most connected metabolic sub-networks have the highest edge count; ",
-        "WT_heat and Temp_main are expected to show the largest modules (heat program recruits ",
+        "WT_heat and Temp_main are expected to show the largest modules (the 39 °C contrast recruits ",
         "glycolytic + mitochondrial enzymes). Claim tier L3."),
       script    = SCRIPT,
       fn        = "module_sizes_bar",

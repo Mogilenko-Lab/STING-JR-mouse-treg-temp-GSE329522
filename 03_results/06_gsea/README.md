@@ -54,7 +54,7 @@ saved as a `.pdf` (vector) and `.png` (raster) pair. The wildcard `<contrast>` r
 | `Interaction` | Heat × genotype interaction (cGAS-dependence of the heat response) | 1-df interaction term; the cGAS-dependence payoff; lowest power (n=5) |
 | `Geno_at_39` | Genotype (WT vs cGAS-KO) @ 39 °C | Genotype simple effect at heat |
 | `Geno_at_37` | Genotype (WT vs cGAS-KO) @ 37 °C | Genotype simple effect at baseline |
-| `Temp_main` | Heat main effect (pooled genotypes) | Pooled heat programme; HIF/glycolysis arm clearest here |
+| `Temp_main` | Heat main effect (pooled genotypes) | Pooled 39 °C-versus-37 °C response; HIF/glycolysis arm clearest here |
 | `Geno_main` | Genotype main effect (pooled temps) | Average cGAS effect across temperatures |
 
 The wildcard `<DB>` ranges over:
@@ -575,4 +575,3 @@ title.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/12_gsea_viz.R` | `save_overview / save_figure` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.5; colors.diverging` | `03_results/master/master_gsea_table.csv` |
-

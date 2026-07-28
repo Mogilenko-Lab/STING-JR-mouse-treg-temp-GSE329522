@@ -43,7 +43,7 @@
 ## 100%% sign agreement (logged below). Because @result is taken verbatim from the
 ## master, the figures carry the master's own statistics regardless.
 ##
-## House constraints (non-negotiable in all captions — see plan INDEX §2):
+## House constraints (non-negotiable in all captions):
 ##   * Never "cGAS-independent" -> say "no detectable cGAS-dependence at n=5"
 ##   * Never crown HIF1alpha/HIF2alpha as the driver
 ##   * Lombardi-2022 (48-gene) is the orthogonal HIF check; contrasted with hand-made 16-gene
@@ -599,7 +599,7 @@ write_caption(
   config_kv  = CFG_KV,
   input      = "03_results/master/master_gsea_table.csv",
   how_to_read = paste0(
-    "NES > 0 = enriched in numerator side of the contrast (hot=39 degrees C, WT genotype). ",
+    "NES > 0 = enriched in numerator side of the contrast (39 degrees C or WT genotype). ",
     "NES < 0 = enriched in denominator side (cold=37 degrees C, cGASKO). ",
     "Glyph convention: orange = up/positive, blue = down/negative (consistent with colors.diverging in config). ",
     "* or filled point = padj < ", FDR, ". ",

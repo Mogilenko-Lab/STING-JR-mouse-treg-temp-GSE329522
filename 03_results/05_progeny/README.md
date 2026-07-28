@@ -213,7 +213,7 @@ key pathways (Hypoxia/JAK-STAT/NFkB/TNFa) marked with bold outline. Compare with
 WT_heat to identify cGAS-dependent attenuation of pathway responses. PROVISIONAL;
 n=5/group.
 
-**How to read:** Same layout as `WT_heat/progeny_barplot`. Fill: diverging (orange = positive/numerator; steelblue4 = negative). Bold outline = key pathways. `*` = raw p < 0.05. Positive score = pathway more active in KO_heat numerator. Hypoxia expected to remain positive (cGAS-independent thermal program); JAK-STAT expected to be reduced vs. WT_heat (cGAS-dependent attenuation). Claim tier: L3 (provisional, n=5/group).
+**How to read:** Same layout as `WT_heat/progeny_barplot`. Fill: diverging (orange = positive/numerator; steelblue4 = negative). Bold outline = key pathways. `*` = raw p < 0.05. Positive score = pathway more active in KO_heat numerator. Hypoxia expected to remain positive in the cGAS-KO 39 °C contrast; JAK-STAT expected to be reduced vs. WT_heat (cGAS-dependent attenuation). Claim tier: L3 (provisional, n=5/group).
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -532,4 +532,3 @@ for the Temp_main contrast (genotype-averaged thermal TF response).
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/13_activity_viz.R` | `.barplot_tf / save_overview` | `thresholds.gsea_fdr=0.05; figures.top_n=20` | `03_results/objects/03_tf_collectri.rds` |
-

@@ -106,7 +106,7 @@ connected subgraph, NOT a direct measurement of metabolic flux.
 GATOM metabolic module size (reaction edges) per contrast × network:
 contrasts with the most connected metabolic sub-networks have the
 highest edge count; WT_heat and Temp_main are expected to show the
-largest modules (heat program recruits glycolytic + mitochondrial
+largest modules (the 39 °C contrast recruits glycolytic + mitochondrial
 enzymes). Claim tier L3.
 
 **How to read:** Horizontal bar = one (contrast × network) combination; longer bar =
@@ -166,4 +166,3 @@ pending collaborator sample sheet.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/14_gatom_viz.R` | `module_summary_panel` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds; 03_results/objects/10_gatom_KO_heat.rds; 03_results/objects/10_gatom_Interaction.rds; 03_results/objects/10_gatom_Temp_main.rds` |
-
