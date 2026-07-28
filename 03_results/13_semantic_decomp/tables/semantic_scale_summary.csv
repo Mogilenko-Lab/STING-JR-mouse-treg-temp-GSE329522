@@ -1,0 +1,13 @@
+"quantity","value"
+"query_mean_sim",0.244174194340972
+"uniform_null_mean",0.219502387879875
+"uniform_null_sd",0.0075371515298825
+"z_vs_uniform",3.2733594864427
+"p_vs_uniform",0.0476190476190476
+"matched_null_mean",0.233336287636945
+"matched_null_sd",0.00815103962300086
+"z_vs_matched",1.329634893866
+"p_vs_matched",0.142857142857143
+"query_med_terms_per_gene",9
+"matched_null_med_terms_per_gene",9.1
+"uniform_null_med_terms_per_gene",3.85

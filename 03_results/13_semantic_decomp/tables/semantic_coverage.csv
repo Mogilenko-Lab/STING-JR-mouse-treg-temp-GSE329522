@@ -1,0 +1,7 @@
+"step","label","n_genes","denominator","genes","fraction"
+1,"WT_heat_up, nominal",213,213,NA,1
+2,"with GO BP annotation",196,213,NA,0.92018779342723
+3,"no BP: carries only CC or MF terms",4,213,"Cystm1; Dmwd; P4ha2; Ppef1",0.0187793427230047
+4,"no BP: predicted gene or pseudogene",10,213,"1110002J07Rik; 4930459C07Rik; A530013C23Rik; Gm12708; Gm36070; Gm43430; Gm44851; Gm7334; Gm9745; Rpl10a-ps2",0.0469483568075117
+5,"no BP: no GO annotation at all",3,213,"Fam160a1; Fam71b; Tctex1d2",0.0140845070422535
+6,"recovered if IEA annotation were kept",1,213,"Ppef1",0.00469483568075117

@@ -117,6 +117,49 @@ gsea:
   eps: 0                    # 0 => exact (machine-precision) fgsea p-values
 
 # =============================================================================
+# SEMANTIC-SIMILARITY COMPOSITION (GOSemSim; stage 13_semantic_decomp)
+# =============================================================================
+# Wang similarity is graph-based on the GO DAG and needs no corpus IC, so it does
+# not shift when the annotation corpus is updated. BMA (best-match average) is the
+# gene-level combiner: a gene carries many terms and BMA scores each term against
+# its best partner, so a gene is not penalised for breadth.
+#
+# depth_bands is the load-bearing parameter. The gate that produced WT_heat_up
+# thresholds effect size, which selects well-studied genes: on curated evidence its
+# members carry a median 9 GO BP terms against the expressed background's 4.
+# A better-annotated gene has more chances to sit near any reference set, so every
+# null here matches the query's terms-per-gene distribution band by band, and every
+# percentile is taken within a gene's own band. The uniform null is computed too,
+# and reported beside the matched one, to show the size of that confound rather
+# than to support any claim.
+
+semantic:
+  ontology: "BP"                  # BP carries process semantics; MF/CC do not
+  measure: "Wang"                 # graph-based, IC-free, corpus-stable
+  combine: "BMA"                  # gene-level best-match average, term-count weighted
+  # GOSemSim's gene-level entry points drop electronically inferred annotations by
+  # default and this stage follows that. It is also the conservative choice here:
+  # poorly studied genes lean on IEA more than well studied ones, so keeping it would
+  # narrow the measured depth gap for a reason that has nothing to do with biology.
+  drop_evidence: ["IEA"]
+  seed: 20260728
+  depth_bands: [0, 3, 6, 10, 15, 22, 32, 50]   # terms-per-gene strata; open upper bin
+  n_null_uniform: 20              # uniform-random size-matched sets (confounded; shown)
+  n_null_matched: 20              # annotation-depth-matched sets (the honest floor)
+  n_theme_subsamples: 5           # subsamples per oversized single-term reference
+  bg_sample_size: 2000            # background genes for lens-proximity percentiles
+  max_k_partition: 15             # silhouette sweep upper bound
+  # Single-GO-term reference sets, used as the coherent end of the coherence scale.
+  # Chosen to span a tight process and progressively broader ones, so the scale has
+  # interior points and not only a ceiling.
+  theme_references:
+    - "GO:0009408"                # response to heat
+    - "GO:0006986"                # response to unfolded protein
+    - "GO:0034976"                # response to endoplasmic reticulum stress
+    - "GO:0001666"                # response to hypoxia
+    - "GO:0006954"                # inflammatory response
+
+# =============================================================================
 # CORESH RUN PARAMETERS
 # =============================================================================
 
@@ -317,6 +360,16 @@ stages:
   - id: "12_hsr_decomp"
     title: "Heat-response three-lens decomposition"
     purpose: "Decompose the WT 39-vs-37 response into thermal HSR vs TCR/activation vs shared, using the curated HSR core, the TCR/IEG activation panel, and the empirical WT_heat_up; leading-edge attribution + gene overlap + rank concordance + competitive/conditional GSEA."
+  # --- Ontology-side composition of the same gate set. Stage 12 asks what fraction of
+  #     WT_heat_up falls inside curated lenses (a binary membership question, and 191 of
+  #     213 fall outside all four). This stage asks a different question of the same 213
+  #     genes using GO BP semantic similarity: how internally coherent is the set, can it
+  #     be split into modules at all, and for the genes no lens contains, how close does
+  #     each one's annotation sit to each lens. Nothing here reads expression, so the
+  #     partition can never be derived from an enrichment.
+  - id: "13_semantic_decomp"
+    title: "Semantic composition of the projection gate set"
+    purpose: "GO BP semantic-similarity composition of WT_heat_up (GOSemSim Wang/BMA): annotation coverage ladder, set coherence against annotation-depth-matched and single-GO-term references, partition diagnostics, and graded per-gene proximity to each curated lens with depth-stratified background percentiles."
 
 # =============================================================================
 # INPUT/OUTPUT PATHS (relative to project root)
