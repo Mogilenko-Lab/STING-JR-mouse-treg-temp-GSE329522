@@ -431,7 +431,7 @@ if (nrow(evidence) == 0L)
 #    This is the single most publication-relevant summary: does the Interaction
 #    contrast separate the two arms? (IFN expected significant+positive; HIF
 #    expected NS / near-zero.) We summarise per (arm, method) on the Interaction
-#    contrast specifically, plus the WT_heat/KO_heat heat-program read.
+#    contrast specifically, plus the WT_heat/KO_heat 39-vs-37 °C read.
 # ============================================================================
 
 message("[2] Summarising the Interaction (cGAS-dependence) readout per arm ...")

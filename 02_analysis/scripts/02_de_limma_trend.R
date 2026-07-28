@@ -17,7 +17,7 @@
 #   Interaction= (WT_39-cGASKO_39) - (WT_37-cGASKO_37)  cGAS-dependence test (1 df)
 #   Geno_at_39 = WT_39 - cGASKO_39     genotype effect under heat
 #   Geno_at_37 = WT_37 - cGASKO_37     genotype effect at baseline
-#   Temp_main  = ½(WT_39+cGASKO_39) - ½(WT_37+cGASKO_37)  pooled average heat program
+#   Temp_main  = ½(WT_39+cGASKO_39) - ½(WT_37+cGASKO_37)  pooled average 39-vs-37 °C response
 #   Geno_main  = ½(WT_37+WT_39) - ½(cGASKO_37+cGASKO_39)  pooled average genotype effect
 #
 # Outputs:  03_results/objects/02_de_results.rds
