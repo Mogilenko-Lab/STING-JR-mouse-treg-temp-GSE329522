@@ -56,6 +56,7 @@ def _(CONFIG, RESULTS, pd, yaml):
     overview = RESULTS / "10_signature" / "tables" / "_overview"
     projection_overview = RESULTS / "11_projection" / "tables" / "_overview"
     decomp = RESULTS / "12_hsr_decomp" / "tables"
+    decomp_overview = decomp / "_overview"
 
     signature_sizes = pd.read_csv(overview / "signature_sizes.csv")
     updown_overlap = pd.read_csv(overview / "updown_overlap.csv")
@@ -67,8 +68,8 @@ def _(CONFIG, RESULTS, pd, yaml):
 
     hsr_decomp_summary = pd.read_csv(decomp / "hsr_decomp_summary.csv")
     hsr_decomp_lens_nes = pd.read_csv(decomp / "hsr_decomp_lens_nes.csv")
-    lens_nes_by_contrast = pd.read_csv(decomp / "lens_nes_by_contrast.csv")
-    wtheatup_attribution = pd.read_csv(decomp / "wtheatup_attribution.csv")
+    lens_nes_by_contrast = pd.read_csv(decomp_overview / "lens_nes_by_contrast.csv")
+    wtheatup_attribution = pd.read_csv(decomp_overview / "wtheatup_attribution.csv")
     hsr_decomp_overlap = pd.read_csv(decomp / "hsr_decomp_overlap.csv")
     hsr_decomp_conditional = pd.read_csv(decomp / "hsr_decomp_conditional.csv")
     hsr_decomp_rank_concordance = pd.read_csv(

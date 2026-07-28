@@ -33,7 +33,7 @@
 #   03_results/12_hsr_decomp/tables/hsr_decomp_rank_concordance.csv
 #   03_results/12_hsr_decomp/tables/hsr_decomp_conditional.csv
 #   03_results/12_hsr_decomp/tables/hsr_lens_membership.csv
-#   03_results/12_hsr_decomp/tables/hsr_rank_position_panel.csv
+#   03_results/12_hsr_decomp/tables/_overview/hsr_rank_position_panel.csv
 #   03_results/12_hsr_decomp/tables/_overview/gate_projection_bridge.csv
 #   03_results/objects/19_hsr_decomp_gsea.rds
 #
@@ -396,7 +396,11 @@ rank_position_panel <- rank_detail %>%
   dplyr::arrange(factor(.data$set, levels = c("WT_heat_up", "HSR_core", "TCR_activation")),
                  .data$rank, .data$gene)
 readr::write_csv(round_numeric_cols(rank_position_panel, sig = 9),
-                 file.path(TBL_DIR, "hsr_rank_position_panel.csv"))
+                 file.path(TBL_OVW, "hsr_rank_position_panel.csv"))
+# The stage previously wrote this table flat; remove the stale copy so a reader
+# cannot pick up a file no run maintains any more.
+stale_rank <- file.path(TBL_DIR, "hsr_rank_position_panel.csv")
+if (file.exists(stale_rank)) file.remove(stale_rank)
 
 get_nes <- function(gsea_obj, term) {
   rr <- as.data.frame(gsea_obj@result, stringsAsFactors = FALSE)
@@ -680,9 +684,8 @@ expected <- c(file.path(TBL_DIR, c(
   "hsr_decomp_overlap.csv",
   "hsr_decomp_rank_concordance.csv",
   "hsr_decomp_conditional.csv",
-  "hsr_rank_position_panel.csv",
   "hsr_lens_membership.csv")),
-  file.path(TBL_OVW, "gate_projection_bridge.csv"))
+  file.path(TBL_OVW, c("hsr_rank_position_panel.csv", "gate_projection_bridge.csv")))
 missing <- expected[!file.exists(expected)]
 if (length(missing) > 0L) stop("[19] Missing expected output(s): ", paste(missing, collapse = ", "))
 

@@ -1,7 +1,0 @@
-term,contrast,set_size,nes,pvalue,padj,leading_edge_n,leading_edge_genes,direction,label
-HSR_core,WT_heat,47,2.04905631,1.28306639e-5,1.92459959e-5,23,Hsph1;Hspa4l;Dnaja3;Hspa1b;Bag3;Hspa1a;Hsf1;Dnaja1;Hspa13;St13;Fkbp4;Ptges3;Hsp90aa1;Htra2;Chordc1;Hspb1;Bag5;Hspa9;Hspa4;Dnajb1;Clpb;Dnajc2;Bag2,up at 39 °C,2.05
-TCR_activation,WT_heat,66,1.71988216,0.00130317807,0.00130317807,27,Lta;Lcp2;Nfatc1;Nr4a2;Il2;Nr4a3;Ier3;Tnfrsf4;Nr4a1;Dusp5;Itk;Rel;Jund;Cd40lg;Egr2;Odc1;Egr3;Cd83;Egr1;Tnfrsf9;Batf;Dusp1;Bcl10;Atf3;Dusp2;Tnf;Junb,up at 39 °C,1.72
-HSR_core,Temp_main,47,2.01287679,2.97501198e-5,4.46251797e-5,18,Hsph1;Hspa4l;Dnaja3;Hspa1b;Bag3;Hspa1a;Hsf1;St13;Dnaja1;Fkbp4;Hspa13;Ptges3;Hsp90aa1;Chordc1;Bag5;Htra2;Hspb1;Hspa9,up at 39 °C,2.01
-TCR_activation,Temp_main,66,1.68025809,0.00204283361,0.00204283361,27,Lta;Lcp2;Ier3;Nfatc1;Nr4a2;Il2;Nr4a3;Tnfrsf4;Nr4a1;Dusp5;Itk;Rel;Odc1;Cd40lg;Jund;Egr2;Cd83;Egr3;Tnfrsf9;Egr1;Batf;Dusp1;Atf3;Bcl10;Dusp2;Tnf;Junb,up at 39 °C,1.68
-HSR_core,KO_heat,47,2.06549851,2.25872387e-5,3.3880858e-5,18,Hsph1;Hspa4l;Dnaja3;Hspa1b;Bag3;St13;Hspa1a;Fkbp4;Dnaja1;Hsf1;Hspa13;Hsp90aa1;Ptges3;Chordc1;Bag5;Hspb1;Htra2;Hspa9,up at 39 °C,2.07
-TCR_activation,KO_heat,66,1.60261123,0.00518335845,0.00518335845,26,Lta;Ier3;Lcp2;Il2;Nr4a2;Tnfrsf4;Nfatc1;Nr4a3;Nr4a1;Dusp5;Itk;Odc1;Rel;Cd40lg;Egr2;Cd83;Jund;Tnfrsf9;Egr3;Egr1;Batf;Dusp1;Atf3;Dusp2;Tnf;Junb,up at 39 °C,1.60
