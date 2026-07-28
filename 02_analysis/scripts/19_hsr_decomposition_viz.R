@@ -122,6 +122,8 @@ TERM_LEVELS <- c("HSR_core", "TCR_activation")
 SET_ORDER <- c("WT_heat_up", "HSR_core", "TCR_activation")
 # eulerr's optimiser is iterative; pin the seed so the fitted layout is stable.
 EULER_SEED <- 20260727L
+# The rank panel jitters points off their row centre; pin that too.
+JITTER_SEED <- 20260727L
 # Label-anchor solver resolution (points per axis over the diagram bounding box).
 POI_GRID <- 600L
 HONEST_CEILING <- paste(
@@ -335,7 +337,10 @@ fig_rank <- ggplot(rank_position, aes(x = rank_pct, y = set_label)) +
              linewidth = 0.45, colour = "grey30") +
   geom_density_ridges(aes(fill = set), alpha = 0.35, scale = 0.85,
                       rel_min_height = 0.01, colour = "grey25", linewidth = 0.35) +
-  geom_point(aes(colour = set), position = position_jitter(height = 0.055, width = 0),
+  # Seeded: an unseeded jitter re-places every point on each render, so two runs of
+  # the same script produce panels that differ byte-for-byte.
+  geom_point(aes(colour = set),
+             position = position_jitter(height = 0.055, width = 0, seed = JITTER_SEED),
              size = 1.35, alpha = 0.75) +
   geom_text(data = rank_summary,
             aes(x = 99, y = set_label,
