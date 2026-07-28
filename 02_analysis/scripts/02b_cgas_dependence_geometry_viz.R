@@ -340,10 +340,16 @@ p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
   labs(
     title    = paste("Warming to 39 °C changes the same genes",
                       "with and without cGAS — apart from 23", sep = "\n"),
-    # Two blocks, hard-separated: the axes, then the notation the counts block uses. Δ is
-    # bound to the quantity the first line just defined rather than re-stating it, so the
-    # counts block can be pure numbers.
+    # Three blocks, hard-separated: the question this panel opens the sequence with
+    # and the answer it gives, then the axes, then the notation the counts block
+    # uses. Δ is bound to the quantity the axis line just defined rather than
+    # re-stating it, so the counts block can be pure numbers.
     subtitle = paste(
+      wrap_at(sprintf(paste0(
+        "Question — does 39 °C produce a coherent transcriptional response, and does that ",
+        "response require cGAS? Answer — coherent, and largely shared: %s of %s genes ",
+        "separate the two genotypes, and every one of them lies on the same side of the line."),
+        N("n_sig", CO_INT), N("n_genes", "all"))),
       wrap_at(paste0(
         "Each dot is one gene. Both axes are its log2 fold change at 39 versus 37 °C, ",
         "measured in WT (x) and in cGAS-KO (y).")),
