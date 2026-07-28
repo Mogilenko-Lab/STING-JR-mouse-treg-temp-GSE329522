@@ -101,8 +101,8 @@ corroborates <- function(a) paste0("Corroborates — ", a)
 # that no run maintains any more. Only the stems this script owns are removed; the
 # compute script's own tables/ files are untouched.
 OWNED_STEMS <- c("wtheatup_attribution", "lens_nes_by_contrast", "gate_projection_bridge",
-                 "hsr_lens_membership_euler", "hsr_lens_membership_venn",
-                 "hsr_lens_membership_upset")
+                 "hsr_lens_membership_euler", "hsr_lens_provenance_euler",
+                 "hsr_lens_membership_venn", "hsr_lens_membership_upset")
 for (stale in list.files(FIG_DIR, pattern = "\\.(png|pdf)$", full.names = TRUE))
   file.remove(stale)
 for (stem in OWNED_STEMS) {
@@ -469,15 +469,85 @@ corroboration_line <- sprintf(
   as.integer(membership$n_mouse[membership$component == "WT_heat_up only"][1]),
   as.integer(membership$wt_heat_up_n[1]))
 
-# ---- 2. Solve a label anchor for every region, empty ones included.
-# For a point p and circle i, margin_i(p) = r_i - |p - c_i| when the region requires
-# being INSIDE circle i, and |p - c_i| - r_i when it requires being OUTSIDE. The
-# anchor is the p maximising min_i margin_i. Where the region exists that is its
-# pole of inaccessibility and the margin is the inscribed radius; where the region
-# is empty the margin goes negative and the anchor is the point that comes closest
-# to satisfying the region's definition -- i.e. exactly where the count would sit
-# if it were not zero. One rule, seven regions, no typed coordinates.
-solve_anchors <- function(circles, regions_df, n_grid = POI_GRID) {
+# ---- 2. Multi-panel Euler decomposition: Panel A (Composition) and Panel B (Provenance).
+# Symbol space: mouse symbols (213-gene WT_heat_up arm).
+# Set effective size testability bands: testable >= 15, underpowered_reported 5-14,
+# untestable < 5, structurally_absent at nominal zero.
+
+testability_band <- function(n) {
+  if (n == 0L) return("structurally_absent")
+  if (n < 5L) return("untestable")
+  if (n <= 14L) return("underpowered_reported")
+  "testable"
+}
+
+# Load Lombardi 2022 HIF consensus set (mouse space)
+hif_mouse_path <- "00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds"
+if (!file.exists(hif_mouse_path)) stop("[19_viz] Missing mouse HIF reference: ", hif_mouse_path)
+hif_mouse_obj <- readRDS(hif_mouse_path)
+hif_mouse_set <- unique(as.character(hif_mouse_obj$Lombardi2022_HIF))
+hif_mouse_set <- hif_mouse_set[!is.na(hif_mouse_set) & hif_mouse_set != ""]
+
+# Load Interaction sets (cGAS-dependent arm) and map human symbols to mouse space
+inter_up_path <- "03_results/human_projection/signatures/Interaction/Interaction_up.txt"
+inter_down_path <- "03_results/human_projection/signatures/Interaction/Interaction_down.txt"
+if (!file.exists(inter_up_path)) stop("[19_viz] Missing Interaction_up file: ", inter_up_path)
+
+inter_up_human <- readLines(inter_up_path)
+inter_up_human <- inter_up_human[inter_up_human != ""]
+
+bg_inter_up <- babelgene::orthologs(genes = inter_up_human, species = "mouse")
+inter_up_mouse <- unique(as.character(bg_inter_up$symbol))
+sig_path <- "03_results/objects/17_signature_sets.rds"
+if (!file.exists(sig_path)) stop("[19_viz] Missing signature object: ", sig_path)
+sig <- readRDS(sig_path)
+
+wt_heat_up_set <- unique(as.character(sig$sets$WT_heat$up$fdr_logfc))
+wt_heat_up_set <- wt_heat_up_set[!is.na(wt_heat_up_set) & wt_heat_up_set != ""]
+hsr_core_set <- unique(as.character(readRDS("00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds")$HSR_core))
+tcr_activation_set <- unique(as.character(readRDS("00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds")$TCR_activation))
+
+get_regions_4set <- function(set_list, set_order) {
+  universe <- unique(unlist(set_list))
+  df <- data.frame(gene = universe, stringsAsFactors = FALSE)
+  for (nm in set_order) df[[nm]] <- df$gene %in% set_list[[nm]]
+  
+  combos <- expand.grid(lapply(set_order, function(x) c(FALSE, TRUE)))
+  names(combos) <- set_order
+  combos <- combos[rowSums(combos) > 0, ]
+  
+  rows <- list()
+  for (i in seq_len(nrow(combos))) {
+    cond <- rep(TRUE, nrow(df))
+    inc_sets <- c()
+    for (nm in set_order) {
+      if (combos[i, nm]) {
+        cond <- cond & df[[nm]]
+        inc_sets <- c(inc_sets, nm)
+      } else {
+        cond <- cond & (!df[[nm]])
+      }
+    }
+    n <- sum(cond)
+    degree <- length(inc_sets)
+    combo_str <- paste(inc_sets, collapse = "&")
+    component <- if (degree == 1) paste(inc_sets, "only") else paste(inc_sets, collapse = " ∩ ")
+    
+    r_df <- data.frame(
+      component = component,
+      n = n,
+      degree = degree,
+      is_empty = (n == 0),
+      combo = combo_str,
+      stringsAsFactors = FALSE
+    )
+    for (nm in set_order) r_df[[nm]] <- combos[i, nm]
+    rows[[i]] <- r_df
+  }
+  do.call(rbind, rows)
+}
+
+solve_anchors_general <- function(circles, regions_df, set_order, n_grid = POI_GRID) {
   pad <- 0.08 * max(circles$r)
   gx <- seq(min(circles$x - circles$r) - pad, max(circles$x + circles$r) + pad, length.out = n_grid)
   gy <- seq(min(circles$y - circles$r) - pad, max(circles$y + circles$r) + pad, length.out = n_grid)
@@ -487,7 +557,7 @@ solve_anchors <- function(circles, regions_df, n_grid = POI_GRID) {
     numeric(nrow(g)))
   colnames(inside_margin) <- circles$set
   out <- lapply(seq_len(nrow(regions_df)), function(k) {
-    m <- vapply(SET_ORDER, function(s)
+    m <- vapply(set_order, function(s)
       if (isTRUE(regions_df[[s]][k])) inside_margin[, s] else -inside_margin[, s],
       numeric(nrow(g)))
     worst <- do.call(pmin, as.data.frame(m))
@@ -497,112 +567,254 @@ solve_anchors <- function(circles, regions_df, n_grid = POI_GRID) {
   dplyr::bind_cols(regions_df, dplyr::bind_rows(out))
 }
 
-# ---- 3. PANEL A -- area-proportional Euler, with the fit residual reported.
-set.seed(EULER_SEED)
-euler_fit <- eulerr::euler(stats::setNames(regions$n, regions$combo), shape = "circle")
-euler_stress <- as.numeric(euler_fit$stress)
-euler_diag_error <- as.numeric(euler_fit$diagError)
-
-circles <- data.frame(
-  set = rownames(euler_fit$ellipses),
-  x = euler_fit$ellipses$h,
-  y = euler_fit$ellipses$k,
-  r = euler_fit$ellipses$a,
-  stringsAsFactors = FALSE
+# --- Panel A -- composition: what named programs does WT_heat_up contain?
+SET_ORDER_A <- c("WT_heat_up", "HSR_core", "TCR_activation", "Lombardi2022_HIF")
+sets_A <- list(
+  WT_heat_up = wt_heat_up_set,
+  HSR_core = hsr_core_set,
+  TCR_activation = tcr_activation_set,
+  Lombardi2022_HIF = hif_mouse_set
 )
-if (!setequal(circles$set, SET_ORDER))
-  stop("[19_viz] eulerr returned circles for an unexpected set of names.")
-circles <- circles[match(SET_ORDER, circles$set), , drop = FALSE]
+set_cols_A <- c(
+  WT_heat_up = FIG_CFG$colors$diverging$up %||% "#B35806",
+  HSR_core = FIG_CFG$colors$okabe_ito$bluish_green %||% "#009E73",
+  TCR_activation = FIG_CFG$colors$okabe_ito$orange %||% "#E69F00",
+  Lombardi2022_HIF = "#56B4E9"
+)
 
-euler_src <- solve_anchors(circles, regions) %>%
+regions_A <- get_regions_4set(sets_A, SET_ORDER_A)
+set.seed(EULER_SEED)
+fit_A <- eulerr::euler(stats::setNames(regions_A$n, regions_A$combo), shape = "circle")
+stress_A <- as.numeric(fit_A$stress)
+diag_err_A <- as.numeric(fit_A$diagError)
+
+circles_A <- data.frame(
+  set = rownames(fit_A$ellipses),
+  x = fit_A$ellipses$h,
+  y = fit_A$ellipses$k,
+  r = fit_A$ellipses$a,
+  stringsAsFactors = FALSE
+)[match(SET_ORDER_A, rownames(fit_A$ellipses)), ]
+
+euler_src_A <- solve_anchors_general(circles_A, regions_A, SET_ORDER_A) %>%
   dplyr::left_join(
     data.frame(
-      combo = names(euler_fit$original.values),
-      original_value = as.numeric(euler_fit$original.values),
-      fitted_value = as.numeric(euler_fit$fitted.values),
+      combo = names(fit_A$original.values),
+      original_value = as.numeric(fit_A$original.values),
+      fitted_value = as.numeric(fit_A$fitted.values),
       stringsAsFactors = FALSE),
     by = "combo") %>%
   dplyr::mutate(
     residual = .data$fitted_value - .data$original_value,
     region_exists = .data$anchor_margin > 0,
-    euler_stress = euler_stress,
-    euler_diag_error = euler_diag_error,
+    euler_stress = stress_A,
+    euler_diag_error = diag_err_A,
     label = pretty_region(.data$component))
 
-# Degree-1 regions are large enough to label in place; the overlaps carry the
-# load-bearing numbers and get named callouts outside the diagram, so the reader
-# never has to infer which sliver a bare digit belongs to. Radial callout placement
-# collides here -- the two empty regions sit at almost the same bearing -- so the
-# callouts are stacked in a right-hand column, ordered by anchor height, which
-# separates them and keeps the leader lines from crossing.
-bbox_x <- range(c(circles$x - circles$r, circles$x + circles$r))
-bbox_y <- range(c(circles$y - circles$r, circles$y + circles$r))
-span_x <- diff(bbox_x)
-span_y <- diff(bbox_y)
+unassigned_A <- sum(wt_heat_up_set %in% wt_heat_up_set &
+  !wt_heat_up_set %in% hsr_core_set &
+  !wt_heat_up_set %in% tcr_activation_set &
+  !wt_heat_up_set %in% hif_mouse_set)
 
-euler_src$placement <- ifelse(euler_src$degree == 1L, "inside", "callout")
-euler_src$callout_x <- NA_real_
-euler_src$callout_y <- NA_real_
-call_idx <- which(euler_src$placement == "callout")
-call_idx <- call_idx[order(euler_src$anchor_y[call_idx], decreasing = TRUE)]
-euler_src$callout_x[call_idx] <- bbox_x[2] + 0.10 * span_x
-euler_src$callout_y[call_idx] <- seq(bbox_y[2] - 0.04 * span_y,
-                                     bbox_y[1] + 0.04 * span_y,
-                                     length.out = length(call_idx))
+euler_src_A$unassigned_remainder <- unassigned_A
+euler_src_A$testability_band <- vapply(euler_src_A$n, testability_band, character(1))
 
-euler_inside <- euler_src[euler_src$placement == "inside", , drop = FALSE]
-euler_callout <- euler_src[euler_src$placement == "callout", , drop = FALSE]
+bbox_xA <- range(c(circles_A$x - circles_A$r, circles_A$x + circles_A$r))
+bbox_yA <- range(c(circles_A$y - circles_A$r, circles_A$y + circles_A$r))
+span_xA <- diff(bbox_xA)
+span_yA <- diff(bbox_yA)
+
+euler_src_A$placement <- ifelse(euler_src_A$degree == 1L, "inside", "callout")
+call_idx_A <- which(euler_src_A$placement == "callout" & euler_src_A$n > 0)
+euler_src_A$callout_x <- NA_real_
+euler_src_A$callout_y <- NA_real_
+if (length(call_idx_A) > 0) {
+  call_idx_A <- call_idx_A[order(euler_src_A$anchor_y[call_idx_A], decreasing = TRUE)]
+  euler_src_A$callout_x[call_idx_A] <- bbox_xA[2] + 0.12 * span_xA
+  euler_src_A$callout_y[call_idx_A] <- seq(bbox_yA[2] - 0.05 * span_yA,
+                                           bbox_yA[1] + 0.05 * span_yA,
+                                           length.out = length(call_idx_A))
+}
+
+euler_inside_A <- euler_src_A[euler_src_A$placement == "inside", , drop = FALSE]
+euler_callout_A <- euler_src_A[euler_src_A$placement == "callout" & euler_src_A$n > 0, , drop = FALSE]
 
 readr::write_csv(round_numeric_cols(
-  euler_src %>% dplyr::select("component", "n", "degree", "is_empty", "combo",
-                              dplyr::all_of(SET_ORDER), "original_value", "fitted_value",
-                              "residual", "anchor_x", "anchor_y", "anchor_margin",
-                              "region_exists", "euler_stress", "euler_diag_error"),
+  euler_src_A %>% dplyr::select("component", "n", "degree", "is_empty", "combo",
+                                dplyr::all_of(SET_ORDER_A), "original_value", "fitted_value",
+                                "residual", "anchor_x", "anchor_y", "anchor_margin",
+                                "region_exists", "euler_stress", "euler_diag_error",
+                                "unassigned_remainder", "testability_band"),
   sig = 9), file.path(TBL_OVW, "hsr_lens_membership_euler.csv"))
 
 fig_euler <- ggplot() +
-  ggforce::geom_circle(data = circles, aes(x0 = x, y0 = y, r = r, fill = set, colour = set),
+  ggforce::geom_circle(data = circles_A, aes(x0 = x, y0 = y, r = r, fill = set, colour = set),
                        alpha = 0.18, linewidth = 0.8) +
-  geom_segment(data = euler_callout,
+  geom_segment(data = euler_callout_A,
                aes(x = anchor_x, y = anchor_y, xend = callout_x, yend = callout_y),
                colour = "grey45", linewidth = 0.35) +
-  geom_point(data = euler_callout, aes(x = anchor_x, y = anchor_y, shape = is_empty),
-             size = 2.6, stroke = 1.0, colour = "grey20", fill = "white") +
-  geom_label(data = euler_callout,
-             aes(x = callout_x, y = callout_y,
-                 label = sprintf("%s\n%d %s", label, n,
-                                 ifelse(is_empty, "genes - EMPTY", "genes"))),
+  geom_point(data = euler_callout_A, aes(x = anchor_x, y = anchor_y),
+             size = 2.6, stroke = 1.0, colour = "grey20", fill = "white", shape = 21) +
+  geom_label(data = euler_callout_A,
+             aes(x = callout_x, y = callout_y, label = sprintf("%s\n%d genes", label, n)),
              hjust = 0, size = (FIG_CFG$figures$label_size %||% 4) * 0.78, lineheight = 0.95,
-             colour = "grey10", fill = "white", linewidth = 0.25,
-             label.padding = unit(0.18, "lines")) +
-  geom_text(data = euler_inside, aes(x = anchor_x, y = anchor_y, label = n),
-            size = (FIG_CFG$figures$label_size %||% 4) * 1.05, fontface = "bold",
-            colour = "grey10") +
-  scale_fill_manual(values = set_cols_membership, breaks = SET_ORDER, name = NULL) +
-  scale_colour_manual(values = set_cols_membership, guide = "none") +
-  scale_shape_manual(values = c(`FALSE` = 21, `TRUE` = 23), guide = "none") +
-  coord_fixed(xlim = c(bbox_x[1] - 0.04 * span_x, bbox_x[2] + 0.62 * span_x),
-              ylim = c(bbox_y[1] - 0.06 * span_y, bbox_y[2] + 0.06 * span_y),
+             colour = "grey10", fill = "white", linewidth = 0.25, label.padding = unit(0.18, "lines")) +
+  geom_text(data = euler_inside_A, aes(x = anchor_x, y = anchor_y, label = n),
+            size = (FIG_CFG$figures$label_size %||% 4) * 1.05, fontface = "bold", colour = "grey10") +
+  scale_fill_manual(values = set_cols_A, breaks = SET_ORDER_A, name = NULL) +
+  scale_colour_manual(values = set_cols_A, guide = "none") +
+  coord_fixed(xlim = c(bbox_xA[1] - 0.05 * span_xA, bbox_xA[2] + 0.55 * span_xA),
+              ylim = c(bbox_yA[1] - 0.06 * span_yA, bbox_yA[2] + 0.06 * span_yA),
               expand = FALSE, clip = "off") +
   labs(
-    title = "Area-proportional membership of the 39 °C-derived up arm and two curated lenses",
-    # coord_fixed + void letterbox the panel, so the subtitle's usable width is
-    # narrower than the emitted figure; keep both lines short and pre-broken.
-    subtitle = paste(corroboration_line,
-                     sprintf(paste("Circle areas are fitted to those counts (eulerr stress %.1g),",
-                                   "so geometry is evidence here."),
-                             euler_stress),
-                     sep = "\n"),
+    title = "Panel A — Composition: what named programs does WT_heat_up contain?",
+    subtitle = paste(
+      sprintf("WT_heat_up unassigned remainder: %d of %d genes (%.1f%%) in no named lens.",
+              unassigned_A, length(wt_heat_up_set), 100 * unassigned_A / length(wt_heat_up_set)),
+      sprintf("Circle areas fitted to exact counts by eulerr (stress %.1g, diagError %.1g).",
+              stress_A, diag_err_A),
+      sep = "\n"),
     x = NULL, y = NULL,
     caption = wrap_caption(
-      "Bold numbers sit inside the region they count; each callout names an overlap and its leader line ",
-      "points at it. Open diamonds mark the two intersections that exist and are EMPTY. ",
+      "Membership partitioning of the mouse 39 °C-derived up arm (WT_heat_up, 213 genes) against three curated lenses: ",
+      "HSR_core (47 genes), TCR_activation (66 genes), and Lombardi2022_HIF (100 genes). ",
+      "Bold numbers sit inside degree-1 regions; callouts label non-empty overlaps. ",
       membership_ceiling)
   ) +
   project_theme(config = FIG_CFG) +
-  # coord_fixed() letterboxes the panel; anchor the caption to the PLOT edge so it
-  # gets the full emitted width the wrap above was computed against.
   theme(legend.position = "bottom", plot.caption.position = "plot")
+
+save_figure(fig_euler, STAGE, "hsr_lens_membership_euler", overview = TRUE,
+            width = FIG_W_EULER, height = 7.5, void = TRUE, config = FIG_CFG)
+
+
+# --- Panel B -- provenance: where does Interaction come from?
+SET_ORDER_B <- c("WT_heat_up", "Interaction_up", "Lombardi2022_HIF", "HSR_core")
+sets_B <- list(
+  WT_heat_up = wt_heat_up_set,
+  Interaction_up = inter_up_mouse,
+  Lombardi2022_HIF = hif_mouse_set,
+  HSR_core = hsr_core_set
+)
+set_cols_B <- c(
+  WT_heat_up = FIG_CFG$colors$diverging$up %||% "#B35806",
+  Interaction_up = "#CC79A7",
+  Lombardi2022_HIF = "#56B4E9",
+  HSR_core = FIG_CFG$colors$okabe_ito$bluish_green %||% "#009E73"
+)
+
+regions_B <- get_regions_4set(sets_B, SET_ORDER_B)
+set.seed(EULER_SEED)
+fit_B <- eulerr::euler(stats::setNames(regions_B$n, regions_B$combo), shape = "circle")
+stress_B <- as.numeric(fit_B$stress)
+diag_err_B <- as.numeric(fit_B$diagError)
+
+circles_B <- data.frame(
+  set = rownames(fit_B$ellipses),
+  x = fit_B$ellipses$h,
+  y = fit_B$ellipses$k,
+  r = fit_B$ellipses$a,
+  stringsAsFactors = FALSE
+)[match(SET_ORDER_B, rownames(fit_B$ellipses)), ]
+
+euler_src_B <- solve_anchors_general(circles_B, regions_B, SET_ORDER_B) %>%
+  dplyr::left_join(
+    data.frame(
+      combo = names(fit_B$original.values),
+      original_value = as.numeric(fit_B$original.values),
+      fitted_value = as.numeric(fit_B$fitted.values),
+      stringsAsFactors = FALSE),
+    by = "combo") %>%
+  dplyr::mutate(
+    residual = .data$fitted_value - .data$original_value,
+    region_exists = .data$anchor_margin > 0,
+    euler_stress = stress_B,
+    euler_diag_error = diag_err_B,
+    label = pretty_region(.data$component))
+
+# The remainder is a property of the set, not of one panel's lens choice, so it is
+# taken against every curated lens either panel draws. Panel B omits TCR_activation,
+# and scoring the remainder against only its own three lenses would report 203 where
+# Panel A reports 191 for the same quantity.
+unassigned_all <- sum(!wt_heat_up_set %in% hsr_core_set &
+  !wt_heat_up_set %in% tcr_activation_set &
+  !wt_heat_up_set %in% hif_mouse_set &
+  !wt_heat_up_set %in% inter_up_mouse)
+
+euler_src_B$unassigned_remainder <- unassigned_all
+euler_src_B$testability_band <- vapply(euler_src_B$n, testability_band, character(1))
+
+bbox_xB <- range(c(circles_B$x - circles_B$r, circles_B$x + circles_B$r))
+bbox_yB <- range(c(circles_B$y - circles_B$r, circles_B$y + circles_B$r))
+span_xB <- diff(bbox_xB)
+span_yB <- diff(bbox_yB)
+
+euler_src_B$placement <- ifelse(euler_src_B$degree == 1L, "inside", "callout")
+call_idx_B <- which(euler_src_B$placement == "callout" & euler_src_B$n > 0)
+euler_src_B$callout_x <- NA_real_
+euler_src_B$callout_y <- NA_real_
+if (length(call_idx_B) > 0) {
+  call_idx_B <- call_idx_B[order(euler_src_B$anchor_y[call_idx_B], decreasing = TRUE)]
+  euler_src_B$callout_x[call_idx_B] <- bbox_xB[2] + 0.12 * span_xB
+  euler_src_B$callout_y[call_idx_B] <- seq(bbox_yB[2] - 0.05 * span_yB,
+                                           bbox_yB[1] + 0.05 * span_yB,
+                                           length.out = length(call_idx_B))
+}
+
+euler_inside_B <- euler_src_B[euler_src_B$placement == "inside", , drop = FALSE]
+euler_callout_B <- euler_src_B[euler_src_B$placement == "callout" & euler_src_B$n > 0, , drop = FALSE]
+
+readr::write_csv(round_numeric_cols(
+  euler_src_B %>% dplyr::select("component", "n", "degree", "is_empty", "combo",
+                                dplyr::all_of(SET_ORDER_B), "original_value", "fitted_value",
+                                "residual", "anchor_x", "anchor_y", "anchor_margin",
+                                "region_exists", "euler_stress", "euler_diag_error",
+                                "unassigned_remainder", "testability_band"),
+  sig = 9), file.path(TBL_OVW, "hsr_lens_provenance_euler.csv"))
+
+fig_provenance <- ggplot() +
+  ggforce::geom_circle(data = circles_B, aes(x0 = x, y0 = y, r = r, fill = set, colour = set),
+                       alpha = 0.18, linewidth = 0.8) +
+  geom_segment(data = euler_callout_B,
+               aes(x = anchor_x, y = anchor_y, xend = callout_x, yend = callout_y),
+               colour = "grey45", linewidth = 0.35) +
+  geom_point(data = euler_callout_B, aes(x = anchor_x, y = anchor_y),
+             size = 2.6, stroke = 1.0, colour = "grey20", fill = "white", shape = 21) +
+  geom_label(data = euler_callout_B,
+             aes(x = callout_x, y = callout_y, label = sprintf("%s\n%d genes", label, n)),
+             hjust = 0, size = (FIG_CFG$figures$label_size %||% 4) * 0.78, lineheight = 0.95,
+             colour = "grey10", fill = "white", linewidth = 0.25, label.padding = unit(0.18, "lines")) +
+  geom_text(data = euler_inside_B, aes(x = anchor_x, y = anchor_y, label = n),
+            size = (FIG_CFG$figures$label_size %||% 4) * 1.05, fontface = "bold", colour = "grey10") +
+  scale_fill_manual(values = set_cols_B, breaks = SET_ORDER_B, name = NULL) +
+  scale_colour_manual(values = set_cols_B, guide = "none") +
+  coord_fixed(xlim = c(bbox_xB[1] - 0.05 * span_xB, bbox_xB[2] + 0.55 * span_xB),
+              ylim = c(bbox_yB[1] - 0.06 * span_yB, bbox_yB[2] + 0.06 * span_yB),
+              expand = FALSE, clip = "off") +
+  labs(
+    title = "Panel B — Provenance: where does Interaction come from?",
+    subtitle = paste(
+      sprintf("Interaction_up shares 0 of its %d mouse orthologs with WT_heat_up. Against all four curated lenses,",
+              length(inter_up_mouse)),
+      sprintf("%d of %d WT_heat_up genes (%.1f%%) sit in no named lens.",
+              unassigned_all, length(wt_heat_up_set),
+              100 * unassigned_all / length(wt_heat_up_set)),
+      sprintf("Interaction_up = 7 human genes (%d mouse; underpowered_reported, 5-14); Interaction_down = 0 (structurally_absent).",
+              length(inter_up_mouse)),
+      sprintf("Fit: stress %.1g, diagError %.1g.", stress_B, diag_err_B),
+      sep = "\n"),
+    x = NULL, y = NULL,
+    caption = wrap_caption(
+      "Membership partitioning of WT_heat_up (213 genes) against Interaction_up (7 human genes / 9 mouse orthologs, underpowered_reported), ",
+      "Lombardi2022_HIF (100 genes), and HSR_core (47 genes). Interaction_down (0-byte file) is structurally_absent at nominal zero. ",
+      "Overlap of WT_heat_up with Interaction_up is 0 genes. ",
+      membership_ceiling)
+  ) +
+  project_theme(config = FIG_CFG) +
+  theme(legend.position = "bottom", plot.caption.position = "plot")
+
+save_figure(fig_provenance, STAGE, "hsr_lens_provenance_euler", overview = TRUE,
+            width = FIG_W_EULER, height = 7.5, void = TRUE, config = FIG_CFG)
 
 # ---- 4. PANEL B -- conventional fixed-layout Venn; only the printed counts scale.
 # Expand the region counts back to one row per gene so the renderer re-derives the
@@ -709,8 +921,8 @@ save_figure(fig_venn, STAGE, "hsr_lens_membership_venn", overview = TRUE,
 save_figure(fig_upset, STAGE, "hsr_lens_membership_upset", overview = TRUE,
             width = FIG_W_UPSET, height = 7.0, config = FIG_CFG)
 
-message(sprintf("[19_viz] eulerr fit: stress = %.3g, diagError = %.3g, max |region residual| = %.3g",
-                euler_stress, euler_diag_error, max(abs(euler_src$residual))))
+message(sprintf("[19_viz] eulerr Panel A fit: stress = %.3g, diagError = %.3g; Panel B fit: stress = %.3g, diagError = %.3g",
+                stress_A, diag_err_A, stress_B, diag_err_B))
 
 # =============================================================================
 # The handoff panel: mouse gate 213 -> human projection 199 -> what is testable.
@@ -868,6 +1080,7 @@ expected <- file.path(FIG_OVW, c(
   "lens_nes_by_contrast.pdf", "lens_nes_by_contrast.png",
   "hsr_rank_position_panel.pdf", "hsr_rank_position_panel.png",
   "hsr_lens_membership_euler.pdf", "hsr_lens_membership_euler.png",
+  "hsr_lens_provenance_euler.pdf", "hsr_lens_provenance_euler.png",
   "hsr_lens_membership_venn.pdf", "hsr_lens_membership_venn.png",
   "hsr_lens_membership_upset.pdf", "hsr_lens_membership_upset.png",
   "gate_projection_bridge.pdf", "gate_projection_bridge.png"

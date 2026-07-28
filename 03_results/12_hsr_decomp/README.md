@@ -132,30 +132,23 @@ much smaller set. Claim tier: direct counts over frozen sets and published ranke
 
 ## figures/_overview/hsr_lens_membership_euler.png
 
-Drawn to scale, the thresholded `WT_heat_up` set sits almost entirely outside both curated lenses:
-it shares 3 of the 47 `HSR_core` genes and 12 of the 66 `TCR_activation` genes, and the two lenses
-share none with each other.
+Panel A partitions the mouse 39 °C-derived up arm (`WT_heat_up`, 213 genes) against three curated reference lenses: `HSR_core` (47 genes), `TCR_activation` (66 genes), and the Lombardi 2022 HIF consensus (`Lombardi2022_HIF`, 100 genes).
 
-**How to read:** This corroborates the answer `wtheatup_attribution` gives, and adds the two lens
-marginals the bar chart cannot show. Areas and overlaps are fitted to the counts, so geometry is
-evidence here, and the residual is on the face: stress 6.1e-19, diagError 4.2e-10, against a 0 that
-means exact.
-
-Bold numbers sit inside the region they count. The four multi-set regions get named callouts on
-leader lines, because the two real overlaps are slivers too thin to hold text; open circles anchor
-the overlaps that exist, open diamonds the two that are empty, each placed where its count would sit
-if it were not zero. Every label anchor is solved rather than hand-placed, because a hand-laid
-diagram can assert a containment the counts contradict. Claim tier: corroborating.
-
-Two further checks live in the source tables rather than on the face. The human counterpart of the
-`WT_heat_up` ∩ `HSR_core` overlap is 2 of 199 after ortholog projection, drawn in
-`gate_projection_bridge`. And conditioning either curated lens on the other shifts NES by about
-+0.005 (`HSR_core` +0.00496; `TCR_activation` +0.00498), so the two lenses behave as independent
-references rather than as one confound wearing two names.
+**How to read:** This corroborates the membership answer and reports the unassigned remainder of `WT_heat_up`: 191 of 213 genes (89.7%) sit in no named lens. Overlaps with `WT_heat_up` are 3 genes for `HSR_core`, 12 for `TCR_activation`, and 7 for `Lombardi2022_HIF`. Areas and overlaps are fitted to exact counts by eulerr (stress 2.4e-17, diagError 1.4e-09). Claim tier: corroborating.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler(shape = "circle")` + `ggforce::geom_circle()` + `save_figure(overview = TRUE, void = TRUE)` | `FIG_CFG`; `colors.diverging.up`; `colors.okabe_ito`; `EULER_SEED`; `POI_GRID` | `03_results/12_hsr_decomp/tables/hsr_lens_membership.csv` |
+| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler(shape = "circle")` + `ggforce::geom_circle()` + `save_figure(overview = TRUE, void = TRUE)` | `FIG_CFG`; `colors.diverging.up`; `colors.okabe_ito`; `EULER_SEED`; `POI_GRID` | `03_results/objects/17_signature_sets.rds`, `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds` |
+
+## figures/_overview/hsr_lens_provenance_euler.png
+
+Panel B partitions `WT_heat_up` (213 genes) against `Interaction_up` (7 human genes / 9 mouse orthologs, `underpowered_reported`), `Lombardi2022_HIF` (100 genes), and `HSR_core` (47 genes) to test where `Interaction` originates. `Interaction_down` is 0 genes (`structurally_absent` at nominal zero).
+
+**How to read:** Overlap of `WT_heat_up` with `Interaction_up` is 0 genes. `Lombardi2022_HIF` overlaps `WT_heat_up` by 7 genes, and `HSR_core` by 3 genes. The unassigned remainder is 203 of 213 genes (95.3%). Circle areas are fitted to exact counts by eulerr (stress 7.5e-19, diagError 4.3e-10). Claim tier: corroborating.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler(shape = "circle")` + `ggforce::geom_circle()` + `save_figure(overview = TRUE, void = TRUE)` | `FIG_CFG`; `colors.diverging.up`; `colors.okabe_ito`; `EULER_SEED`; `POI_GRID` | `03_results/human_projection/signatures/Interaction/Interaction_up.txt`, `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds` |
 
 ## figures/_overview/hsr_lens_membership_venn.png
 
@@ -371,20 +364,23 @@ siblings records missing optional sources instead of failing.
 
 ## tables/_overview/hsr_lens_membership_euler.csv
 
-The source table for `figures/_overview/hsr_lens_membership_euler.png` records what the
-area-proportional fit was asked to draw, what it actually drew, and how far apart those are.
+The source table for `figures/_overview/hsr_lens_membership_euler.png` (Panel A) records what the area-proportional fit was asked to draw, what it actually drew, the unassigned remainder, and goodness-of-fit.
 
-**How to read:** `original_value` is the count from the shared table, `fitted_value` is the area the
-fitted circles actually give that region, and `residual` is the difference in gene units;
-`euler_stress` and `euler_diag_error` are eulerr's own goodness-of-fit measures, repeated on every
-row, where 0 means the layout reproduces the counts exactly. `anchor_x`/`anchor_y` is the solved
-label position and `anchor_margin` is its clearance from the nearest region boundary — positive when
-the region exists (`region_exists = TRUE`), negative for the two empty regions, where the magnitude
-says how far the anchor is from being inside all the required circles.
+**How to read:** `original_value` is the exact intersection count, `fitted_value` is the fitted circle area, `residual` is the difference, and `unassigned_remainder` records genes in no named lens (191 genes). `testability_band` classifies each set size.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler()` fit diagnostics + `solve_anchors()` label-anchor solve | `EULER_SEED`; `POI_GRID`; `FIG_CFG` | `03_results/12_hsr_decomp/tables/hsr_lens_membership.csv` |
+| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler()` fit diagnostics + `solve_anchors_general()` label-anchor solve | `EULER_SEED`; `POI_GRID`; `FIG_CFG` | `03_results/objects/17_signature_sets.rds`, `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds` |
+
+## tables/_overview/hsr_lens_provenance_euler.csv
+
+The source table for `figures/_overview/hsr_lens_provenance_euler.png` (Panel B) records the 4-set partitioning of WT_heat_up against Interaction_up, Lombardi2022_HIF, and HSR_core.
+
+**How to read:** `original_value` is the exact intersection count, `fitted_value` is the fitted circle area, `residual` is the difference, and `unassigned_remainder` records genes in no named lens (203 genes). `testability_band` records set testability (`underpowered_reported` for Interaction_up; `structurally_absent` for Interaction_down).
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/19_hsr_decomposition_viz.R` | `eulerr::euler()` fit diagnostics + `solve_anchors_general()` label-anchor solve | `EULER_SEED`; `POI_GRID`; `FIG_CFG` | `03_results/human_projection/signatures/Interaction/Interaction_up.txt`, `00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds` |
 
 ## tables/_overview/hsr_lens_membership_venn.csv
 

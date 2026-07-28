@@ -1,0 +1,16 @@
+component,n,degree,is_empty,combo,WT_heat_up,Interaction_up,Lombardi2022_HIF,HSR_core,original_value,fitted_value,residual,anchor_x,anchor_y,anchor_margin,region_exists,euler_stress,euler_diag_error,unassigned_remainder,testability_band
+WT_heat_up only,203,1,FALSE,WT_heat_up,TRUE,FALSE,FALSE,FALSE,203,202.999999,-5.48974299e-7,-11.6220846,-3.26802145,7.4104924,TRUE,4.97479413e-18,1.06329202e-9,191,testable
+Interaction_up only,9,1,FALSE,Interaction_up,FALSE,TRUE,FALSE,FALSE,9,9,1.77635684e-15,9.14965315,-9.80402469,1.68334439,TRUE,4.97479413e-18,1.06329202e-9,191,underpowered_reported
+WT_heat_up ∩ Interaction_up,0,2,TRUE,WT_heat_up&Interaction_up,TRUE,TRUE,FALSE,FALSE,0,0,0,2.32985954,-7.40884338,-5.53250236,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+Lombardi2022_HIF only,93,1,FALSE,Lombardi2022_HIF,FALSE,FALSE,TRUE,FALSE,93,92.9999998,-1.71839957e-7,2.27780005,-3.26802145,4.81651928,TRUE,4.97479413e-18,1.06329202e-9,191,testable
+WT_heat_up ∩ Lombardi2022_HIF,7,2,FALSE,WT_heat_up&Lombardi2022_HIF,TRUE,FALSE,TRUE,FALSE,7,7.00000017,1.71839943e-7,-3.39668471,-3.26802145,0.79278416,TRUE,4.97479413e-18,1.06329202e-9,191,underpowered_reported
+Interaction_up ∩ Lombardi2022_HIF,0,2,TRUE,Interaction_up&Lombardi2022_HIF,FALSE,TRUE,TRUE,FALSE,0,0,0,6.80697596,-7.81480631,-1.38409792,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+WT_heat_up ∩ Interaction_up ∩ Lombardi2022_HIF,0,3,TRUE,WT_heat_up&Interaction_up&Lombardi2022_HIF,TRUE,TRUE,TRUE,FALSE,0,0,0,2.32985954,-7.40884338,-5.53250236,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+HSR_core only,44,1,FALSE,HSR_core,FALSE,FALSE,FALSE,TRUE,44,43.9999996,-3.77134306e-7,-8.49851505,8.09894069,3.36107209,TRUE,4.97479413e-18,1.06329202e-9,191,testable
+WT_heat_up ∩ HSR_core,3,2,FALSE,WT_heat_up&HSR_core,TRUE,FALSE,FALSE,TRUE,3,3.00000038,3.77134306e-7,-9.33146694,4.32348541,0.496583211,TRUE,4.97479413e-18,1.06329202e-9,191,untestable
+Interaction_up ∩ HSR_core,0,2,TRUE,Interaction_up&HSR_core,FALSE,TRUE,FALSE,TRUE,0,0,0,0.924253223,-1.92834377,-9.69135399,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+WT_heat_up ∩ Interaction_up ∩ HSR_core,0,3,TRUE,WT_heat_up&Interaction_up&HSR_core,TRUE,TRUE,FALSE,TRUE,0,0,0,0.924253223,-1.92834377,-9.69135399,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+Lombardi2022_HIF ∩ HSR_core,0,2,TRUE,Lombardi2022_HIF&HSR_core,FALSE,FALSE,TRUE,TRUE,0,0,0,-4.2296366,2.82142255,-2.68794955,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+WT_heat_up ∩ Lombardi2022_HIF ∩ HSR_core,0,3,TRUE,WT_heat_up&Lombardi2022_HIF&HSR_core,TRUE,FALSE,TRUE,TRUE,0,0,0,-4.2296366,2.82142255,-2.68794955,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+Interaction_up ∩ Lombardi2022_HIF ∩ HSR_core,0,3,TRUE,Interaction_up&Lombardi2022_HIF&HSR_core,FALSE,TRUE,TRUE,TRUE,0,0,0,0.924253223,-1.92834377,-9.69135399,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
+WT_heat_up ∩ Interaction_up ∩ Lombardi2022_HIF ∩ HSR_core,0,4,TRUE,WT_heat_up&Interaction_up&Lombardi2022_HIF&HSR_core,TRUE,TRUE,TRUE,TRUE,0,0,0,0.924253223,-1.92834377,-9.69135399,FALSE,4.97479413e-18,1.06329202e-9,191,structurally_absent
