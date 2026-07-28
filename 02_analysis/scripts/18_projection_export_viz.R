@@ -297,15 +297,26 @@ cgas_sentence <- if (!is.na(cgas_note$wt_only_up_cgas_dependent_n[1])) {
   "No cgas_dependent flag was available in the projection tables, so no WT-only cGAS-dependence claim is made."
 }
 
+# The reader arrives here having just been shown that the 39 °C response is
+# largely shared between genotypes in mouse. The question this panel closes is
+# whether thresholding and ortholog projection recover a separation the mouse
+# geometry did not have, so the title states the answer and the subtitle names
+# the question it answers.
+LEDGER_W <- 12
+ledger_wrap <- function(..., chars_per_inch) {
+  paste(strwrap(paste0(...), width = as.integer(LEDGER_W * chars_per_inch)), collapse = "\n")
+}
+
 fig_ledger <- ggplot(ledger_bars, aes(x = display_group, y = n_human, fill = component)) +
   geom_col(width = 0.68) +
   geom_text(aes(label = label), position = position_stack(vjust = 0.5),
-            size = (FIG_CFG$figures$label_size %||% 4) * 0.78, colour = "grey10") +
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.95, fontface = "bold",
+            colour = "grey10") +
   geom_point(data = ledger_empty, aes(x = display_group, y = 0, shape = glyph),
              fill = "white", colour = "grey20", size = 3.4, stroke = 1.1,
              inherit.aes = FALSE) +
   geom_text(data = ledger_empty, aes(x = display_group, y = 13, label = label),
-            size = (FIG_CFG$figures$label_size %||% 4) * 0.72, colour = "grey20",
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.85, colour = "grey20",
             inherit.aes = FALSE) +
   facet_wrap(~ direction, nrow = 1) +
   scale_fill_manual(values = ledger_cols, name = "Projected set slice",
@@ -315,13 +326,27 @@ fig_ledger <- ggplot(ledger_bars, aes(x = display_group, y = n_human, fill = com
                      labels = c(structural_empty = "structural empty")) +
   scale_y_continuous(expand = expansion(mult = c(0.04, 0.12))) +
   labs(
-    title = "Projected human set ledger",
-    subtitle = "WT_heat and KO_heat overlap after ortholog mapping; Interaction is shown at both exported gates.",
+    title = ledger_wrap(
+      sprintf("The projected WT and cGAS-KO up arms share %d of %d human genes",
+              up_shared$heat_shared_n[1], up_shared$heat_union_n[1]),
+      chars_per_inch = 8.5),
+    subtitle = ledger_wrap(
+      sprintf(paste("Question — does thresholding and ortholog projection separate the heat response",
+                    "by genotype? Answer — no. The two up arms overlap at Jaccard %.3f and the two",
+                    "down arms at %.3f, so their enrichment scores from one ranked list are not",
+                    "independent. The Interaction gates are disjoint from both."),
+              up_shared$heat_jaccard[1], down_shared$heat_jaccard[1]),
+      chars_per_inch = 11),
     x = NULL,
     y = "human genes",
-    caption = "Counts are read from the frozen one-symbol-per-line signature files. Open diamond = structurally empty set."
+    caption = ledger_wrap(
+      "Counts are read from the frozen one-symbol-per-line signature files. Open diamond marks a ",
+      "set that is structurally empty rather than measured and small. Claim tier: a direct count ",
+      "over frozen sets.",
+      chars_per_inch = 13)
   ) +
-  project_theme(config = FIG_CFG)
+  project_theme(config = FIG_CFG) +
+  theme(plot.caption.position = "plot")
 
 purge_figures(STAGE, "projection_overlap_ledger", overview = TRUE, config = FIG_CFG)
 save_overview(
@@ -345,7 +370,7 @@ save_overview(
     down_shared$heat_shared_n[1], down_shared$heat_union_n[1], down_shared$heat_jaccard[1],
     cgas_sentence
   ),
-  width = 12, height = 6.5,
+  width = LEDGER_W, height = 6.8,
   config = FIG_CFG)
 
 # ============================================================================
