@@ -195,11 +195,33 @@ print(as.data.frame(cgas_quant), row.names = FALSE)
 # =============================================================================
 message("\n==================  D) FIG 1c PCA 2x2 (compute)  ==================")
 
-gene_var <- apply(logcpm_mat, 1, var)
-n_top <- min(2000, sum(gene_var > 0))
-top_genes <- names(sort(gene_var, decreasing = TRUE))[seq_len(n_top)]
-pca <- prcomp(t(logcpm_mat[top_genes, ]), center = TRUE, scale. = FALSE)
+# The PCA runs on the SAME gene universe the DE stage models: every delivered
+# symbol, unfiltered, minus the handful that are constant across all 20 libraries
+# and so carry no variance to decompose. Selecting the most variable genes first
+# would concentrate variance into PC1 by construction, which inflates the % var
+# the figure reports without changing the axis it finds; the correspondence check
+# below quantifies exactly that.
+gene_var  <- apply(logcpm_mat, 1, var)
+pca_genes <- names(gene_var)[gene_var > 0]
+n_genes   <- length(pca_genes)
+n_zerovar <- sum(gene_var == 0)
+pca <- prcomp(t(logcpm_mat[pca_genes, ]), center = TRUE, scale. = FALSE)
 percentVar <- pca$sdev^2 / sum(pca$sdev^2) * 100
+message(sprintf("[PCA] %d genes entered (%d dropped for zero variance across all libraries).",
+                n_genes, n_zerovar))
+
+# Correspondence check: a top-2000-variable-gene PCA finds the same leading axis,
+# at a much larger apparent % var. Carried as figure provenance so the caption can
+# state the number instead of asserting the equivalence.
+top2000    <- names(sort(gene_var, decreasing = TRUE))[seq_len(min(2000, n_genes))]
+pca_top    <- prcomp(t(logcpm_mat[top2000, ]), center = TRUE, scale. = FALSE)
+pv_top     <- pca_top$sdev^2 / sum(pca_top$sdev^2) * 100
+pc1_cor_top2000 <- abs(cor(pca$x[, 1], pca_top$x[, 1]))
+pc2_cor_top2000 <- abs(cor(pca$x[, 2], pca_top$x[, 2]))
+message(sprintf(
+  "[ACCEPT #3b] top-2000 subset PCA: PC1 %.1f%% / PC2 %.1f%% vs %.1f%% / %.1f%% on all %d genes; |r| PC1 %.5f, PC2 %.3f.",
+  pv_top[1], pv_top[2], percentVar[1], percentVar[2], n_genes,
+  pc1_cor_top2000, pc2_cor_top2000))
 
 # Plot-ready tidy table: (library_id, PC1, PC2, genotype, temp)
 fig1c_data <- data.frame(
@@ -213,12 +235,16 @@ fig1c_data$temp     <- as.character(fig1c_data$temp)
 fig1c_data$genotype <- as.character(fig1c_data$genotype)
 fig1c_data$group    <- as.character(fig1c_data$group)
 
-# Small variance-explained table: (PC, pct_var). n_top (#genes that entered the
-# PCA) is carried as a label column on every row for the viz title.
+# Small variance-explained table: (PC, pct_var). The gene count that entered the
+# PCA and the top-2000 correspondence are carried as label columns on every row so
+# the viz title and caption read them instead of hardcoding them.
 fig1c_varexp <- data.frame(
   PC = paste0("PC", seq_along(percentVar)),
   pct_var = percentVar,
-  n_top = n_top,
+  n_genes = n_genes,
+  n_zerovar_dropped = n_zerovar,
+  pc1_pct_var_top2000 = pv_top[1],
+  pc1_cor_vs_top2000 = pc1_cor_top2000,
   stringsAsFactors = FALSE
 )
 
@@ -376,7 +402,7 @@ thermo_mean_cool <- mean(thermo_quant$mean_cool_log2)
 readme_path <- file.path(DIR_RESULTS, "01_qc", "README.md")
 dir.create(dirname(readme_path), recursive = TRUE, showWarnings = FALSE)
 readme_txt <- sprintf(
-"# Phase 1 -- Sample-mapping QC verdict
+"# Sample-mapping QC of the iTreg libraries
 
 **Generated:** %s by `02_analysis/scripts/01_mapping_qc.R`
 
@@ -384,7 +410,7 @@ readme_txt <- sprintf(
 
 The inferred temperature-major mapping (021-025 WT_37, 026-030 cGASKO_37, 031-035 WT_39, 036-040 cGASKO_39) is **%s**: **%d/20** libraries have a data-derived label (thermometer-predicted temperature + Cgas-predicted genotype) that matches the inferred label.%s
 
-**Evidence.** The heat-shock thermometer (%s) is monotone with the inferred temperature: mean log2CPM = %.2f in the hot half (031-040) vs %.2f in the cool half (021-030), a +%.2f log2 shift. %s (Cgas) is higher in WT than cGAS-KO within both temperature halves (37C: WT-KO = %.2f; 39C: WT-KO = %.2f log2CPM). PCA on the top %d variable genes places %.1f%%/%.1f%% of variance on PC1/PC2; temperature and genotype track the leading axes, forming the expected 2x2.
+**Evidence.** The heat-shock thermometer (%s) is monotone with the inferred temperature: mean log2CPM = %.2f in the hot half (031-040) vs %.2f in the cool half (021-030), a +%.2f log2 shift. %s (Cgas) is higher in WT than cGAS-KO within both temperature halves (37C: WT-KO = %.2f; 39C: WT-KO = %.2f log2CPM). PCA on all %d genes carrying variance places %.1f%%/%.1f%% of variance on PC1/PC2. PC1 is temperature almost exactly (R2 %.2f against temperature, %.2f against genotype); genotype sits weakly on PC2 (R2 %.2f), so the 2x2 is recoverable from expression but its two factors are recoverable to very different degrees.
 
 **Scramble caveat.** The deposited CPM column order is temperature-major; the GEO GSM accessions are genotype-major. A naive positional GSM->column join therefore mislabels **%d** libraries (%s) -- see `figures/fig1d_scramble.png`. This is why the mapping must be marker-derived, not accession-positional.
 
@@ -400,7 +426,7 @@ See `tables/mapping_verdict.csv` for the per-library machine-checkable verdict.
   cgas_symbol,
   cgas_quant$WT_minus_KO[cgas_quant$temp == "37"],
   cgas_quant$WT_minus_KO[cgas_quant$temp == "39"],
-  n_top, percentVar[1], percentVar[2],
+  n_genes, percentVar[1], percentVar[2], pc1_temp, pc1_geno, pc2_geno,
   n_disc, paste(disc_libs, collapse = ", "),
   if (n_concordant == 20) "SUPPORTED" else "NOT fully supported"
 )

@@ -79,9 +79,14 @@ lib_levels <- fig1b_data$lib
 temp_cols <- c("37" = DIVERGING_COLORS$negative, "39" = DIVERGING_COLORS$positive)
 geno_cols <- c("WT" = "#1B7837", "cGASKO" = "#762A83")
 
-# Read variance-explained + n_top (labels only) from the varexp table.
+# Read variance-explained + the gene-universe provenance (labels only) from the
+# varexp table. n_genes is every delivered symbol carrying variance across the 20
+# libraries, which is the universe the DE stage models.
 percentVar <- setNames(fig1c_varexp$pct_var, fig1c_varexp$PC)
-n_top <- fig1c_varexp$n_top[1]
+n_genes      <- fig1c_varexp$n_genes[1]
+n_genes_lab  <- format(n_genes, big.mark = ",")
+pc1_top2000  <- fig1c_varexp$pc1_pct_var_top2000[1]
+pc1_cor_2000 <- fig1c_varexp$pc1_cor_vs_top2000[1]
 
 # NOTE on axis-label legibility: save_figure() re-applies project_theme() to the
 # plot object per variant (figure_helpers.R), which CLOBBERS any post-theme
@@ -221,8 +226,7 @@ fig1c <- ggplot(pca_df, aes(x = PC1, y = PC2, color = temp, shape = genotype)) +
   scale_color_manual(values = temp_cols, name = "Inferred temp (C)") +
   scale_shape_manual(values = c("WT" = 16, "cGASKO" = 17), name = "Inferred genotype") +
   labs(
-    title = sprintf("Fig 1c -- PCA on top %d variable genes (label-blind, labels overlaid)", n_top),
-    subtitle = "Expect PC1/PC2 to form the 2x2: temperature (primary) and genotype (secondary)",
+    title = sprintf("PCA of the 20 iTreg libraries, all %s genes", n_genes_lab),
     x = sprintf("PC1: %.1f%% var", percentVar[["PC1"]]),
     y = sprintf("PC2: %.1f%% var", percentVar[["PC2"]])
   ) +
@@ -238,24 +242,27 @@ write_caption(
   stage      = "02_eda",
   filename   = "figures/fig1c_pca_2x2.png",
   finding    = sprintf(paste0(
-    "PCA on the top %d variable genes (label-blind): each library plotted on PC1 (%.1f%% var) ",
-    "vs PC2 (%.1f%% var), colored by INFERRED temperature and shaped by INFERRED genotype, with ",
-    "library ids overlaid. The libraries split into the expected 2x2: temperature dominates PC1 ",
-    "(37C vs 39C separate left/right) and genotype tracks the secondary axis -- confirming both ",
-    "experimental factors are recoverable from expression alone. ",
-    "Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
-    n_top, percentVar[["PC1"]], percentVar[["PC2"]]),
+    "Temperature is the dominant axis of variation among the 20 libraries: PC1 (%.1f%% var) ",
+    "separates 37C from 39C, and genotype tracks the much smaller PC2 (%.1f%% var). Both ",
+    "experimental factors are recoverable from expression alone, with the labels inferred rather ",
+    "than deposited. Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    percentVar[["PC1"]], percentVar[["PC2"]]),
   script     = SCRIPT,
   fn         = "geom_point + geom_text_repel (project_theme + save_figure)",
   config_kv  = CFG_KV,
   input      = "03_results/02_eda/tables/fig1c_pca_data.csv",
-  how_to_read = paste0(
-    "x = PC1 (% var in axis title); y = PC2. Point COLOR = inferred temperature ",
+  how_to_read = sprintf(paste0(
+    "x = PC1 (%% var in axis title); y = PC2. Point COLOR = inferred temperature ",
     "(blue = 37C, red = 39C); point SHAPE = inferred genotype (circle = WT, triangle = cGASKO). ",
-    "Grey text = library id. Read: temperature should separate along PC1 (the big axis), genotype ",
-    "along PC2 -- the canonical 2x2 of a temperature x genotype design. ",
-    "Labels are inferred (label-blind), NOT deposited. Companion scree panel: fig1c_pca_scree. ",
-    "Claim tier: PROVISIONAL."),
+    "Grey text = library id. Read the 2x2 as temperature separating along PC1 (the big axis) and ",
+    "genotype along the much smaller PC2. GENE UNIVERSE: all %s delivered symbols carrying ",
+    "variance across the 20 libraries (%d constant genes dropped), which is the same universe the ",
+    "DE stage models, so the %% var here is comparable to everything downstream. A PCA restricted ",
+    "to the 2,000 most variable genes finds the SAME leading axis (|r| %.5f on PC1) but reports ",
+    "PC1 at %.1f%%, because selecting on variance concentrates variance into PC1; read the %% var ",
+    "as a property of the gene universe, not of the design. Labels are inferred (label-blind), ",
+    "NOT deposited. Companion scree panel: fig1c_pca_scree. Claim tier: PROVISIONAL."),
+    n_genes_lab, fig1c_varexp$n_zerovar_dropped[1], pc1_cor_2000, pc1_top2000),
   config     = FIG_CFG
 )
 
@@ -269,17 +276,19 @@ scree_df <- fig1c_varexp[order(-fig1c_varexp$pct_var), ]
 # 2-char library ticks on 1a/1b/1d).
 scree_df$pc_idx  <- factor(seq_len(nrow(scree_df)),
                            levels = seq_len(nrow(scree_df)))
-scree_df$is_lead <- scree_df$PC %in% c("PC1", "PC2")
+# PC1 alone is highlighted. On the full gene universe PC2 (4.4%) sits within a
+# point of PC3 (3.5%) and the rest of the tail, so colouring PC2 as a named design
+# axis would assert a separation the variance does not show. Which factor each axis
+# tracks is a regression result, reported in the caption.
+scree_df$is_lead <- scree_df$PC == "PC1"
 
 fig1c_scree <- ggplot(scree_df, aes(x = pc_idx, y = pct_var, fill = is_lead)) +
   geom_col() +
   scale_fill_manual(values = c(`TRUE` = DIVERGING_COLORS$positive,
                                `FALSE` = "grey70"),
-                    name = NULL, labels = c(`TRUE` = "PC1/PC2 (2x2 axes)", `FALSE` = "PC3+")) +
+                    name = NULL, labels = c(`TRUE` = "PC1", `FALSE` = "PC2+")) +
   labs(
-    title = sprintf("Fig 1c (scree) -- variance explained per PC (top %d variable genes)", n_top),
-    subtitle = sprintf("PC1 dominates (%.1f%%); PC2 (%.1f%%) carries the secondary genotype axis",
-                       percentVar[["PC1"]], percentVar[["PC2"]]),
+    title = sprintf("Variance explained per principal component, all %s genes", n_genes_lab),
     x = "Principal component (rank order)", y = "Variance explained (%)"
   ) +
   project_theme(config = FIG_CFG)
@@ -292,22 +301,24 @@ write_caption(
   stage      = "02_eda",
   filename   = "figures/fig1c_pca_scree.png",
   finding    = sprintf(paste0(
-    "PCA scree / variance-explained panel (top %d variable genes): %% variance per principal ",
-    "component, PC1/PC2 highlighted. PC1 alone captures %.1f%% of the variance (the temperature ",
-    "axis) and PC2 a further %.1f%% (the secondary genotype axis); PC3+ contribute little, ",
-    "confirming the 2x2 structure seen in fig1c_pca_2x2 is concentrated in the leading two axes. ",
-    "Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
-    n_top, percentVar[["PC1"]], percentVar[["PC2"]]),
+    "One axis carries the experiment: PC1 captures %.1f%% of the variance and tracks temperature ",
+    "almost exactly, while PC2 (%.1f%%) sits within about a point of PC3 (%.1f%%) and the rest of ",
+    "the tail. Temperature is recoverable from a single component; genotype is not separated by ",
+    "the leading axes at all. Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    percentVar[["PC1"]], percentVar[["PC2"]], percentVar[["PC3"]]),
   script     = SCRIPT,
   fn         = "geom_col (project_theme + save_figure)",
   config_kv  = CFG_KV,
   input      = "03_results/02_eda/tables/fig1c_pca_varexp.csv",
-  how_to_read = paste0(
-    "x = principal component (descending variance); y = % variance explained. ",
-    "Orange bars = PC1/PC2 (the two axes that carry the temperature x genotype 2x2); grey = PC3+. ",
-    "Read: a steep drop after PC2 means the experimental structure lives in the leading axes ",
-    "(the fig1c_pca_2x2 scatter is therefore a faithful 2D summary). ",
+  how_to_read = sprintf(paste0(
+    "x = principal component (descending variance); y = %% variance explained. ",
+    "Orange bar = PC1, the temperature axis; grey = PC2+. Only PC1 stands clear of the tail, so ",
+    "read one dominant axis rather than two design axes. ",
+    "GENE UNIVERSE: all %s delivered symbols carrying variance across the 20 libraries, matching ",
+    "the DE stage. On the 2,000 most variable genes alone PC1 would read %.1f%% instead of %.1f%%, ",
+    "because variance selection concentrates variance into the leading axis. ",
     "Companion scatter: fig1c_pca_2x2. Claim tier: PROVISIONAL."),
+    n_genes_lab, pc1_top2000, percentVar[["PC1"]]),
   config     = FIG_CFG
 )
 
