@@ -84,6 +84,61 @@ stage_dir <- function(id, kind = c("figures", "tables")) {
 }
 
 # ============================================================================
+# PROJECT-LOCAL R LIBRARY (opt-in, never automatic)
+# ============================================================================
+
+DIR_R_LIBRARY <- file.path(PROJECT_ROOT,
+                           sub("/+$", "", YAML_CONFIG$paths$r_library %||% "01_modules/Rlib"))
+
+#' Put the project-local R library first on .libPaths() for this session.
+#'
+#' Sourcing config.R deliberately does NOT do this. A script opts in by calling
+#' use_project_rlib() BEFORE its library() calls; every other script sees the
+#' container's system library exactly as before. The system library stays on the
+#' search path behind the project one, so only packages actually installed into
+#' the project library shadow it.
+#'
+#' The environment variable PROJECT_RLIB overrides the configured path for one
+#' run, which is how a script can be re-run against the system build of a package
+#' for comparison:
+#'   PROJECT_RLIB=none Rscript 02_analysis/scripts/<script>.R   # system library only
+#'   PROJECT_RLIB=/some/other/lib Rscript ...                   # a different library
+#'
+#' @param require_pkgs Optional character vector. Each named package must resolve
+#'   inside the project library, or the call stops. Use it when the whole point of
+#'   opting in is a specific build, so a missing install fails loudly instead of
+#'   silently falling through to the system version. The check is skipped when
+#'   PROJECT_RLIB is set, since an explicit override is a deliberate choice.
+#' @return The library path put in front, or NA if none was (invisibly).
+use_project_rlib <- function(require_pkgs = character(0)) {
+  ov  <- Sys.getenv("PROJECT_RLIB", unset = NA_character_)
+  lib <- if (is.na(ov)) DIR_R_LIBRARY
+         else if (identical(tolower(ov), "none")) NA_character_
+         else normalizePath(ov, mustWork = FALSE)
+
+  if (is.na(lib)) {
+    message("[rlib] PROJECT_RLIB=none; using the system library only")
+  } else if (!dir.exists(lib)) {
+    message("[rlib] no project library at ", lib, "; using the system library only")
+    lib <- NA_character_
+  } else {
+    .libPaths(c(lib, .libPaths()))
+    message("[rlib] project library first on the search path: ", lib)
+  }
+
+  for (p in if (is.na(ov)) require_pkgs else character(0)) {
+    found <- tryCatch(find.package(p), error = function(e) NA_character_)
+    if (is.na(found))
+      stop(sprintf("Package '%s' is required but not installed anywhere on .libPaths().", p))
+    if (is.na(lib) || !startsWith(normalizePath(found), normalizePath(lib)))
+      stop(sprintf(paste0("Package '%s' was required from the project library but resolved to %s. ",
+                          "Install it with: R CMD INSTALL -l %s <source>"),
+                   p, found, DIR_R_LIBRARY))
+  }
+  invisible(lib)
+}
+
+# ============================================================================
 # INPUT PATHS
 # ============================================================================
 

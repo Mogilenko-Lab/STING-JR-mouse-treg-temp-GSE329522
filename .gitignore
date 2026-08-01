@@ -55,6 +55,10 @@ __marimo__/
 # Reference codebases (gitignored by default — add explicitly if needed)
 01_modules/.ref/
 
+# Project-local R library (paths.r_library). Compiled package binaries, rebuilt by
+# 02_analysis/config/env/r_library.md; the recipe is tracked, the bytes are not.
+01_modules/Rlib/
+
 # Logs
 logs/
 *.log
