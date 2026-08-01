@@ -1,0 +1,5 @@
+"arm","n_genes","n_no_annotation","n_annotated_no_enriched_term","n_in_enriched_term","n_no_bp_but_other_ontology","n_arm_annotated","n_covered_obs","null_median_covered","null_q95_covered","uniform_median_covered","p_covered_matched"
+"WT_heat_up",199,11,29,159,7,188,159,147,158.05,0,0.0504747626
+"KO_heat_up",218,15,38,165,11,203,165,130,150,0,0.00099950025
+"Interaction_up",7,0,0,7,0,7,7,0,4,0,0.0019990005
+"Interaction_fdrOnly_up",18,1,3,14,1,17,14,0,7,0,0.000499750125

@@ -1,0 +1,9 @@
+"arm","quantity","n_drawn","observed","null_median","null_q95","uniform_median","p_value"
+"WT_heat_up","GO BP terms reaching significance",188,386,242,382.05,0,0.0474762619
+"KO_heat_up","GO BP terms reaching significance",203,316,108.5,226.05,0,0.00149925037
+"Interaction_up","GO BP terms reaching significance",7,47,0,10,0,0.0104947526
+"Interaction_fdrOnly_up","GO BP terms reaching significance",17,66,0,11,0,0.00149925037
+"WT_heat_up","arm genes in a term reaching significance",188,159,147,158.05,0,0.0504747626
+"KO_heat_up","arm genes in a term reaching significance",203,165,130,150,0,0.00099950025
+"Interaction_up","arm genes in a term reaching significance",7,7,0,4,0,0.0019990005
+"Interaction_fdrOnly_up","arm genes in a term reaching significance",17,14,0,7,0,0.000499750125
