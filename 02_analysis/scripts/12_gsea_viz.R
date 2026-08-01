@@ -11,8 +11,11 @@
 ##   barplot.{print.pdf,screen.png}      — gsea_barplot()        (NES bars, significant only)
 ##
 ## Cross-contrast overview (03_results/06_gsea/figures/_overview/):
-##   gsea_asymmetry_panel           — cGAS-dependence asymmetry (IFN/ISG vs HIF/glycolysis)
-##   gsea_lombardi_vs_bespoke_hif   — Lombardi-2022 48-gene vs Hallmark Hypoxia HIF check
+##   gsea_asymmetry_panel           NES heatmap of the Hallmark sets matching two name
+##                                  patterns (interferon/inflammatory, hypoxia/metabolic)
+##                                  across the focal contrasts
+##   gsea_lombardi_vs_bespoke_hif   NES per contrast for the curated Lombardi-2022 consensus
+##                                  and Hallmark HYPOXIA; BOTH set sizes are read at RUNTIME
 ##
 ## Run from project root AFTER 05_gsea_msigdb_run.R and 06_gsea_custom_run.R:
 ##   Rscript 02_analysis/scripts/12_gsea_viz.R
@@ -45,8 +48,18 @@
 ##
 ## House constraints (non-negotiable in all captions):
 ##   * Never "cGAS-independent" -> say "no detectable cGAS-dependence at n=5"
-##   * Never crown HIF1alpha/HIF2alpha as the driver
-##   * Lombardi-2022 (48-gene) is the orthogonal HIF check; contrasted with hand-made 16-gene
+##   * Never crown HIF1alpha/HIF2alpha as the driver, and never name a block of gene sets after
+##     a mechanism it is hoped to represent. The asymmetry panel's two blocks are NAME-PATTERN
+##     groupings over Hallmark set names, so they are labelled by those patterns, never "the
+##     HIF arm" (no set in that block is a HIF set).
+##   * NO em-dashes, contrastive negation ("X, not Y"), or self-approving vocabulary in any
+##     title, subtitle, axis label, legend or caption. A title states what is DRAWN.
+##   * The curated Lombardi-2022 set's SIZE IS READ AT RUNTIME and is never a literal. An
+##     earlier revision printed "48-gene" on the figure face while the set on disk held 100
+##     and this panel's own source table recorded set_size=100 on every row. The 48-gene
+##     vector was verbatim the single TCGA-ACC worksheet of the supplement;
+##     00b_curate_lombardi_hif.R:19-24 documents why it is not the published signature. A
+##     hardcoded count is how that label survived the re-curation, so read it, never type it.
 ##   * Claims floor at L3 (DE/enrichment stats); stamp PROVISIONAL sample labels where relevant
 ##   * NES sign: positive = enriched in NUMERATOR (hot/WT side); negative = denominator
 
@@ -279,10 +292,32 @@ as_gsearesult <- function(co, db) {
 # 4. Per-contrast subtitle + caption metadata
 # ============================================================================
 
-#' Standard per-contrast subtitle line for every panel.
+#' Wrap on-figure text to a character width so a long label cannot run off the plot edge.
+#' Needed because several contrast display labels are long: the untruncated Interaction label
+#' ("Heat × genotype interaction (cGAS-dependence of the heat response)") ran off the right edge
+#' of the 8.5in per-cell panels as a single-line title.
+TITLE_WRAP    <- 52L    # per-cell panels, 8.5in wide
+SUB_WRAP      <- 88L
+OV_TITLE_WRAP <- 78L    # _overview panels, 13in wide (wide = TRUE)
+OV_SUB_WRAP   <- 108L
+
+# Facet row cap, PER DIRECTION. The facet stacks an up block and a down block, so reusing
+# figures.top_pathways (20) put up to 40 wrapped set names on one canvas and the labels
+# collided into illegibility. The craft standard's remedy is "cap to top-N; never truncate
+# axis labels", so we drop rows rather than clip labels or stretch the canvas: a taller canvas
+# fixes the room but fails the journal-column half of the same standard. The cap and the full
+# per-direction count are both printed on the panel so the reduction is visible, and every set
+# stays in the per-contrast table named in the caption.
+FACET_TOPN <- 10L
+FACET_WRAP <- 85L   # y-label wrap width; the longest facet label in the stage is 81 chars
+wrap_text <- function(x, width) paste(strwrap(as.character(x), width = width), collapse = "\n")
+
+#' Standard subtitle line for every per-cell panel: the sign convention and the label caveat.
+#' The contrast itself is already named in the title, so it is not repeated here. `co` is kept
+#' in the signature so the call sites read symmetrically with the title builder.
 contrast_subtitle <- function(co) {
-  sprintf("%s — NES>0 enriched in numerator/hot/WT side, NES<0 in denominator — PROVISIONAL sample labels",
-          contrast_label(co))
+  wrap_text("NES > 0 enriched in the numerator (39 °C or WT), NES < 0 in the denominator. PROVISIONAL sample labels",
+            SUB_WRAP)
 }
 
 CFG_KV <- sprintf(
@@ -292,6 +327,23 @@ CFG_KV <- sprintf(
 # ============================================================================
 # 5. Per-cell emitter — the four toolkit panels for one (contrast x DB)
 # ============================================================================
+
+#' A titled panel whose body is one legible statement, for the case where a panel's own
+#' selection rule leaves it with nothing to draw. Keeps the four-panels-per-cell invariant
+#' while making the emptiness a readable result instead of a blank page.
+empty_state_panel <- function(ttl, sub, msg) {
+  ggplot(data.frame(x = 0, y = 0), aes(x = x, y = y)) +
+    geom_blank() +
+    annotate("label", x = 0, y = 0, label = msg, lineheight = 1.15,
+             size = (FIG_CFG$figures$label_size %||% 5) + 1, fontface = "bold",
+             colour = "white", fill = NEG, label.size = 0, label.r = unit(3, "pt"),
+             label.padding = unit(0.8, "lines")) +
+    labs(title = ttl, subtitle = sub, x = NULL, y = NULL) +
+    project_theme(config = FIG_CFG) +
+    ggplot2::theme(axis.text = ggplot2::element_blank(),
+                   axis.ticks = ggplot2::element_blank(),
+                   panel.grid = ggplot2::element_blank())
+}
 
 emit_cell <- function(co, db_name, src) {
   g <- tryCatch(as_gsearesult(co, db_name),
@@ -307,7 +359,10 @@ emit_cell <- function(co, db_name, src) {
   message(sprintf("  [12] %s / %s: %d pathways, %d sig (padj < %.2g)",
                   co, db_name, nrow(g@result), n_sig, FDR))
 
-  ttl <- sprintf("%s — %s", db_name, contrast_label(co))
+  # Title = the contrast and the collection, which is what the panel draws. No em-dash, and no
+  # colon separator: several contrast labels already contain one ("WT: heat (39 vs 37 °C)").
+  # Wrapped, because the Interaction label pushes the single-line form past the panel edge.
+  ttl <- wrap_text(sprintf("%s in the %s collection", contrast_label(co), db_name), TITLE_WRAP)
   sub <- contrast_subtitle(co)
 
   # Pre-create + purge the per-(contrast x DB) figure subdir so the run owns its namespace
@@ -333,20 +388,49 @@ emit_cell <- function(co, db_name, src) {
   }
   save_figure(p_dot, STAGE, file.path(db_name, "dotplot"), contrast = co, config = FIG_CFG)
 
-  # ---- 2. up/down faceted dotplot ----
-  p_fac <- gsea_dotplot_facet(g, showCategory = TOPN, padj_cutoff = FDR, title = ttl,
+  # ---- 2. up/down faceted dotplot (capped at FACET_TOPN per direction) ----
+  # The full per-direction counts go on the panel next to the cap, so a reader can see how much
+  # was dropped rather than mistaking the panel for the whole cell.
+  n_up_all <- sum(g@result$NES > 0, na.rm = TRUE)
+  n_dn_all <- sum(g@result$NES < 0, na.rm = TRUE)
+  fac_src  <- sprintf("tables/by_contrast/%s/gsea_%s.csv", co, src)
+  fac_sub  <- wrap_text(sprintf(
+    "Top %d per direction of %d up and %d down. Every set is in %s. %s",
+    FACET_TOPN, n_up_all, n_dn_all, fac_src, sub), OV_SUB_WRAP)
+  # Landscape geometry (wide = TRUE, 13in) plus a generous wrap width. With the cap fixed at
+  # FACET_TOPN per direction, 20 rows must fit the shared 6.5in height, which they only do if
+  # each set name occupies ONE line. At the 8.5in width and the toolkit's default wrap_width=50
+  # the long Reactome/MitoPathways/WikiPathways names broke onto two lines and collided. Widening
+  # buys the label column the room to keep them on one line without truncating any of them, and
+  # a 13x6.5in landscape panel still reads in a journal double-column. Verified on the three
+  # worst cells by measured label length: KO_heat/Reactome (max 81 chars), Geno_at_37/
+  # MitoPathways (max 71), KO_heat/WikiPathways (max 62).
+  p_fac <- gsea_dotplot_facet(g, showCategory = FACET_TOPN, padj_cutoff = FDR, title = ttl,
+                              wrap_width = FACET_WRAP,
                               neg_color = NEG, mid_color = MID, pos_color = POS,
                               nes_limits = c(-NESCAP, NESCAP)) +
-    labs(subtitle = sub) +
+    labs(subtitle = fac_sub) +
     project_theme(config = FIG_CFG)
-  save_figure(p_fac, STAGE, file.path(db_name, "facet"), contrast = co, config = FIG_CFG)
+  save_figure(p_fac, STAGE, file.path(db_name, "facet"), contrast = co, config = FIG_CFG,
+              wide = TRUE)
 
   # ---- 3. NES barplot (significant sets only, top-N by |NES|) ----
-  p_bar <- gsea_barplot(g, padj_cutoff = FDR, top_n = TOPN, title = ttl,
-                        neg_color = NEG, mid_color = MID, pos_color = POS,
-                        nes_limits = c(-NESCAP, NESCAP)) +
-    labs(subtitle = sub) +
-    project_theme(config = FIG_CFG)
+  # The barplot draws FDR-significant sets ONLY, so in a cell with none the toolkit returns a
+  # panel with no layers: title and subtitle over a blank page, no axes, nothing to tell the
+  # reader whether the figure is empty by result or broken by bug. 18 of the 98 cells are in
+  # that state. Substitute an explicit empty-state panel that states the selection rule and
+  # points at the panels that do show the full ranking.
+  p_bar <- if (n_sig == 0) {
+    empty_state_panel(
+      ttl, sub,
+      sprintf("No gene set reached FDR < %.2g in this cell.\nThis panel draws FDR-significant sets only.\nThe dotplot and facet panels show the full ranking.", FDR))
+  } else {
+    gsea_barplot(g, padj_cutoff = FDR, top_n = TOPN, title = ttl,
+                 neg_color = NEG, mid_color = MID, pos_color = POS,
+                 nes_limits = c(-NESCAP, NESCAP)) +
+      labs(subtitle = sub) +
+      project_theme(config = FIG_CFG)
+  }
   save_figure(p_bar, STAGE, file.path(db_name, "barplot"), contrast = co, config = FIG_CFG)
 
   # ---- 4. running-sum — REAL three-panel ES curves (the headline fix) ----
@@ -400,11 +484,18 @@ for (co in CONTRASTS) {
 db_in_master <- intersect(ALL_DBS, unique(mg$database))
 
 # ============================================================================
-# 9. cGAS-dependence ASYMMETRY panel (_overview/)
+# 9. Hallmark NES heatmap, two name-pattern blocks (_overview/)
 # ============================================================================
-ASYMM_IFN_PATTERN  <- "INTERFERON|INNATE_IMMUNE|INFLAMMATORY|TNF|IL6|IL2|ALLOGRAFT"
-ASYMM_HIF_PATTERN  <- "HYPOXIA|GLYCOLYSIS|MTORC1|OXIDATIVE_PHOSPHORYLATION"
-FOCAL_CONTRASTS    <- intersect(c("WT_heat", "KO_heat", "Interaction", "Temp_main"), CONTRASTS)
+# The two blocks are groupings over Hallmark SET NAMES, nothing more. They are labelled by
+# those name patterns: calling the lower block "the HIF arm" would name a block of sets after
+# a regulator that none of its member sets is (HYPOXIA/GLYCOLYSIS/MTORC1/OXPHOS are all
+# curated MSigDB sets, not HIF target lists), which is the naming the house rules forbid.
+ASYMM_IFN_PATTERN    <- "INTERFERON|INNATE_IMMUNE|INFLAMMATORY|TNF|IL6|IL2|ALLOGRAFT"
+ASYMM_METAB_PATTERN  <- "HYPOXIA|GLYCOLYSIS|MTORC1|OXIDATIVE_PHOSPHORYLATION"
+ASYMM_LAB_IFN        <- "Interferon and inflammatory sets"
+ASYMM_LAB_METAB      <- "Hypoxia and metabolic sets"
+ASYMM_TOP_PER_BLOCK  <- min(TOPN, 12L)   # the panel's selection rule, per block, by |NES|
+FOCAL_CONTRASTS      <- intersect(c("WT_heat", "KO_heat", "Interaction", "Temp_main"), CONTRASTS)
 
 if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
   hall_mg <- mg %>% dplyr::filter(database == "Hallmark", contrast %in% FOCAL_CONTRASTS)
@@ -412,24 +503,45 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
   asym_df <- hall_mg %>%
     dplyr::mutate(
       arm = dplyr::case_when(
-        grepl(ASYMM_IFN_PATTERN, pathway_id, ignore.case = TRUE) ~ "IFN / Immune",
-        grepl(ASYMM_HIF_PATTERN, pathway_id, ignore.case = TRUE) ~ "HIF / Glycolysis",
+        grepl(ASYMM_IFN_PATTERN,   pathway_id, ignore.case = TRUE) ~ ASYMM_LAB_IFN,
+        grepl(ASYMM_METAB_PATTERN, pathway_id, ignore.case = TRUE) ~ ASYMM_LAB_METAB,
         TRUE ~ NA_character_)) %>%
     dplyr::filter(!is.na(arm)) %>%
     dplyr::mutate(
       label_y     = format_pathway_name(pathway_name, use_formatting = TRUE, strip_prefix = TRUE),
       significant = padj < FDR,
       contrast_lab = factor(contrast_label(contrast, short = TRUE), levels = contrast_label(FOCAL_CONTRASTS, short = TRUE)),
-      arm         = factor(arm, levels = c("IFN / Immune", "HIF / Glycolysis")))
+      arm         = factor(arm, levels = c(ASYMM_LAB_IFN, ASYMM_LAB_METAB)))
 
   if (nrow(asym_df) > 0) {
     top_ids_asym <- asym_df %>%
       dplyr::group_by(arm, pathway_id) %>%
       dplyr::summarise(max_abs_nes = max(abs(nes), na.rm = TRUE), .groups = "drop") %>%
       dplyr::group_by(arm) %>%
-      dplyr::slice_max(order_by = max_abs_nes, n = min(TOPN, 12L), with_ties = FALSE) %>%
+      dplyr::slice_max(order_by = max_abs_nes, n = ASYMM_TOP_PER_BLOCK, with_ties = FALSE) %>%
       dplyr::ungroup()
     asym_df <- asym_df %>% dplyr::semi_join(top_ids_asym, by = c("arm", "pathway_id"))
+
+    # Row counts actually DRAWN per block. The cap is at most ASYMM_TOP_PER_BLOCK, and both
+    # blocks currently fall under it, so the subtitle must not imply that 12 of a longer list
+    # were picked when every matching set is on the panel.
+    asym_n_drawn <- asym_df %>% dplyr::distinct(arm, pathway_id) %>%
+      dplyr::count(arm, name = "n") %>% dplyr::arrange(arm)
+    asym_counts_txt <- paste(sprintf("%s = %d", asym_n_drawn$arm, asym_n_drawn$n), collapse = ", ")
+    asym_cap_bites  <- any(asym_n_drawn$n >= ASYMM_TOP_PER_BLOCK)
+    asym_rule <- if (asym_cap_bites)
+      sprintf("Top %d sets per block by |NES|", ASYMM_TOP_PER_BLOCK)
+    else
+      sprintf("Every matching Hallmark set is drawn; the rule caps a block at %d by |NES|",
+              ASYMM_TOP_PER_BLOCK)
+    asym_absence_note <- if (asym_cap_bites)
+      sprintf("The cap bites here (%s drawn per block), so a matching set can be absent purely because its |NES| ranked outside the top %d. ",
+              asym_counts_txt, ASYMM_TOP_PER_BLOCK)
+    else
+      sprintf("The cap does not bite here (%s), so every Hallmark set matching either pattern is on the panel and no absence needs explaining. ",
+              asym_counts_txt)
+    message(sprintf("[12] Asymmetry blocks drawn: %s (cap %d, bites: %s)",
+                    asym_counts_txt, ASYMM_TOP_PER_BLOCK, asym_cap_bites))
 
     p_asym <- ggplot(asym_df, aes(x = contrast_lab, y = reorder(label_y, nes), fill = nes)) +
       geom_tile(colour = "white", linewidth = 0.5) +
@@ -441,8 +553,10 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
       facet_grid(arm ~ ., scales = "free_y", space = "free_y",
                  labeller = ggplot2::labeller(arm = ggplot2::label_wrap_gen(22))) +
       labs(
-        title    = "cGAS-dependence asymmetry: IFN vs HIF arms (Hallmark)",
-        subtitle = sprintf("* = padj < %.2g", FDR),
+        title    = wrap_text(sprintf("Hallmark gene-set NES across %d contrasts, in two name-pattern blocks",
+                                     length(FOCAL_CONTRASTS)), OV_TITLE_WRAP),
+        subtitle = wrap_text(sprintf("%s. * = padj < %.2g. PROVISIONAL sample labels", asym_rule, FDR),
+                             OV_SUB_WRAP),
         x = NULL, y = NULL, caption = NULL) +
       project_theme(config = FIG_CFG) +
       ggplot2::theme(axis.text.x  = ggplot2::element_text(angle = 35, hjust = 1),
@@ -457,51 +571,114 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
                     dplyr::select(arm, pathway_id, pathway_name, contrast, nes, padj, set_size) %>%
                     dplyr::mutate(across(where(is.factor), as.character)),
       finding   = sprintf(
-        "cGAS-dependence asymmetry in Hallmark GSEA (focal contrasts: %s). IFN/immune sets (top block) are expected to show positive NES in WT_heat and positive Interaction NES (cGAS-dependent heat-induced IFN arm). HIF/glycolysis sets (bottom block) are expected positive in WT_heat/KO_heat/Temp_main but NOT significantly enriched in Interaction — interpreted as no detectable cGAS-dependence at n=5, NOT as proven cGAS-independence (the 1-df Interaction term is underpowered).",
-        paste(FOCAL_CONTRASTS, collapse = ", ")),
+        "Hallmark GSEA NES for every set whose MSigDB name matches one of two patterns, drawn across the contrasts %s. Top block (pattern %s): the two interferon-response sets carry negative NES in both per-genotype heat contrasts (WT_heat -1.90, KO_heat -2.52 for the alpha set; -1.77 and -2.20 for the gamma set) and positive NES in the interaction term (+3.14, padj 2.7e-24; +2.83, padj 5.0e-22), while the TNF, IL2/STAT5, inflammatory and allograft sets are positive in both heat contrasts with a non-significant interaction. Bottom block (pattern %s): HYPOXIA, GLYCOLYSIS and MTORC1 are positive and FDR-significant in both heat contrasts (HYPOXIA WT_heat +1.91 padj 4.2e-06, KO_heat +1.95 padj 2.5e-06) with a negative, non-significant interaction NES (HYPOXIA -1.27, padj 0.17), and OXIDATIVE_PHOSPHORYLATION is negative and non-significant throughout. A non-significant interaction NES reads as no detectable cGAS-dependence at n=5 and never as proven cGAS-independence: the 1-df interaction term is the least-powered contrast in this design. Set composition is not established by this panel, so a set's enrichment is not evidence that the program its name invokes is present.",
+        paste(FOCAL_CONTRASTS, collapse = ", "), ASYMM_IFN_PATTERN, ASYMM_METAB_PATTERN),
       script    = SCRIPT,
       fn        = "geom_tile",
       config_kv = CFG_KV,
       input     = "03_results/master/master_gsea_table.csv",
       how_to_read = paste0(
-        "Two-row heatmap: top block = IFN/immune Hallmark sets; bottom block = HIF/glycolysis sets. ",
-        "Color = NES (orange = NES>0 / enriched in hot/WT numerator; blue = NES<0 / enriched in cold/KO denominator). ",
-        "* = padj < ", FDR, ". The Interaction contrast is the cGAS-dependence read-out: ",
-        "positive/significant Interaction NES for IFN sets = cGAS-dependent; non-significant Interaction NES ",
-        "for HIF sets = no detectable cGAS-dependence at n=5 (NEVER 'cGAS-independent'). Claim tier: L3. PROVISIONAL sample labels."),
+        "Two-block heatmap, one tile per (gene set x contrast). Rows are the Hallmark sets whose MSigDB ",
+        "name matches the block's pattern: top block = '", ASYMM_IFN_PATTERN, "'; bottom block = '",
+        ASYMM_METAB_PATTERN, "'. SELECTION RULE, which governs every absence you see: within each block ",
+        "only the top ", ASYMM_TOP_PER_BLOCK, " sets by max |NES| across the plotted contrasts are drawn, so a ",
+        "set can be missing because its |NES| is small even when its adjusted p is among the smallest. ",
+        asym_absence_note,
+        "The two blocks are NAME-PATTERN groupings over set names and carry no claim about which regulator ",
+        "drives either block. Fill = NES: orange = NES > 0 (enriched in the contrast numerator, 39 °C or WT); ",
+        "blue = NES < 0 (enriched in the denominator, 37 °C or cGAS-KO); fill is squished at +/-", NESCAP, ". ",
+        "* = padj < ", FDR, ". Row order within a block is by NES. The Interaction column is the ",
+        "cGAS-dependence read-out: a positive significant interaction NES is consistent with cGAS-dependent ",
+        "induction; a non-significant interaction NES means no detectable cGAS-dependence at n=5 and never ",
+        "'cGAS-independent'. A set enriching is not evidence that the program its name invokes is present; ",
+        "composition would have to be established separately. Claim tier: L3. PROVISIONAL sample labels."),
       config    = FIG_CFG, wide = TRUE
     )
     message("[12] Asymmetry panel emitted: gsea_asymmetry_panel")
   } else {
-    message("[12] SKIP asymmetry panel: no Hallmark IFN/HIF rows matched the patterns.")
+    message("[12] SKIP asymmetry panel: no Hallmark set names matched either block pattern.")
   }
 } else {
   message("[12] SKIP asymmetry panel: Hallmark not in master or <2 focal contrasts available.")
 }
 
 # ============================================================================
-# 10. Lombardi-2022 vs Hallmark-Hypoxia HIF comparison panel (_overview/)
+# 10. Curated Lombardi-2022 consensus alongside Hallmark HYPOXIA (_overview/)
 # ============================================================================
 LOMBARDI_DB <- "Lombardi2022_HIF"
 
+#' Read a gene set's TESTED size at runtime from the master table rows the panel plots.
+#'
+#' The size on the figure face MUST come from the same rows the same-stem source table is
+#' written from, so the two can never disagree. Typing the number is what let a "48-gene"
+#' label survive next to a table recording set_size = 100 on every row.
+tested_set_size <- function(rows, what) {
+  sz <- unique(as.integer(rows$set_size[!is.na(rows$set_size)]))
+  if (length(sz) == 0L) stop("tested_set_size: no set_size recorded in the master rows for ", what)
+  if (length(sz) > 1L)
+    warning("[12] ", what, " carries >1 distinct set_size in the master (",
+            paste(sort(sz), collapse = "/"), "); labelling with the maximum.")
+  max(sz)
+}
+
+#' Cross-check a tested size against the curated gene set on disk (the 03_decoupler_tf.R
+#' discipline: length the object, never carry a literal). Logs both; warns on a mismatch
+#' rather than silently preferring one.
+.check_curated_size <- function(db, n_tested) {
+  hit <- Filter(function(d) identical(d$name, db), YAML_CONFIG$databases$custom %||% list())
+  if (length(hit) == 0L || is.null(hit[[1]]$path) || !file.exists(hit[[1]]$path)) {
+    message(sprintf("[12] %s: curated RDS not on disk; size taken from the master (%d tested).",
+                    db, n_tested))
+    return(invisible(NULL))
+  }
+  obj <- tryCatch(readRDS(hit[[1]]$path), error = function(e) NULL)
+  if (is.null(obj) || is.null(obj[[db]])) return(invisible(NULL))
+  n_curated <- length(unique(as.character(obj[[db]])))
+  message(sprintf("[12] %s size read at RUNTIME: curated set on disk = %d genes; tested in this ranking = %d",
+                  db, n_curated, n_tested))
+  if (n_curated != n_tested)
+    message(sprintf("[12]   (the %d difference is genes absent from the ranked universe or dropped by the %d-%d size filter)",
+                    n_curated - n_tested, MINGS, MAXGS))
+  invisible(n_curated)
+}
+
 if (LOMBARDI_DB %in% db_in_master) {
-  lomb_df <- mg %>%
-    dplyr::filter(database == LOMBARDI_DB, contrast %in% CONTRASTS) %>%
-    dplyr::mutate(source_label = "Lombardi-2022\n(48-gene published HIF consensus)",
+  lomb_rows <- mg %>% dplyr::filter(database == LOMBARDI_DB, contrast %in% CONTRASTS)
+  hall_rows <- mg %>% dplyr::filter(database == "Hallmark",
+                                    grepl("HYPOXIA", pathway_id, ignore.case = TRUE),
+                                    contrast %in% CONTRASTS)
+
+  # ---- Set sizes read at RUNTIME from the rows this panel plots (never hardcoded) ----
+  N_LOMB <- tested_set_size(lomb_rows, LOMBARDI_DB)
+  N_HALL <- tested_set_size(hall_rows, "HALLMARK_HYPOXIA")
+  .check_curated_size(LOMBARDI_DB, N_LOMB)
+  message(sprintf("[12] HALLMARK_HYPOXIA size read at RUNTIME: %d genes tested", N_HALL))
+
+  LAB_LOMB <- sprintf("Lombardi-2022 consensus\n(%d genes tested)", N_LOMB)
+  LAB_HALL <- sprintf("Hallmark HYPOXIA\n(MSigDB, %d genes tested)", N_HALL)
+
+  lomb_df <- lomb_rows %>%
+    dplyr::mutate(source_label = LAB_LOMB,
                   contrast_lab = factor(contrast_label(contrast, short = TRUE), levels = contrast_label(CONTRASTS, short = TRUE)),
                   significant  = padj < FDR)
 
-  hall_hypoxia <- mg %>%
-    dplyr::filter(database == "Hallmark",
-                  grepl("HYPOXIA", pathway_id, ignore.case = TRUE),
-                  contrast %in% CONTRASTS) %>%
-    dplyr::mutate(source_label = "Hallmark HYPOXIA\n(MSigDB canonical)",
+  hall_hypoxia <- hall_rows %>%
+    dplyr::mutate(source_label = LAB_HALL,
                   contrast_lab = factor(contrast_label(contrast, short = TRUE), levels = contrast_label(CONTRASTS, short = TRUE)),
                   significant  = padj < FDR)
 
   combo_df <- dplyr::bind_rows(lomb_df, hall_hypoxia)
 
   if (nrow(combo_df) > 0) {
+    # The y-axis stays pinned at +/-NESCAP for cross-panel comparability, which leaves this
+    # panel's lower and upper thirds empty. State the OBSERVED span, computed, so a reader does
+    # not read the empty band as missing data, and say whether the cap actually clipped anything
+    # here rather than asserting it.
+    LOMB_LO   <- min(combo_df$nes, na.rm = TRUE)
+    LOMB_HI   <- max(combo_df$nes, na.rm = TRUE)
+    LOMB_CLIP <- sum(abs(combo_df$nes) > NESCAP, na.rm = TRUE)
+    message(sprintf("[12] Lombardi panel observed NES span: %.2f to %.2f; values beyond the +/-%.1f cap: %d",
+                    LOMB_LO, LOMB_HI, NESCAP, LOMB_CLIP))
     p_lomb <- ggplot(combo_df,
                      aes(x = contrast_lab, y = nes, colour = source_label, shape = significant,
                          group = interaction(pathway_name, source_label))) +
@@ -509,18 +686,19 @@ if (LOMBARDI_DB %in% db_in_master) {
       geom_line(aes(group = interaction(database, pathway_id)), linewidth = 0.7, alpha = 0.6) +
       geom_point(size = 4, stroke = 1.2) +
       scale_colour_manual(
-        values = c("Lombardi-2022\n(48-gene published HIF consensus)" = POS,
-                   "Hallmark HYPOXIA\n(MSigDB canonical)"             = COL_PURPLE),
-        name = "HIF signature") +
+        values = stats::setNames(c(POS, COL_PURPLE), c(LAB_LOMB, LAB_HALL)),
+        name = "Gene set") +
       scale_shape_manual(values = c("TRUE" = 19, "FALSE" = 1),
                          name   = sprintf("padj < %.2g", FDR),
                          labels = c("TRUE" = "Significant", "FALSE" = "Not significant")) +
       scale_y_continuous(limits = c(-NESCAP, NESCAP), oob = scales::squish) +
       labs(
-        title    = "HIF orthogonal check: Lombardi-2022 vs Hallmark Hypoxia",
-        subtitle = NULL,
+        title    = wrap_text(sprintf("GSEA NES per contrast for two curated gene sets, %d and %d genes tested",
+                                     N_LOMB, N_HALL), OV_TITLE_WRAP),
+        subtitle = wrap_text(sprintf("Every contrast in the design is plotted, with no ranking filter. Observed NES spans %.2f to %.2f inside a y-axis pinned at ±%.1f for cross-panel comparability. Filled point = padj < %.2g. PROVISIONAL sample labels",
+                                     LOMB_LO, LOMB_HI, NESCAP, FDR), OV_SUB_WRAP),
         x = NULL,
-        y = sprintf("NES (capped at ±%.1f)", NESCAP),
+        y = sprintf("NES (squished at ±%.1f)", NESCAP),
         caption = NULL) +
       project_theme(config = FIG_CFG) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 35, hjust = 1),
@@ -534,22 +712,40 @@ if (LOMBARDI_DB %in% db_in_master) {
                     dplyr::select(source_label, pathway_id, pathway_name, contrast, nes, padj, set_size) %>%
                     dplyr::mutate(across(where(is.factor), as.character)),
       finding   = sprintf(
-        "Comparison of HIF-signature GSEA NES across contrasts: published Lombardi-2022 48-gene consensus (orange) vs Hallmark HYPOXIA (purple). Both are expected to track the heat response in WT_heat/KO_heat/Temp_main but NOT show significant Interaction NES — consistent with no detectable cGAS-dependence of the HIF/glycolysis arm at n=5. The Lombardi-2022 set provides an orthogonal published benchmark absent from the original hand-curated 16-gene list (~92%% heat-shock/glycolytic; the hypoxia-diagnostic core repressed, not induced)."),
+        "GSEA NES per contrast for two independently curated gene sets: the Lombardi-2022 conserved consensus re-derived by 00b_curate_lombardi_hif.R from the published supplement (orange, %d genes tested here) and MSigDB HALLMARK_HYPOXIA (purple, %d genes tested here). Both set sizes are read at RUNTIME from the same master rows this panel's source table is written from. Both traces are positive and FDR-significant in WT_heat, KO_heat and Temp_main, and neither reaches significance in the interaction term, which reads as no detectable cGAS-dependence at n=5 and never as proven cGAS-independence. The two sets were curated from different evidence (recurrence across 32 TCGA per-cancer-type worksheets versus MSigDB hallmark curation), so agreement between the traces bears on curation sensitivity and bears on nothing causal: NES is an enrichment statistic and this panel establishes neither set's composition. Naming note for anyone editing this: an earlier revision labelled the orange trace '48-gene' on the figure face while its own source table recorded set_size = %d on every row. That 48-gene vector was verbatim the single TCGA-ACC worksheet of the supplement, which 00b_curate_lombardi_hif.R:19-24 documents is not the published signature.",
+        N_LOMB, N_HALL, N_LOMB),
       script    = SCRIPT,
       fn        = "geom_point + geom_line",
       config_kv = CFG_KV,
       input     = "03_results/master/master_gsea_table.csv",
       how_to_read = paste0(
-        "Line-point traces show NES across contrasts for each HIF signature. ",
-        "Filled points = padj < ", FDR, "; open points = not significant. ",
-        "Positive NES = enriched in numerator (hot/WT); negative = denominator. ",
-        "The Interaction contrast (if present) is the cGAS-dependence read-out: ",
-        "non-significant NES for the HIF arm = no detectable cGAS-dependence at n=5 ",
-        "(NEVER 'cGAS-independent'). House rule: never crown HIF1α/HIF2α as driver; ",
-        "NES is an enrichment statistic (L3 tier). PROVISIONAL sample labels."),
+        "One line-point trace per gene set, x = contrast, y = NES. Orange = the curated ",
+        "Lombardi-2022 consensus (", N_LOMB, " genes tested); purple = MSigDB HALLMARK_HYPOXIA (",
+        N_HALL, " genes tested). Both counts on the legend are read at runtime from the master ",
+        "rows behind the same-stem source table, so the figure face and that table cannot ",
+        "disagree. SELECTION RULE: both named sets are plotted at every contrast in the design; ",
+        "nothing is ranked and nothing is dropped, so no absence on this panel needs explaining. ",
+        "Filled point = padj < ", FDR, "; open point = not significant. Positive NES = enriched ",
+        "in the contrast numerator (39 °C or WT); negative = enriched in the denominator ",
+        "(37 °C or cGAS-KO). The y-axis is squished at ±", NESCAP, " so this panel stays ",
+        "comparable with the other NES panels in the stage. That leaves the top and bottom bands ",
+        "of the panel empty: the values drawn here span ", sprintf("%.2f to %.2f", LOMB_LO, LOMB_HI),
+        " and ", LOMB_CLIP, " of them sit beyond the cap, so the empty band is headroom rather ",
+        "than missing data. Across the 14 databases this stage draws, the cap clips 2 of 33509 ",
+        "results, both HALLMARK_INTERFERON_ALPHA_RESPONSE (Geno_at_39 +3.309, Geno_main +3.301). ",
+        "FILE-NAME NOTE: the stem 'lombardi_vs_bespoke_hif' is a misnomer kept for reference ",
+        "stability. This panel compares the curated Lombardi-2022 consensus against Hallmark ",
+        "HYPOXIA. The hand-made 16-gene list it was originally named for is not plotted here; ",
+        "that comparison lives in 03_results/04_tf/. ",
+        "The Interaction column is the cGAS-dependence read-out: a non-significant NES there ",
+        "means no detectable cGAS-dependence at n=5 and never 'cGAS-independent'. Both sets are ",
+        "named by how they were curated. Neither is a HIF1A or EPAS1 target list, so a positive ",
+        "NES does not identify a regulator, and this panel establishes neither set's composition. ",
+        "Claim tier: L3 (enrichment statistic). PROVISIONAL sample labels."),
       config    = FIG_CFG, wide = TRUE
     )
-    message("[12] Lombardi-vs-bespoke panel emitted: gsea_lombardi_vs_bespoke_hif")
+    message(sprintf("[12] Lombardi/Hallmark-HYPOXIA panel emitted: gsea_lombardi_vs_bespoke_hif (%d and %d genes tested)",
+                    N_LOMB, N_HALL))
   } else {
     message("[12] SKIP Lombardi panel: no rows for Lombardi2022_HIF or Hallmark Hypoxia.")
   }
@@ -560,28 +756,46 @@ if (LOMBARDI_DB %in% db_in_master) {
 # ============================================================================
 # 11. Per-DB README captions for the per-cell toolkit panels
 # ============================================================================
-# One caption block per database family covering the four per-cell stems. The
-# running-sum now describes a REAL three-panel enrichment curve, not a lollipop.
+# One caption block per database family covering the four per-cell stems. Each names the
+# SELECTION RULE its panels use, because that rule governs every absence a reader sees.
+# What each custom database CONTAINS, keyed by database. A two-way msigdb/custom split was
+# wrong here: it described the HSR and TCR lenses as carrying "metabolic and transport sets
+# only", which is false for both. MSigDB collections fall through to the generic line.
+DB_CONTENT <- c(
+  TransportDB      = "Membrane-transporter sets; this database carries no interferon or heat-shock sets, so nothing here bears on those axes.",
+  MitoPathways     = "MitoCarta MitoPathways sets (mitochondrial function and metabolism); this database carries no interferon or heat-shock sets.",
+  MitoXplorer      = "MitoXplorer sets (mitochondrial metabolic atlas); this database carries no interferon or heat-shock sets.",
+  Lombardi2022_HIF = "One set: the curated Lombardi-2022 published consensus, whose size is read at runtime from the master table and never hardcoded. A positive NES here does not identify a regulator, and these panels do not establish the set's composition.",
+  HSR_lens         = "Two curated heat-shock-response terms (HSR_core, HSR_sensitivity), built by 00d/00e and held anchor-independent of the empirical heat arms. Proteotoxic-stress-general in scope; only the 37/39 °C contrast bears on temperature.",
+  TCR_activation   = "One curated TCR and immediate-early T-cell-activation term, built by 00f and disjoint from the HSR core by construction. Overlap of a heat arm with this term reads as activation."
+)
+DB_CONTENT_GENERIC <- "Read each set's direction per contrast on its own; the panels rank sets within a cell and make no statement about which regulator drives any of them."
+
 for (db_name in ALL_DBS) {
   if (!(db_name %in% db_in_master)) next
   src <- if (db_name %in% MSIGDB_NAMES) "msigdb" else "custom"
-  db_body <- if (src == "msigdb" || db_name %in% c("Lombardi2022_HIF"))
-    "IFN/ISG and immune sets enrich positively in WT-time contrasts and reverse sign in the STING/IFNAR1 interaction contrasts"
-  else
-    "per-contrast set enrichment for this metabolic/transport database — read each set's direction on its own, NOT as an IFN-axis signature (these DBs carry no IFN/ISG sets)"
+  db_body <- if (db_name %in% names(DB_CONTENT)) unname(DB_CONTENT[db_name]) else DB_CONTENT_GENERIC
+  # Where the dotplot's rank (adjusted p) and the running-sum's rank (|NES|) disagree, the
+  # disagreement is worth stating concretely so a reader never reads an absence as a null.
+  db_rank_note <- if (identical(db_name, "Hallmark"))
+    sprintf(" Worked example of the two rankings diverging: in the WT_heat Hallmark cell HALLMARK_HYPOXIA is 6th by |NES| (+1.91) and 4th by adjusted p (4.2e-06), so it is outside the running-sum's top %d by |NES| while sitting well inside the dotplot's top %d by adjusted p. An absence from one panel is a statement about that panel's ranking metric only.",
+            RSTOP, TOPN)
+  else ""
   write_caption(
     stage    = STAGE,
     filename = sprintf("figures/by_contrast/<contrast>/%s/*.png", db_name),
     finding  = sprintf(
-      "%s GSEA per contrast (dotplot/facet/barplot/running_sum) via the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult (NES/padj taken verbatim from master_gsea_table.csv; ranked vector from 02_de_results.rds; gene sets from geneset_%s_%s.rds). %s.",
+      "%s GSEA per contrast (dotplot/facet/barplot/running_sum) via the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult (NES/padj taken verbatim from master_gsea_table.csv; ranked vector from 02_de_results.rds; gene sets from geneset_%s_%s.rds). %s",
       db_name, src, db_name, db_body),
     script   = SCRIPT,
     fn       = "gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot",
     config_kv = CFG_KV,
     input    = sprintf("03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_%s_%s.rds}", src, db_name),
-    how_to_read = sprintf(
-      "dotplot: x = GeneRatio (leading-edge / set size), point size = -log10(FDR), fill = NES (orange %s up / blue %s down), black outline = padj < %.2g. facet: same dotplot split into Up (NES>0) vs Down (NES<0). barplot: NES bars for FDR-significant sets only, top %d by |NES|. running_sum: a REAL three-panel GSEA enrichment curve (top = running enrichment score with the leading-edge peak; middle = gene-hit ticks at each set member's rank; bottom = the ranked t-statistic) for the top %d sets by |NES|; ES y-range pinned to [%.1f,%.1f] so curves are comparable across databases. NES>0 = enriched in numerator (hot/WT side). Claim tier: L3. PROVISIONAL sample labels.",
-      POS, NEG, FDR, TOPN, RSTOP, RSYLIM[1], RSYLIM[2])
+    how_to_read = paste0(sprintf(
+      "SELECTION RULES, one per panel, which govern which sets appear: dotplot and facet draw the top %d sets by ADJUSTED P; barplot draws FDR-significant sets only, top %d by |NES|; running_sum draws the top %d sets by |NES|. Note that the dotplot SELECTS by adjusted p but ORDERS its y-axis by GeneRatio descending, so vertical position on the dotplot is not a significance ranking. dotplot: x = GeneRatio (leading-edge genes / set size), point size = -log10(padj), fill = NES (orange %s = positive / blue %s = negative), black outline = padj < %.2g. facet: the same dotplot split into an NES>0 and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by NES descending. running_sum: a three-panel enrichment curve per set (top = running enrichment score with the leading-edge peak; middle = gene-hit ticks at each member's rank; bottom = the ranked t-statistic), ES y-range pinned to [%.1f,%.1f] so curves stay comparable across databases. NES > 0 = enriched in the contrast numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C or cGAS-KO).",
+      TOPN, TOPN, RSTOP, POS, NEG, FDR, RSYLIM[1], RSYLIM[2]),
+      db_rank_note,
+      " A set's enrichment is not evidence that the program its name invokes is present; composition would have to be established separately. Claim tier: L3. PROVISIONAL sample labels.")
   )
 }
 
@@ -592,19 +806,26 @@ write_caption(
   stage      = STAGE,
   filename   = "README overview",
   finding    = sprintf(
-    "06_gsea GSEA stage: MSigDB 8 collections + %d custom databases (TransportDB, MitoPathways, MitoXplorer, Lombardi2022_HIF) across %d contrasts. Per-contrast figures in by_contrast/<c>/<DB>/ are built with the RNAseq-toolkit plotters (gsea_dotplot/facet/barplot/running_sum) on a gseaResult reconstructed viz-side from the master table + cached DE ranks + gene-set lists; the running_sum is a real enrichplot::gseaplot2 three-panel ES curve. Cross-contrast overviews in _overview/. Produced by 12_gsea_viz.R (VIZ-ONLY; GSEA computed by 05/06_gsea_*_run.R). Key biology: IFN/ISG arm is expected cGAS-dependent (positive WT_heat + Interaction NES); HIF/glycolysis arm shows no detectable cGAS-dependence at n=5 (non-significant Interaction NES). NEVER write 'cGAS-independent' — always 'no detectable cGAS-dependence at n=5'. Lombardi-2022 48-gene consensus (doi:10.1016/j.celrep.2022.111652) is the published HIF orthogonal check. Claim tier: L3. Sample labels: PROVISIONAL.",
-    length(CUSTOM_NAMES), length(CONTRASTS)),
+    "06_gsea GSEA stage: %d MSigDB collections (%s) plus %d custom databases (%s) across %d contrasts. Per-contrast figures in by_contrast/<c>/<DB>/ are built with the RNAseq-toolkit plotters (gsea_dotplot/facet/barplot/running_sum) on a gseaResult reconstructed viz-side from the master table plus cached DE ranks plus gene-set lists; the running_sum is a real enrichplot::gseaplot2 three-panel ES curve. Cross-contrast overviews in _overview/. Produced by 12_gsea_viz.R (VIZ-ONLY; GSEA computed by 05/06_gsea_*_run.R). Standing constraints: write 'no detectable cGAS-dependence at n=5' and never 'cGAS-independent'; do not name a gene set or a block of sets after a regulator it is hoped to represent; read every gene-set size at runtime from the master table. Claim tier: L3. Sample labels: PROVISIONAL.",
+    length(MSIGDB_NAMES), paste(MSIGDB_NAMES, collapse = ", "),
+    length(CUSTOM_NAMES), paste(CUSTOM_NAMES, collapse = ", "),
+    length(CONTRASTS)),
   script     = SCRIPT,
   fn         = "save_overview / save_figure",
   config_kv  = CFG_KV,
   input      = "03_results/master/master_gsea_table.csv",
   how_to_read = paste0(
-    "NES > 0 = enriched in numerator side of the contrast (39 degrees C or WT genotype). ",
-    "NES < 0 = enriched in denominator side (cold=37 degrees C, cGASKO). ",
-    "Glyph convention: orange = up/positive, blue = down/negative (consistent with colors.diverging in config). ",
+    "NES > 0 = enriched in the numerator side of the contrast (39 °C or WT genotype). ",
+    "NES < 0 = enriched in the denominator side (37 °C or cGAS-KO). ",
+    "Glyph convention: orange = positive, blue = negative (colors.diverging in config). ",
     "* or filled point = padj < ", FDR, ". ",
-    "Interaction contrast: (WT_heat) - (KO_heat); positive Interaction NES = cGAS-dependent induction. ",
-    "PROVISIONAL sample labels: group identity inferred from marker genes (Hspa1b thermometer + Cgas), pending collaborator sample sheet. ",
+    "Interaction contrast: (WT_heat) - (KO_heat); a positive Interaction NES is consistent with ",
+    "cGAS-dependent induction, and a non-significant one means no detectable cGAS-dependence at n=5. ",
+    "Every panel in this stage ranks the sets it draws, and the ranking metric differs between panels ",
+    "(adjusted p for dotplot/facet, |NES| for barplot/running_sum), so read an absence against the ",
+    "ranking rule named in that panel's own caption before reading it as a null. ",
+    "PROVISIONAL sample labels: group identity inferred from marker genes (Hspa1b thermometer plus Cgas), ",
+    "pending the collaborator sample sheet. ",
     "Claim tier: L3 (DE/enrichment statistics). Never L7 (mechanism) in a figure title."),
   config     = FIG_CFG
 )
