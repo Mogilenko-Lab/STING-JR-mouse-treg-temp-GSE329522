@@ -338,25 +338,14 @@ p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
   scale_discrete_identity(aesthetics = "fontface") +   # bold = inside the gate
   coord_fixed(ratio = 1, xlim = c(-LIM_A, LIM_A), ylim = c(-LIM_A, LIM_A)) +
   labs(
-    title    = paste("Warming to 39 °C changes the same genes",
-                      "with and without cGAS — apart from 23", sep = "\n"),
-    # Three blocks, hard-separated: the question this panel opens the sequence with
-    # and the answer it gives, then the axes, then the notation the counts block
-    # uses. Δ is bound to the quantity the axis line just defined rather than
-    # re-stating it, so the counts block can be pure numbers.
-    subtitle = paste(
-      wrap_at(sprintf(paste0(
-        "Question — does 39 °C produce a coherent transcriptional response, and does that ",
-        "response require cGAS? Answer — coherent, and largely shared: %s of %s genes ",
-        "separate the two genotypes, and every one of them lies on the same side of the line."),
-        N("n_sig", CO_INT), N("n_genes", "all"))),
-      wrap_at(paste0(
-        "Each dot is one gene. Both axes are its log2 fold change at 39 versus 37 °C, ",
-        "measured in WT (x) and in cGAS-KO (y).")),
-      wrap_at(sprintf("Δ = that log2 fold change; sig = adj.P < %.2g.", FDR)),
-      sep = "\n"),
-    x = sprintf("%s — log2 fold change", contrast_label(CO_WT)),
-    y = sprintf("%s — log2 fold change", contrast_label(CO_KO))
+    title    = "Per-gene heat response, WT against cGAS-KO",
+    # One line only, and only the notation the in-panel counts block needs. The
+    # agreement statistics, the gene counts and how to read the glyphs all live in
+    # the README caption, which is where a reader can take the time to read them.
+    subtitle = wrap_at(sprintf(
+      "Δ = log2 fold change at 39 versus 37 °C; sig = adj.P < %.2g.", FDR)),
+    x = sprintf("%s: log2 fold change", contrast_label(CO_WT)),
+    y = sprintf("%s: log2 fold change", contrast_label(CO_KO))
   ) +
   project_theme(config = FIG_CFG) +
   ggplot2::theme(legend.position = "bottom")
