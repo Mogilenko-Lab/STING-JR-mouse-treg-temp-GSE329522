@@ -143,6 +143,20 @@ semantic:
   # narrow the measured depth gap for a reason that has nothing to do with biology.
   drop_evidence: ["IEA"]
   seed: 20260728
+  # Wang weights a parent edge by its relationship: is_a 0.8, part_of 0.6, other 0.7.
+  # GOSemSim through 2.36.0 keys that table on "is_a"/"part_of" and matches it against
+  # the packaged `gotbl`, which spells them "isa"/"part of", so all 66,947 BP edges take
+  # the 0.7 "other" weight and the measure loses the distinction it is made of.
+  # `expect_isa_weight` is asserted BEHAVIOURALLY at run time, not read off the version
+  # string: for a BP term whose only gotbl parent is an is_a edge to the BP root, Wang
+  # similarity to that root is (1+w)/(2+w), so the run recovers w and stops if it is not
+  # this value. The recovered number is written to semantic_provenance.csv, so the table
+  # proves which weighting produced the numbers beside it.
+  expect_isa_weight: 0.8
+  # Builds known to carry the fix. Advisory only; the behavioural assert is the gate,
+  # because the fix reached the devel branch (2.39.x) first and a release-branch build
+  # carrying it would be numbered differently.
+  known_fixed_gosemsim: ["2.39.2"]
   depth_bands: [0, 3, 6, 10, 15, 22, 32, 50]   # terms-per-gene strata; open upper bin
   n_null_uniform: 20              # uniform-random size-matched sets (confounded; shown)
   n_null_matched: 20              # annotation-depth-matched sets (the honest floor)
@@ -158,6 +172,42 @@ semantic:
     - "GO:0034976"                # response to endoplasmic reticulum stress
     - "GO:0001666"                # response to hypoxia
     - "GO:0006954"                # inflammatory response
+
+# =============================================================================
+# POOLED-FDR GSEA OVERVIEW PANEL (stage 06_gsea, figures/_overview/)
+# =============================================================================
+# Display contract for the faceted lollipop overview built by
+# 12b_gsea_overview_pooled_viz.R. These keys govern the FIGURE only: the pooled
+# Benjamini-Hochberg family computed by 06b_gsea_pooled_padj.R is unchanged and
+# still spans every database listed under `databases:` below.
+#
+# `exclude_databases` drops a database from the PANEL, never from the pooled
+# family, the GSEA sweep, or the results tables. Lombardi2022_HIF is excluded
+# because it is a single hand-curated HIF consensus set: giving it a facet of its
+# own puts a hypothesis-shaped gene set on equal footing with the curated,
+# versioned databases and invites the reader to score the hypoxia question off a
+# set that was assembled to represent hypoxia. The set, its curation script
+# (00b_curate_lombardi_hif.R) and its rows in every 06_gsea table all stay.
+#
+# `top_n_per_db` is the ONLY per-facet selection knob: sets are ranked by pooled
+# BH FDR (ties broken by the raw p-value, then by |NES|) and the top N per
+# database are drawn. No semantic, thematic or manual pinning is layered on top —
+# an earlier revision force-included Hallmark HYPOXIA/INTERFERON sets and the
+# three project-curated lenses regardless of rank, which quietly made the panel
+# argue for a conclusion; that pin is gone.
+
+gsea_pooled_overview:
+  top_n_per_db: 5              # sets drawn per database facet, ranked by padj_pooled
+  exclude_databases:           # dropped from the PANEL only (see note above)
+    - "Lombardi2022_HIF"
+  label_wrap: 38               # wrap column for set names on the y axis (never truncate)
+  facet_ncol: 2                # 2 columns keeps long set names legible at width_wide
+  # Inches per set row. 0.36 rather than 0.30 because set names wrap to two lines in
+  # the long-named families (WikiPathways, Reactome, GO_CC) and at 0.30 four
+  # consecutive two-line labels run into each other.
+  facet_row_height: 0.36
+  facet_strip_height: 0.34     # inches per facet strip
+  chrome_height: 3.4           # inches for title + subtitle + axis + legend + caption
 
 # =============================================================================
 # CORESH RUN PARAMETERS
@@ -178,6 +228,222 @@ coresh:
       - { contrast: WT_heat,     direction: up, gate: fdr_only,  origin: "WT_heat_up (generic thermal)" }        # ~4207, broad
       - { contrast: Interaction, direction: up, gate: fdr_logfc, origin: "Interaction_up (cGAS-specific ISG)" }  # 9, core
       - { contrast: Interaction, direction: up, gate: fdr_only,  origin: "Interaction_up (cGAS-specific ISG)" }  # 23, gate-sensitivity
+
+# =============================================================================
+# SIGNATURE-GENE EXPRESSION READBACK (stage 14_signature_expression)
+# =============================================================================
+# UP ARMS ONLY, and that is a scope decision rather than an omission. The bench
+# question this stage serves — "show me the genes that go UP with heat and whether
+# cGAS matters" — is asked of the induced arm; the down arms carry a separate
+# interpretive burden (in the human compartment the down arm's direction does not
+# replicate cleanly) and mixing them into one dot plot would invite reading a
+# two-headed panel as one program. Down arms are therefore absent from this stage's
+# tables, figures and prose by design.
+#
+# `Interaction_up_fdrOnly` rides alongside `Interaction_up` because the stringent
+# gate leaves the interaction arm at 9 genes: too thin to read a pattern from. It is
+# the SAME 1-df contrast at the looser gate (adj.P.Val only, |logFC| gate off), it is
+# flagged as such in every table row and facet label, and it is a sensitivity read —
+# never a second, larger interaction signature.
+#
+# `top_n_genes` caps the plotted rows per facet only; both tables carry every member.
+# It is 15, not 25, for a legibility reason that is worth writing down. The figure lays the
+# four arms out 2x2 rather than 4-across, because the canvas WIDTH is what gets normalised
+# when a reader views the PNG at notebook width (~1150 px): 4 panels side by side force a
+# 17-inch canvas, at which the gene labels render around 9 px and stop being readable, while
+# 2 columns fit the project default 8.5-inch width and render them near 19 px. That fixes the
+# width; `top_n_genes` then fixes the height, since 2 panel rows stack their gene rows. At 15
+# the figure is ~8.5 x 10.5 in — legible at notebook width AND shrinkable into a journal page.
+# The cost is one arm: Interaction_up_fdrOnly has 23 members, so it is the only signature the
+# cap truncates (the strip label says "top 15 of 23"). Interaction_up (9) stays complete, and
+# both tables carry every member of every arm regardless.
+
+signature_expression:
+  # Read from the mouse-native signature-set checkpoint, in this display order.
+  # `name` is the signature label carried in every output row (and the facet label);
+  # `source_contrast` is the DE contrast whose logFC/t/adj.P.Val the gene is ranked on.
+  source_object: "03_results/objects/17_signature_sets.rds"
+  signatures:
+    - { name: "WT_heat_up",             source_contrast: "WT_heat",     direction: up, gate: fdr_logfc }   # 213
+    - { name: "KO_heat_up",             source_contrast: "KO_heat",     direction: up, gate: fdr_logfc }   # 239
+    - { name: "Interaction_up",         source_contrast: "Interaction", direction: up, gate: fdr_logfc }   # 9
+    - { name: "Interaction_up_fdrOnly", source_contrast: "Interaction", direction: up, gate: fdr_only }    # 23, sensitivity read
+  expression_object: "03_results/objects/01_eda.rds"
+  expression_matrix: "logcpm_mat"       # log2 CPM; the matrix every group mean is taken on
+  ortholog_map: "03_results/human_projection/ortholog_map.tsv"   # the APPLIED frozen map
+  projection_manifest: "03_results/human_projection/manifest.csv" # frozen ledger, cross-checked
+  top_n_genes: 15                       # plotted rows per signature facet (tables are complete)
+  facet_ncol: 2                         # 2x2 layout — keeps the canvas at the default 8.5in width
+  # ggplot point-size range for mean log2 CPM. The FLOOR is 1.8 rather than 1.2 because the
+  # scarcest plotted genes are the interaction-arm ISGs, and at notebook display width a 1.2
+  # dot is a few pixels — the reader would lose exactly the points the panel exists to show.
+  # The CEILING is 6.5 rather than 7.0 so the largest dots in the two abundant heat panels
+  # keep visible air between adjacent gene rows.
+  dot_size_range: [1.8, 6.5]
+
+# =============================================================================
+# ONTOLOGY-WIDE OVER-REPRESENTATION (stage 15_go_decomposition)
+# =============================================================================
+# Every other enrichment in this project is pre-ranked GSEA. This block configures the
+# only over-representation test in the repo, and it exists because a decomposition run
+# against a hand-picked list of candidate programs can only return candidates from that
+# list. Here the candidate space is the whole ontology.
+#
+# background is load-bearing. The arm was SELECTED from the projection ranked list, so
+# that list — not a generic all-genes set — is the universe the selection happened in.
+# Using anything wider would credit the arm with enrichment that is really the
+# mouse->human ortholog map's coverage.
+#
+# The depth-matched null is not a duplicate of the hypergeometric p-value. The gate that
+# produced these arms thresholds effect size, which preferentially admits well-studied
+# genes; the hypergeometric conditions on set size and universe only. Measured here:
+# uniform-random size-matched sets of the projection background return a MEDIAN OF ZERO
+# BH-significant BP terms, while sets matched to the arm's terms-per-gene profile return
+# hundreds. Any term's p-value must therefore be read against the matched null, not
+# against the uniform expectation the hypergeometric assumes.
+
+go_decomposition:
+  # --- inputs -----------------------------------------------------------------
+  # The arms, in human projection space. `role: primary` is the headline axis; the rest
+  # are comparators and carry no privilege in any table.
+  arms:
+    - { name: "WT_heat_up",             role: "primary",
+        file: "03_results/human_projection/signatures/WT_heat/WT_heat_up.txt" }
+    - { name: "KO_heat_up",             role: "comparator",
+        file: "03_results/human_projection/signatures/KO_heat/KO_heat_up.txt" }
+    - { name: "Interaction_up",         role: "comparator",
+        file: "03_results/human_projection/signatures/Interaction/Interaction_up.txt" }
+    - { name: "Interaction_fdrOnly_up", role: "comparator",
+        file: "03_results/human_projection/signatures/Interaction/Interaction_fdrOnly_up.txt" }
+  # Column 1 of the projection ranked list: the 12,986 human symbols the arms were
+  # selected from, carried across the same frozen ortholog map.
+  background: "03_results/human_projection/signatures/WT_heat/WT_heat_ranked.rnk"
+  orgdb: "org.Hs.eg.db"
+
+  # --- test -------------------------------------------------------------------
+  # MF rides alongside BP and is never pooled with it: the two ontologies are separate
+  # multiple-testing families and separate tables. MF is here for a specific coverage
+  # reason — P4HA2, a canonical HIF target, carries no GO BP term at all and is only
+  # visible in MF (2-oxoglutarate-dependent dioxygenase activity), so a BP-only read
+  # would silently call it un-annotated.
+  ontologies: ["BP", "MF"]
+  primary_ontology: "BP"
+  # Both cutoffs are clusterProfiler::enrichGO's own defaults, kept so a reader can
+  # reproduce any row with a one-line call. "Enriched" below always means BOTH gates:
+  # raw p and BH-adjusted p under p_cutoff, and the Storey q under q_cutoff.
+  p_cutoff: 0.05
+  q_cutoff: 0.2
+  p_adjust_method: "BH"
+  min_gs_size: 10
+  max_gs_size: 500
+
+  # --- the IEA decision, taken explicitly and tested both ways -----------------
+  # enrichGO includes electronically inferred (IEA) annotation; stage 13_semantic_decomp
+  # deliberately drops it. Neither default is obviously right here, so both are run and
+  # both are reported. with_iea is PRIMARY because it is the canonical clusterProfiler
+  # path a reader reproduces in one line, and because the study-depth confound that
+  # motivates dropping IEA is handled directly by the depth-matched null below rather
+  # than by an evidence filter. If the headline terms move between the two variants,
+  # that is a finding and the stage README says so.
+  iea_variants: ["with_iea", "no_iea"]
+  primary_iea: "with_iea"
+  drop_evidence: ["IEA"]
+
+  # --- redundancy collapse, two levels ----------------------------------------
+  # Both run under GOSemSim from the project-local R library. The system build (2.36.0)
+  # collapses every BP parent edge to a uniform 0.7 Wang weight because GO.db spells the
+  # relationships "isa"/"part of" while getSV keys on "is_a"/"part_of"; 2.39.2 normalises
+  # them first. Any simplify() or pairwise_termsim() call inherits that, so this stage
+  # stops rather than fall back to the system build.
+  sim_measure: "Wang"
+  simplify_cutoff: 0.7
+  simplify_by: "p.adjust"
+  cluster_linkage: "average"
+  cluster_height: 0.7         # cut the (1 - Wang) dendrogram here for the block assignment
+
+  # --- annotation-depth-matched permutation null -------------------------------
+  # n_null is 2000, not the 20 stage 13 could afford: a hit count and a share both scale
+  # with n, so the p-value floor of a small null (1/21) is not usable for either. The set
+  # arithmetic is a sparse matrix product, so 2000 costs seconds.
+  seed: 20260730
+  n_null: 2000
+  null_ontologies: ["BP"]     # the null is computed for the primary ontology only
+  # Depth = the number of ontology terms the gene carries in the SAME propagated map the
+  # test uses, so the band is the gene's actual number of chances to be a hit. Band edges
+  # are background quantiles rather than the fixed counts stage 13 used on the direct
+  # (unpropagated) map, because the propagated distribution is an order of magnitude
+  # wider (background median 52 terms per gene, WT_heat_up median 100).
+  depth_band_quantiles: [0.2, 0.4, 0.55, 0.7, 0.8, 0.875, 0.94, 0.98]
+
+  # --- GO term versus curated lens, gene block against gene block ---------------
+  # Every curated lens the human compartment's arm-decomposition panel uses, each paired
+  # with the GO term whose NAME a reader would take to mean the same thing. The point of
+  # the pairing is that the two disagree about which genes they claim, so the pair is
+  # reported as three counts (GO only / shared / lens only) and three gene lists. A GO id
+  # that is absent from the installed GO.db is reported as an absent row, not skipped.
+  curated_lenses:
+    - { name: "HALLMARK_HYPOXIA",                 go_id: "GO:0001666",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_HYPOXIA.txt" }
+    - { name: "HALLMARK_TNFA_SIGNALING_VIA_NFKB", go_id: "GO:0007249",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_TNFA_SIGNALING_VIA_NFKB.txt" }
+    - { name: "HALLMARK_INFLAMMATORY_RESPONSE",   go_id: "GO:0006954",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_INFLAMMATORY_RESPONSE.txt" }
+    - { name: "HALLMARK_IL2_STAT5_SIGNALING",     go_id: "GO:0038110",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_IL2_STAT5_SIGNALING.txt" }
+    - { name: "HALLMARK_INTERFERON_ALPHA_RESPONSE", go_id: "GO:0035455",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_INTERFERON_ALPHA_RESPONSE.txt" }
+    - { name: "HALLMARK_UNFOLDED_PROTEIN_RESPONSE", go_id: "GO:0006986",
+        file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_UNFOLDED_PROTEIN_RESPONSE.txt" }
+    - { name: "HSR_core",                         go_id: "GO:0009408",
+        file: "../human_treg_arthritis/00_data/references/temp_hsr_lens/HSR_core.txt" }
+    - { name: "deCevins_STING_IFN_independent",   go_id: "GO:0140896",
+        file: "../sting_positive_control/03_results/06_reference_axis/signatures/sting_specific_up.txt" }
+    - { name: "IFN_axis_generic",                 go_id: "GO:0060337",
+        file: "../sting_positive_control/03_results/06_reference_axis/signatures/ifn_only_up.txt" }
+
+  # --- searched-and-absent proteostasis probe -----------------------------------
+  # The project's central negative result is that no heat-shock program is in the arm.
+  # An absence is only checkable if it is a row with a number, so every term a
+  # proteostasis reading would predict is looked up by id and reported with its actual
+  # gene count and q whether or not it passes anything. probe_name_pattern additionally
+  # sweeps the enriched-term NAMES so a proteostasis-adjacent term nobody listed cannot
+  # hide (it is how GO:0031649 heat generation surfaces).
+  proteostasis_probe:
+    - "GO:0009408"   # response to heat
+    - "GO:0034605"   # cellular response to heat
+    - "GO:0009266"   # response to temperature stimulus
+    - "GO:0031649"   # heat generation
+    - "GO:0006986"   # response to unfolded protein
+    - "GO:0035966"   # response to topologically incorrect protein
+    - "GO:0006457"   # protein folding
+    - "GO:0042026"   # protein refolding
+    - "GO:0006458"   # 'de novo' protein folding
+    - "GO:0034975"   # protein folding in endoplasmic reticulum
+    - "GO:0034976"   # response to endoplasmic reticulum stress
+    - "GO:0030968"   # endoplasmic reticulum unfolded protein response
+    - "GO:0006515"   # protein quality control for misfolded or incompletely synthesized protein
+    - "GO:0010498"   # proteasomal protein catabolic process
+    - "GO:0031072"   # heat shock protein binding        (MF)
+    - "GO:0051082"   # unfolded protein binding          (MF)
+    - "GO:0051087"   # protein-folding chaperone binding (MF)
+    - "GO:0044183"   # protein folding chaperone         (MF)
+  probe_name_pattern: "chaperon|unfolded|misfold|refold|protein folding|heat|thermogen|temperature|proteostas|proteasom|heat shock"
+
+  # --- mouse-space replicate (secondary) ----------------------------------------
+  # The same question asked before the ortholog map, so a term that appears only in human
+  # space can be attributed to the projection rather than to the biology. Secondary by
+  # construction: the human-space run is the one the arms are defined in.
+  mouse_replicate:
+    signature_object: "03_results/objects/17_signature_sets.rds"
+    contrast: "WT_heat"
+    direction: "up"
+    gate: "fdr_logfc"
+    universe: "03_results/objects/gene_universe.txt"
+    orgdb: "org.Mm.eg.db"
+
+  # --- display caps (figures only; every table carries every row) ---------------
+  top_n_terms: 18             # rows in the per-arm ranked term bar
+  top_n_blocks: 8             # term blocks drawn before the "other enriched" catch-all
 
 # =============================================================================
 # COLOR PALETTES (colorblind-safe)
@@ -261,7 +527,11 @@ figures:
   running_sum_ylim: [-1.0, 1.0]       # shared running-ES y-range so curves are comparable across DBs/contrasts
   volcano_label_top: 10
   z_clamp: 2.5
-  nes_cap: 3.5
+  # Symmetric limit for diverging NES fills. Kept fixed rather than per-contrast so one
+  # colour means one NES in every panel, and set tight to the observed range across the
+  # pooled family (max |NES| = 3.145) so the colourbar does not advertise end-colours no
+  # point attains. scales::squish still guards anything beyond it.
+  nes_cap: 3.2
   caption_wrap_column: 70
   # results sub-layout directory names
   by_contrast_dir: "by_contrast"
@@ -293,10 +563,20 @@ databases:
       path: "01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds"
     - name: "MitoXplorer"
       path: "01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds"
-    # Curation-INDEPENDENT HIF check: the PUBLISHED Lombardi 2022 48-gene consensus HIF
-    # signature (doi:10.1016/j.celrep.2022.111652, Ratcliffe/Mole). Used as the orthogonal
-    # HIF score in Phase 3 forensics + Phase 5 GSEA, and as the direct contrast to Phylo's
-    # selectively-subset 16-gene list (shows what was dropped). Built by 00b_curate_lombardi_hif.R.
+    # Curation-INDEPENDENT HIF check: the published Lombardi 2022 conserved HIF consensus
+    # (doi:10.1016/j.celrep.2022.111652, Ratcliffe/Mole), reconstructed by 00b from the
+    # supplement as the genes recurring across the 32 TCGA per-cancer-type sheets. 100 genes
+    # in mouse symbols. NOT the 48-gene list an earlier revision hardcoded: that vector was
+    # verbatim the single TCGA-ACC sheet, which happens to have 48 rows, and 00b:19-24
+    # documents why it is not the published signature. It is retained there only as
+    # `lombardi48_stale` for a contrast report. Also the direct contrast to the
+    # selectively-subset 16-gene list, which shows what that list dropped.
+    #
+    # NOTE ON SCOPE: this set is deliberately absent from the pooled-overview FIGURE
+    # (gsea_pooled_overview.exclude_databases) because a single hand-curated HIF set given its
+    # own facet presupposes the hypoxia question the analysis tests. It stays in the pooled
+    # correction and in every 06_gsea table, so the pooled-family database count is one higher
+    # than the facet count.
     - name: "Lombardi2022_HIF"
       path: "00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds"
     # Curated heat-shock-response (HSR) thermal proteostasis lens — the biology-defined
@@ -370,6 +650,30 @@ stages:
   - id: "13_semantic_decomp"
     title: "Semantic composition of the projection gate set"
     purpose: "GO BP semantic-similarity composition of WT_heat_up (GOSemSim Wang/BMA): annotation coverage ladder, set coherence against annotation-depth-matched and single-GO-term references, partition diagnostics, and graded per-gene proximity to each curated lens with depth-stratified background percentiles."
+  # --- Bench-facing readback of the exported up arms. Stages 10/11 report a signature as
+  #     a COUNT (213 mouse -> 199 human); the bench asks the gene-level question those
+  #     counts hide: for each member gene, what is its expression level in each of the four
+  #     design cells, and how much of its across-group variation sits on the heat axis
+  #     versus the genotype axis. No new statistics — the DE numbers are read from the
+  #     finished master and the expression from the frozen 01_eda log2 CPM matrix.
+  - id: "14_signature_expression"
+    title: "Signature-gene expression across the 2x2 design"
+    purpose: "Per-gene group-mean log2 CPM (+/- sd/se) and across-group z for every member of the exported up arms (WT_heat_up, KO_heat_up, Interaction_up at fdr_logfc plus Interaction_up at fdr_only), carrying each gene's source-contrast DE statistics and its mouse->human ortholog fate; substrate for the wet-lab dot plot."
+  # --- Candidate-list-free composition of the same up arms. Stage 12 and the human
+  #     compartment's arm-decomposition both ask "how much of the arm is in THIS lens?"
+  #     from a hand-picked panel that already contains the answer they are looking for,
+  #     and two thirds of WT_heat_up lands in no panel member at all. This stage asks the
+  #     ontology instead: over-representation of the WHOLE GO Biological Process (and
+  #     Molecular Function) space against the projection background the arm was selected
+  #     from, so the candidate space is not curated by the person asking the question.
+  #     Over-representation is new machinery here: every other enrichment in this repo is
+  #     pre-ranked GSEA.
+  - id: "15_go_decomposition"
+    title: "Ontology-wide over-representation composition of the projected up arms"
+    purpose: "Whole-ontology GO BP (+ MF) over-representation of each mouse-derived human-projected up arm against the 12,986-symbol projection background, run with and without IEA-derived annotation; an annotation-depth-matched permutation null beside the hypergeometric p-value; Wang-similarity redundancy collapse at two levels; a GO-term-versus-curated-lens gene-block comparison; a three-way per-gene coverage split; and an explicit searched-and-absent probe of the proteostasis terms a heat-shock reading would predict."
+  - id: "16_arm_composition"
+    title: "What fraction of each projected arm each pathway accounts for"
+    purpose: "Over-representation of each human-projected arm across five frozen MSigDB collections (Hallmark, GO BP, GO MF, KEGG, Reactome) on the shared 12,986-symbol background, selecting sets by a 2,000-replicate annotation-depth-matched permutation rather than by adjusted p and dropping any whose significance recurs in more than a quarter of matched draws; redundancy pruned on shared arm genes; attribution written both fractionally and winner-take-all so their disagreement is visible, each summing to the arm size exactly; a hypoxia-anchored variant reported beside the unpinned one with pinned sets that never reached significance marked as such; and a coverage null recording how many drawn genes a matched random set covers."
 
 # =============================================================================
 # INPUT/OUTPUT PATHS (relative to project root)
@@ -394,6 +698,13 @@ paths:
   # Toolkits
   rnaseq_toolkit: "01_modules/RNAseq-toolkit/"
   sciagent_toolkit: "01_modules/SciAgent-toolkit/"
+
+  # Project-local R library, for packages that must differ from the container's
+  # system library. It is OPT-IN: sourcing config.R does not touch .libPaths().
+  # A script that needs it calls use_project_rlib() before its library() calls,
+  # and every other script keeps the system library untouched. Contents are
+  # rebuildable and are not tracked; see 02_analysis/config/env/r_library.md.
+  r_library: "01_modules/Rlib/"
 
 # =============================================================================
 # SCHEMA DEFINITIONS (for validation)
@@ -484,3 +795,99 @@ decisions:
       # Interaction is 1 df, underpowered at n=5; EDA-value 
       drop_interaction_if_trivial: true
       trivial_min_genes: 5
+
+# =============================================================================
+# arm_composition -- what fraction of each arm each pathway accounts for
+# =============================================================================
+# Why this stage exists, given 15_go_decomposition already runs over-representation.
+#
+# 15_go_decomposition answers "which terms does this arm's gene content organise into".
+# It does NOT support a composition figure, and its own numbers say why: 386 enriched
+# GO BP terms for WT_heat_up produce 972 module-memberships over a union of 159 genes,
+# a 6.1-fold double count, with only 21 of 199 genes in exactly one module. A stacked
+# bar built on that draws 972 gene-slots for 159 genes.
+#
+# The existing hand-picked nine-lens decomposition has the opposite problem: it is close
+# to a partition (100 memberships over 67 genes) but its panel was chosen by whoever was
+# asking, and it leaves 132 of 199 genes unclaimed.
+#
+# This stage keeps the partition property and drops the hand-picked panel. Sets come from
+# five frozen MSigDB collections; selection is by depth-matched permutation rather than by
+# adjusted p; redundant sets are pruned on how much of the ARM they share, not on set
+# similarity in general; and attribution is reported two ways so a reader can see whether
+# the composition is determined at all.
+arm_composition:
+  # --- inputs -----------------------------------------------------------------
+  # Same arms and same background as go_decomposition, deliberately: the two stages must
+  # be readable against each other term for term.
+  arms_from: "go_decomposition"
+  background_from: "go_decomposition"
+
+  # The frozen collections the HUMAN compartment's sweep already used, consumed as an
+  # object rather than rebuilt from msigdbr here. Rebuilding would risk the mouse-side
+  # "HALLMARK_HYPOXIA" and the human-side one meaning different things if msigdbr data
+  # drifted between runs; sharing the frozen object makes the two sides comparable set
+  # for set. The content hash is recorded in provenance and a change to it is visible.
+  genesets_object: "../human_treg_arthritis/03_results/objects/14_genesets.rds"
+  collections: ["Hallmark", "GO_BP", "GO_MF", "KEGG", "Reactome"]
+
+  # --- test -------------------------------------------------------------------
+  # enricher() defaults, matching go_decomposition so rows are comparable.
+  p_cutoff: 0.05
+  q_cutoff: 0.2
+  p_adjust_method: "BH"
+  min_gs_size: 10
+  max_gs_size: 500
+
+  # --- selection --------------------------------------------------------------
+  # Sets enter the composition only if a depth-matched random gene set of the same size
+  # and annotation depth reaches their adjusted p less than p_matched_cutoff of the time.
+  # This is the step that makes the figure robust: in 15_go_decomposition only 188 of 386
+  # enriched GO BP terms clear it, and the MEDIAN enriched term does not.
+  p_matched_cutoff: 0.05
+  # Terms whose own significance recurs in more than this fraction of matched replicates
+  # are dropped even if p_matched clears, because a category a random set finds half the
+  # time cannot carry a share of a signature. In 15_go_decomposition the five terms that
+  # would have headlined the figure recur at 0.281 to 0.628.
+  max_null_recurrence: 0.25
+  # Redundancy prune. Two sets that claim nearly the same ARM genes cannot both carry a
+  # share, so the less significant one is dropped. Overlap is measured on the arm's hit
+  # genes rather than on the whole sets, because hit overlap is what double counts in the
+  # bar; whole-set Jaccard is recorded alongside for audit.
+  prune_hit_jaccard: 0.5
+  top_n_per_collection: 10
+
+  # --- attribution ------------------------------------------------------------
+  # Both are written and both are plotted. `fractional` answers "how much of the arm does
+  # this category account for" and sums to the arm size exactly. `winner_take_all` gives a
+  # true partition by assigning each gene to its single best set. Where the two disagree
+  # materially the composition is not determined, and that disagreement is the result.
+  accountings: ["fractional", "winner_take_all"]
+
+  # --- the hypoxia-anchored variant -------------------------------------------
+  # Reported BESIDE the unbiased variant, never instead of it. History: an earlier
+  # revision of the pooled GSEA overview force-included the Hallmark hypoxia and
+  # interferon sets regardless of rank, which made that panel argue for a conclusion, and
+  # the pin was removed. Pinning here is legitimate only because the anchored panel is
+  # labelled as anchored and the unbiased panel is published next to it.
+  #
+  # Named explicitly rather than matched by pattern: a regex on "HIF" also catches
+  # GOBP_VIRAL_TRANSLATIONAL_FRAMESHIFTING, which is how a pin becomes a silent error.
+  # Two of the five collections carry no hypoxia set at all, and the stage reports that
+  # as an absence of opportunity rather than as a zero share.
+  hypoxia_anchor:
+    Hallmark:  ["HALLMARK_HYPOXIA"]
+    Reactome:  ["REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA"]
+    GO_BP:     ["GOBP_RESPONSE_TO_OXYGEN_LEVELS", "GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS",
+                "GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY"]
+    KEGG:      []
+    GO_MF:     []
+
+  # --- null -------------------------------------------------------------------
+  # Same engine and same band quantiles as go_decomposition. n_null is per arm and per
+  # collection. The null additionally records, per replicate, how many of the DRAWN genes
+  # fall in at least one set reaching significance, which go_decomposition does not: that
+  # is the missing null for any coverage or share claim.
+  n_null: 2000
+  depth_band_quantiles: [0.2, 0.4, 0.55, 0.7, 0.8, 0.875, 0.94, 0.98]
+  seed: 20260731
