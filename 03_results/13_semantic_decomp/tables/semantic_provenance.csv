@@ -1,6 +1,7 @@
 "key","value"
 "R","4.5.3"
-"GOSemSim","2.36.0"
+"GOSemSim","2.39.2"
+"wang_isa_weight_measured","0.801"
 "org.Mm.eg.db","3.22.0"
 "GO.db","3.22.0"
 "ontology","BP"

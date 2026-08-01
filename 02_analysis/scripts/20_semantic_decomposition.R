@@ -50,6 +50,7 @@
 #   03_results/13_semantic_decomp/tables/_overview/wtheatup_semantic_coherence.csv
 #   03_results/13_semantic_decomp/tables/_overview/wtheatup_lens_proximity.csv
 #   03_results/objects/20_semantic_decomp.rds
+#   03_results/objects/20_semantic_decomp__GOSemSim-<version>.rds   (engine-stamped copy)
 #
 # Honest ceiling
 #   Semantic proximity to a lens says a gene's GO annotation resembles that of the
@@ -59,11 +60,32 @@
 #   the seven Lombardi2022_HIF genes in the set, carries CC and MF annotation but no
 #   BP annotation in mouse or in human, so this stage cannot place it at all.
 #
+# Which GOSemSim build this runs on, and why it is pinned
+#   Wang similarity weights a parent edge by its relationship: is_a 0.8, part_of 0.6,
+#   everything else 0.7. GOSemSim through 2.36.0 matches those weight names against the
+#   relationship strings in its own packaged gotbl without normalising them, and gotbl
+#   spells the same relationships "isa" and "part of". Every edge fails the match and
+#   falls through to "other", so on BP all 66,947 edges run at a uniform 0.7 and none
+#   receives 0.8 or 0.6: the distinction the Wang measure is made of is absent, not
+#   merely weakened. 2.39.2 (Bioconductor devel, upstream issue #51) normalises the
+#   spellings first. This stage runs on 2.39.2 from the project-local R library.
+#   Install it with:
+#     R CMD INSTALL -l 01_modules/Rlib <GOSemSim source carrying the fix>
+#
+#   Two guards, because a version string is the weaker claim. use_project_rlib() below
+#   stops if GOSemSim resolves outside the project library, and section 0 recovers the
+#   effective is_a weight from the measure and stops if it is not 0.8. The recovered
+#   value goes into semantic_provenance.csv and into the term-matrix cache key, so the
+#   published table shows which weighting produced it rather than naming a package.
+#   The size of the difference is measured in 20b_semantic_engine_validation.R.
+#
 # Run from project root (expensive; one shared term matrix, then indexing):
 #   Rscript 02_analysis/scripts/20_semantic_decomposition.R
+#   PROJECT_RLIB=none Rscript 02_analysis/scripts/20_semantic_decomposition.R   # system build
 # =============================================================================
 
 source("02_analysis/config/config.R")
+use_project_rlib(require_pkgs = "GOSemSim")
 
 suppressPackageStartupMessages({
   library(GOSemSim)
@@ -97,10 +119,48 @@ MAX_K     <- as.integer(SEM$max_k_partition    %||% 15L)
 THEMES    <- as.character(unlist(SEM$theme_references))
 DROP_CODES <- as.character(unlist(SEM$drop_evidence %||% "IEA"))
 NCORE     <- max(1L, min(60L, parallel::detectCores() - 4L))
+GSS_VER   <- as.character(utils::packageVersion("GOSemSim"))
+EXPECT_ISA <- as.numeric(SEM$expect_isa_weight %||% 0.8)
+KNOWN_FIXED <- as.character(unlist(SEM$known_fixed_gosemsim %||% character(0)))
+
+## ---------------------------------------------------------------------------
+## 0. Which weighting is actually in force
+## ---------------------------------------------------------------------------
+# A version string records which build was loaded, and that is a weaker claim than the
+# one this stage needs. 2.36.0 keys the Wang weight table on "is_a"/"part_of" and matches
+# it against the packaged gotbl, which spells the same relationships "isa"/"part of", so
+# every BP edge silently takes the 0.7 "other" weight. The stamped version would still
+# read 2.36.0 and look self-consistent, and a future build could regress the same way
+# under a version this script has never seen. So recover the weight from the arithmetic.
+#
+# For a BP term whose only gotbl parent is an is_a edge to the BP root, the two DAGs are
+# {child: 1, root: w, all: 0} and {root: 1, all: 0}, the root and "all" are the shared
+# terms, and Wang similarity reduces to (1 + w) / (2 + w). Inverting, w = (2s - 1)/(1 - s).
+# Terms carrying extra parents only dilute w downward, so the maximum over several
+# candidates recovers the true weight and needs no hardcoded GO id.
+measured_isa_weight <- function(semdata) {
+  e <- new.env()
+  utils::data("gotbl", package = "GOSemSim", envir = e)
+  g <- get("gotbl", envir = e)
+  g <- unique(g[g$Ontology == ONT, c("go_id", "relationship", "parent")])
+  root <- switch(ONT, BP = "GO:0008150", MF = "GO:0003674", CC = "GO:0005575")
+  npar <- table(g$go_id)
+  cand <- unique(g$go_id[g$parent == root & g$relationship == "isa" &
+                         npar[g$go_id] == 1L])
+  if (length(cand) < 1L) return(NA_real_)
+  s <- vapply(utils::head(sort(cand), 8L), function(x)
+    suppressWarnings(GOSemSim::goSim(x, root, semData = semdata, measure = MEASURE)),
+    numeric(1))
+  w <- (2 * s - 1) / (1 - s)
+  w <- w[is.finite(w) & w > 0.4 & w < 1.05]
+  if (!length(w)) return(NA_real_)
+  max(w)
+}
 
 message("=================================================================")
 message("20_semantic_decomposition: GO ", ONT, " composition (", STAGE, ")")
 message("  measure: ", MEASURE, " / ", COMBINE, "   cores: ", NCORE, "   seed: ", SEED)
+message("  GOSemSim ", GSS_VER, " from ", find.package("GOSemSim"))
 message("=================================================================")
 
 ## ---------------------------------------------------------------------------
@@ -108,6 +168,37 @@ message("=================================================================")
 ## ---------------------------------------------------------------------------
 semdata <- godata(annoDb = "org.Mm.eg.db", keytype = "SYMBOL", ont = ONT,
                   computeIC = TRUE)
+
+ISA_W <- if (identical(MEASURE, "Wang")) measured_isa_weight(semdata) else NA_real_
+if (identical(MEASURE, "Wang")) {
+  message("[0] effective Wang is_a edge weight, recovered from the measure: ",
+          sprintf("%.3f", ISA_W), " (expected ", EXPECT_ISA, ")")
+  if (!is.finite(ISA_W))
+    stop("[20] could not recover the Wang is_a weight; the guard cannot be skipped ",
+         "silently. Check GOSemSim's gotbl and the ", ONT, " root id.")
+  isa_ok <- abs(ISA_W - EXPECT_ISA) <= 0.01
+  if (!isa_ok) {
+    msg <- sprintf(paste0("effective Wang is_a weight is %.3f, not the expected %.2f. ",
+                          "GOSemSim %s is collapsing is_a/part_of onto the 0.7 'other' ",
+                          "weight, so the measure has lost the distinction it is made of. ",
+                          "Install a fixed build (known good: %s) into %s."),
+                   ISA_W, EXPECT_ISA, GSS_VER,
+                   paste(KNOWN_FIXED, collapse = ", "), DIR_R_LIBRARY)
+    # PROJECT_RLIB is the deliberate escape hatch used to regenerate the pre-fix numbers
+    # for 20b's comparison, so there it warns; on a default run it stops.
+    if (nzchar(Sys.getenv("PROJECT_RLIB")))
+      warning("[20] ", msg, " Continuing because PROJECT_RLIB is set.")
+    else
+      stop("[20] ", msg)
+  }
+  # Only meaningful once the weight check has passed: a build outside the advisory list
+  # that satisfies the behavioural guard is fine, and the list is what should be updated.
+  if (isa_ok && length(KNOWN_FIXED) && !GSS_VER %in% KNOWN_FIXED)
+    message("[0] GOSemSim ", GSS_VER, " passed the behavioural guard and is not yet in ",
+            "semantic.known_fixed_gosemsim (", paste(KNOWN_FIXED, collapse = ", "),
+            "); add it there.")
+}
+
 IC <- semdata@IC
 raw_anno <- semdata@geneAnno[!is.na(semdata@geneAnno$GO) &
                              semdata@geneAnno$ONTOLOGY == ONT, ]
@@ -285,13 +376,19 @@ message("[4] universe ", length(universe), " genes -> ", length(terms),
         " terms (", sprintf("%.2f", gb), " GB matrix)")
 if (gb > 24) stop("[20] term matrix would exceed 24 GB; lower bg_sample_size or n_null_*.")
 
-# The term matrix is the one expensive step and depends only on (terms, measure,
-# ontology, GO.db version). Cache it in the sanctioned throwaway zone so a rerun after
-# a downstream change costs seconds. Any mismatch recomputes rather than reusing.
-CACHE <- file.path(DIR_SCRATCH, "20_termsim_cache.rds")
+# The term matrix is the one expensive step and depends on (terms, measure, ontology,
+# GO.db version, GOSemSim version). Cache it in the sanctioned throwaway zone so a rerun
+# after a downstream change costs seconds. Any mismatch recomputes rather than reusing.
+# The GOSemSim version belongs in both the key and the filename: the 2.36.0 and 2.39.2
+# builds return different Wang values for the same term pair, so a key that omitted the
+# engine would hand a rerun the previous build's matrix without saying so, and stamping
+# the filename lets the two builds be compared without each recomputing the other's.
+CACHE <- file.path(DIR_SCRATCH, sprintf("20_termsim_cache__GOSemSim-%s.rds", GSS_VER))
 dir.create(DIR_SCRATCH, recursive = TRUE, showWarnings = FALSE)
 cache_key <- list(terms = terms, measure = MEASURE, ont = ONT,
-                  godb = as.character(utils::packageVersion("GO.db")))
+                  godb = as.character(utils::packageVersion("GO.db")),
+                  gosemsim = GSS_VER,
+                  isa_weight = if (is.finite(ISA_W)) round(ISA_W, 3) else NA_real_)
 TS <- NULL
 if (file.exists(CACHE)) {
   cached <- readRDS(CACHE)
@@ -548,12 +645,14 @@ lens_sum <- dplyr::bind_rows(lens_summary)
 ## 7. Provenance and writes
 ## ---------------------------------------------------------------------------
 prov <- data.frame(
-  key = c("R", "GOSemSim", "org.Mm.eg.db", "GO.db", "ontology", "measure", "combine",
+  key = c("R", "GOSemSim", "wang_isa_weight_measured",
+          "org.Mm.eg.db", "GO.db", "ontology", "measure", "combine",
           "drop_evidence", "seed", "n_universe_genes", "n_terms", "n_terms_isolated",
           "query_nominal", "query_annotated", "background_pool", "bg_sample",
           "n_null_uniform", "n_null_matched", "n_theme_draws", "depth_bands"),
   value = c(paste(R.version$major, R.version$minor, sep = "."),
             as.character(utils::packageVersion("GOSemSim")),
+            if (is.finite(ISA_W)) sprintf("%.3f", ISA_W) else NA_character_,
             as.character(utils::packageVersion("org.Mm.eg.db")),
             as.character(utils::packageVersion("GO.db")),
             ONT, MEASURE, COMBINE, paste(DROP_CODES, collapse = "/"),
@@ -580,13 +679,17 @@ per_gene <- data.frame(
 per_gene <- per_gene[order(-per_gene$mean_sim_to_set), ]
 write.csv(per_gene, file.path(TBL_DIR, "query_per_gene_coherence.csv"), row.names = FALSE)
 
-saveRDS(list(query_sim = Sq, coverage = coverage, coherence = coh,
-             proximity = prox, lens_summary = lens_sum, scale = scale_summary,
-             per_gene = per_gene, lens_lost = lens_lost, provenance = prov,
-             theme_names = setNames(vapply(THEMES, go_term_name, character(1)), THEMES),
-             built_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S"), built_by = SCRIPT),
-        file.path(DIR_OBJECTS, "20_semantic_decomp.rds"))
+state <- list(query_sim = Sq, coverage = coverage, coherence = coh,
+              proximity = prox, lens_summary = lens_sum, scale = scale_summary,
+              per_gene = per_gene, lens_lost = lens_lost, provenance = prov,
+              theme_names = setNames(vapply(THEMES, go_term_name, character(1)), THEMES),
+              built_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S"), built_by = SCRIPT)
+saveRDS(state, file.path(DIR_OBJECTS, "20_semantic_decomp.rds"))
+# A second copy stamped with the engine, so a run on one GOSemSim build does not
+# overwrite the record of the other and 20b can put the two side by side.
+stamped <- sprintf("20_semantic_decomp__GOSemSim-%s.rds", GSS_VER)
+saveRDS(state, file.path(DIR_OBJECTS, stamped))
 
 message("[7] wrote ", length(list.files(TBL_DIR, pattern = "[.]csv$")),
-        " tables + objects/20_semantic_decomp.rds")
+        " tables + objects/20_semantic_decomp.rds + objects/", stamped)
 message("20_semantic_decomposition: COMPUTE DONE.")

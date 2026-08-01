@@ -169,9 +169,15 @@ pC <- ggplot(coh, aes(x = .data$best_sil, y = .data$largest_cluster_frac,
   geom_point(size = PT * 1.2, alpha = 0.8) +
   geom_point(data = qrow, size = PT * 2.6, shape = 21, stroke = 1.5,
              fill = OI$vermillion, colour = "grey15") +
-  geom_text(data = qrow, aes(label = "WT_heat_up"), hjust = -0.16, vjust = 0.4,
-            size = LAB * 1.0, fontface = "bold", colour = "grey15",
-            show.legend = FALSE) +
+  # Repelled rather than nudged by a fixed offset. The query's coordinates move with
+  # the measure, and a hand-tuned hjust/vjust that clears the neighbouring points at
+  # one value drops the label on top of them at the next.
+  ggrepel::geom_text_repel(
+    data = qrow, aes(label = "WT_heat_up"), size = LAB * 1.0, fontface = "bold",
+    colour = "grey15", show.legend = FALSE, seed = 3L,
+    min.segment.length = 0, segment.colour = "grey35", segment.size = 0.4,
+    box.padding = 0.7, point.padding = 0.5, direction = "both",
+    nudge_x = 0.006, nudge_y = -0.09) +
   scale_colour_manual(values = FAM_COL, labels = FAM_LAB, name = NULL,
                       breaks = names(FAM_LAB)[names(FAM_LAB) %in% coh$family]) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
