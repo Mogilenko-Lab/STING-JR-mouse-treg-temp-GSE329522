@@ -326,4 +326,4 @@ stopifnot(
 message(sprintf(
   "[08_coresh_derived_gsea] COMPLETE — %d contrasts, %d CoReSh_derived rows appended to master. ",
   length(all_results), nrow(all_df)),
-  sprintf("(provisional sample labels; captions floor at L3-DE)"))
+  sprintf("(captions floor at L3-DE)"))

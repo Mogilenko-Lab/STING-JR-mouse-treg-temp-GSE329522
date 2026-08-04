@@ -2,7 +2,7 @@
 # =============================================================================
 # 01_mapping_qc_viz.R  --  PHASE 1: Sample-mapping QC figures (VISUALIZE)
 # =============================================================================
-# Phase:        1 (SCIENCE GATE -- visualization of the inferred sample mapping)
+# Phase:        1 (SCIENCE GATE -- label-blind recovery of the sample mapping)
 # Role:         VISUALIZE half of the "normalize-then-visualize" split. Reads the
 #               plot-ready tidy tables emitted by 01_mapping_qc.R and renders the
 #               figures. Performs NO statistics (no prcomp, no collapse, no
@@ -34,14 +34,14 @@
 #       legible without an axis rotation (which save_figure would clobber).
 #
 # Dependencies: figure_style.R (contract); config.R (stage_dir, DIVERGING_COLORS,
-#               provisional_caption, DIR_OBJECTS); ggplot2, dplyr, ggrepel, tidyr
+#               sample_mapping_stamp, DIR_OBJECTS); ggplot2, dplyr, ggrepel, tidyr
 # =============================================================================
 
 source("02_analysis/helpers/figure_style.R")   # FIG_CFG, project_theme(),
                                                 # save_figure(), write_caption(),
                                                 # purge_figures()
 source("02_analysis/config/config.R")           # stage_dir(), DIVERGING_COLORS,
-                                                # provisional_caption(), DIR_OBJECTS
+                                                # sample_mapping_stamp(), DIR_OBJECTS
 
 suppressPackageStartupMessages({
   library(ggplot2)
@@ -79,6 +79,39 @@ lib_levels <- fig1b_data$lib
 temp_cols <- c("37" = DIVERGING_COLORS$negative, "39" = DIVERGING_COLORS$positive)
 geno_cols <- c("WT" = "#1B7837", "cGASKO" = "#762A83")
 
+# Display spellings. The analytic key stays "cGASKO" (it is the join key into
+# sample_metadata and every downstream table); only the printed form is hyphenated,
+# so these panels read the same as the volcanoes, the scatter and the dotplot.
+GENO_LABELS <- c("WT" = "WT", "cGASKO" = "cGAS-KO")
+GENO_LEGEND <- "Genotype"
+TEMP_LEGEND <- "Temperature (°C)"
+
+# Sample-label provenance, READ rather than asserted. The status and its evidence
+# live in ONE place, analysis_config.yaml:design$sample_mapping, surfaced by
+# config.R::sample_mapping_stamp() (canvas) and ::sample_mapping_caption() (README);
+# 00_data/processed/PROVENANCE.md holds the per-library table. These panels are the
+# label-blind check itself, so they keep saying how the assignment was recovered.
+# What they must not keep saying is that the owner sheet is still pending.
+SAMPLE_LABEL_NOTE <- sample_mapping_caption()
+
+# Cross-check the config against what 00_setup_metadata.R actually stamped per
+# library, so a config edit alone cannot silently promote the status.
+.smeta <- tryCatch(
+  utils::read.csv("03_results/master/sample_metadata.csv", stringsAsFactors = FALSE),
+  error = function(e) NULL)
+if (!is.null(.smeta) && nrow(.smeta) > 0) {
+  .n_confirmed <- sum(.smeta$mapping_status == "CONFIRMED")
+  if (sample_mapping_confirmed() && .n_confirmed != nrow(.smeta)) {
+    stop(sprintf(paste0(
+      "analysis_config.yaml says design$sample_mapping$status = CONFIRMED but only ",
+      "%d of %d libraries carry mapping_status == CONFIRMED in ",
+      "03_results/master/sample_metadata.csv. Reconcile before rendering."),
+      .n_confirmed, nrow(.smeta)))
+  }
+  message(sprintf("[01_viz] sample mapping: %s (%d/%d libraries concordant)",
+                  sample_mapping_status(), .n_confirmed, nrow(.smeta)))
+}
+
 # Read variance-explained + the gene-universe provenance (labels only) from the
 # varexp table. n_genes is every delivered symbol carrying variance across the 20
 # libraries, which is the universe the DE stage models.
@@ -114,10 +147,10 @@ thermo_plot$gene <- factor(thermo_plot$marker, levels = unique(fig1a_data$marker
 fig1a <- ggplot(thermo_plot, aes(x = lib, y = value, fill = temp)) +
   geom_col() +
   facet_wrap(~ gene, scales = "free_y", ncol = 1) +
-  scale_fill_manual(values = temp_cols, name = "Inferred temp (C)") +
+  scale_fill_manual(values = temp_cols, name = TEMP_LEGEND) +
   labs(
     title = "Fig 1a -- Heat-shock thermometer (label-blind)",
-    subtitle = "Per-library log2(CPM+0.5); libraries 031-040 (inferred 39C) should be systematically higher",
+    subtitle = "Per-library log2(CPM+0.5); libraries 031-040 (39 °C) should be systematically higher",
     x = "Library (12630-RS-)", y = "log2(CPM + 0.5)"
   ) +
   project_theme(config = FIG_CFG)
@@ -134,22 +167,21 @@ write_caption(
   finding    = paste0(
     "Heat-shock thermometer (label-blind temperature validation): per-library log2(CPM+0.5) ",
     "for the 4 heat-shock marker genes (Hspa1b, Hsph1, Hspa1a, Dnajb1), one facet per gene, ",
-    "all 20 libraries (12630-RS-021..040) on the x-axis, colored by INFERRED temperature. ",
-    "Libraries 031-040 (inferred 39C, red) run systematically higher than 021-030 (inferred 37C, blue) ",
+    "all 20 libraries (12630-RS-021..040) on the x-axis, colored by the label-blind temperature call. ",
+    "Libraries 031-040 (39 °C, red) run systematically higher than 021-030 (37 °C, blue) ",
     "in every marker, confirming the deposited CPM column order is temperature-major. ",
     "Label-blind: the temperature is data-derived (marker expression), not read off the deposited labels. ",
-    "Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    SAMPLE_LABEL_NOTE),
   script     = SCRIPT,
   fn         = "geom_col + facet_wrap (project_theme + save_figure)",
   config_kv  = CFG_KV,
   input      = "03_results/01_qc/tables/fig1a_thermometer_data.csv",
   how_to_read = paste0(
     "x = library (12630-RS-021..040, temperature-major order); y = log2(CPM+0.5). ",
-    "Fill color = INFERRED temperature: blue = 37C (negative pole of the diverging map), ",
-    "red = 39C (positive pole). One facet per heat-shock marker (free y). ",
+    "Fill color = the label-blind temperature call: blue = 37 °C (negative pole of the diverging map), ",
+    "red = 39 °C (positive pole). One facet per heat-shock marker (free y). ",
     "Read: the hot half (031-040) bars should tower over the cool half (021-030) in each facet. ",
-    "The labels are inferred from marker expression (label-blind), NOT the deposited sample labels. ",
-    "Claim tier: PROVISIONAL, pending the collaborator sample sheet."),
+    "The labels shown were recovered from marker expression alone, label-blind."),
   config     = FIG_CFG
 )
 
@@ -170,8 +202,8 @@ cgas_df <- data.frame(
 fig1b <- ggplot(cgas_df, aes(x = lib, y = log2cpm, fill = genotype)) +
   geom_col() +
   facet_grid(. ~ temp, scales = "free_x", space = "free_x",
-             labeller = labeller(temp = function(x) paste0(x, "C (inferred)"))) +
-  scale_fill_manual(values = geno_cols, name = "Inferred genotype") +
+             labeller = labeller(temp = function(x) paste0(x, " °C"))) +
+  scale_fill_manual(values = geno_cols, labels = GENO_LABELS, name = GENO_LEGEND) +
   labs(
     title = sprintf("Fig 1b -- %s genotype check (label-blind within temp half)", cgas_symbol),
     subtitle = "WT should exceed cGAS-KO within EACH temperature half",
@@ -190,22 +222,22 @@ write_caption(
   filename   = "figures/fig1b_cgas.png",
   finding    = sprintf(paste0(
     "%s genotype check (label-blind within each temperature half): per-library log2(CPM+0.5) of %s, ",
-    "all 20 libraries split into the inferred-37C and inferred-39C facets, colored by INFERRED genotype. ",
+    "all 20 libraries split into the 37 °C and 39 °C facets, colored by the label-blind genotype call. ",
     "Within EACH temperature half, the WT libraries (green) exceed the cGAS-KO libraries (purple), ",
     "the expected signature of a Cgas knockout -- confirming the genotype axis is data-recoverable. ",
     "Label-blind: genotype is inferred from %s expression, not the deposited labels. ",
-    "Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    SAMPLE_LABEL_NOTE),
     cgas_symbol, cgas_symbol, cgas_symbol),
   script     = SCRIPT,
   fn         = "geom_col + facet_grid (project_theme + save_figure)",
   config_kv  = CFG_KV,
   input      = "03_results/01_qc/tables/fig1b_cgas_data.csv",
   how_to_read = sprintf(paste0(
-    "x = library (12630-RS-, faceted into inferred-37C | inferred-39C halves); y = %s log2(CPM+0.5). ",
-    "Fill color = INFERRED genotype: green = WT, purple = cGASKO. ",
+    "x = library (12630-RS-, faceted into the 37 °C | 39 °C halves); y = %s log2(CPM+0.5). ",
+    "Fill color = the label-blind genotype call: green = WT, purple = cGAS-KO. ",
     "Read WITHIN each facet (each temperature half): WT bars should sit above cGAS-KO bars. ",
     "The comparison is intentionally within-temperature so the heat effect does not confound the genotype call. ",
-    "Genotype is inferred from %s expression (label-blind). Claim tier: PROVISIONAL."),
+    "Genotype here is read off %s expression, label-blind."),
     cgas_symbol, cgas_symbol),
   config     = FIG_CFG
 )
@@ -223,8 +255,9 @@ fig1c <- ggplot(pca_df, aes(x = PC1, y = PC2, color = temp, shape = genotype)) +
   geom_point(size = 4, stroke = 1.1) +
   ggrepel::geom_text_repel(aes(label = lib), color = "grey30",
                            max.overlaps = 20, show.legend = FALSE) +
-  scale_color_manual(values = temp_cols, name = "Inferred temp (C)") +
-  scale_shape_manual(values = c("WT" = 16, "cGASKO" = 17), name = "Inferred genotype") +
+  scale_color_manual(values = temp_cols, name = TEMP_LEGEND) +
+  scale_shape_manual(values = c("WT" = 16, "cGASKO" = 17), labels = GENO_LABELS,
+                     name = GENO_LEGEND) +
   labs(
     title = sprintf("PCA of the 20 iTreg libraries, all %s genes", n_genes_lab),
     x = sprintf("PC1: %.1f%% var", percentVar[["PC1"]]),
@@ -243,25 +276,22 @@ write_caption(
   filename   = "figures/fig1c_pca_2x2.png",
   finding    = sprintf(paste0(
     "Temperature is the dominant axis of variation among the 20 libraries: PC1 (%.1f%% var) ",
-    "separates 37C from 39C, and genotype tracks the much smaller PC2 (%.1f%% var). Both ",
-    "experimental factors are recoverable from expression alone, with the labels inferred rather ",
-    "than deposited. Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    "separates 37 °C from 39 °C, and genotype tracks the much smaller PC2 (%.1f%% var). Both ",
+    "experimental factors are recoverable from expression alone, label-blind. ", SAMPLE_LABEL_NOTE),
     percentVar[["PC1"]], percentVar[["PC2"]]),
   script     = SCRIPT,
   fn         = "geom_point + geom_text_repel (project_theme + save_figure)",
   config_kv  = CFG_KV,
   input      = "03_results/02_eda/tables/fig1c_pca_data.csv",
   how_to_read = sprintf(paste0(
-    "x = PC1 (%% var in axis title); y = PC2. Point COLOR = inferred temperature ",
-    "(blue = 37C, red = 39C); point SHAPE = inferred genotype (circle = WT, triangle = cGASKO). ",
-    "Grey text = library id. Read the 2x2 as temperature separating along PC1 (the big axis) and ",
-    "genotype along the much smaller PC2. GENE UNIVERSE: all %s delivered symbols carrying ",
-    "variance across the 20 libraries (%d constant genes dropped), which is the same universe the ",
-    "DE stage models, so the %% var here is comparable to everything downstream. A PCA restricted ",
-    "to the 2,000 most variable genes finds the SAME leading axis (|r| %.5f on PC1) but reports ",
-    "PC1 at %.1f%%, because selecting on variance concentrates variance into PC1; read the %% var ",
-    "as a property of the gene universe, not of the design. Labels are inferred (label-blind), ",
-    "NOT deposited. Companion scree panel: fig1c_pca_scree. Claim tier: PROVISIONAL."),
+    "x = PC1 (%% var in axis title); y = PC2. Point COLOR = temperature ",
+    "(blue = 37 °C, red = 39 °C); point SHAPE = genotype (circle = WT, triangle = cGAS-KO). ",
+    "Grey text = library id (12630-RS-0NN). GENE UNIVERSE: %s symbols, every delivered symbol ",
+    "carrying variance across the 20 libraries. The DE figures report 19,679 because a principal ",
+    "component cannot use the %d genes that are constant across all 20 libraries; the two ",
+    "universes are otherwise the same. On the 2,000 most variable genes the leading axis is the ",
+    "same (|r| %.5f) but PC1 reads %.1f%%, so %% var is a property of the gene universe rather ",
+    "than of the design. Companion scree panel: fig1c_pca_scree."),
     n_genes_lab, fig1c_varexp$n_zerovar_dropped[1], pc1_cor_2000, pc1_top2000),
   config     = FIG_CFG
 )
@@ -304,7 +334,7 @@ write_caption(
     "One axis carries the experiment: PC1 captures %.1f%% of the variance and tracks temperature ",
     "almost exactly, while PC2 (%.1f%%) sits within about a point of PC3 (%.1f%%) and the rest of ",
     "the tail. Temperature is recoverable from a single component; genotype is not separated by ",
-    "the leading axes at all. Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    "the leading axes at all. ", SAMPLE_LABEL_NOTE),
     percentVar[["PC1"]], percentVar[["PC2"]], percentVar[["PC3"]]),
   script     = SCRIPT,
   fn         = "geom_col (project_theme + save_figure)",
@@ -317,7 +347,7 @@ write_caption(
     "GENE UNIVERSE: all %s delivered symbols carrying variance across the 20 libraries, matching ",
     "the DE stage. On the 2,000 most variable genes alone PC1 would read %.1f%% instead of %.1f%%, ",
     "because variance selection concentrates variance into the leading axis. ",
-    "Companion scatter: fig1c_pca_2x2. Claim tier: PROVISIONAL."),
+    "Companion scatter: fig1c_pca_2x2."),
     n_genes_lab, pc1_top2000, percentVar[["PC1"]]),
   config     = FIG_CFG
 )
@@ -387,7 +417,7 @@ write_caption(
     "(black outline + x marker): the deposited CPM columns are temperature-major while the GEO GSM ",
     "accessions are genotype-major, so a positional join silently swaps KO-37 <-> WT-39 in the ",
     "middle block. This is why the mapping MUST be marker-derived, not accession-positional. ",
-    "Claim tier: PROVISIONAL (pending collaborator sample sheet)."),
+    SAMPLE_LABEL_NOTE),
     n_disc),
   script     = SCRIPT,
   fn         = "geom_tile + geom_point (project_theme + save_figure)",
@@ -399,7 +429,7 @@ write_caption(
     "(WT_37/cGASKO_37/WT_39/cGASKO_39, a blue->red diverging-by-condition map). ",
     "A black tile outline + an x glyph on the strip = the two sources DISAGREE for that library ",
     "(a mislabeled column under the naive join). Read: the discordant block (026-035) is exactly ",
-    "where the temperature-major vs genotype-major orderings cross. Claim tier: PROVISIONAL."),
+    "where the temperature-major vs genotype-major orderings cross."),
   config     = FIG_CFG
 )
 

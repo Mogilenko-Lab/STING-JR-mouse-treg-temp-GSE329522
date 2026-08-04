@@ -92,9 +92,11 @@ ARM_LABELS <- c(
 GSEA_IFN_PAT <- paste0(
   "INTERFERON|_IFN|TYPE_I_IFN|ISG|JAK_STAT|JAK-STAT|",
   "CGAS|STING|DNA_SENSING|RIG_I|ANTIVIRAL|RESPONSE_TO_(TYPE|INTERFERON)|TNFA_SIGNALING_VIA_NFKB|NFKB")
+# The LOMBARDI literal was dropped when the Lombardi2022_HIF database left 06_gsea. The
+# remaining alternatives collect this arm from the curated, versioned collections.
 GSEA_HIF_PAT <- paste0(
   "HYPOXIA|HIF|GLYCOLY|GLUCOSE_(METABOL|TRANSPORT)|",
-  "PYRUVATE|LACTATE|LOMBARDI|PSEUDOHYPOXIA|VEGF|ANGIOGENESIS")
+  "PYRUVATE|LACTATE|PSEUDOHYPOXIA|VEGF|ANGIOGENESIS")
 
 # PROGENy pathway names (the footprint method; no HIF regulon).
 PROGENY_IFN <- c("JAK-STAT", "NFkB", "TNFa")
@@ -503,7 +505,7 @@ synthesis <- list(
     gatom_arm = GATOM_ARM),
   masters_present       = present,
   masters_absent        = absent,
-  provisional_caveat    = provisional_caption(),
+  provisional_caveat    = sample_mapping_stamp(),
   built_at              = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC")
 )
 out_rds <- file.path(DIR_OBJECTS, "16_synthesis.rds")

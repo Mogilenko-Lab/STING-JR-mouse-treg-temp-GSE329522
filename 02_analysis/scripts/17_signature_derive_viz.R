@@ -196,8 +196,8 @@ save_overview(
                        "blue = down. TOP facet = FDR-only gate (adj.P.Val < ", DE_FDR,
                        "), BOTTOM = FDR + |log2FC| >= ", DE_LOGFC, " (stringent). Numbers above bars ",
                        "= genes in that set (mouse symbols, pre-ortholog). Use this to pick the gate ",
-                       "at BREAKPOINT 10: FDR+logFC can decimate small contrasts. Claim tier: L3 ",
-                       "(DE statistics); provisional sample mapping, n=5/group."),
+                       "before the signatures are frozen: FDR+logFC can decimate small contrasts. ",
+                       "Claim tier: L3 (DE statistics), n=5/group. ", sample_mapping_caption()),
   # GEOMETRY OVERRIDE (contract-sanctioned passthrough; NOT raw ggsave): 7 contrasts
   # with two-line labels collide on the fixed 8.5in canvas and the caption clips. A
   # wider canvas gives each column real width; project_theme still enforces the font
@@ -230,8 +230,9 @@ save_overview(
   how_to_read = paste0("Stacked bars = fraction of a contrast's significant mouse genes (up+down) that map ",
                        "1:1 to a human ortholog (green), one-mouse->many-human (orange), or have no human ",
                        "ortholog (grey, dropped downstream). TOP facet = FDR-only, BOTTOM = FDR+logFC. This ",
-                       "is a PREVIEW (babelgene, offline) that does NOT feed the freeze — stage 18 re-maps ",
-                       "the approved sets. Read it to judge whether a signature survives mapping. Claim tier: L3."),
+                       "is an offline babelgene PREVIEW for judging mapping loss. The frozen human sets ",
+                       "are re-mapped from the approved gene lists by 18_projection_export.R, and that ",
+                       "run is what 03_results/11_projection/ reports. Claim tier: L3."),
   width = 12, height = 7.5,
   config = FIG_CFG)
 

@@ -1,10 +1,10 @@
-# 06_gsea artifact captions
+# 06_gsea: artifact captions
 
 ## Stage overview
 
 06_gsea GSEA stage: 8 MSigDB collections (Hallmark, KEGG, Reactome, WikiPathways,
-GO_BP, GO_MF, GO_CC, TF_Targets) plus 6 custom databases (TransportDB, MitoPathways,
-MitoXplorer, Lombardi2022_HIF, HSR_lens, TCR_activation), 14 databases in total, across
+GO_BP, GO_MF, GO_CC, TF_Targets) plus 5 custom databases (TransportDB, MitoPathways,
+MitoXplorer, HSR_lens, TCR_activation), 13 databases in total, across
 7 contrasts. Per-contrast
 figures in `figures/by_contrast/<contrast>/<DB>/` are built with RNAseq-toolkit plotters
 (`gsea_dotplot`, `gsea_dotplot_facet`, `gsea_barplot`, `gsea_running_sum_plot`) on a
@@ -37,16 +37,19 @@ Produced by `12_gsea_viz.R` (VIZ-ONLY; GSEA computed by `05_gsea_msigdb_run.R` a
 - NEVER crown HIF1alpha/HIF2alpha as the driver; NES is an enrichment statistic (L3 tier).
   This extends to naming: a gene set or a block of gene sets is named by how it was curated,
   never after a regulator it is hoped to represent.
-- The curated Lombardi-2022 consensus (doi:10.1016/j.celrep.2022.111652) is the published
-  curation-independent comparison set, re-derived by `00b_curate_lombardi_hif.R` from the
-  supplement as the genes recurring across the 32 TCGA per-cancer-type worksheets. **Its size
-  is read at runtime from `master_gsea_table.csv` and is never written as a literal:** as
-  tested here it holds **100 genes**, and every row of
-  `tables/_overview/gsea_lombardi_vs_bespoke_hif.csv` records `set_size = 100`. An earlier
-  revision printed "48-gene" on the figure face; that 48-gene vector was verbatim the single
-  `TCGA-ACC` worksheet of the supplement (the one sheet that happens to have 48 rows), which
-  `00b_curate_lombardi_hif.R:19-24` documents is not the published signature. A hardcoded
-  count is how the wrong label survived the re-curation.
+- The `Lombardi2022_HIF` database was removed from this stage. A pan-cancer consensus derived
+  under hypoxia in cancer cells is the wrong reference for a 39 °C in-vitro contrast in
+  iTregs, and it meets `WT_heat_up` at 7 of that arm's 213 genes, 3.3% (see
+  `mouse_anchor/03_results/12_hsr_decomp/README.md`). Hypoxia in this stage is read off the
+  curated, versioned collections instead; `figures/_overview/hypoxia_routes_by_contrast.png`
+  is the panel that does it. The curation script and its outputs under
+  `00_data/references/gene_sets/` stay, because the curated comparison lens in
+  `mouse_anchor/03_results/12_hsr_decomp/` and the semantic decomposition read the set from
+  there and never from this stage.
+- **A gene-set size is read at runtime and never written as a literal.** An earlier revision
+  printed "48-gene" on a figure face for a set that held 100, because the count had been
+  hardcoded from a single worksheet of a supplement. A hardcoded size is how a wrong label
+  survives a re-curation.
 - The bespoke 16-gene HIF list is ~92% heat-shock/glycolytic and its hypoxia-diagnostic core
   (Pdk1/Bnip3/Bnip3l/Car9) is repressed. That list is not plotted in this stage; see
   `03_results/04_tf/` for the comparison against it.
@@ -100,15 +103,15 @@ The wildcard `<DB>` ranges over:
 | `TransportDB` | Custom | Membrane transporter gene sets; metabolic/transport focus; no IFN/ISG sets |
 | `MitoPathways` | Custom | Mitochondrial pathway gene sets; metabolic focus; no IFN/ISG sets |
 | `MitoXplorer` | Custom | MitoXplorer metabolic atlas gene sets; metabolic focus; no IFN/ISG sets |
-| `Lombardi2022_HIF` | Custom | Curated Lombardi-2022 published consensus, 100 genes as tested here (doi:10.1016/j.celrep.2022.111652); size read at runtime, never hardcoded |
 | `HSR_lens` | Custom | Curated heat-shock-response lens, 2 sets (`HSR_core`, `HSR_sensitivity`); built by `00d`/`00e` from msigdbr v2026.1.Hs |
 | `TCR_activation` | Custom | Curated TCR/immediate-early T-cell-activation lens, 1 set; built by `00f` |
 
-All 98 (7 × 14) cells were attempted and all 98 emitted their four panels, so nothing was
-skipped for want of master rows or a cached gene-set list: 784 PDF/PNG files = 98 cells × 4
-panels × 2 formats. `figures/_overview/` holds 10 more files (5 panels × 2 formats): the two
-written by `12_gsea_viz.R` and the three `gsea_pooled_overview*` panels written by
-`12b_gsea_overview_pooled_viz.R`. Gene-set size filter:
+All 91 (7 × 13) cells were attempted and all 91 emitted their four panels, so nothing was
+skipped for want of master rows or a cached gene-set list: 728 PDF/PNG files = 91 cells × 4
+panels × 2 formats. `figures/_overview/` holds 12 more files (6 panels × 2 formats):
+`gsea_asymmetry_panel` written by `12_gsea_viz.R`, the three `gsea_pooled_overview*` panels
+written by `12b_gsea_overview_pooled_viz.R`, and the two hypoxia panels written by
+`28_hypoxia_focus_viz.R`. Gene-set size filter:
 15–500 genes (GSEA_MIN_SIZE / GSEA_MAX_SIZE from config).
 Statistical threshold: FDR (Benjamini-Hochberg padj) < 0.05. Ranking metric: t-statistic
 from limma-trend DE (02_de_results.rds). NES and padj values are taken verbatim from
@@ -117,7 +120,7 @@ deterministically by `enrichplot::gseaScores(geneList, geneSet, exponent=1)` on 
 reconstructed gseaResult (NES-agreement check: max|dNES| < 0.04, r > 0.9999, 100% sign
 agreement on WT_heat/Hallmark benchmark cell).
 
-The four panel types are described once below. Each applies identically across all 98 cells.
+The four panel types are described once below. Each applies identically across all 91 cells.
 
 **The four panels use two different ranking metrics, and that is what governs every absence
 you will notice.** `dotplot` and `facet` select the top 20 by **adjusted p**; `barplot` and
@@ -237,12 +240,12 @@ NES bar chart for FDR-significant pathways only (padj < 0.05), top 20 by |NES|, 
 via the RNAseq-toolkit `gsea_barplot()`. Bars extend left (negative NES, blue) or right
 (positive NES, orange) from zero.
 
-**The 18 cells with no FDR-significant set carry an explicit empty-state panel**, not a blank
+**The 16 cells with no FDR-significant set carry an explicit empty-state panel**, not a blank
 page: a boxed statement naming the panel's selection rule and pointing at `dotplot`/`facet`,
 which show the full ranking regardless of significance. Those cells are `WT_heat`/MitoXplorer,
-`KO_heat`/MitoXplorer, `Interaction`/{TransportDB, MitoPathways, MitoXplorer, Lombardi2022_HIF,
+`KO_heat`/MitoXplorer, `Interaction`/{TransportDB, MitoPathways, MitoXplorer,
 HSR_lens, TCR_activation}, `Geno_at_39`/{TransportDB, HSR_lens, TCR_activation},
-`Geno_at_37`/{TF_Targets, Lombardi2022_HIF, TCR_activation}, `Temp_main`/{MitoPathways,
+`Geno_at_37`/{TF_Targets, TCR_activation}, `Temp_main`/{MitoPathways,
 MitoXplorer}, and `Geno_main`/{TF_Targets, TCR_activation}. An empty barplot is a result about
 that cell's FDR, never a rendering failure.
 
@@ -263,10 +266,11 @@ empty-state statement instead of bars had no set survive FDR correction in that
 
 ## Cross-contrast overview figures
 
-`figures/_overview/` holds five panels, each saved as a `.pdf` (vector) and `.png` (raster)
-pair. The two captioned immediately below are written by `12_gsea_viz.R`. The three
-`gsea_pooled_overview*` panels are written by `12b_gsea_overview_pooled_viz.R` and are
-captioned at the end of this file.
+`figures/_overview/` holds six panels, each saved as a `.pdf` (vector) and `.png` (raster)
+pair. The one captioned immediately below is written by `12_gsea_viz.R`. The three
+`gsea_pooled_overview*` panels are written by `12b_gsea_overview_pooled_viz.R` and the two
+`hypoxia_*` panels by `28_hypoxia_focus_viz.R`; all five are captioned at the end of this
+file.
 
 ## figures/_overview/gsea_asymmetry_panel.png
 
@@ -314,68 +318,13 @@ is consistent with cGAS-dependent induction; a non-significant
 interaction NES means no detectable cGAS-dependence at n=5 and never
 'cGAS-independent'. A set enriching is not evidence that the program
 its name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/12_gsea_viz.R` | `geom_tile` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
-
-## figures/_overview/gsea_lombardi_vs_bespoke_hif.png
-
-GSEA NES per contrast for two independently curated gene sets: the
-Lombardi-2022 conserved consensus re-derived by
-00b_curate_lombardi_hif.R from the published supplement (orange, 100
-genes tested here) and MSigDB HALLMARK_HYPOXIA (purple, 171 genes
-tested here). Both set sizes are read at RUNTIME from the same master
-rows this panel's source table is written from. Both traces are
-positive and FDR-significant in WT_heat, KO_heat and Temp_main, and
-neither reaches significance in the interaction term, which reads as
-no detectable cGAS-dependence at n=5 and never as proven
-cGAS-independence. The two sets were curated from different evidence
-(recurrence across 32 TCGA per-cancer-type worksheets versus MSigDB
-hallmark curation), so agreement between the traces bears on curation
-sensitivity and bears on nothing causal: NES is an enrichment
-statistic and this panel establishes neither set's composition.
-Naming note for anyone editing this: an earlier revision labelled the
-orange trace '48-gene' on the figure face while its own source table
-recorded set_size = 100 on every row. That 48-gene vector was
-verbatim the single TCGA-ACC worksheet of the supplement, which
-00b_curate_lombardi_hif.R:19-24 documents is not the published
-signature.
-
-**How to read:** One line-point trace per gene set, x = contrast, y = NES. Orange =
-the curated Lombardi-2022 consensus (100 genes tested); purple =
-MSigDB HALLMARK_HYPOXIA (171 genes tested). Both counts on the legend
-are read at runtime from the master rows behind the same-stem source
-table, so the figure face and that table cannot disagree. SELECTION
-RULE: both named sets are plotted at every contrast in the design;
-nothing is ranked and nothing is dropped, so no absence on this panel
-needs explaining. Filled point = padj < 0.05; open point = not
-significant. Positive NES = enriched in the contrast numerator (39 °C
-or WT); negative = enriched in the denominator (37 °C or cGAS-KO).
-The y-axis is squished at ±3.2 so this panel stays comparable with
-the other NES panels in the stage. That leaves the top and bottom
-bands of the panel empty: the values drawn here span -1.54 to 2.36
-and 0 of them sit beyond the cap, so the empty band is headroom
-rather than missing data. Across the 14 databases this stage draws,
-the cap clips 2 of 33509 results, both
-HALLMARK_INTERFERON_ALPHA_RESPONSE (Geno_at_39 +3.309, Geno_main
-+3.301). FILE-NAME NOTE: the stem 'lombardi_vs_bespoke_hif' is a
-misnomer kept for reference stability. This panel compares the
-curated Lombardi-2022 consensus against Hallmark HYPOXIA. The
-hand-made 16-gene list it was originally named for is not plotted
-here; that comparison lives in 03_results/04_tf/. The Interaction
-column is the cGAS-dependence read-out: a non-significant NES there
-means no detectable cGAS-dependence at n=5 and never
-'cGAS-independent'. Both sets are named by how they were curated.
-Neither is a HIF1A or EPAS1 target list, so a positive NES does not
-identify a regulator, and this panel establishes neither set's
-composition. Claim tier: L3 (enrichment statistic). PROVISIONAL
-sample labels.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `geom_point + geom_line` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
 
 ## figures/by_contrast/<contrast>/Hallmark/*.png
 
@@ -410,7 +359,9 @@ by |NES| while sitting well inside the dotplot's top 20 by adjusted
 p. An absence from one panel is a statement about that panel's
 ranking metric only. A set's enrichment is not evidence that the
 program its name invokes is present; composition would have to be
-established separately. Claim tier: L3. PROVISIONAL sample labels.
+established separately. Claim tier: L3. Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -444,7 +395,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -478,7 +431,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -512,7 +467,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -546,7 +503,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -580,7 +539,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -614,7 +575,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -648,7 +611,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -682,7 +647,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -716,7 +683,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -750,47 +719,13 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_MitoXplorer.rds}` |
-
-## figures/by_contrast/<contrast>/Lombardi2022_HIF/*.png
-
-Lombardi2022_HIF GSEA per contrast
-(dotplot/facet/barplot/running_sum) via the RNAseq-toolkit plotters
-on a viz-side-reconstructed gseaResult (NES/padj taken verbatim from
-master_gsea_table.csv; ranked vector from 02_de_results.rds; gene
-sets from geneset_custom_Lombardi2022_HIF.rds). One set: the curated
-Lombardi-2022 published consensus, whose size is read at runtime from
-the master table and never hardcoded. A positive NES here does not
-identify a regulator, and these panels do not establish the set's
-composition.
-
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_Lombardi2022_HIF.rds}` |
 
 ## figures/by_contrast/<contrast>/HSR_lens/*.png
 
@@ -821,7 +756,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -856,7 +793,9 @@ comparable across databases. NES > 0 = enriched in the contrast
 numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
 or cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
-separately. Claim tier: L3. PROVISIONAL sample labels.
+separately. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -865,9 +804,9 @@ separately. Claim tier: L3. PROVISIONAL sample labels.
 ## README overview
 
 06_gsea GSEA stage: 8 MSigDB collections (Hallmark, KEGG, Reactome,
-WikiPathways, GO_BP, GO_MF, GO_CC, TF_Targets) plus 6 custom
-databases (TransportDB, MitoPathways, MitoXplorer, Lombardi2022_HIF,
-HSR_lens, TCR_activation) across 7 contrasts. Per-contrast figures in
+WikiPathways, GO_BP, GO_MF, GO_CC, TF_Targets) plus 5 custom
+databases (TransportDB, MitoPathways, MitoXplorer, HSR_lens,
+TCR_activation) across 7 contrasts. Per-contrast figures in
 by_contrast/<c>/<DB>/ are built with the RNAseq-toolkit plotters
 (gsea_dotplot/facet/barplot/running_sum) on a gseaResult
 reconstructed viz-side from the master table plus cached DE ranks
@@ -878,7 +817,9 @@ Produced by 12_gsea_viz.R (VIZ-ONLY; GSEA computed by
 cGAS-dependence at n=5' and never 'cGAS-independent'; do not name a
 gene set or a block of sets after a regulator it is hoped to
 represent; read every gene-set size at runtime from the master table.
-Claim tier: L3. Sample labels: PROVISIONAL.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 **How to read:** NES > 0 = enriched in the numerator side of the contrast (39 °C or WT
 genotype). NES < 0 = enriched in the denominator side (37 °C or
@@ -891,10 +832,12 @@ panel in this stage ranks the sets it draws, and the ranking metric
 differs between panels (adjusted p for dotplot/facet, |NES| for
 barplot/running_sum), so read an absence against the ranking rule
 named in that panel's own caption before reading it as a null.
-PROVISIONAL sample labels: group identity inferred from marker genes
-(Hspa1b thermometer plus Cgas), pending the collaborator sample
-sheet. Claim tier: L3 (DE/enrichment statistics). Never L7
-(mechanism) in a figure title.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call. Group identity was also recovered
+independently from marker genes (the Hspa1b thermometer plus Cgas),
+and the two agree. Claim tier: L3 (DE/enrichment statistics). Never
+L7 (mechanism) in a figure title.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -904,9 +847,9 @@ sheet. Claim tier: L3 (DE/enrichment statistics). Never L7
 
 Cross-database GSEA overview for the WT_heat contrast, labelled WT:
 heat (39 vs 37 °C), under the pooled Benjamini-Hochberg family of
-4,787 tests across 14 databases. Per-database FDR < 0.05 gives 855
-significant sets; the pooled FDR gives 854 (44 lost on pooling, 43
-gained). The panel draws the top 5 sets per database for 13 of the 14
+4,786 tests across 13 databases. Per-database FDR < 0.05 gives 854
+significant sets; the pooled FDR gives 853 (44 lost on pooling, 43
+gained). The panel draws the top 5 sets per database for 13 of the 13
 pooled databases. MitoXplorer carries no pooled-significant set at
 all and keeps its facet so the null stays visible.
 
@@ -929,28 +872,26 @@ pass the pooled FDR, counted over the whole database. A header
 reading (0/23) marks a real null, and those facets stay on the
 canvas, since dropping a database because it came out empty would
 leave a panel selected for positives. EXCLUDED FROM THE PANEL:
-Lombardi2022_HIF (gsea_pooled_overview.exclude_databases). A single
-hand-curated HIF consensus set given its own facet sits level with
-the curated versioned databases while presupposing the hypoxia
-question. It stays inside the pooled correction and in every 06_gsea
-table, which is why the pooled-family database count on the canvas is
-one higher than the facet count. CAVEAT: padj_pooled is a
-comparability device across databases rather than a calibrated error
-rate, since GO terms and pathway sets share genes. Claim tier: L3
-(enrichment statistics). Sample mapping owner-confirmed.
+whatever gsea_pooled_overview.exclude_databases names, which is
+currently empty, so the facet count and the pooled-family database
+count agree. An excluded database stays inside the pooled correction
+and in every 06_gsea table. CAVEAT: padj_pooled is a comparability
+device across databases rather than a calibrated error rate, since GO
+terms and pathway sets share genes. Claim tier: L3 (enrichment
+statistics). Sample mapping owner-confirmed.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `ggplot2 / geom_point + facet_wrap` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[Lombardi2022_HIF]; gsea_pooled_overview.facet_ncol=2; figures.nes_cap=3.2` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
+| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `ggplot2 / geom_point + facet_wrap` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[]; gsea_pooled_overview.facet_ncol=2; figures.nes_cap=3.2` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
 
 ## figures/_overview/gsea_pooled_overview_Interaction.png
 
 Cross-database GSEA overview for the Interaction contrast, labelled
 Heat × genotype interaction (cGAS-dependence of the heat response),
-under the pooled Benjamini-Hochberg family of 4,787 tests across 14
+under the pooled Benjamini-Hochberg family of 4,786 tests across 13
 databases. Per-database FDR < 0.05 gives 186 significant sets; the
 pooled FDR gives 154 (36 lost on pooling, 4 gained). The panel draws
-the top 5 sets per database for 13 of the 14 pooled databases. 5 of
+the top 5 sets per database for 13 of the 13 pooled databases. 5 of
 them carry no pooled-significant set at all (HSR_lens, MitoPathways,
 MitoXplorer, TCR_activation, TransportDB) and keep their facets so
 the nulls stay visible.
@@ -974,27 +915,25 @@ pass the pooled FDR, counted over the whole database. A header
 reading (0/23) marks a real null, and those facets stay on the
 canvas, since dropping a database because it came out empty would
 leave a panel selected for positives. EXCLUDED FROM THE PANEL:
-Lombardi2022_HIF (gsea_pooled_overview.exclude_databases). A single
-hand-curated HIF consensus set given its own facet sits level with
-the curated versioned databases while presupposing the hypoxia
-question. It stays inside the pooled correction and in every 06_gsea
-table, which is why the pooled-family database count on the canvas is
-one higher than the facet count. CAVEAT: padj_pooled is a
-comparability device across databases rather than a calibrated error
-rate, since GO terms and pathway sets share genes. Claim tier: L3
-(enrichment statistics). Sample mapping owner-confirmed.
+whatever gsea_pooled_overview.exclude_databases names, which is
+currently empty, so the facet count and the pooled-family database
+count agree. An excluded database stays inside the pooled correction
+and in every 06_gsea table. CAVEAT: padj_pooled is a comparability
+device across databases rather than a calibrated error rate, since GO
+terms and pathway sets share genes. Claim tier: L3 (enrichment
+statistics). Sample mapping owner-confirmed.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `ggplot2 / geom_point + facet_wrap` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[Lombardi2022_HIF]; gsea_pooled_overview.facet_ncol=2; figures.nes_cap=3.2` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
+| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `ggplot2 / geom_point + facet_wrap` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[]; gsea_pooled_overview.facet_ncol=2; figures.nes_cap=3.2` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
 
 ## figures/_overview/gsea_pooled_overview.png
 
 The two per-contrast pooled-FDR overviews abreast on one canvas, WT
 heat on the left and Interaction on the right, so the 13 displayed
 databases line up block for block between the contrasts. Under the
-shared pooled family of 4,787 tests across 14 databases, WT heat
-carries 855 significant sets before pooling and 854 after,
+shared pooled family of 4,786 tests across 13 databases, WT heat
+carries 854 significant sets before pooling and 853 after,
 Interaction 186 and 154. The per-contrast panels hold the full
 numbers.
 
@@ -1021,13 +960,11 @@ FACET HEADER (n/N): n of the N sets in that database pass the pooled
 FDR, counted over the whole database. A header reading (0/23) marks a
 real null, and those facets stay on the canvas, since dropping a
 database because it came out empty would leave a panel selected for
-positives. EXCLUDED FROM THE PANEL: Lombardi2022_HIF
-(gsea_pooled_overview.exclude_databases). A single hand-curated HIF
-consensus set given its own facet sits level with the curated
-versioned databases while presupposing the hypoxia question. It stays
-inside the pooled correction and in every 06_gsea table, which is why
-the pooled-family database count on the canvas is one higher than the
-facet count. CAVEAT: padj_pooled is a comparability device across
+positives. EXCLUDED FROM THE PANEL: whatever
+gsea_pooled_overview.exclude_databases names, which is currently
+empty, so the facet count and the pooled-family database count agree.
+An excluded database stays inside the pooled correction and in every
+06_gsea table. CAVEAT: padj_pooled is a comparability device across
 databases rather than a calibrated error rate, since GO terms and
 pathway sets share genes. Claim tier: L3 (enrichment statistics).
 Sample mapping owner-confirmed. This canvas is double width by
@@ -1037,5 +974,119 @@ gsea_pooled_overview_Interaction.png.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `patchwork / p_wt beside p_int` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[Lombardi2022_HIF]` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
+| `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `patchwork / p_wt beside p_int` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[]` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
+
+
+## figures/_overview/hypoxia_running_sum_wt_heat.png
+
+Running enrichment of the single Hallmark set HALLMARK_HYPOXIA
+against the WT 39-vs-37 °C ranked t-statistic. NES +1.9078, p
+3.331e-07, adjusted p 4.164e-06, 171 of the set's genes present in
+the 19,679-gene ranked universe, 56 of them in the leading edge. The
+curve peaks at an enrichment score of +0.455 at rank 2,297, which is
+the top 12% of the ranking, so the set's members are concentrated
+toward the 39 °C end of the WT ordering. The statistics on the figure
+are taken verbatim from master_gsea_table.csv, and the curve geometry
+is recomputed deterministically from the same ranked vector the sweep
+used, at exponent 1, with no permutation re-run. This set sits 6th by
+|NES| and 4th by adjusted p in the WT_heat Hallmark cell, so it falls
+outside the general running-sum panels of this GSEA sweep, which draw
+the top 5 sets per cell by |NES|. Its enrichment locates where these
+171 genes sit in one ranking, and the gene content of the set is a
+separate question from the name the set carries.
+
+**How to read:** Three stacked panels sharing one x axis: the rank of every gene in
+the WT_heat ranked list, most 39 °C-shifted on the left, most 37
+°C-shifted on the right. Top panel: the running enrichment score,
+which steps up at each gene belonging to the set and decays between
+them. Its peak is the enrichment score, and the set members left of
+the peak are the leading edge. The y range is pinned to [-1, 1] so
+the curve stays comparable to every other running-sum figure in this
+GSEA sweep. Middle panel: one tick per set member at that member's
+rank, over a band showing where the ranking crosses zero. Bottom
+panel: the ranked t-statistic, which shows how much signal each rank
+carries. The legend carries the set name, its genes present in the
+ranked universe, its NES and its adjusted p. NES > 0 = enriched in
+the contrast numerator (39 °C or WT). NES < 0 = enriched in the
+denominator (37 °C or cGAS-KO). This set is 6th by |NES| and 4th by
+adjusted p in its cell, so the general running-sum panels of this
+GSEA sweep, which draw the top 5 per cell by |NES|, leave it out by
+construction. SELECTION RULE: this set was chosen BY NAME, and its
+adjusted p and |NES| played no part in that choice. The general
+per-database and pooled panels of this GSEA sweep pin no set by name,
+and no pin from this figure is carried back into them. This panel
+draws one set out of the 50 that the Hallmark collection contributed
+to this contrast, so read the two ranks quoted above as the whole of
+what it says about where this set stands among them. A set's
+enrichment is not evidence that the program its name invokes is
+present; composition would have to be established separately. What
+this curve locates is where the set's member genes sit in one
+ranking. Claim tier: L3 (DE and enrichment statistics). PROVISIONAL
+sample labels.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
+
+## figures/_overview/hypoxia_routes_by_contrast.png
+
+Running-enrichment curves for four hypoxia-named gene sets, one per
+database, across the three focal contrasts. WT: heat (39 vs 37 °C):
+Hallmark NES +1.91 (padj 4.16e-06), GO MF NES +1.75 (padj 0.0408), GO
+BP NES +1.71 (padj 0.00113), Reactome NES -0.91 (padj 0.723).
+cGAS-KO: heat (39 vs 37 °C): Hallmark NES +1.95 (padj 2.48e-06), GO
+MF NES +1.77 (padj 0.0431), GO BP NES +1.54 (padj 0.0162), Reactome
+NES -0.92 (padj 0.716). Heat × genotype interaction (cGAS-dependence
+of the heat response): Hallmark NES -1.27 (padj 0.169), GO MF NES
++0.67 (padj 0.987), GO BP NES +1.34 (padj 0.31), Reactome NES -0.78
+(padj 0.942). Three of the four sets carry a positive NES and reach
+FDR < 0.05 in both per-genotype heat contrasts, and the fourth,
+REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no
+significance in any of the three; 6 of the 12 (set x contrast) cells
+reach FDR < 0.05. Every Interaction NES is non-significant, which
+reads as no detectable cGAS-dependence at n=5 and never as proven
+cGAS-independence: the 1-df interaction term is the least-powered
+contrast in this design. All four sets were chosen by name, so the
+panel reports these four curves and ranks nothing.
+
+**How to read:** One facet per contrast, and within each facet four overlaid
+running-enrichment curves, one per gene set, keyed by colour in the
+shared legend below the panels. The x axis is the rank of every gene
+in THAT contrast's ranked list, most numerator-shifted on the left,
+most denominator-shifted on the right, so the facets share an axis
+length and each carries its own ordering. A curve steps up at each
+gene belonging to its set and decays between them: an early high peak
+means the members are packed at the numerator end, and a curve near
+zero means they are spread through the list. The y range is pinned to
+[-1, 1] so every curve stays comparable to every other running-sum
+figure in this GSEA sweep. Inside each facet the NES and adjusted p
+for that contrast are printed in each set's own colour, in the
+legend's own top-to-bottom order, keyed by database name because each
+of the four sets comes from a different database. The member ticks
+and the ranked-metric panel are left off to keep four curves per
+facet legible; the companion figure hypoxia_running_sum_wt_heat.png
+draws all three panels for one set. NES > 0 = enriched in the
+contrast numerator (39 °C or WT). NES < 0 = enriched in the
+denominator (37 °C or cGAS-KO). The Interaction facet is the
+cGAS-dependence read-out: a positive significant Interaction NES is
+consistent with cGAS-dependent induction, and a non-significant one
+means no detectable cGAS-dependence at n=5. SELECTION RULE: these 4
+sets were chosen BY NAME, one per database, with no input from their
+adjusted p or |NES|. The general per-database and pooled panels of
+this GSEA sweep pin no set by name, and no pin from this figure is
+carried back into them. So this is a named-set read-out and says
+nothing about how these four rank among the thousands of sets they
+came from. Read the fourth curve as carefully as the other three:
+three of these hypoxia-named sets carry a positive NES in both heat
+contrasts and the Reactome set carries a negative one, so shared
+wording in two set names leaves shared behaviour an open question. A
+set's enrichment is not evidence that the program its name invokes is
+present; composition would have to be established separately. The
+four names overlap in wording while their gene content differs, which
+is why each is drawn on its own curve. Claim tier: L3 (DE and
+enrichment statistics). PROVISIONAL sample labels.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `geom_line / facet_wrap` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
 

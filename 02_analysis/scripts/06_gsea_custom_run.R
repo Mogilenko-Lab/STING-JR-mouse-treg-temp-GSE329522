@@ -1,6 +1,6 @@
 # 06_gsea_custom_run.R — COMPUTE
 ## clusterProfiler::GSEA (by="fgsea") over the custom databases (TransportDB,
-## MitoPathways, MitoXplorer, Lombardi2022_HIF) × all 7 contrasts. Caches gseaResult
+## MitoPathways, MitoXplorer, HSR_lens, TCR_activation) × all 7 contrasts. Caches gseaResult
 ## S4 objects (consumable by the RNAseq-toolkit GSEA plotters); derives the tidy master
 ## rows via normalize_gsea_results().
 ##
@@ -42,12 +42,9 @@
 ##   [A4] gene_universe.txt (from 11_emit_universe.R) is advisory background; it is
 ##        read and reported but fgsea ranks on the full DE t-vector (no gene-set
 ##        subsetting by universe here — fgsea naturally intersects with each pathway).
-##   [A5] Lombardi2022_HIF is an ORTHOGONAL published-HIF check (Ratcliffe/Mole,
-##        doi:10.1016/j.celrep.2022.111652; 48-gene consensus, human→mouse,
-##        protein-coding, provenance-stamped by 00b_curate_lombardi_hif.R). Its NES
-##        on the Interaction contrast is the direct contrast to the hand-made 16-gene
-##        Biomni list. Per house rules: results floored at L3; never crown HIF1α/2α;
-##        "no detectable cGAS-dependence at n=5" — NEVER "cGAS-independent".
+##   [A5] Per house rules: results floored at L3; never crown HIF1α/2α; and the
+##        interaction reads as "no detectable cGAS-dependence at n=5", NEVER as
+##        "cGAS-independent".
 
 ## ============================================================================
 ## 0. Setup
@@ -84,7 +81,7 @@ MAXSZ     <- GSEA_MAX_SIZE         # 500
 SEED      <- GSEA_SEED             # 123
 NPERM     <- GSEA_NPERM            # 100000  (nPermSimple for clusterProfiler::GSEA)
 RANK_COL  <- (YAML_CONFIG$gsea$rank_metric %||% RANK_METRIC)   # "t"
-## clusterProfiler::GSEA run-time engine settings (gsea: block; §5 of the blast-radius doc)
+## clusterProfiler::GSEA run-time engine settings, read from the config's `gsea:` block.
 PCUT      <- YAML_CONFIG$gsea$pvalue_cutoff_run %||% 1       # keep ALL pathways at run time
 PADJM     <- YAML_CONFIG$gsea$padj_method       %||% "fdr"   # pAdjustMethod
 EPS       <- YAML_CONFIG$gsea$eps                %||% 0       # exact fgsea p-values
@@ -108,7 +105,7 @@ dir.create(overview_dir, recursive = TRUE, showWarnings = FALSE)
 ## 2. Custom-DB registry — built from databases.custom in the YAML config.
 ##    Each entry: list(name = "<DisplayName>", rds = "<absolute cache path>").
 ##    04_gsea_set_prep.R stores the cache as geneset_custom_<name>.rds where
-##    <name> is the `name` field from the YAML (case-preserved, e.g. "Lombardi2022_HIF").
+##    <name> is the `name` field from the YAML (case-preserved, e.g. "MitoXplorer").
 ## ============================================================================
 
 custom_cfg <- YAML_CONFIG$databases$custom
@@ -129,7 +126,7 @@ for (entry in custom_cfg) {
   }
   db_registry[[nm]] <- rds_path
 }
-DB_NAMES <- names(db_registry)   # e.g. c("TransportDB","MitoPathways","MitoXplorer","Lombardi2022_HIF")
+DB_NAMES <- names(db_registry)   # e.g. c("TransportDB","MitoPathways","MitoXplorer","HSR_lens")
 
 if (length(DB_NAMES) == 0)
   stop("No custom gene-set caches found under ", DIR_OBJECTS,
@@ -295,7 +292,7 @@ for (co in CONTRASTS) {
     ## Per-contrast output: one combined CSV (all custom DBs, sorted by padj).
     ## Layout: 03_results/06_gsea/tables/by_contrast/<contrast>/gsea_custom.csv
     ## The `database` column in each row identifies which DB it came from.
-    ## Convention (§5 global): contrast is the DIRECTORY, not a filename suffix.
+    ## Project-wide convention: the contrast names the DIRECTORY, never a filename suffix.
     cdir <- file.path(tbl_dir, "by_contrast", co)
     dir.create(cdir, recursive = TRUE, showWarnings = FALSE)
     out_contrast <- dplyr::arrange(round_numeric_cols(contrast_rows), padj)
@@ -334,7 +331,7 @@ if (nrow(all_rows) > 0) {
 ##    value in df$database, then writes the full combined table.
 ##
 ##    By calling it ONCE PER DATABASE (not once for all custom rows combined),
-##    each DB key ("TransportDB", "MitoPathways", "MitoXplorer", "Lombardi2022_HIF")
+##    each DB key ("TransportDB", "MitoPathways", "MitoXplorer", "HSR_lens", "TCR_activation")
 ##    replaces exactly its own rows and leaves all other rows — including the
 ##    MSigDB rows written by 05_gsea_msigdb_run.R ("Hallmark", "KEGG", etc.) —
 ##    completely untouched. This is the idempotency guarantee.
@@ -382,7 +379,6 @@ if (nrow(all_rows) > 0) {
   message(sprintf("  For Interaction:     NES>0 = heat response LARGER in WT than cGASKO"))
   message(sprintf("     (the cGAS-dependence payoff; 1 df, lowest power — phrase as"))
   message(sprintf("      'no detectable cGAS-dependence at n=5', NEVER 'cGAS-independent')."))
-  message(sprintf("  Lombardi2022_HIF NES on Interaction = orthogonal HIF check vs Biomni's"))
   message(sprintf("    16-gene list; never crown HIF1a/HIF2a; floor claims at L3."))
 }
 message("[06_gsea_custom_run] COMPLETE.")

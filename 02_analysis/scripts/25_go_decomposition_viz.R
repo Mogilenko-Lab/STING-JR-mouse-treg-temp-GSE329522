@@ -92,8 +92,28 @@ blocks$label <- factor(blocks$label, levels = rev(blocks$label))
 n_blocks <- nrow(blocks)
 arm_n <- obj$arms[[ARM]]$n_nominal
 
+# The hypoxia block is marked because the niche reading downstream turns on whether hypoxia
+# terms show up in this arm at all, and one row out of 35 is otherwise easy to miss. The row
+# is selected by its representative term and asserted unique, so a re-clustered object either
+# marks the same block or stops the run. The band is the FIRST layer, so it sits under the
+# bar and the segment. The bar fill already carries the block's best adjusted p, so the
+# highlight is a background band plus a bold axis label and never a fourth fill colour.
+HYP_REP <- "response to hypoxia"
+hyp_i   <- which(blocks$cluster_representative == HYP_REP)
+stopifnot(length(hyp_i) == 1L)
+hyp_y   <- which(levels(blocks$label) == as.character(blocks$label[hyp_i]))
+HYP_COL <- OI$reddish_purple
+hyp_band <- annotate("rect", xmin = -Inf, xmax = Inf,
+                     ymin = hyp_y - 0.5, ymax = hyp_y + 0.5,
+                     fill = HYP_COL, alpha = 0.24)
+# element_text takes a vector of faces, recycled over the axis breaks in level order, which
+# for this discrete scale runs bottom to top. ggtext is not installed, so this is the way to
+# bold one axis label.
+hyp_face <- ifelse(seq_along(levels(blocks$label)) == hyp_y, "bold", "plain")
+
 p1a <- ggplot(blocks, aes(x = .data$n_terms, y = .data$label,
                           fill = -log10(.data$best_p_adjust))) +
+  hyp_band +
   geom_col(width = 0.74) +
   geom_text(aes(label = sprintf("%d genes", .data$n_genes)), hjust = -0.16,
             size = LAB * 0.8, colour = "grey20") +
@@ -107,9 +127,11 @@ p1a <- ggplot(blocks, aes(x = .data$n_terms, y = .data$label,
        x = sprintf("GO %s terms in the block", ONT), y = NULL) +
   project_theme(config = FIG_CFG) +
   theme(panel.grid.major.y = element_blank(), legend.position = "bottom",
-        legend.key.width = unit(1.6, "lines"))
+        legend.key.width = unit(1.6, "lines"),
+        axis.text.y = element_text(face = hyp_face))
 
 p1b <- ggplot(blocks, aes(x = .data$frac_terms_p_matched, y = .data$label)) +
+  hyp_band +
   geom_segment(aes(x = 0, xend = .data$frac_terms_p_matched, yend = .data$label),
                colour = "grey78", linewidth = 1.0) +
   geom_point(size = PT * 1.5, colour = OI$vermillion) +
@@ -127,14 +149,10 @@ p1b <- ggplot(blocks, aes(x = .data$frac_terms_p_matched, y = .data$label)) +
 fig1 <- (p1a | p1b) +
   patchwork::plot_layout(widths = c(2.7, 1)) +
   patchwork::plot_annotation(
-    title = sprintf("GO %s term blocks for %s, by term count and best adjusted p",
-                    ONT, ARM),
-    subtitle = sprintf(paste0(
-      "The %d enriched terms collapse to %d blocks at Wang similarity %s, average linkage cut at %s (GOSemSim %s). ",
-      "Bar length is the number of terms in\nthe block, the bar-end count the union of genes those terms hold, out of the arm's %d. ",
-      "The right panel gives the share of the block's terms whose\nhit count a depth-matched random draw of the same size matches in under %.0f%% of %s replicates."),
-      nrow(enr_p), n_blocks, prov[["simplify_cutoff"]], prov[["cluster_height"]],
-      prov[["GOSemSim_version"]], arm_n, 100 * PCUT, prov[["n_null"]]),
+    title = sprintf("GO %s term blocks for %s", ONT, ARM),
+    # A glyph key and nothing else. The clustering parameters, the bar-end counts and the
+    # null verdict all read as sentences, so they belong in the stage README.
+    subtitle = sprintf("Shaded row: the %s block.", HYP_REP),
     theme = project_theme(config = FIG_CFG))
 
 save_overview(
@@ -144,20 +162,30 @@ save_overview(
                      "median_recurrence")],
   finding = sprintf(paste0(
     "The %d GO %s terms enriched for %s collapse to %d blocks. The largest is %s with %d terms over %d of the arm's %d genes, ",
-    "and %.0f%% of its terms have a depth-matched p_matched under %.2f. Across all blocks the union of genes the enriched terms hold is %d."),
+    "and %.0f%% of its terms have a depth-matched p_matched under %.2f. Across all blocks the union of genes the enriched terms hold is %d. ",
+    "The shaded row is the %s block: %d terms over %d arm genes (%s), best adjusted p %.4f, and %.0f%% of its terms with a depth-matched ",
+    "p_matched under %.2f."),
     nrow(enr_p), ONT, ARM, n_blocks, blocks$cluster_representative[1],
     blocks$n_terms[1], blocks$n_genes[1], arm_n,
     100 * blocks$frac_terms_p_matched[1], PCUT,
-    length(split_genes(enr_p$geneID))),
+    length(split_genes(enr_p$geneID)),
+    HYP_REP, blocks$n_terms[hyp_i], blocks$n_genes[hyp_i],
+    paste(sort(split_genes(enr_p$geneID[enr_p$cluster_id == blocks$cluster_id[hyp_i]])),
+          collapse = ", "),
+    blocks$best_p_adjust[hyp_i], 100 * blocks$frac_terms_p_matched[hyp_i], PCUT),
   script = SCRIPT, fn = "top-level (p1a | p1b)",
   config_kv = CFG_KV, input = "03_results/objects/24_go_decomposition.rds",
-  how_to_read = paste0(
-    "One row per block. Bar length is the number of enriched terms in the block, fill the smallest adjusted p ",
-    "among them, the bar-end text the arm genes those terms cover between them. The right panel is the same ",
-    "block's depth-matched verdict: the share of its terms whose observed hit count a matched random draw ",
-    "equals or beats in under 5% of 2000 replicates. A long bar with a low dot is a large block a random draw ",
-    "reproduces. Blocks are a similarity cut over term annotation, so a gene can sit in several and the gene ",
-    "counts do not sum to the arm. Claim tier: descriptive, hypothesis-generating."),
+  how_to_read = sprintf(paste0(
+    "The %d enriched terms collapse to %d blocks at Wang similarity %s, average linkage cut at %s (GOSemSim ",
+    "%s), one row each. Bar length is the number of enriched terms in the block, fill the smallest adjusted p ",
+    "among them, the bar-end text the arm genes those terms cover between them, out of the arm's %d. The ",
+    "right panel is the same block's depth-matched verdict: the share of its terms whose observed hit count a ",
+    "matched random draw equals or beats in under %.0f%% of %s replicates. A long bar with a low dot is a ",
+    "large block a random draw reproduces. The shaded row spanning both panels is the %s block, shaded so a ",
+    "reader can find it among the %d. Blocks are a similarity cut over term annotation, so a gene can sit in ",
+    "several and the gene counts do not sum to the arm. Claim tier: descriptive, hypothesis-generating."),
+    nrow(enr_p), n_blocks, prov[["simplify_cutoff"]], prov[["cluster_height"]],
+    prov[["GOSemSim_version"]], arm_n, 100 * PCUT, prov[["n_null"]], HYP_REP, n_blocks),
   config = FIG_CFG, wide = TRUE, height = 17)
 
 ## ===========================================================================
@@ -281,24 +309,36 @@ save_overview(
 ## Figure 3 -- null recurrence against rank
 ## ===========================================================================
 
+# The three hypoxia and oxygen-level terms are called out by colour and by name so a reader
+# can find them in a cloud of several hundred points. They are a third level of the same
+# factor rather than a second scale, so the panel keeps one legend.
+HYP_IDS <- c("GO:0001666", "GO:0036293", "GO:0070482")
+KEY_BELOW <- sprintf("p_matched below %.2f", PCUT)
+KEY_ABOVE <- sprintf("p_matched at or above %.2f", PCUT)
+KEY_HYP   <- "hypoxia and oxygen-level terms"
+
 dn <- obj$depth_null %>%
   dplyr::filter(.data$arm == ARM, .data$ontology == ONT, .data$iea_variant == IEA) %>%
   dplyr::arrange(.data$p_adjust_hypergeometric) %>%
   dplyr::mutate(rank = dplyr::row_number(),
-                survives = ifelse(.data$p_matched < PCUT,
-                                  sprintf("p_matched below %.2f", PCUT),
-                                  sprintf("p_matched at or above %.2f", PCUT))) %>%
+                survives = ifelse(
+                  .data$ID %in% HYP_IDS, KEY_HYP,
+                  ifelse(.data$p_matched < PCUT, KEY_BELOW, KEY_ABOVE))) %>%
   as.data.frame()
+dn$survives <- factor(dn$survives, levels = c(KEY_BELOW, KEY_ABOVE, KEY_HYP))
 
 med_rec <- stats::median(dn$frac_matched_reaching_q)
 n_20 <- sum(dn$frac_matched_reaching_q > 0.20)
 n_50 <- sum(dn$frac_matched_reaching_q > 0.50)
-head_lab <- dn[seq_len(min(8L, nrow(dn))), ]
+N_HEAD <- 8L
+head_lab <- dn[seq_len(min(N_HEAD, nrow(dn))), ]
+hyp_lab  <- dn[dn$ID %in% HYP_IDS, ]
+stopifnot(nrow(hyp_lab) == length(HYP_IDS))
 y_top <- max(dn$frac_matched_reaching_q) * 1.08
 
-REC_COL <- c(OI$blue, "grey62")
-names(REC_COL) <- c(sprintf("p_matched below %.2f", PCUT),
-                    sprintf("p_matched at or above %.2f", PCUT))
+REC_COL <- c(OI$blue, "grey62", OI$reddish_purple)
+names(REC_COL) <- c(KEY_BELOW, KEY_ABOVE, KEY_HYP)
+HYP_INK <- OI$reddish_purple   # label ink for the three named hypoxia terms
 
 p3a <- ggplot(dn, aes(x = .data$rank, y = .data$frac_matched_reaching_q)) +
   geom_hline(yintercept = med_rec, linetype = "dashed", linewidth = 0.6,
@@ -308,12 +348,31 @@ p3a <- ggplot(dn, aes(x = .data$rank, y = .data$frac_matched_reaching_q)) +
   geom_point(aes(colour = .data$survives), size = PT * 0.8, alpha = 0.75) +
   geom_smooth(method = "loess", formula = y ~ x, se = FALSE, linewidth = 1.1,
               colour = OI$vermillion) +
+  # Three points among several hundred: redrawn on top at a larger size so the colour is
+  # findable. Same colour scale, so this adds no legend row.
+  geom_point(data = hyp_lab, aes(colour = .data$survives), size = PT * 1.7) +
+  # The head labels stay clamped to the left third, where their own points are.
   ggrepel::geom_text_repel(
     data = head_lab, aes(label = .data$Description), size = LAB * 0.85,
     colour = "grey15", seed = 11L, min.segment.length = 0,
     segment.colour = "grey45", segment.size = 0.4, box.padding = 0.55,
     point.padding = 0.4, direction = "both", xlim = c(1, nrow(dn) * 0.34),
     max.overlaps = Inf) +
+  # The hypoxia terms sit near ranks 161 to 248, well outside that clamp, so a shared
+  # repel run would drag their labels back to the left third and off their own points.
+  # They get their own layer with its own window: the sparse upper right, x beyond the
+  # head-label region so the two label sets cannot meet.
+  ggrepel::geom_text_repel(
+    data = hyp_lab, aes(label = .data$Description), size = LAB * 0.85,
+    colour = HYP_INK, fontface = "bold", seed = 11L, min.segment.length = 0,
+    segment.colour = HYP_INK, segment.size = 0.5, box.padding = 0.6,
+    point.padding = 0.5, direction = "both",
+    xlim = c(nrow(dn) * 0.40, nrow(dn) * 1.0),
+    # Above the 50% rule, where the cloud thins out, so the three names do not sit on it.
+    ylim = c(y_top * 0.68, y_top * 0.99),
+    # White halo: the names stay readable where a grid rule or a grey dot passes under.
+    bg.colour = "white", bg.r = 0.12,
+    max.overlaps = Inf, show.legend = FALSE) +
   scale_colour_manual(values = REC_COL, name = NULL) +
   # coord_cartesian rather than scale limits: a scale limit drops the histogram bin whose
   # lower edge stat_bin puts below zero, and ggplot reports that as removed rows.
@@ -344,12 +403,10 @@ p3b <- ggplot(dn, aes(y = .data$frac_matched_reaching_q)) +
 fig3 <- (p3a | p3b) +
   patchwork::plot_layout(widths = c(3.2, 1)) +
   patchwork::plot_annotation(
-    title = sprintf("Depth-matched null recurrence against rank in the %s term list", ARM),
-    subtitle = sprintf(paste0(
-      "For each of the %d enriched terms, the share of %s depth-matched random draws that also take it to q below %.2f. Median %.3f, ",
-      "%d terms above 20%%\nand %d above 50%%. The dashed rule is the median and the dotted rules are 20%% and 50%%. ",
-      "The eight most significant terms are named."),
-      nrow(dn), prov[["n_null"]], PCUT, med_rec, n_20, n_50),
+    title = sprintf("Depth-matched null recurrence, %s terms", ARM),
+    # A rule key and nothing else. The median, the tail counts and which terms are named
+    # all read as sentences, so they belong in the stage README.
+    subtitle = "Dashed rule: the median. Dotted rules: 20% and 50%.",
     theme = project_theme(config = FIG_CFG))
 
 save_overview(
@@ -366,13 +423,17 @@ save_overview(
           collapse = ", ")),
   script = SCRIPT, fn = "top-level (p3a | p3b)",
   config_kv = CFG_KV, input = "03_results/objects/24_go_decomposition.rds",
-  how_to_read = paste0(
-    "One dot per enriched term, at its rank by adjusted p against how often a gene set matched to the arm on ",
-    "annotation depth also takes it to significance over 2000 draws. Blue dots are terms whose observed hit ",
-    "count a matched draw equals or beats in under 5% of replicates. The red curve is a loess fit, and the ",
-    "right panel is the same y axis as a histogram over all terms. A term high on this axis is one the ",
-    "ontology hands to any well-annotated gene set of this size. Claim tier: a property of the term and of ",
-    "the background, bounding how the block panel reads."),
+  how_to_read = sprintf(paste0(
+    "One dot per enriched term, at its rank by adjusted p against how often a depth-matched draw of the same ",
+    "size also takes it to significance over %s replicates. Blue dots are terms a matched draw equals or beats ",
+    "in under %.0f%% of replicates. The red curve is a loess fit and the right panel is the same y axis as a ",
+    "histogram over all terms. The dashed rule is the median recurrence, %.3f, and the dotted rules are 20%% ",
+    "and 50%%: %d terms sit above 20%% and %d above 50%%. The %d most significant terms are named, and so are ",
+    "the three hypoxia and oxygen-level terms, in bold at ranks %s. All three carry a p_matched at or above ",
+    "%.2f. A term high on this axis is one the ontology hands to any well-annotated gene set of this size. ",
+    "Claim tier: a property of the term and of the background, bounding how the block panel reads."),
+    prov[["n_null"]], 100 * PCUT, med_rec, n_20, n_50, N_HEAD,
+    paste(sort(hyp_lab$rank), collapse = ", "), PCUT),
   config = FIG_CFG, wide = TRUE, height = 9)
 
 ## ===========================================================================
@@ -458,12 +519,10 @@ chap <- sort(intersect(c("HSPA1A", "HSPH1", "HSPA1B", "DNAJB1"),
 fig4 <- (p4a | p4b) +
   patchwork::plot_layout(widths = c(2.1, 1)) +
   patchwork::plot_annotation(
-    title = sprintf("Hypergeometric result for every proteostasis probe term in %s", ARM),
-    subtitle = sprintf(paste0(
-      "%d of the %d distinct probe terms entered the hypergeometric. The %d that did not are marked with their reason, which is a property of the term's size in\n",
-      "the %s-symbol background or of its gene content, and carries no information about the arm. Two terms clear the adjusted-p cutoff, and the right\n",
-      "panel names the arm genes carrying each of them. The dashed rule is a raw p of %.2f. Probe list and name sweep are both configured."),
-      n_tested, nrow(pr), nrow(pr) - n_tested, prov[["background_n"]], PCUT),
+    title = sprintf("Proteostasis probe terms in %s", ARM),
+    # A rule key and nothing else. How many probes entered, why the rest did not and what
+    # the two clearing terms are all read as sentences, so they belong in the stage README.
+    subtitle = sprintf("Dashed rule: raw p = %.2f.", PCUT),
     theme = project_theme(config = FIG_CFG))
 
 save_overview(
@@ -472,20 +531,27 @@ save_overview(
                  "term_size_in_universe", "k_arm", "expected_k", "pvalue", "p_adjust",
                  "p_matched", "frac_matched_reaching_q", "enriched", "genes_hit")],
   finding = sprintf(paste0(
-    "Of %d distinct proteostasis probe terms looked up against %s, %d entered the hypergeometric and %d cleared the adjusted-p cutoff. ",
-    "Those %d are %s, and the genes carrying them are inflammatory mediators. ",
-    "Every chaperone, folding and unfolded-protein term that entered returned an adjusted p above the cutoff, and the chaperone genes present in the arm are %s."),
-    nrow(pr), ARM, n_tested, nrow(sig), nrow(sig), sig_txt,
-    paste(chap, collapse = " and ")),
+    "This is the direct by-name test of whether proteostasis and heat-shock terms enrich in %s. Every term on the configured probe list is looked up and ",
+    "reported here, whether or not it returned anything. Every chaperone, protein-folding, unfolded-protein and heat-shock term that entered the ",
+    "hypergeometric returned an adjusted p above the %.2f cutoff, and the chaperone genes present in the arm are %s. ",
+    "Of %d distinct probe terms, %d entered and %d cleared the cutoff: %s. Both of those are organism-level thermoregulation terms, and the genes carrying ",
+    "them are inflammatory mediators."),
+    ARM, PCUT, paste(chap, collapse = " and "),
+    nrow(pr), n_tested, nrow(sig), sig_txt),
   script = SCRIPT, fn = "top-level (p4a | p4b)",
   config_kv = CFG_KV, input = "03_results/objects/24_go_decomposition.rds",
-  how_to_read = paste0(
+  how_to_read = sprintf(paste0(
     "One row per probe term, split by ontology. The dot is the raw hypergeometric p on a -log10 axis and the ",
-    "dashed rule is p = 0.05. A cross at zero is a term the test never saw, and the right panel gives the ",
-    "reason: above the 500-gene cap, below the 10-gene floor, or holding no arm gene at all. For every tested ",
-    "term the right panel names the arm genes it holds, so the two terms that clear the cutoff can be read by ",
-    "their gene content. Claim tier: these are searched-and-absent rows, reported so an absence carries a ",
-    "number."),
+    "dashed rule is p = %.2f. Grey is tested and above the adjusted-p cutoff, vermillion tested and below it, ",
+    "a blue cross at zero a term the test never saw. %d of the %d probe terms entered. The right panel names ",
+    "the arm genes each tested term holds, so a term clearing the cutoff can be read by its gene content, and ",
+    "for an untested term gives the reason it never entered: above the %s-gene cap, below the %s-gene floor, ",
+    "or holding no arm gene. Those reasons are properties of the term's size in the %s-symbol background or of ",
+    "its gene content and carry no information about the arm. The `status` and `found_by` columns of the ",
+    "source table hold the same values. Claim tier: these are searched-and-absent rows, reported so an absence ",
+    "carries a number."),
+    PCUT, n_tested, nrow(pr),
+    prov[["max_gs_size"]], prov[["min_gs_size"]], prov[["background_n"]]),
   config = FIG_CFG, wide = TRUE, height = 11)
 
 ## ===========================================================================

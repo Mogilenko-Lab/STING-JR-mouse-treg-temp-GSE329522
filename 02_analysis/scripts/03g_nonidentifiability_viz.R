@@ -45,7 +45,7 @@ STAGE  <- "04_tf"
 SCRIPT <- "02_analysis/scripts/03g_nonidentifiability_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
 
-PROV <- provisional_caption()
+PROV <- sample_mapping_stamp()
 rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
 # -----------------------------------------------------------------------------

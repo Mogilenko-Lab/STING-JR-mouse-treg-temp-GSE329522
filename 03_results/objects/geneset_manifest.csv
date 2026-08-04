@@ -10,6 +10,5 @@ TF_Targets,msigdb,354,MSigDB C3/TFT:GTRD,/workspaces/STING-JR/mouse_anchor/03_re
 TransportDB,custom,17,01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TransportDB.rds
 MitoPathways,custom,60,01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoPathways.rds
 MitoXplorer,custom,25,01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoXplorer.rds
-Lombardi2022_HIF,custom,1,00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_Lombardi2022_HIF.rds
 HSR_lens,custom,2,00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_HSR_lens.rds
 TCR_activation,custom,1,00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TCR_activation.rds

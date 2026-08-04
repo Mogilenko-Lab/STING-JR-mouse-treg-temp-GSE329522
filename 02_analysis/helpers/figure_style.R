@@ -88,6 +88,52 @@ contrast_label <- function(co, short = FALSE) {
 }
 
 ## ---------------------------------------------------------------------------
+## 3b. SAMPLE-MAPPING PROVENANCE — single source of truth for every viz script.
+##     Read from design.sample_mapping in the project config. No viz script may
+##     hard-code the mapping status: the 2026-07-22 owner sample sheet flipped it
+##     INFERRED -> CONFIRMED, and figures regenerated after that date kept printing
+##     the old hedge because the string lived in nine scripts instead of one key.
+##
+##     config.R defines the same four accessors off the same config key, for the
+##     compute scripts that source it instead of this shim. Definitions are guarded
+##     by exists() so whichever loads first wins; both read design$sample_mapping,
+##     so the two cannot disagree on a value. Use sample_mapping_stamp() for a
+##     figure canvas (short) and sample_mapping_caption() for a README (names the
+##     evidence). Full per-library account: 00_data/processed/PROVENANCE.md.
+## ---------------------------------------------------------------------------
+.SAMPLE_MAPPING <- FIG_CFG$design$sample_mapping %||% list()
+
+if (!exists("sample_mapping_status", mode = "function")) {
+    sample_mapping_status <- function() toupper(.SAMPLE_MAPPING$status %||% "INFERRED")
+}
+if (!exists("sample_mapping_confirmed", mode = "function")) {
+    sample_mapping_confirmed <- function() identical(sample_mapping_status(), "CONFIRMED")
+}
+if (!exists("sample_mapping_stamp", mode = "function")) {
+    sample_mapping_stamp <- function() {
+        if (sample_mapping_confirmed()) {
+            .SAMPLE_MAPPING$stamp %||% "Sample mapping owner-confirmed"
+        } else {
+            .SAMPLE_MAPPING$stamp_unconfirmed %||%
+                "Sample mapping inferred, pending the owner sample sheet"
+        }
+    }
+}
+if (!exists("sample_mapping_caption", mode = "function")) {
+    sample_mapping_caption <- function() {
+        if (sample_mapping_confirmed()) {
+            .SAMPLE_MAPPING$caption %||% sample_mapping_stamp()
+        } else {
+            .SAMPLE_MAPPING$caption_unconfirmed %||% sample_mapping_stamp()
+        }
+    }
+}
+## Deprecated alias; new code should call sample_mapping_stamp()/_caption().
+if (!exists("provisional_caption", mode = "function")) {
+    provisional_caption <- function() sample_mapping_stamp()
+}
+
+## ---------------------------------------------------------------------------
 ## 4. UNIFIED STYLE OVERRIDES — single-variant theme + dual-format (pdf+png) export.
 ##    Sourced LAST so it SHADOWS the toolkit lib's project_theme / save_figure /
 ##    save_overview / style_series with the unified contract (no .print/.screen split;

@@ -38,7 +38,7 @@ STAGE   <- "04_tf"
 SCRIPT  <- "02_analysis/scripts/03c_hif_program_attribution_viz.R"
 TBL_DIR <- stage_dir("04_tf", "tables")
 
-cap <- provisional_caption()
+cap <- sample_mapping_stamp()
 rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)
 
 

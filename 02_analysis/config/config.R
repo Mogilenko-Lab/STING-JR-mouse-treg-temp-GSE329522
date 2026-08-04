@@ -253,16 +253,55 @@ KEY_TFS <- c("Irf3", "Irf7", "Irf1", "Stat1", "Stat2", "Hif1a", "Epas1", "Nfkb1"
 KEY_PROGENY <- c("Hypoxia", "JAK-STAT", "NFkB", "TNFa")
 
 # ============================================================================
-# SAMPLE-MAPPING CAPTION (single source of truth; every figure uses this)
+# SAMPLE-MAPPING PROVENANCE (single source of truth; every figure reads this)
 # ============================================================================
+# All four accessors below read design$sample_mapping in analysis_config.yaml.
+# No script may hard-code the mapping status: the 2026-07-22 owner sample sheet
+# flipped it INFERRED -> CONFIRMED, and figures regenerated after that date kept
+# printing the old hedge because the string lived in nine scripts instead of one
+# key. Read the key and the wording follows the evidence automatically.
 
-#' Standard sample-provenance stamp for every figure caption/subtitle.
-#' The 12630-RS-021..040 -> genotype x temperature mapping is owner-confirmed
-#' (2026-07-22 sample sheet; see 00_data/processed/PROVENANCE.md). It matched the
-#' Hspa1b/Hsph1 thermometer + Cgas inference exactly (20/20).
+.SAMPLE_MAPPING <- YAML_CONFIG$design$sample_mapping %||% list()
+
+#' Mapping status as recorded in the config: "CONFIRMED" or "INFERRED".
+#' @return Single character string.
+sample_mapping_status <- function() {
+  toupper(.SAMPLE_MAPPING$status %||% "INFERRED")
+}
+
+#' TRUE when the sample -> condition mapping is owner-confirmed.
+sample_mapping_confirmed <- function() {
+  identical(sample_mapping_status(), "CONFIRMED")
+}
+
+#' SHORT sample-provenance stamp for a figure canvas (subtitle/caption).
+#' Long detail belongs in the README caption, not on the PNG.
+#' @return Single character string.
+sample_mapping_stamp <- function() {
+  if (sample_mapping_confirmed()) {
+    .SAMPLE_MAPPING$stamp %||% "Sample mapping owner-confirmed"
+  } else {
+    .SAMPLE_MAPPING$stamp_unconfirmed %||% "Sample mapping inferred, pending the owner sample sheet"
+  }
+}
+
+#' LONG sample-provenance sentence for a README caption. Names the evidence
+#' (which sheet, which date, how many libraries concordant).
+#' @return Single character string.
+sample_mapping_caption <- function() {
+  if (sample_mapping_confirmed()) {
+    .SAMPLE_MAPPING$caption %||% sample_mapping_stamp()
+  } else {
+    .SAMPLE_MAPPING$caption_unconfirmed %||% sample_mapping_stamp()
+  }
+}
+
+#' Deprecated alias retained so existing call sites keep resolving. New code
+#' should call sample_mapping_stamp() (canvas) or sample_mapping_caption()
+#' (README). The name is a historical artifact: the mapping is not provisional.
 #' @return Single character string.
 provisional_caption <- function() {
-  "Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)"
+  sample_mapping_stamp()
 }
 
 # ============================================================================

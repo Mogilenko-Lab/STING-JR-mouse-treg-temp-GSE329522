@@ -406,19 +406,20 @@ readme_txt <- sprintf(
 
 **Generated:** %s by `02_analysis/scripts/01_mapping_qc.R`
 
-## Verdict (PROVISIONAL -- pending collaborator sample sheet)
+## Verdict (mapping %s)
 
-The inferred temperature-major mapping (021-025 WT_37, 026-030 cGASKO_37, 031-035 WT_39, 036-040 cGASKO_39) is **%s**: **%d/20** libraries have a data-derived label (thermometer-predicted temperature + Cgas-predicted genotype) that matches the inferred label.%s
+The temperature-major mapping under test (021-025 WT_37, 026-030 cGASKO_37, 031-035 WT_39, 036-040 cGASKO_39) is **%s**: **%d/20** libraries have a data-derived label (thermometer-predicted temperature + Cgas-predicted genotype) that matches it.%s
 
-**Evidence.** The heat-shock thermometer (%s) is monotone with the inferred temperature: mean log2CPM = %.2f in the hot half (031-040) vs %.2f in the cool half (021-030), a +%.2f log2 shift. %s (Cgas) is higher in WT than cGAS-KO within both temperature halves (37C: WT-KO = %.2f; 39C: WT-KO = %.2f log2CPM). PCA on all %d genes carrying variance places %.1f%%/%.1f%% of variance on PC1/PC2. PC1 is temperature almost exactly (R2 %.2f against temperature, %.2f against genotype); genotype sits weakly on PC2 (R2 %.2f), so the 2x2 is recoverable from expression but its two factors are recoverable to very different degrees.
+**Evidence.** The heat-shock thermometer (%s) is monotone with the assigned temperature: mean log2CPM = %.2f in the hot half (031-040) vs %.2f in the cool half (021-030), a +%.2f log2 shift. %s (Cgas) is higher in WT than cGAS-KO within both temperature halves (37 °C: WT-KO = %.2f; 39 °C: WT-KO = %.2f log2CPM). PCA on all %d genes carrying variance places %.1f%%/%.1f%% of variance on PC1/PC2. PC1 is temperature almost exactly (R2 %.2f against temperature, %.2f against genotype); genotype sits weakly on PC2 (R2 %.2f), so the 2x2 is recoverable from expression but its two factors are recoverable to very different degrees.
 
 **Scramble caveat.** The deposited CPM column order is temperature-major; the GEO GSM accessions are genotype-major. A naive positional GSM->column join therefore mislabels **%d** libraries (%s) -- see `figures/fig1d_scramble.png`. This is why the mapping must be marker-derived, not accession-positional.
 
-**Bottom line:** inferred mapping **%s**, PROVISIONAL pending the collaborator sample sheet.
+**Bottom line:** the label-blind mapping is **%s**. %s
 
 See `tables/mapping_verdict.csv` for the per-library machine-checkable verdict.
 ",
   format(Sys.time(), "%Y-%m-%d %H:%M"),
+  tolower(sample_mapping_status()),
   gate, n_concordant,
   if (length(disc_rows) > 0) sprintf(" Discordant (flagged): %s.", paste(disc_rows, collapse = ", ")) else " No discordant libraries.",
   paste(thermo_present, collapse = "/"),
@@ -428,7 +429,8 @@ See `tables/mapping_verdict.csv` for the per-library machine-checkable verdict.
   cgas_quant$WT_minus_KO[cgas_quant$temp == "39"],
   n_genes, percentVar[1], percentVar[2], pc1_temp, pc1_geno, pc2_geno,
   n_disc, paste(disc_libs, collapse = ", "),
-  if (n_concordant == 20) "SUPPORTED" else "NOT fully supported"
+  if (n_concordant == 20) "SUPPORTED" else "NOT fully supported",
+  sample_mapping_caption()
 )
 writeLines(readme_txt, readme_path)
 message(sprintf("[README] wrote verdict to %s", readme_path))
@@ -450,6 +452,7 @@ message(sprintf("4. Concordance: %d/20 -- %s", n_concordant,
                 if (n_concordant == 20) "PASS" else "CONCERN"))
 message(sprintf("5. Markers lost in collapse: %d -- %s",
                 length(lost_markers), if (length(lost_markers) == 0) "PASS" else "FAIL"))
-message("6. Plot-ready tidy tables emitted; run 01_mapping_qc_viz.R to render fig1a-d (all PROVISIONAL-stamped)")
+message(sprintf("6. Plot-ready tidy tables emitted; run 01_mapping_qc_viz.R to render fig1a-d (sample mapping: %s)",
+                sample_mapping_status()))
 message(sprintf("\nGATE RECOMMENDATION: %s", gate))
 message("\n[DONE] 01_mapping_qc.R (compute) complete.")

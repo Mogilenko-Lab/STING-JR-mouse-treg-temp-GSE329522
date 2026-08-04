@@ -38,7 +38,7 @@ FIG_DIR     <- file.path(GENESET_DIR, "figures")
 
 DOWN <- DIVERGING_COLORS$negative   # blue
 UP   <- DIVERGING_COLORS$positive   # orange
-cap  <- provisional_caption()
+cap  <- sample_mapping_stamp()
 
 
 rd <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAsFactors = FALSE)

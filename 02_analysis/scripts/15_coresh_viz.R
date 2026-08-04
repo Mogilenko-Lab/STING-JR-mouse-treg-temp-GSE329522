@@ -27,7 +27,7 @@
 ## annotation), so a reader sees "GSE89069 · viral infection · embryonic brain", not a raw id.
 ##
 ## Sample mapping is owner-confirmed (GSE329522 2x2 genotype x temperature); captions carry
-## that stamp via provisional_caption().
+## that stamp via sample_mapping_stamp().
 
 # =============================================================================
 # 0. Style contract + toolkit GSEA plotters (MANDATORY FIRST — no inline theme/hex)
@@ -38,7 +38,7 @@ source("02_analysis/helpers/figure_style.R")    # FIG_CFG, project_theme, save_f
                                                  # overview_path, contrast_label, direction_cue, %||%
 source("02_analysis/config/config.R")            # PROJECT_ROOT, YAML_CONFIG, DIR_OBJECTS,
                                                  # DIR_MASTER, DIR_RESULTS, SPECIES, stage_dir,
-                                                 # provisional_caption, RANK_METRIC,
+                                                 # sample_mapping_stamp, RANK_METRIC,
                                                  # GSEA_FDR_CUTOFF, GSEA_MIN_SIZE/MAX_SIZE, %||%
 source("02_analysis/helpers/de_gsea_helpers.R")  # load_de_results(), build_ranked_vector()
 
@@ -89,7 +89,7 @@ RSTOP   <- as.integer(FIG_CFG$figures$running_sum_top %||% 5L)
 RSYLIM  <- as.numeric(unlist(FIG_CFG$figures$running_sum_ylim %||% c(-1, 1)))
 MINGS   <- as.integer(GSEA_MIN_SIZE %||% 15L)
 MAXGS   <- as.integer(GSEA_MAX_SIZE %||% 500L)
-CAP     <- provisional_caption()     # owner-confirmed sample-mapping stamp
+CAP     <- sample_mapping_stamp()     # owner-confirmed sample-mapping stamp
 DB_NAME <- "CoReSh_derived"          # the single "database" this stage contributes
 
 qsigs_cfg <- coresh_cfg$query_signatures %||% list()

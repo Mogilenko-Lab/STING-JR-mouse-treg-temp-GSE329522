@@ -11,7 +11,7 @@
 # Key scientific claim (the headline panel):
 #   Hypoxia (PROGENy) rises in BOTH WT_heat and KO_heat but is FLAT in the
 #   Interaction contrast => NO DETECTABLE cGAS-dependence at n=5
-#   (PROVISIONAL; n=5/group; not proven independence).
+#   (n=5/group; not proven independence).
 #   JAK-STAT (PROGENy) and the IFN/IRF/STAT TFs are positive in WT_heat,
 #   reduced in KO_heat, and positive in the Interaction => cGAS-DEPENDENT.
 #   This orthogonal pathway-footprint view corroborates the two-arms split
@@ -93,11 +93,11 @@ KEY_PROGENY <- c("Hypoxia", "JAK-STAT", "NFkB", "TNFa")
 KEY_TFS <- c("Irf3", "Irf7", "Irf1", "Stat1", "Stat2", "Nfkb1", "Rela",
              "Hif1a", "Epas1")
 
-# Provisional caption stamp (matches config.R::provisional_caption())
-PROV_STAMP <- paste0(
-  "[PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas), ",
-  "pending collaborator sample sheet; n=5/group]"
-)
+# Sample-provenance stamp, READ from analysis_config.yaml:design$sample_mapping via
+# figure_style.R::sample_mapping_stamp(). Never hard-code the status here: the owner
+# sheet flipped it INFERRED -> CONFIRMED on 2026-07-22, and a literal string in this
+# script is how a figure keeps printing a hedge the evidence no longer supports.
+PROV_STAMP <- paste0(sample_mapping_stamp(), "; n=5/group")
 
 # =============================================================================
 # DIRECTORIES
@@ -504,7 +504,7 @@ for (co in CO_HEADLINE) {
                       "Bars = MLM activity score (orange = pathway more active in numerator; ",
                       "blue = more active in denominator). Glyphs: * = raw p < ", FDR, "; ",
                       "bold outline = key pathway. Score is not a fold-change; sign tracks ",
-                      "numerator activation direction. Claim tier: L3 (provisional, n=5/group)."),
+                      "numerator activation direction. Claim tier: L3 (n=5/group). ", sample_mapping_caption()),
                     config    = FIG_CFG),
       error = function(e) message("  save_overview progeny_barplot [", co, "]: ", e$message))
   }
@@ -534,7 +534,7 @@ for (co in CO_HEADLINE) {
                         "Lollipops = ULM activity score (rightward = pathway-level activation in numerator). ",
                         "Color: orange = HIF axis (Hif1a/Epas1), blue = IFN/NFkB axis, grey = other. ",
                         "Open circle = watchlist TF. * = BH padj < ", FDR, ". ",
-                        "Claim tier: L3 (provisional, n=5/group)."),
+                        "Claim tier: L3 (n=5/group). ", sample_mapping_caption()),
                       config    = FIG_CFG),
         error = function(e) message("  save_overview tf_barplot [", co, "]: ", e$message))
     }
@@ -580,7 +580,7 @@ tryCatch({
                   "clamped +/-", CAP, "; * raw p<", FDR, "; rows clustered): ",
                   "Hypoxia/glycolysis rise in BOTH heat arms but are flat in the Interaction; ",
                   "JAK-STAT/NFkB/TNFa rise in WT_heat and are positive in the Interaction (cGAS-dependent). ",
-                  "PROVISIONAL; n=5/group."),
+                  "n=5/group. ", sample_mapping_caption()),
                 script    = SCRIPT,
                 fn        = ".heat_tile (ggplot geom_tile)",
                 config_kv = paste0("thresholds.gsea_fdr=", FDR,
@@ -592,7 +592,7 @@ tryCatch({
                   "design order (left = WT_heat, KO_heat; then Interaction, Temp_main, Geno*, Geno_main). ",
                   "Fill: orange = pathway activated in numerator; blue = activated in denominator. ",
                   "Score clamped to +/-", CAP, "; * = raw p < ", FDR, " (n=14 pathways; no multi-test ",
-                  "correction warranted). Claim tier: L3 (provisional, n=5/group)."),
+                  "correction warranted). Claim tier: L3 (n=5/group). ", sample_mapping_caption()),
                 # Tall canvas: 14 rows need vertical room so tiles do not collapse;
                 # wide so the contrast labels and legend fit. Floors still enforced.
                 height    = 8,
@@ -617,7 +617,7 @@ tryCatch({
 #   Temp_main: Hypoxia UP (average), JAK-STAT UP (but smaller than WT_heat)
 #
 # Caption explicitly uses "no detectable cGAS-dependence at n=5" NOT
-# "cGAS-independent"; never crowns HIF1α/2α; adds PROVISIONAL label.
+# "cGAS-independent"; never crowns HIF1α/2α; stamps the sample-mapping provenance.
 # =============================================================================
 
 message("[13_activity_viz] --- Hypoxia-vs-immune split panel (Interaction) ---")
@@ -666,7 +666,8 @@ tryCatch({
       )) +
       labs(
         title    = "PROGENy pathway activity: Hypoxia vs immune split (MLM)",
-        subtitle = "Hypoxia (orange): flat Interaction (no detectable cGAS-dependence). JAK-STAT/NFkB/TNFa (blue): positive Interaction (cGAS-dependent). PROVISIONAL.",
+        subtitle = paste0("Hypoxia (orange): flat Interaction (no detectable cGAS-dependence). ",
+                          "JAK-STAT/NFkB/TNFa (blue): positive Interaction (cGAS-dependent)."),
         x        = NULL,
         y        = "PROGENy activity score (MLM)",
         caption  = NULL
@@ -685,7 +686,7 @@ tryCatch({
                     "with a flat Interaction (no detectable cGAS-dependence at n=5), whereas ",
                     "JAK-STAT/NFkB/TNFa are positive in the Interaction (cGAS-dependent arm). ",
                     "This orthogonal pathway footprint corroborates the two-arms DE/TF result. ",
-                    "PROVISIONAL; n=5/group."),
+                    "n=5/group. ", sample_mapping_caption()),
                   script    = SCRIPT,
                   fn        = "ggplot/geom_col",
                   config_kv = paste0("thresholds.gsea_fdr=", FDR,
@@ -698,7 +699,7 @@ tryCatch({
                     "(JAK-STAT/NFkB/TNFa) should be taller in WT_heat than KO_heat and positive in ",
                     "Interaction - cGAS-dependent. * = raw p < ", FDR, ". ",
                     "CAUTION: 'flat Interaction' is NOT proven cGAS-independence; ",
-                    "the study is powered at n=5/group. Claim tier: L3 (provisional)."),
+                    "the study is powered at n=5/group. Claim tier: L3. ", sample_mapping_caption()),
                   config    = FIG_CFG)
     message("[13_activity_viz] Interaction split panel done.")
   }
@@ -767,7 +768,7 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
                       " contrasts + watchlist; rows = TFs, cols = contrasts; score clamped +/-",
                       CAP, "; * BH padj<", FDR, "; row strip = HIF/IFN/other axis): ",
                       "IFN/IRF/STAT TFs cluster as the cGAS-dependent block (positive in Interaction); ",
-                      "HIF-axis TFs are non-significant in the Interaction. PROVISIONAL; n=5/group."),
+                      "HIF-axis TFs are non-significant in the Interaction. n=5/group. ", sample_mapping_caption()),
                     script    = SCRIPT,
                     fn        = ".heat_tile (ggplot geom_tile)",
                     config_kv = paste0("thresholds.gsea_fdr=", FDR,
@@ -780,7 +781,7 @@ if (TF_AVAILABLE && length(CO_TF) >= 2) {
                       "Fill: orange = TF activated in numerator; blue = activated in denominator. ",
                       "Left-edge strip: orange = HIF axis (Hif1a/Epas1), blue = IFN/NFkB axis, ",
                       "grey = other. Score clamped to +/-", CAP, ". * = BH padj < ", FDR, ". ",
-                      "Claim tier: L3 (provisional, n=5/group; IFN-arm TFs positive in Interaction ",
+                      "Claim tier: L3 (n=5/group; IFN-arm TFs positive in Interaction ",
                       "= cGAS-dependent; HIF-axis TFs flat/NS in Interaction = no detectable ",
                       "cGAS-dependence at n=5; NOT proven independence)."),
                     # Tall canvas scaled by row count so the (up to ~40-row) grid
@@ -884,7 +885,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                            name = "Entity type") +
         labs(
           title    = "PROGENy + TF activity: key pathways and TFs (headline contrasts)",
-          subtitle = "PROGENy MLM (top) + CollecTRI ULM (bottom). Orange = HIF arm; blue = IFN/NFkB arm. PROVISIONAL.",
+          subtitle = "PROGENy MLM (top) + CollecTRI ULM (bottom). Orange = HIF arm; blue = IFN/NFkB arm.",
           x        = "Activity score",
           y        = NULL,
           caption  = NULL
@@ -909,7 +910,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                       "key pathways/TFs across ", length(CO_COMBINED), " headline contrasts: ",
                       "Hypoxia (PROGENy) and Hif1a (TF) are active in both heat arms and flat in ",
                       "the Interaction (no detectable cGAS-dependence at n=5); JAK-STAT/IFN/Stat1/Irf3 ",
-                      "are positive in the Interaction (cGAS-dependent). PROVISIONAL."),
+                      "are positive in the Interaction (cGAS-dependent). ", sample_mapping_caption()),
                     script    = SCRIPT,
                     fn        = "ggplot/facet_grid",
                     config_kv = paste0("thresholds.gsea_fdr=", FDR,
@@ -927,7 +928,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
                       "- no detectable cGAS-dependence. JAK-STAT/Stat1/Irf3 bars are positive ",
                       "in the Interaction column - cGAS-dependent. ",
                       "CAUTION: n=5/group; absence of significant Interaction for HIF arm is NOT ",
-                      "proven independence. Claim tier: L3 (provisional)."),
+                      "proven independence. Claim tier: L3. ", sample_mapping_caption()),
                     config    = FIG_CFG)
       message("[13_activity_viz] Combined PROGENy+TF panel done.")
     } else {
@@ -987,8 +988,8 @@ if (!file.exists(readme_path)) {
     "",
     "Stage 05: PROGENy MLM pathway activity inference (14 pathways, all contrasts).",
     "Key result: Hypoxia is flat in the Interaction (no detectable cGAS-dependence at n=5;",
-    "PROVISIONAL); JAK-STAT/NFkB/TNFa are positive in the Interaction (cGAS-dependent).",
-    "PROVISIONAL - inferred sample mapping pending collaborator sample sheet.",
+    "n=5/group); JAK-STAT/NFkB/TNFa are positive in the Interaction (cGAS-dependent).",
+    sample_mapping_caption(),
     ""
   ), readme_path)
   message("[13_activity_viz] Created 03_results/", STAGE, "/README.md stub.")

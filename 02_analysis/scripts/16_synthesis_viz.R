@@ -29,7 +29,7 @@
 #     about a TF being #1).
 #   * Figure claims FLOOR at L3 (DE/enrichment statistics); mechanism (L7) stays
 #     in the reply memo prose, never in a figure title.
-#   * PROVISIONAL-sample-label caveat stamped on every panel.
+#   * Sample-mapping provenance stamped on every panel, read from the config.
 #
 # Inputs (read-only):
 #   03_results/07_synthesis/tables/two_arms_summary.csv
@@ -91,10 +91,9 @@ TRACK_LABELS <- c(
 # figure_style.R::CONTRAST_LABELS_SHORT (config-driven; design.contrast_labels_short).
 # Used below via scale_x_discrete(labels = CONTRAST_LABELS_SHORT).
 
-# Provisional stamp (matches config.R::provisional_caption()).
-PROV_STAMP <- paste0(
-  "[PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas), ",
-  "pending collaborator sample sheet; n=5/group]")
+# Sample-provenance stamp, READ from analysis_config.yaml:design$sample_mapping via
+# figure_style.R::sample_mapping_stamp(). Never hard-code the status here.
+PROV_STAMP <- paste0(sample_mapping_stamp(), "; n=5/group")
 
 # ============================================================================
 # 1. GUARD — stop only if BOTH the table and the object are missing; otherwise
@@ -232,7 +231,7 @@ build_two_arms_panel <- function(df) {
       x = NULL, y = NULL,
       caption = paste0(
         "Tile = signed score; orange = up in numerator, blue = down. ",
-        "Black ring = padj < ", FDR, ". Claim tier: L3 (provisional, n=5/group). ",
+        "Black ring = padj < ", FDR, ". Claim tier: L3 (n=5/group). ", sample_mapping_caption(), " ",
         "'Flat Interaction' is NOT proven cGAS-independence.")) +
     project_theme(config = FIG_CFG, legend = TRUE) +
     # Structural facet geometry only (NOT styling): the two arm tracks are stacked
@@ -293,7 +292,7 @@ save_overview(
     "HIF/glycolysis arm rises in BOTH WT_heat and KO_heat yet is flat in the ",
     "Interaction (", n_hif_int_sig, " significant; no detectable cGAS-dependence ",
     "at n=5). Convergent across GSEA, PROGENy, decoupleR-TF, and per-gene DE ",
-    "(plus GATOM/CoReSh where provisioned). PROVISIONAL; n=5/group; NOT proven ",
+    "(plus GATOM/CoReSh where provisioned). n=5/group; NOT proven ",
     "independence."),
   script    = SCRIPT,
   fn        = "build_two_arms_panel",
@@ -315,7 +314,7 @@ save_overview(
     "/ unringed there while staying lit in BOTH heat columns = no detectable ",
     "cGAS-dependence at n=5. The arm NAMES are labels, not claims that any one ",
     "TF (e.g. HIF1a/HIF2a) is the driver. Claim tier: L3 (DE/enrichment ",
-    "statistics; provisional, n=5/group). 'Flat Interaction' is NOT proven ",
+    "statistics; n=5/group). 'Flat Interaction' is NOT proven ",
     "cGAS-independence - the 1-df interaction is the lowest-powered comparison."),
   # GEOMETRY OVERRIDE (contract-sanctioned width/height passthrough; NOT raw ggsave):
   # a 40-glyph-row x 4-column faceted heatmap with long method+feature y-labels
@@ -366,8 +365,8 @@ if (file.exists(readme_path)) {
       "names are labels. Figure claims floor at L3 (DE/enrichment statistics);",
       "mechanism (L7: pseudohypoxia / Complex-I) lives only in the reply memo.",
       "",
-      "PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas),",
-      "pending the collaborator sample sheet; n=5/group.",
+      sample_mapping_caption(),
+      "n=5/group.",
       "",
       "Artifacts:",
       "- figures/_overview/two_arms_panel.png + two_arms_panel.pdf - the headline panel",

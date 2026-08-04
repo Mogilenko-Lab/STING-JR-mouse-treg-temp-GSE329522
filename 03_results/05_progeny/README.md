@@ -1,4 +1,4 @@
-# 05_progeny — artifact captions
+# 05_progeny: artifact captions
 
 PROGENy MLM pathway activity inference (14 pathways, all contrasts)
 + CollecTRI ULM TF activity (decoupleR). Key result: Hypoxia (PROGENy) is flat in
@@ -31,14 +31,18 @@ PROGENy 14-pathway x 7-contrast activity heatmap (MLM score, clamped
 +/-2.5; * raw p<0.05; rows clustered): Hypoxia/glycolysis rise in
 BOTH heat arms but are flat in the Interaction; JAK-STAT/NFkB/TNFa
 rise in WT_heat and are positive in the Interaction (cGAS-dependent).
-PROVISIONAL; n=5/group.
+n=5/group. Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Rows = PROGENy pathways (hierarchically clustered); columns =
 contrasts in design order (left = WT_heat, KO_heat; then Interaction,
 Temp_main, Geno*, Geno_main). Fill: orange = pathway activated in
 numerator; blue = activated in denominator. Score clamped to +/-2.5;
 * = raw p < 0.05 (n=14 pathways; no multi-test correction warranted).
-Claim tier: L3 (provisional, n=5/group).
+Claim tier: L3 (n=5/group). Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -64,8 +68,10 @@ PROGENy Hypoxia vs immune split: Hypoxia activity is similar in
 WT_heat and KO_heat with a flat Interaction (no detectable
 cGAS-dependence at n=5), whereas JAK-STAT/NFkB/TNFa are positive in
 the Interaction (cGAS-dependent arm). This orthogonal pathway
-footprint corroborates the two-arms DE/TF result. PROVISIONAL;
-n=5/group.
+footprint corroborates the two-arms DE/TF result. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Grouped bars: x = contrast (3 headline contrasts: WT_heat, KO_heat,
 Interaction), fill = PROGENy pathway. Orange (Hypoxia) bars should be
@@ -74,7 +80,9 @@ similar in WT_heat and KO_heat and near-zero in the Interaction panel
 (JAK-STAT/NFkB/TNFa) should be taller in WT_heat than KO_heat and
 positive in Interaction - cGAS-dependent. * = raw p < 0.05. CAUTION:
 'flat Interaction' is NOT proven cGAS-independence; the study is
-powered at n=5/group. Claim tier: L3 (provisional).
+powered at n=5/group. Claim tier: L3. Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -100,15 +108,18 @@ CollecTRI TF activity heatmap (TFs significant in >=2 contrasts +
 watchlist; rows = TFs, cols = contrasts; score clamped +/-2.5; * BH
 padj<0.05; row strip = HIF/IFN/other axis): IFN/IRF/STAT TFs cluster
 as the cGAS-dependent block (positive in Interaction); HIF-axis TFs
-are non-significant in the Interaction. PROVISIONAL; n=5/group.
+are non-significant in the Interaction. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Rows = CollecTRI TFs (hierarchically clustered); columns = contrasts.
 Fill: orange = TF activated in numerator; blue = activated in
 denominator. Left-edge strip: orange = HIF axis (Hif1a/Epas1), blue =
 IFN/NFkB axis, grey = other. Score clamped to +/-2.5. * = BH padj <
-0.05. Claim tier: L3 (provisional, n=5/group; IFN-arm TFs positive in
-Interaction = cGAS-dependent; HIF-axis TFs flat/NS in Interaction =
-no detectable cGAS-dependence at n=5; NOT proven independence).
+0.05. Claim tier: L3 (n=5/group; IFN-arm TFs positive in Interaction
+= cGAS-dependent; HIF-axis TFs flat/NS in Interaction = no detectable
+cGAS-dependence at n=5; NOT proven independence).
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -135,7 +146,9 @@ for key pathways/TFs across 3 headline contrasts: Hypoxia (PROGENy)
 and Hif1a (TF) are active in both heat arms and flat in the
 Interaction (no detectable cGAS-dependence at n=5);
 JAK-STAT/IFN/Stat1/Irf3 are positive in the Interaction
-(cGAS-dependent). PROVISIONAL.
+(cGAS-dependent). Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 **How to read:** Row facets = PROGENy (top) vs CollecTRI TF (bottom); column facets =
 headline contrasts. Lollipop color: orange = HIF axis, blue =
@@ -146,7 +159,9 @@ bars are near-zero in the Interaction column - no detectable
 cGAS-dependence. JAK-STAT/Stat1/Irf3 bars are positive in the
 Interaction column - cGAS-dependent. CAUTION: n=5/group; absence of
 significant Interaction for HIF arm is NOT proven independence. Claim
-tier: L3 (provisional).
+tier: L3. Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -173,8 +188,10 @@ raw p<0.05; key pathways (Hypoxia/JAK-STAT/NFkB/TNFa) bold-outlined.
 **How to read:** Bars = MLM activity score (orange = pathway more active in numerator;
 blue = more active in denominator). Glyphs: * = raw p < 0.05; bold
 outline = key pathway. Score is not a fold-change; sign tracks
-numerator activation direction. Claim tier: L3 (provisional,
-n=5/group).
+numerator activation direction. Claim tier: L3 (n=5/group).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -200,7 +217,9 @@ HIF/IFN axis; * BH padj<0.05; IFN/HIF watchlist bold-outlined.
 **How to read:** Lollipops = ULM activity score (rightward = pathway-level activation
 in numerator). Color: orange = HIF axis (Hif1a/Epas1), blue =
 IFN/NFkB axis, grey = other. Open circle = watchlist TF. * = BH padj
-< 0.05. Claim tier: L3 (provisional, n=5/group).
+< 0.05. Claim tier: L3 (n=5/group). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -227,8 +246,10 @@ raw p<0.05; key pathways (Hypoxia/JAK-STAT/NFkB/TNFa) bold-outlined.
 **How to read:** Bars = MLM activity score (orange = pathway more active in numerator;
 blue = more active in denominator). Glyphs: * = raw p < 0.05; bold
 outline = key pathway. Score is not a fold-change; sign tracks
-numerator activation direction. Claim tier: L3 (provisional,
-n=5/group).
+numerator activation direction. Claim tier: L3 (n=5/group).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -255,7 +276,9 @@ HIF/IFN axis; * BH padj<0.05; IFN/HIF watchlist bold-outlined.
 **How to read:** Lollipops = ULM activity score (rightward = pathway-level activation
 in numerator). Color: orange = HIF axis (Hif1a/Epas1), blue =
 IFN/NFkB axis, grey = other. Open circle = watchlist TF. * = BH padj
-< 0.05. Claim tier: L3 (provisional, n=5/group).
+< 0.05. Claim tier: L3 (n=5/group). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -283,8 +306,10 @@ bold-outlined.
 **How to read:** Bars = MLM activity score (orange = pathway more active in numerator;
 blue = more active in denominator). Glyphs: * = raw p < 0.05; bold
 outline = key pathway. Score is not a fold-change; sign tracks
-numerator activation direction. Claim tier: L3 (provisional,
-n=5/group).
+numerator activation direction. Claim tier: L3 (n=5/group).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -310,7 +335,9 @@ HIF/IFN axis; * BH padj<0.05; IFN/HIF watchlist bold-outlined.
 **How to read:** Lollipops = ULM activity score (rightward = pathway-level activation
 in numerator). Color: orange = HIF axis (Hif1a/Epas1), blue =
 IFN/NFkB axis, grey = other. Open circle = watchlist TF. * = BH padj
-< 0.05. Claim tier: L3 (provisional, n=5/group).
+< 0.05. Claim tier: L3 (n=5/group). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -337,8 +364,10 @@ bold-outlined.
 **How to read:** Bars = MLM activity score (orange = pathway more active in numerator;
 blue = more active in denominator). Glyphs: * = raw p < 0.05; bold
 outline = key pathway. Score is not a fold-change; sign tracks
-numerator activation direction. Claim tier: L3 (provisional,
-n=5/group).
+numerator activation direction. Claim tier: L3 (n=5/group).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -364,7 +393,9 @@ HIF/IFN axis; * BH padj<0.05; IFN/HIF watchlist bold-outlined.
 **How to read:** Lollipops = ULM activity score (rightward = pathway-level activation
 in numerator). Color: orange = HIF axis (Hif1a/Epas1), blue =
 IFN/NFkB axis, grey = other. Open circle = watchlist TF. * = BH padj
-< 0.05. Claim tier: L3 (provisional, n=5/group).
+< 0.05. Claim tier: L3 (n=5/group). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -532,3 +563,4 @@ for the Temp_main contrast (genotype-averaged thermal TF response).
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/13_activity_viz.R` | `.barplot_tf / save_overview` | `thresholds.gsea_fdr=0.05; figures.top_n=20` | `03_results/objects/03_tf_collectri.rds` |
+

@@ -98,8 +98,7 @@ for (db in YAML_CONFIG$databases$msigdb) {
 custom_outfile <- c(
   MitoPathways      = "geneset_custom_MitoPathways.rds",
   MitoXplorer       = "geneset_custom_MitoXplorer.rds",
-  TransportDB       = "geneset_custom_TransportDB.rds",
-  Lombardi2022_HIF  = "geneset_custom_Lombardi2022_HIF.rds"
+  TransportDB       = "geneset_custom_TransportDB.rds"
 )
 for (dbn in names(custom_outfile)) {
   fp <- file.path(obj_dir, custom_outfile[[dbn]])

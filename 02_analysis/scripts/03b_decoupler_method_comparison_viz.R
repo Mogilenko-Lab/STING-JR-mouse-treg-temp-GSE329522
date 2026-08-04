@@ -28,7 +28,7 @@
 source("02_analysis/config/config.R")          # palette tokens: AXIS_COLORS/AXIS_LABELS/DIVERGING_COLORS
 source("02_analysis/helpers/figure_style.R")  # contract: FIG_CFG, project_theme, save_overview, ...
 suppressPackageStartupMessages({ library(ggplot2); library(dplyr) })
-cap <- provisional_caption()
+cap <- sample_mapping_stamp()
 
 STAGE   <- "04_tf"
 SCRIPT  <- "02_analysis/scripts/03b_decoupler_method_comparison_viz.R"

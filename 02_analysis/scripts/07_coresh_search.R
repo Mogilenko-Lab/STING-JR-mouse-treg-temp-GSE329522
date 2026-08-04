@@ -350,5 +350,5 @@ stopifnot(
   file.exists(file.path(tbl_dir, "coresh_provenance.csv"))
 )
 message(sprintf(
-  "[07_coresh_search] COMPLETE — %d queries, %d ranking rows, %d derived sets. (provisional sample labels; captions floor at L3-DE)",
+  "[07_coresh_search] COMPLETE — %d queries, %d ranking rows, %d derived sets. (captions floor at L3-DE)",
   length(all_queries), nrow(results), length(derived_sets)))

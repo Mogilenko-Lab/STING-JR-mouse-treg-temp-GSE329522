@@ -54,15 +54,19 @@ Hk2) across 4 groups (WT_37, WT_39, cGASKO_37, cGASKO_39). Also
 carries Interaction logFC and adj.P.Val from limma-trend (no
 recomputation in viz). READ-ONLY in this script; schema-frozen (also
 consumed by 03_decoupler_tf.R:687). Also the HIGHLIGHT watchlist
-source for the volcano + MD sweeps. Claim tier: L3. PROVISIONAL
-sample labels.
+source for the volcano + MD sweeps. Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Columns: gene, arm (IFN/ISG arm | HIF/glycolysis arm), hif_class
 (HIF-specific | shared-glycolytic | NA for ISG), genotype (WT |
 cGASKO), temp (37C | 39C), mean_log2cpm, inter_logFC, inter_adjP. One
 row per gene x group (4 rows per gene). inter_adjP is constant within
 gene. Schema frozen: do NOT rename/relocate; consumed by downstream
-scripts. Claim tier: L3. PROVISIONAL.
+scripts. Claim tier: L3. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -74,14 +78,18 @@ Per-marker Interaction contrast statistics table (subset of
 02_de_results.rds, Interaction slot) for the cGAS-dependence marker
 genes. Lists logFC, P.Value, adj.P.Val, AveExpr for each marker. Used
 as supplemental evidence for the two-arms framing. Claim tier: L3.
-PROVISIONAL.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Rows = marker genes; columns = gene_symbol, ensembl, logFC, AveExpr,
 t, P.Value, adj.P.Val, contrast. All values from the Interaction
 contrast (1 df; logFC > 0 = up in WT relative to cGASKO after
 removing shared heat effect). Non-significant adj.P = no detectable
 cGAS-dependence at n=5 (NEVER 'cGAS-independent'). Claim tier: L3.
-PROVISIONAL sample labels.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -103,8 +111,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -163,8 +173,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -221,8 +233,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -279,8 +293,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -339,8 +355,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -405,8 +423,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -464,8 +484,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -521,8 +543,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -576,8 +600,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -634,8 +660,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -691,8 +719,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -753,8 +783,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -812,8 +844,10 @@ lines = adj.P < 0.05 boundary (horizontal) & |log2FC| >= 1.0
 decision-by-FDR rule. Labelled = top 10 genes by significance per
 side, PLUS the always-on two-arms watchlist (ISG:
 Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). Data: CPM /
-limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -874,8 +908,10 @@ normalization confound); dotted vertical = median expression; dashed
 horizontals = |log2FC| >= 1.0. Quadrant numbers = significant-gene
 counts per quadrant. Labelled = top 5 sig genes per side, PLUS the
 always-on two-arms watchlist. Driven from 02_de_results.rds topTable
-columns (no MArrayLM fit on disk). Claim tier: L3. PROVISIONAL sample
-labels; n=5/group.
+columns (no MArrayLM fit on disk). Claim tier: L3; n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -939,7 +975,9 @@ panel: adj.P < 0.05, no fold-change cut-off -- the |log2FC| >= 1.0
 gate used by the projection export is stricter and keeps far fewer
 genes. A non-significant interaction gene = no detectable
 cGAS-dependence at n=5, never independence. Claim tier: L3.
-PROVISIONAL sample labels.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -996,21 +1034,24 @@ cGAS. Claim tier: L3.
 
 **How to read:** One dot per gene: x = log2 fold change at 39 vs 37 °C in WT, y = the
 same in cGAS-KO, equal scales, so the dashed identity line runs at
-45°. Glyphs run pale to dark: pale dots have no detectable
-cGAS-dependence at n=5, vermillion circles fall with heat in both
-genotypes and further without cGAS, black triangles rise with heat in
-WT and fall without it. Highlighted genes pass at adj.P < 0.05.
-Dotted lines lie 1 log2 unit either side; the 9 highlighted genes
-beyond the lower one, names in bold, are the ones that also clear
-|logFC| >= 1, 4 of them triangles. The gate is not the set that
-travels to human: the frozen 03_results/human_projection/ contract
-exports this arm at BOTH gates, these 9 at fdr_logfc and all 23 at
-fdr_only, the sensitivity read a 1 df term at n=5 needs, so bold
-marks the stringent core and not the whole export (per-gate ortholog
-counts: human_projection/manifest.csv). Read one-sidedness as a
-statement about the HIGHLIGHTED arm only — the pale cloud straddles
-the dashed line in both directions. Claim tier: L3. PROVISIONAL
-sample labels; n=5/group.
+45°. Glyphs run pale to dark. Pale dots have no detectable difference
+between the genotypes at n=5. Vermillion circles fall with heat in
+both genotypes and fall further once cGAS is gone. Black triangles
+rise with heat in WT and fall without cGAS. Highlighted genes pass at
+adj.P < 0.05, and all 23 of them sit below the dashed line, which is
+a weaker heat response without cGAS. The dotted lines lie 1 log2 unit
+either side of the identity. The 9 highlighted genes beyond the lower
+dotted line, their names in bold, also clear |logFC| >= 1, and 4 of
+those are triangles. Bold marks that stringent core. The frozen
+03_results/human_projection/ contract exports the arm at both gates,
+these 9 at fdr_logfc and all 23 at fdr_only, which is the sensitivity
+a 1 df term at n=5 needs (per-gate ortholog counts:
+human_projection/manifest.csv). Read one-sidedness as a statement
+about the highlighted arm alone. The pale cloud straddles the dashed
+line in both directions. Claim tier: L3, n=5/group.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1094,7 +1135,9 @@ significant in the WT heat contrast and 5 in both genotypes, so the
 flip is a direction read off fitted effects rather than 9 independent
 significant flips. Labels name the top 10 genes by evidence plus
 every gene inside the gate, so both subsets are readable by name.
-Claim tier: L3. PROVISIONAL sample labels; n=5/group.
+Claim tier: L3; n=5/group. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|

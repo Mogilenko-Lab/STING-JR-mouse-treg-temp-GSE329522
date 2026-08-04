@@ -22,8 +22,8 @@
 ##     load_or_compute(), load_msigdb_collection(), load_custom_geneset().
 ##   * databases.msigdb is a list of {category, subcategory, name} maps.
 ##   * databases.custom is a list of {name, path} maps; paths are relative to
-##     PROJECT_ROOT. The Lombardi RDS (path starting 00_data/) is built by
-##     00b_curate_lombardi_hif.R; toolkit RDS (paths under 01_modules/) are built by
+##     PROJECT_ROOT. Project RDS (paths starting 00_data/) are built by the 00-series
+##     curation scripts; toolkit RDS (paths under 01_modules/) are built by
 ##     the RNAseq-toolkit reference-processing pipeline. If any path is absent the
 ##     script warns and skips that DB — it does NOT error.
 ##   * msigdbr is a lazy dependency (not sourced at the top). If missing, MSigDB
@@ -124,7 +124,7 @@ for (m in YAML_CONFIG$databases$msigdb) {
 # ============================================================================
 ## Each custom DB is cached as a NAMED LIST of mouse gene-symbol vectors (same
 ## fgsea pathways format). load_custom_geneset() handles both toolkit T2G/T2N
-## shape and direct named-list shape (including the Lombardi provenance-stamped rds).
+## shape and direct named-list shape (including the provenance-stamped project rds).
 ## Size-filtering is applied at the same thresholds as MSigDB.
 ##
 ## MISSING PATH HANDLING:

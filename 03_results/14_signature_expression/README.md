@@ -1,4 +1,4 @@
-# 14_signature_expression — artifact captions
+# 14_signature_expression: artifact captions
 
 ## figures/_overview/signature_dotplot.png
 
@@ -17,7 +17,10 @@ rank 1 at top; each strip gives the on-screen count. The interaction
 panels' blue column is cGAS-KO 39 °C — a deficit in one cell, the
 arithmetic content of an interaction term. Interaction_up and
 Interaction_up_fdrOnly are one 1-df contrast at two gates, not two
-signatures. Up arms only. Claim tier: L3 (provisional, n=5/group).
+signatures. Up arms only. Claim tier: L3 (n=5/group).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -37,7 +40,9 @@ mean_logcpm the size channel, rank_within_signature the row order (1
 15-of-213 reads as a cap rather than a set size; z_bound carries the
 four-cell z limit (1.5) the colour scale uses. Downstream notebooks
 discover this table by its same-stem pairing with the PNG — keep the
-pair intact. Claim tier: L3 (provisional, n=5/group).
+pair intact. Claim tier: L3 (n=5/group). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|

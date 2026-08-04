@@ -31,7 +31,7 @@
 # =============================================================================
 
 source("02_analysis/helpers/figure_style.R")   # project_theme, save_overview, purge_figures, FIG_CFG
-source("02_analysis/config/config.R")          # provisional_caption() — the ONE sample-provenance stamp
+source("02_analysis/config/config.R")          # sample_mapping_stamp()/_caption() — the ONE sample-provenance source
 
 suppressPackageStartupMessages({
   library(ggplot2)
@@ -191,7 +191,7 @@ fig_dot <- ggplot(dot_p, aes(x = group, y = row_key)) +
          " (fdr_only), or additionally |log2FC| >= ", DE_LOGFC, " (fdr_logfc). Panels show each ",
          "arm's top ", TOP_N, " genes by t, or all of them where an arm has fewer — the strip says ",
          "which, and the stage tables carry every member. Mouse symbols. Claim tier: L3 ",
-         "(provisional, n=5/group). ", provisional_caption(), ".")) +
+         "(n=5/group). ", sample_mapping_stamp(), ".")) +
   project_theme(config = FIG_CFG) +
   theme(axis.text.x = element_text(angle = 0),
         axis.text.y = element_text(size = (FIG_CFG$figures$axis_text_size %||% 11) * 0.9),
@@ -241,7 +241,7 @@ save_overview(
     "gives the on-screen count. The interaction panels' blue column is cGAS-KO 39 °C — a ",
     "deficit in one cell, the arithmetic content of an interaction term. Interaction_up and ",
     "Interaction_up_fdrOnly are one 1-df contrast at two gates, not two signatures. Up arms ",
-    "only. Claim tier: L3 (provisional, n=5/group)."),
+    "only. Claim tier: L3 (n=5/group). ", sample_mapping_caption()),
   # GEOMETRY OVERRIDE (contract-sanctioned passthrough; NOT raw ggsave) — see FIG_W/FIG_H
   # above, which the text wrap is also computed against.
   width = FIG_W, height = FIG_H,
@@ -273,7 +273,7 @@ write_caption(
     "member count, so ", TOP_N, "-of-213 reads as a cap rather than a set size; z_bound carries ",
     "the four-cell z limit (", signif(Z_BOUND, 3), ") the colour scale uses. Downstream ",
     "notebooks discover this table by its same-stem pairing with the PNG — keep the pair ",
-    "intact. Claim tier: L3 (provisional, n=5/group)."),
+    "intact. Claim tier: L3 (n=5/group). ", sample_mapping_caption()),
   config   = FIG_CFG)
 
 write_caption(

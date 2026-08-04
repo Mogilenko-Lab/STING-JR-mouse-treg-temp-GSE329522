@@ -1,9 +1,9 @@
 # 07_synthesis - capstone synthesis (two-arms panel + reply memo)
 
-Stage 07 assembles the cross-arm evidence for the STING-cGAS standard sweep
-into one tidy two-arms table and renders the headline figure. NO new
-statistics are computed here - it joins/summarises the masters the earlier
-arms produced (GSEA, PROGENy, decoupleR-TF, DE; GATOM/CoReSh where present).
+This step assembles the cross-arm evidence for the STING-cGAS standard sweep
+into one tidy two-arms table and renders the headline figure. It joins and
+summarises the master tables the earlier arms produced (GSEA, PROGENy,
+decoupleR-TF, DE; GATOM/CoReSh where present), and computes no new statistics.
 
 Headline result (the publication-relevant payoff): a cGAS-dependence
 ASYMMETRY. The IFN/ISG arm is cGAS-dependent (positive, significant
@@ -22,7 +22,7 @@ Artifacts:
 - tables/_overview/two_arms_panel.csv - the source table behind the panel
 - tables/two_arms_summary.csv - the full cross-arm evidence table (16_synthesis.R)
 
-Reply memo: docs/_internal/reports/2026-06-24_claim-evidence-memo.md
+The claim-to-evidence reply memo is kept with this compartment's working notes.
 
 ## figures/_overview/two_arms_panel.png
 
@@ -32,8 +32,7 @@ method-features in the Interaction column), while the HIF/glycolysis
 arm rises in BOTH WT_heat and KO_heat yet is flat in the Interaction
 (1 significant; no detectable cGAS-dependence at n=5). Convergent
 across GSEA, PROGENy, decoupleR-TF, and per-gene DE (plus
-GATOM/CoReSh where provisioned). PROVISIONAL; n=5/group; NOT proven
-independence.
+GATOM/CoReSh where provisioned). n=5/group; NOT proven independence.
 
 **How to read:** Two stacked tracks: TOP = IFN/ISG arm (cGAS-dependent), BOTTOM =
 HIF/glycolysis arm (no detectable cGAS-dependence at n=5). Rows
@@ -42,20 +41,20 @@ pathways, decoupleR TFs, DE marker genes; GATOM modules where
 present), ordered by Interaction score. Columns = headline contrasts
 (WT heat | cGAS-KO heat | Interaction | Temp main). Tile fill =
 signed score (orange = up in the numerator condition, blue = down),
-clamped to +/-3.5; the printed number is the score. A BLACK RING
+clamped to +/-3.2; the printed number is the score. A BLACK RING
 means padj < 0.05 (significant). READ THE ASYMMETRY DOWN THE
 'Interaction' COLUMN: the IFN/ISG track lights up (positive, ringed)
 = cGAS-dependent; the HIF/glycolysis track goes flat / unringed there
 while staying lit in BOTH heat columns = no detectable
 cGAS-dependence at n=5. The arm NAMES are labels, not claims that any
 one TF (e.g. HIF1a/HIF2a) is the driver. Claim tier: L3
-(DE/enrichment statistics; provisional, n=5/group). 'Flat
-Interaction' is NOT proven cGAS-independence - the 1-df interaction
-is the lowest-powered comparison.
+(DE/enrichment statistics; n=5/group). 'Flat Interaction' is NOT
+proven cGAS-independence - the 1-df interaction is the lowest-powered
+comparison.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.5; colors.diverging; design.contrasts` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
+| `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.2; colors.diverging; design.contrasts` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
 
 ## figures/_overview/two_arms_panel.pdf
 

@@ -1,4 +1,4 @@
-# 09_gatom — artifact captions
+# 09_gatom: artifact captions
 
 ## figures/by_contrast/WT_heat/module_graph_kegg.png
 
@@ -8,8 +8,8 @@ log2FC (orange = up-regulated at 39°C, blue = down-regulated; no
 metabolomics data supplied so node size is uniform). Module V=7 E=6
 w=47.01. This is an expression-only GATOM run (k.met=NULL). Claim
 tier L3 (enrichment statistics; mechanism is interpretive text only).
-PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
-Cgas), pending collaborator sample sheet
+Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x
+temperature)
 
 **How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
 enzymatic reactions; gene symbol labels on edges. Edge color: orange
@@ -33,8 +33,8 @@ gene log2FC (orange = up-regulated at 39°C, blue = down-regulated; no
 metabolomics data supplied so node size is uniform). Module V=18 E=17
 w=44.83. This is an expression-only GATOM run (k.met=NULL). Claim
 tier L3 (enrichment statistics; mechanism is interpretive text only).
-PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
-Cgas), pending collaborator sample sheet
+Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x
+temperature)
 
 **How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
 enzymatic reactions; gene symbol labels on edges. Edge color: orange
@@ -58,9 +58,8 @@ edges are enzymatic reactions colored by gene log2FC (orange =
 up-regulated at 39°C, blue = down-regulated; no metabolomics data
 supplied so node size is uniform). Module V=n/a E=n/a w=n/a. This is
 an expression-only GATOM run (k.met=NULL). Claim tier L3 (enrichment
-statistics; mechanism is interpretive text only). PROVISIONAL -
-inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas), pending
-collaborator sample sheet
+statistics; mechanism is interpretive text only). Sample mapping
+owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
 enzymatic reactions; gene symbol labels on edges. Edge color: orange
@@ -84,8 +83,8 @@ colored by gene log2FC (orange = up-regulated at 39°C, blue =
 down-regulated; no metabolomics data supplied so node size is
 uniform). Module V=6 E=5 w=48.32. This is an expression-only GATOM
 run (k.met=NULL). Claim tier L3 (enrichment statistics; mechanism is
-interpretive text only). PROVISIONAL - inferred sample mapping
-(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+interpretive text only). Sample mapping owner-confirmed (GSE329522
+iTreg 2x2 genotype x temperature)
 
 **How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
 enzymatic reactions; gene symbol labels on edges. Edge color: orange
@@ -106,8 +105,8 @@ connected subgraph, NOT a direct measurement of metabolic flux.
 GATOM metabolic module size (reaction edges) per contrast × network:
 contrasts with the most connected metabolic sub-networks have the
 highest edge count; WT_heat and Temp_main are expected to show the
-largest modules (the 39 °C contrast recruits glycolytic + mitochondrial
-enzymes). Claim tier L3.
+largest modules (the 39 °C contrast recruits glycolytic +
+mitochondrial enzymes). Claim tier L3.
 
 **How to read:** Horizontal bar = one (contrast × network) combination; longer bar =
 bigger module. Length = number of reaction edges (enzyme-encoded
@@ -148,9 +147,8 @@ Cross-contrast GATOM module summary: top panel shows module size
 module enzyme log2FC (pseudo-NES), indicating whether the recruited
 metabolic sub-network is net up- or down-regulated. Corroborates the
 MitoCarta-anchored Complex-I / metabolic-pseudohypoxia mechanism at
-the enrichment-statistics tier (L3). PROVISIONAL - inferred sample
-mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator
-sample sheet
+the enrichment-statistics tier (L3). Sample mapping owner-confirmed
+(GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Top panel: bar height = number of enzymatic reaction edges in the
 SGMWCS module. Bottom panel: dot position = mean log2FC across all
@@ -160,9 +158,11 @@ met.combined.db.rds absent). Positive pseudo-NES (above dashed line)
 = net up-regulation of module enzymes in the contrast numerator. Sign
 convention: positive log2FC = higher in numerator (e.g. 39°C arm for
 heat contrasts). Claim tier L3: module statistics, not metabolic flux
-measurement. PROVISIONAL: sample-group labels are marker-inferred,
-pending collaborator sample sheet.
+measurement. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/14_gatom_viz.R` | `module_summary_panel` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds; 03_results/objects/10_gatom_KO_heat.rds; 03_results/objects/10_gatom_Interaction.rds; 03_results/objects/10_gatom_Temp_main.rds` |
+

@@ -9,7 +9,7 @@
 ##
 ## The facet list, the per-facet cap and the canvas geometry are read from
 ## analysis_config.yaml (`gsea_pooled_overview:`) — see that block for why
-## Lombardi2022_HIF is absent from the panel while remaining in the pooled family.
+## exclude_databases drops a database from the panel while keeping it in the pooled family.
 ##
 ## Reads:
 ##   03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv
@@ -301,10 +301,9 @@ HOW_TO_READ_COMMON <- paste0(
   "FACET HEADER (n/N): n of the N sets in that database pass the pooled FDR, counted over the whole database. ",
   "A header reading (0/23) marks a real null, and those facets stay on the canvas, since dropping a database ",
   "because it came out empty would leave a panel selected for positives. ",
-  "EXCLUDED FROM THE PANEL: Lombardi2022_HIF (gsea_pooled_overview.exclude_databases). A single hand-curated HIF ",
-  "consensus set given its own facet sits level with the curated versioned databases while presupposing the ",
-  "hypoxia question. It stays inside the pooled correction and in every 06_gsea table, which is why the ",
-  "pooled-family database count on the canvas is one higher than the facet count. ",
+  "EXCLUDED FROM THE PANEL: whatever gsea_pooled_overview.exclude_databases names, which is ",
+  "currently empty, so the facet count and the pooled-family database count agree. An excluded ",
+  "database stays inside the pooled correction and in every 06_gsea table. ",
   "CAVEAT: padj_pooled is a comparability device across databases rather than a calibrated error rate, since GO ",
   "terms and pathway sets share genes. ",
   "Claim tier: L3 (enrichment statistics). Sample mapping owner-confirmed."

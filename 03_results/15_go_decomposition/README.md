@@ -74,17 +74,24 @@ The 386 GO BP terms enriched for WT_heat_up collapse to 35 blocks.
 The largest is blood vessel morphogenesis with 56 terms over 81 of
 the arm's 199 genes, and 59% of its terms have a depth-matched
 p_matched under 0.05. Across all blocks the union of genes the
-enriched terms hold is 159.
+enriched terms hold is 159. The shaded row is the response to hypoxia
+block: 3 terms over 12 arm genes (ADAM8, AK4, EGR1, FOSL2, HK2,
+HSPG2, INHBA, LTA, NPPC, NR4A2, PAK1, PTGS2), best adjusted p 0.0109,
+and 0% of its terms with a depth-matched p_matched under 0.05.
 
-**How to read:** One row per block. Bar length is the number of enriched terms in the
-block, fill the smallest adjusted p among them, the bar-end text the
-arm genes those terms cover between them. The right panel is the same
-block's depth-matched verdict: the share of its terms whose observed
-hit count a matched random draw equals or beats in under 5% of 2000
-replicates. A long bar with a low dot is a large block a random draw
-reproduces. Blocks are a similarity cut over term annotation, so a
-gene can sit in several and the gene counts do not sum to the arm.
-Claim tier: descriptive, hypothesis-generating.
+**How to read:** The 386 enriched terms collapse to 35 blocks at Wang similarity 0.7,
+average linkage cut at 0.7 (GOSemSim 2.39.2), one row each. Bar
+length is the number of enriched terms in the block, fill the
+smallest adjusted p among them, the bar-end text the arm genes those
+terms cover between them, out of the arm's 199. The right panel is
+the same block's depth-matched verdict: the share of its terms whose
+observed hit count a matched random draw equals or beats in under 5%
+of 2000 replicates. A long bar with a low dot is a large block a
+random draw reproduces. The shaded row spanning both panels is the
+response to hypoxia block, shaded so a reader can find it among the
+35. Blocks are a similarity cut over term annotation, so a gene can
+sit in several and the gene counts do not sum to the arm. Claim tier:
+descriptive, hypothesis-generating.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -125,14 +132,18 @@ regulation of cytokine production 0.627, chemotaxis 0.281, positive
 regulation of cell migration 0.586.
 
 **How to read:** One dot per enriched term, at its rank by adjusted p against how
-often a gene set matched to the arm on annotation depth also takes it
-to significance over 2000 draws. Blue dots are terms whose observed
-hit count a matched draw equals or beats in under 5% of replicates.
-The red curve is a loess fit, and the right panel is the same y axis
-as a histogram over all terms. A term high on this axis is one the
-ontology hands to any well-annotated gene set of this size. Claim
-tier: a property of the term and of the background, bounding how the
-block panel reads.
+often a depth-matched draw of the same size also takes it to
+significance over 2000 replicates. Blue dots are terms a matched draw
+equals or beats in under 5% of replicates. The red curve is a loess
+fit and the right panel is the same y axis as a histogram over all
+terms. The dashed rule is the median recurrence, 0.103, and the
+dotted rules are 20% and 50%: 138 terms sit above 20% and 25 above
+50%. The 8 most significant terms are named, and so are the three
+hypoxia and oxygen-level terms, in bold at ranks 161, 189, 248. All
+three carry a p_matched at or above 0.05. A term high on this axis is
+one the ontology hands to any well-annotated gene set of this size.
+Claim tier: a property of the term and of the background, bounding
+how the block panel reads.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -140,23 +151,31 @@ block panel reads.
 
 ## figures/_overview/wtheatup_proteostasis_probe.png
 
-Of 19 distinct proteostasis probe terms looked up against WT_heat_up,
-15 entered the hypergeometric and 2 cleared the adjusted-p cutoff.
-Those 2 are heat generation (3 genes: IL1A, PTGS2, TNFSF11, p_matched
-0.011) and temperature homeostasis (8 genes: EGR1, GATM, IGF2BP2,
-IL1A, KDM6B, NPR3, PTGS2, TNFSF11, p_matched 0.101), and the genes
-carrying them are inflammatory mediators. Every chaperone, folding
-and unfolded-protein term that entered returned an adjusted p above
-the cutoff, and the chaperone genes present in the arm are HSPA1A and
-HSPH1.
+This is the direct by-name test of whether proteostasis and
+heat-shock terms enrich in WT_heat_up. Every term on the configured
+probe list is looked up and reported here, whether or not it returned
+anything. Every chaperone, protein-folding, unfolded-protein and
+heat-shock term that entered the hypergeometric returned an adjusted
+p above the 0.05 cutoff, and the chaperone genes present in the arm
+are HSPA1A and HSPH1. Of 19 distinct probe terms, 15 entered and 2
+cleared the cutoff: heat generation (3 genes: IL1A, PTGS2, TNFSF11,
+p_matched 0.011) and temperature homeostasis (8 genes: EGR1, GATM,
+IGF2BP2, IL1A, KDM6B, NPR3, PTGS2, TNFSF11, p_matched 0.101). Both of
+those are organism-level thermoregulation terms, and the genes
+carrying them are inflammatory mediators.
 
 **How to read:** One row per probe term, split by ontology. The dot is the raw
-hypergeometric p on a -log10 axis and the dashed rule is p = 0.05. A
-cross at zero is a term the test never saw, and the right panel gives
-the reason: above the 500-gene cap, below the 10-gene floor, or
-holding no arm gene at all. For every tested term the right panel
-names the arm genes it holds, so the two terms that clear the cutoff
-can be read by their gene content. Claim tier: these are
+hypergeometric p on a -log10 axis and the dashed rule is p = 0.05.
+Grey is tested and above the adjusted-p cutoff, vermillion tested and
+below it, a blue cross at zero a term the test never saw. 15 of the
+19 probe terms entered. The right panel names the arm genes each
+tested term holds, so a term clearing the cutoff can be read by its
+gene content, and for an untested term gives the reason it never
+entered: above the 500-gene cap, below the 10-gene floor, or holding
+no arm gene. Those reasons are properties of the term's size in the
+12986-symbol background or of its gene content and carry no
+information about the arm. The `status` and `found_by` columns of the
+source table hold the same values. Claim tier: these are
 searched-and-absent rows, reported so an absence carries a number.
 
 | Script | Function | Config | Input |

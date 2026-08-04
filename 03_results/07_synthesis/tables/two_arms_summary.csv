@@ -350,10 +350,6 @@ HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no dete
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:KEGG,Vegf Signaling Pathway,gene_set,KO_heat,1.54690639,0.0269293532,0.130168626,Up,FALSE
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:KEGG,Vegf Signaling Pathway,gene_set,Interaction,1.40565532,0.061452514,0.213454376,Up,FALSE
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:KEGG,Vegf Signaling Pathway,gene_set,Temp_main,1.5917363,0.016550662,0.086725469,Up,FALSE
-HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:Lombardi2022_HIF,Lombardi2022 Hif,gene_set,WT_heat,2.28619011,1.68920608e-9,1.68920608e-9,Up,TRUE
-HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:Lombardi2022_HIF,Lombardi2022 Hif,gene_set,KO_heat,2.3337512,2.11672265e-10,2.11672265e-10,Up,TRUE
-HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:Lombardi2022_HIF,Lombardi2022 Hif,gene_set,Interaction,-0.907448286,0.674208145,0.674208145,Down,FALSE
-HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:Lombardi2022_HIF,Lombardi2022 Hif,gene_set,Temp_main,2.30135724,6.41833013e-10,6.41833013e-10,Up,TRUE
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:MitoXplorer,Glycolysis,gene_set,WT_heat,1.30410815,0.135371179,0.308637309,Up,FALSE
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:MitoXplorer,Glycolysis,gene_set,KO_heat,1.4047354,0.0818181818,0.376363636,Up,FALSE
 HIF_glycolysis,HIF/glycolysis (no-detectable-cGAS-dependence hypothesis),no detectable cGAS-dependence at n=5,GSEA:MitoXplorer,Glycolysis,gene_set,Interaction,-1.12341857,0.289256198,0.720730028,Down,FALSE

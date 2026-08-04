@@ -180,14 +180,14 @@ PT_HL <- PT * 0.95
 # -----------------------------------------------------------------------------
 # 3. Class keying — legend keys name the GEOMETRY the reader can see
 # -----------------------------------------------------------------------------
-# The old keys ("heat response differs between genotypes", "reverses direction")
-# described the test, not the picture: a reader saw two spatially separate clouds
-# under one generic label. These keys say where each class sits and what that
-# means biologically, in words a wet-lab reader already owns. arm_class comes from
-# the compute sibling; the viz only attaches display labels.
-KEY_BG   <- "no detectable difference between genotypes at n=5"
-KEY_SAME <- "falls with heat in both genotypes, and further without cGAS"
-KEY_REV  <- "rises with heat in WT, falls without cGAS"
+# Each key is a short technical phrase naming the class, kept parallel in form so the
+# three read as one ladder at legend size. The sentence-length gloss on each class,
+# including what the vermillion circles do beyond falling in both genotypes, lives in
+# the README caption. arm_class comes from the compute sibling; the viz only attaches
+# display labels.
+KEY_BG   <- "genotype difference n.s. at n=5"
+KEY_SAME <- "down in both genotypes"
+KEY_REV  <- "up in WT, down in cGAS-KO"
 KEYS     <- c(KEY_BG, KEY_SAME, KEY_REV)
 CLASS_KEY <- c(no_detectable_difference = KEY_BG,
                differs_same_direction   = KEY_SAME,
@@ -282,16 +282,13 @@ box_a_stats <- fits(box_text(
   max_lines = 5, max_chars = WRAP_BOX - 1, where = "upper-left counts")
 
 # The key states the two reference lines as EQUATIONS on the same Δ vocabulary as the
-# counts block, so the geometry is self-defining. Both claims are scoped to the
-# HIGHLIGHTED arm: the pale cloud straddles the dashed line in both directions, so an
-# unscoped "none below" would be contradicted by the picture it annotates. Where the gated
-# genes go downstream is deliberately NOT here — the frozen export carries the arm at two
-# gates, and one canvas line cannot say that without misleading (see the header note).
+# counts block, so the geometry is self-defining. It is a glyph key and nothing else.
+# Which genes sit where relative to those lines, how many clear the gate, and where the
+# gated genes go downstream are all sentences, so they belong in the README caption
+# where a reader has room for them.
 box_a_read <- fits(box_text(
   "dashed line: ΔWT = ΔcGAS-KO",
-  sprintf("dotted lines: ΔWT − ΔcGAS-KO = ±%g", GATE),
-  sprintf("all %s highlighted genes lie below the dashed line; the %s in bold also clear ±%g",
-          N("n_sig", CO_INT), N("n_stringent_gate", CO_INT, ARM), GATE)),
+  sprintf("dotted lines: ΔWT − ΔcGAS-KO = ±%g", GATE)),
   max_lines = 5, max_chars = WRAP_BOX - 1, where = "lower-right key")
 
 p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
@@ -343,7 +340,7 @@ p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
     # agreement statistics, the gene counts and how to read the glyphs all live in
     # the README caption, which is where a reader can take the time to read them.
     subtitle = wrap_at(sprintf(
-      "Δ = log2 fold change at 39 versus 37 °C; sig = adj.P < %.2g.", FDR)),
+      "Δ = log2 fold change at 39 versus 37 °C. sig = adj.P < %.2g.", FDR)),
     x = sprintf("%s: log2 fold change", contrast_label(CO_WT)),
     y = sprintf("%s: log2 fold change", contrast_label(CO_KO))
   ) +
@@ -385,19 +382,20 @@ save_overview(
   how_to_read = sprintf(
     paste0("One dot per gene: x = log2 fold change at 39 vs 37 °C in WT, y = the same in ",
            "cGAS-KO, equal scales, so the dashed identity line runs at 45°. Glyphs run pale to ",
-           "dark: pale dots have no detectable cGAS-dependence at n=5, vermillion circles fall ",
-           "with heat in both genotypes and further without cGAS, black triangles rise with heat ",
-           "in WT and fall without it. Highlighted genes pass at adj.P < %.2g. Dotted lines lie ",
-           "%g log2 unit either side; the %s highlighted genes beyond the lower one, names in ",
-           "bold, are the ones that also clear |logFC| >= %g, %s of them triangles. The gate is ",
-           "not the set that travels to human: the frozen 03_results/human_projection/ contract ",
-           "exports this arm at BOTH gates, these %s at fdr_logfc and all %s at fdr_only, the ",
-           "sensitivity read a 1 df term at n=5 needs, so bold marks the stringent core and not ",
-           "the whole export (per-gate ortholog counts: human_projection/manifest.csv). Read ",
-           "one-sidedness as a statement about the HIGHLIGHTED arm only — the pale cloud ",
-           "straddles the dashed line in both directions. Claim tier: L3. PROVISIONAL sample ",
-           "labels; n=5/group."),
-    FDR, GATE, N("n_stringent_gate", CO_INT, ARM), GATE,
+           "dark. Pale dots have no detectable difference between the genotypes at n=5. ",
+           "Vermillion circles fall with heat in both genotypes and fall further once cGAS is ",
+           "gone. Black triangles rise with heat in WT and fall without cGAS. Highlighted genes ",
+           "pass at adj.P < %.2g, and all %s of them sit below the dashed line, which is a ",
+           "weaker heat response without cGAS. The dotted lines lie %g log2 unit either side of ",
+           "the identity. The %s highlighted genes beyond the lower dotted line, their names in ",
+           "bold, also clear |logFC| >= %g, and %s of those are triangles. Bold marks that ",
+           "stringent core. The frozen 03_results/human_projection/ contract exports the arm at ",
+           "both gates, these %s at fdr_logfc and all %s at fdr_only, which is the sensitivity a ",
+           "1 df term at n=5 needs (per-gate ortholog counts: human_projection/manifest.csv). ",
+           "Read one-sidedness as a statement about the highlighted arm alone. The pale cloud ",
+           "straddles the dashed line in both directions. Claim tier: L3, n=5/group. ",
+           sample_mapping_caption()),
+    FDR, N("n_sig", CO_INT), GATE, N("n_stringent_gate", CO_INT, ARM), GATE,
     N("n_stringent_and_reverses", CO_INT, ARM),
     N("n_stringent_gate", CO_INT, ARM), N("n_sig", CO_INT)),
   config    = FIG_CFG,
@@ -449,7 +447,7 @@ for (m in panel_meta) {
     input       = "03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv",
     how_to_read = sprintf(paste0("%s Labels name the top %d genes by evidence plus every gene ",
                                  "inside the gate, so both subsets are readable by name. ",
-                                 "Claim tier: L3. PROVISIONAL sample labels; n=5/group."),
+                                 "Claim tier: L3; n=5/group. ", sample_mapping_caption()),
                           MEMBERSHIP_SENTENCE, LBL_TOP),
     config = FIG_CFG
   )

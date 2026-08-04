@@ -27,7 +27,7 @@
 #
 # Figure discipline (AGENTS.md): ONE claim = ONE dedicated figure. The ONLY
 # multi-panel here is fig3b, and ONLY because all 4 facets share the SAME x-axis
-# (ULM score). Every figure carries the provisional_caption() stamp.
+# (ULM score). Every figure carries the sample_mapping_stamp() stamp.
 # Dependencies: config.R; ggplot2, dplyr
 # =============================================================================
 
@@ -384,10 +384,10 @@ save_overview(
 fig3g_df  <- rd("fig3g_target_decomposition_data.csv")
 fig3g_sum <- rd("fig3g_target_decomposition_summary.csv")
 
-# --- stress-contaminant highlight genes (spec §2 / fig3m note) ---------------
+# --- stress-contaminant highlight genes -------------------------------------
 STRESS_GENES <- c("Timp1", "Sdc1", "Cdkn1a", "Serpine1", "Eno2", "Hspa1a", "Spp1")
 
-# --- genes to text-label (spec §2 fig3g): top stress drivers + HIF-specific ---
+# --- genes to text-label: top stress drivers plus the HIF-specific ones -------
 LABEL_GENES <- c(
   # stress drivers: the 6 named in the spec
   "Timp1", "Sdc1", "Cdkn1a", "Serpine1", "Eno2", "Hspa1a",

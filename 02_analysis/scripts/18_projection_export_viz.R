@@ -29,10 +29,19 @@
 #   _overview/projection_overlap_ledger
 #                                     overlap ledger for the frozen projected human sets:
 #                                     WT/KO heat-set sharing plus both Interaction gates
+#   _overview/conversion_ledger      per frozen UP arm at the primary gate, the mouse gene
+#                                     count decomposed into carried / lost-to-paralog-collapse /
+#                                     dropped-no-ortholog. mapping_loss shows the human count
+#                                     only as a '->N' annotation, so the collapse loss has no
+#                                     segment there; this panel gives it one.
 #
-# Inputs (read-only; produced by 18_projection_export.R):
+# Inputs (read-only; produced by 18_projection_export.R and 17_signature_derive.R):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss,projection_overlap_ledger}.csv
 #   03_results/human_projection/manifest.csv
+#   03_results/human_projection/ortholog_map.tsv          (conversion_ledger only)
+#   03_results/human_projection/signatures/<contrast>/    (conversion_ledger only)
+#   03_results/objects/17_signature_sets.rds              (conversion_ledger only)
+#   00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds  (optional annotation)
 #
 # Run from project root (after 18_projection_export.R):
 #   Rscript 02_analysis/scripts/18_projection_export_viz.R
@@ -230,8 +239,8 @@ save_overview(
                        "= down; numbers = human genes in the frozen set. A contrast carried at two threshold ",
                        "gates gets one bar pair per gate, with the gate named in square brackets under its ",
                        "tick — the looser gate is the sensitivity read, not a second result. This is the ",
-                       "human-space counterpart of the mouse-side size bars. Claim tier: L3 (DE statistics); ",
-                       "provisional sample mapping, n=5/group."),
+                       "human-space counterpart of the mouse-side size bars. Claim tier: L3 (DE statistics), ",
+                       "n=5/group. ", sample_mapping_caption()),
   width = 11, height = 6.5,
   config = FIG_CFG)
 
@@ -371,6 +380,323 @@ save_overview(
     cgas_sentence
   ),
   width = LEDGER_W, height = 6.8,
+  config = FIG_CFG)
+
+# ============================================================================
+# 5d. FIGURE (d): conversion_ledger: where each frozen mouse UP arm's genes went.
+#
+#   mapping_loss (section 4) decomposes the MOUSE set by fate and reports the human
+#   set size only as a "->N" annotation, so the genes lost when several mouse paralogs
+#   collapse onto one human symbol are folded into that annotation. Every human-side
+#   denominator turns on that number, so here it gets a segment of its own: bar length
+#   is the mouse arm at the primary gate, and the three segments are carried, lost to
+#   collapse, and dropped for want of an accepted ortholog.
+#
+#   COUNTS ARE RECOMPUTED FROM THE FROZEN CONTRACT.
+#   Three independent routes to the carried count must agree before anything is
+#   plotted: (1) the length of the published one-symbol-per-line signature file,
+#   (2) the manifest's n_human, and (3) re-mapping the frozen mouse arm through the
+#   applied ortholog map. A disagreement halts the script, because a wrong ortholog
+#   ledger would misstate every human denominator downstream of it.
+#
+#   Reading the frozen contract and 17_signature_sets.rds from a viz script follows
+#   the same pattern as 19_hsr_decomposition_viz.R and 23_signature_expression_viz.R:
+#   both are published, byte-stable compute outputs, and nothing new is estimated here.
+# ============================================================================
+
+PROJ_DIR <- file.path("03_results", "human_projection")
+f_omap   <- file.path(PROJ_DIR, "ortholog_map.tsv")
+f_sig    <- file.path("03_results", "objects", "17_signature_sets.rds")
+
+if (is.null(man))       stop("[18_viz] conversion_ledger needs ", man_path, ".")
+if (!file.exists(f_omap)) stop("[18_viz] conversion_ledger needs ", f_omap, ".")
+if (!file.exists(f_sig))  stop("[18_viz] conversion_ledger needs ", f_sig, ".")
+
+omap     <- readr::read_tsv(f_omap, show_col_types = FALSE, progress = FALSE)
+sig_sets <- readRDS(f_sig)
+
+BABELGENE_VER <- as.character(unique(omap$babelgene_version))[1]
+MIN_SUPPORT   <- (.dcn$ortholog_ambiguity %||% list())$min_support %||% NA
+
+# Map topology: how many partners each side of an edge has. This is what defines the
+# three arrival routes, and it is a property of the MAP, not of any one arm.
+.named_count <- function(df, key, val) {
+  d <- df %>% dplyr::group_by(.data[[key]]) %>%
+    dplyr::summarise(n = dplyr::n_distinct(.data[[val]]), .groups = "drop")
+  stats::setNames(d$n, d[[key]])
+}
+LED_N_HUMAN_PER_MOUSE <- .named_count(omap, "mouse_symbol", "human_symbol")
+LED_N_MOUSE_PER_HUMAN <- .named_count(omap, "human_symbol", "mouse_symbol")
+LED_MOUSE_OF_HUMAN    <- {
+  d <- omap %>% dplyr::distinct(human_symbol, .keep_all = TRUE)
+  stats::setNames(d$mouse_symbol, d$human_symbol)
+}
+
+# How did this human gene arrive: alone, by collapse, or by split?
+arrival_route <- function(h) {
+  n_mouse_side <- unname(LED_N_MOUSE_PER_HUMAN[h])
+  first_mouse  <- unname(LED_MOUSE_OF_HUMAN[h])
+  n_human_side <- unname(LED_N_HUMAN_PER_MOUSE[first_mouse])
+  out <- rep("one-to-one", length(h))
+  out[!is.na(n_human_side) & n_human_side > 1] <- "one mouse split across several human"
+  out[!is.na(n_mouse_side) & n_mouse_side > 1] <- "several mouse collapsed onto it"
+  out[is.na(n_mouse_side)] <- "not in map"
+  out
+}
+
+read_frozen_set <- function(rel) {
+  p <- file.path(PROJ_DIR, rel)
+  if (!file.exists(p)) stop("[18_viz] conversion_ledger: missing frozen signature file ", p, ".")
+  x <- trimws(readLines(p, warn = FALSE))
+  unique(x[nzchar(x)])
+}
+
+# The arms drawn are the frozen primary contrasts, UP direction, at the PRIMARY gate.
+# The manifest also carries the down arms and the secondary gate; both are out of scope
+# for this panel, and the contrast list and gate come from the decision block rather
+# than from literals here.
+LED_ARMS <- as.character(.dcn$contrasts_primary %||% character(0))
+if (!length(LED_ARMS) || is.na(GATE_PRIMARY))
+  stop("[18_viz] conversion_ledger needs decisions.projection.{contrasts_primary,gate}.")
+
+led_man <- man %>%
+  dplyr::filter(contrast %in% LED_ARMS, direction == "up", gate == GATE_PRIMARY) %>%
+  dplyr::mutate(.ord = match(contrast, LED_ARMS)) %>%
+  dplyr::arrange(.ord) %>%
+  dplyr::select(-.ord)
+if (nrow(led_man) != length(LED_ARMS))
+  stop("[18_viz] conversion_ledger: manifest has ", nrow(led_man), " up rows at gate ",
+       GATE_PRIMARY, " for contrasts ", paste(LED_ARMS, collapse = "/"), "; expected ",
+       length(LED_ARMS), ".")
+
+led_rows <- lapply(seq_len(nrow(led_man)), function(i) {
+  r         <- led_man[i, ]
+  human_set <- read_frozen_set(r$file)
+  routes    <- arrival_route(human_set)
+  mouse_arm <- unique(as.character(sig_sets$sets[[r$contrast]]$up[[r$gate]]))
+  mouse_arm <- mouse_arm[!is.na(mouse_arm) & nzchar(mouse_arm)]
+  arm_edges <- omap %>% dplyr::filter(mouse_symbol %in% mouse_arm)
+  # Independent re-derivation of the carried count: push the frozen mouse arm back
+  # through the applied map and count distinct human symbols.
+  remapped_n <- dplyr::n_distinct(arm_edges$human_symbol)
+  # The mouse paralog groups that actually collided INSIDE this arm, which is where
+  # the collapse loss comes from.
+  cg <- arm_edges %>%
+    dplyr::group_by(human_symbol) %>%
+    dplyr::summarise(n_mice = dplyr::n_distinct(mouse_symbol),
+                     mice   = paste(sort(unique(mouse_symbol)), collapse = "+"),
+                     .groups = "drop") %>%
+    dplyr::filter(n_mice > 1) %>%
+    dplyr::arrange(human_symbol)
+  data.frame(
+    arm                        = paste0(r$contrast, "_up"),
+    contrast                   = r$contrast,
+    direction                  = "up",
+    gate                       = r$gate,
+    n_mouse_at_gate            = as.integer(r$n_mouse),
+    n_human_carried            = length(human_set),
+    n_lost_to_collapse         = as.integer(r$n_mouse) - as.integer(r$n_dropped_no_ortholog) -
+                                 length(human_set),
+    n_dropped_no_ortholog      = as.integer(r$n_dropped_no_ortholog),
+    pct_of_mouse_arm_carried   = round(100 * length(human_set) / as.integer(r$n_mouse), 1),
+    n_arrived_one_to_one       = sum(routes == "one-to-one"),
+    n_arrived_by_collapse      = sum(routes == "several mouse collapsed onto it"),
+    n_arrived_by_split         = sum(routes == "one mouse split across several human"),
+    n_arrived_not_in_map       = sum(routes == "not in map"),
+    collapsed_within_arm       = if (nrow(cg))
+                                   paste(sprintf("%s <- %s", cg$human_symbol, cg$mice),
+                                         collapse = "; ") else "",
+    n_mouse_arm_object         = length(mouse_arm),
+    n_human_remapped_from_arm  = remapped_n,
+    manifest_n_human           = as.integer(r$n_human),
+    stringsAsFactors           = FALSE)
+})
+conv_ledger <- dplyr::bind_rows(led_rows)
+
+# ---- THE CROSS-CHECK. Halt on any disagreement rather than plotting either number. ----
+led_bad <- conv_ledger %>%
+  dplyr::filter(n_human_carried != manifest_n_human |
+                n_human_carried != n_human_remapped_from_arm |
+                n_mouse_at_gate != n_mouse_arm_object |
+                n_lost_to_collapse < 0)
+if (nrow(led_bad))
+  stop("[18_viz] conversion_ledger cross-check FAILED. The frozen signature files, the ",
+       "manifest, and re-mapping the frozen mouse arm through ortholog_map.tsv do not agree, ",
+       "so no ledger is plotted:\n",
+       paste(utils::capture.output(print(as.data.frame(
+         led_bad[, c("arm", "n_mouse_at_gate", "n_mouse_arm_object", "n_human_carried",
+                     "manifest_n_human", "n_human_remapped_from_arm", "n_lost_to_collapse")]))),
+         collapse = "\n"))
+
+message("[18_viz] conversion_ledger cross-check passed for ", nrow(conv_ledger),
+        " up arm(s) at gate ", GATE_PRIMARY, "; map holds ", nrow(omap), " edges over ",
+        dplyr::n_distinct(omap$mouse_symbol), " mouse and ",
+        dplyr::n_distinct(omap$human_symbol), " human symbols.")
+
+# Curated-lens annotation for the finding line: which genes of the curated HSR core the
+# mouse arms carry, and what they become in human. Membership comes from the curated set.
+# A symbol-prefix rule would be wrong here: WT_heat_up carries HSPG2, a proteoglycan.
+HSR_LENS_PATH <- "00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds"
+led_hs_sentence <- ""
+if (file.exists(HSR_LENS_PATH)) {
+  hsr_core <- unique(as.character(readRDS(HSR_LENS_PATH)$HSR_core))
+  hs_rows <- lapply(LED_ARMS, function(co) {
+    mouse_arm <- unique(as.character(sig_sets$sets[[co]]$up[[GATE_PRIMARY]]))
+    hit_m <- sort(intersect(mouse_arm, hsr_core))
+    hit_h <- sort(unique(omap$human_symbol[omap$mouse_symbol %in% hit_m]))
+    data.frame(contrast = co, n_m = length(hit_m), n_h = length(hit_h),
+               m = paste(hit_m, collapse = ", "), h = paste(hit_h, collapse = ", "),
+               stringsAsFactors = FALSE)
+  })
+  hs_df <- dplyr::bind_rows(hs_rows) %>% dplyr::filter(n_m > n_h)
+  if (nrow(hs_df)) {
+    hs_collapse <- omap %>%
+      dplyr::filter(human_symbol %in% strsplit(hs_df$h[1], ", ")[[1]]) %>%
+      dplyr::group_by(human_symbol) %>%
+      dplyr::summarise(mice = paste(sort(unique(mouse_symbol)), collapse = " and "),
+                       n_mice = dplyr::n_distinct(mouse_symbol), .groups = "drop") %>%
+      dplyr::filter(n_mice > 1) %>%
+      dplyr::slice(1)
+    led_hs_sentence <- sprintf(
+      paste0("One collapse lands on the heat-shock genes: mouse %s both map to human %s, so the ",
+             "%d curated HSR core genes in the %s mouse %s (%s) arrive as %d in human (%s)."),
+      hs_collapse$mice[1], hs_collapse$human_symbol[1],
+      hs_df$n_m[1], paste(paste0(hs_df$contrast, "_up"), collapse = " and "),
+      if (nrow(hs_df) > 1) "arms" else "arm", hs_df$m[1], hs_df$n_h[1], hs_df$h[1])
+  }
+}
+
+# ---- geometry: one horizontal stacked bar per arm, WT at the top ----
+LED_SEGS <- c(n_human_carried       = "human genes carried",
+              n_lost_to_collapse    = "lost when paralogs collapsed",
+              n_dropped_no_ortholog = "dropped, no accepted ortholog")
+LED_FILL <- c("human genes carried"          = FIG_CFG$colors$okabe_ito$blue   %||% "#0072B2",
+              "lost when paralogs collapsed" = FIG_CFG$colors$okabe_ito$orange %||% "#E69F00",
+              "dropped, no accepted ortholog" = "grey65")
+# Text sitting ON a segment: white reads on the dark carried fill, near-black on the two
+# light ones. The leader lines keep the segment's own colour so a parked number stays
+# keyed to its sliver, except the grey fill which is darkened to stay visible as a line.
+LED_INK  <- c("human genes carried"          = "white",
+              "lost when paralogs collapsed" = "grey10",
+              "dropped, no accepted ortholog" = "grey10")
+LED_LEAD <- c("human genes carried"           = unname(LED_FILL[1]),
+              "lost when paralogs collapsed"  = unname(LED_FILL[2]),
+              "dropped, no accepted ortholog" = "grey45")
+
+conv_ledger$y    <- rev(seq_len(nrow(conv_ledger)))
+conv_ledger$tick <- sprintf("%s\n%d mouse genes",
+                            contrast_label(conv_ledger$contrast, short = TRUE),
+                            conv_ledger$n_mouse_at_gate)
+
+LED_BARH <- 0.44
+led_seg <- conv_ledger %>%
+  dplyr::select(arm, y, n_mouse_at_gate, dplyr::all_of(names(LED_SEGS))) %>%
+  tidyr::pivot_longer(cols = dplyr::all_of(names(LED_SEGS)),
+                      names_to = "key", values_to = "n") %>%
+  dplyr::mutate(segment = factor(unname(LED_SEGS[key]), levels = unname(LED_SEGS))) %>%
+  dplyr::group_by(y) %>%
+  dplyr::arrange(segment, .by_group = TRUE) %>%
+  dplyr::mutate(xmax = cumsum(n), xmin = xmax - n, xmid = (xmin + xmax) / 2) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(ymin = y - LED_BARH / 2, ymax = y + LED_BARH / 2)
+
+# A 2-gene segment on a 213-gene bar is a sliver, so its count cannot sit inside it.
+# Anything under LED_FIT_FRAC of the widest bar gets its number parked to the right of
+# that bar with a leader line back to the sliver, in a fixed order so two slivers on one
+# bar never land on top of each other. The threshold is set above the widest loss segment
+# (19 of 239) so both loss counts are parked on every bar and the placement rule reads the
+# same way on each row.
+LED_AXIS_MAX <- max(conv_ledger$n_mouse_at_gate)
+LED_FIT_FRAC <- 0.085
+LED_W        <- 11
+led_lab <- led_seg %>% dplyr::filter(n > 0) %>%
+  dplyr::mutate(fits = n / LED_AXIS_MAX >= LED_FIT_FRAC)
+led_in  <- led_lab %>% dplyr::filter(fits) %>%
+  dplyr::mutate(ink = unname(LED_INK[as.character(segment)]))
+led_out <- led_lab %>% dplyr::filter(!fits) %>%
+  dplyr::group_by(y) %>%
+  dplyr::arrange(segment, .by_group = TRUE) %>%
+  dplyr::mutate(lx = n_mouse_at_gate + LED_AXIS_MAX * (0.055 + 0.095 * (dplyr::row_number() - 1))) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(lead = unname(LED_LEAD[as.character(segment)]))
+LED_XHI <- max(LED_AXIS_MAX * 1.06, if (nrow(led_out)) max(led_out$lx) * 1.10 else 0)
+
+led_wrap <- function(txt, chars_per_inch)
+  paste(strwrap(txt, width = as.integer(LED_W * chars_per_inch)), collapse = "\n")
+
+fig_conv <- ggplot() +
+  geom_rect(data = dplyr::filter(led_seg, n > 0),
+            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = segment)) +
+  geom_segment(data = led_out,
+               aes(x = xmid, xend = lx, y = ymax, yend = y + 0.28, colour = lead),
+               linewidth = 0.45, show.legend = FALSE) +
+  geom_text(data = led_in,
+            aes(x = xmid, y = y, label = n, colour = ink),
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.95, fontface = "bold",
+            show.legend = FALSE) +
+  geom_text(data = led_out,
+            aes(x = lx, y = y + 0.32, label = n),
+            size = (FIG_CFG$figures$label_size %||% 4) * 0.9, fontface = "bold",
+            colour = "grey15", vjust = 0, hjust = 0.5) +
+  scale_fill_manual(values = LED_FILL, name = "fate of the mouse gene", drop = FALSE) +
+  scale_colour_identity(guide = "none") +
+  scale_y_continuous(breaks = conv_ledger$y, labels = conv_ledger$tick,
+                     expand = expansion(add = c(0.42, 0.72))) +
+  scale_x_continuous(limits = c(0, LED_XHI), expand = expansion(mult = c(0.004, 0))) +
+  labs(title = "Fate of each mouse up arm under the ortholog map",
+       subtitle = led_wrap(sprintf(
+         "Bar length = mouse genes in the arm at the %s gate; segments = where those genes went.",
+         GATE_PRIMARY), chars_per_inch = 11),
+       x = "genes", y = NULL,
+       caption = led_wrap(paste0("Counts recomputed from the frozen signature files and the ",
+                                 "applied ortholog map, then cross-checked against the projection ",
+                                 "manifest. Claim tier: a direct count over frozen sets."),
+                          chars_per_inch = 13)) +
+  project_theme(config = FIG_CFG) +
+  theme(panel.grid.major.y = element_blank(),
+        plot.caption.position = "plot")
+
+LED_FINDING <- paste0(
+  "Each frozen mouse up arm loses genes twice on the way into human symbols, once to genes ",
+  "with no accepted ortholog and once to mouse paralogs collapsing onto one human symbol: ",
+  paste(sprintf("%s carries %d of %d (%d dropped, %d collapsed)",
+                conv_ledger$arm, conv_ledger$n_human_carried, conv_ledger$n_mouse_at_gate,
+                conv_ledger$n_dropped_no_ortholog, conv_ledger$n_lost_to_collapse),
+        collapse = ", "),
+  ". One to one arrivals: ",
+  paste(sprintf("%d of %d", conv_ledger$n_arrived_one_to_one, conv_ledger$n_human_carried),
+        collapse = ", "),
+  " in the same order. ", led_hs_sentence)
+
+purge_figures(STAGE, "conversion_ledger", overview = TRUE, config = FIG_CFG)
+save_overview(
+  fig_conv, STAGE, "conversion_ledger",
+  table   = conv_ledger %>% dplyr::select(-y, -tick),
+  finding = LED_FINDING,
+  script  = SCRIPT, fn = "ggplot(geom_rect + leader-line sliver labels)",
+  config_kv = paste0("decisions.projection.gate=", GATE_PRIMARY,
+                     "; decisions.projection.contrasts_primary; ",
+                     "decisions.projection.ortholog_ambiguity.min_support=", MIN_SUPPORT,
+                     "; babelgene=", BABELGENE_VER, "; colors.okabe_ito"),
+  input   = paste0(PROJ_DIR, "/{manifest.csv,ortholog_map.tsv,signatures/}; ", f_sig),
+  how_to_read = paste0(
+    "One horizontal bar per frozen up arm. Bar length is the mouse genes that passed the ",
+    GATE_PRIMARY, " gate; the segments are their fate. Blue is carried into human, orange ",
+    "is lost when several mouse paralogs collapsed onto one human symbol, grey is dropped ",
+    "for want of an accepted ortholog. A count sits inside its segment where it fits, and ",
+    "is otherwise parked to the right of the bar on a leader line back to the sliver.\n\n",
+    "The map is babelgene ", BABELGENE_VER, ", queried mouse to human at min_support = ",
+    MIN_SUPPORT, ", so an edge is accepted when at least three source databases agree; it ",
+    "holds ", format(nrow(omap), big.mark = ","), " edges over ",
+    format(dplyr::n_distinct(omap$mouse_symbol), big.mark = ","), " mouse and ",
+    format(dplyr::n_distinct(omap$human_symbol), big.mark = ","), " human symbols. A binary ",
+    "set takes the union both ways: several mouse onto one human shrinks it, one mouse ",
+    "across several human grows it. Every human denominator downstream is the carried set ",
+    "rather than the mouse set.\n\n",
+    "Per-arm arrival routes (one-to-one, several mouse collapsed onto it, one mouse split ",
+    "across several human) and the paralog groups that collided inside each arm are in the ",
+    "same-stem CSV. Claim tier: a direct count over frozen sets."),
+  width = LED_W, height = 5.0,
   config = FIG_CFG)
 
 # ============================================================================

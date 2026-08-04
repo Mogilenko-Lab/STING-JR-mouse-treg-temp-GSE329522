@@ -74,8 +74,9 @@ HEADLINE_CONTRASTS <- c("WT_heat", "KO_heat", "Interaction", "Temp_main")
 ## single source of truth in design.contrast_labels). CONTRAST_LABELS (named vector)
 ## and the vectorized contrast_label() are defined there and sourced above.
 
-## PROVISIONAL stamp (single source of truth from config.R)
-PROVISIONAL <- provisional_caption()
+## Sample-provenance stamp, READ from analysis_config.yaml:design$sample_mapping.
+## Short form for a canvas; sample_mapping_caption() is the README form.
+MAPPING_STAMP <- sample_mapping_stamp()
 
 ## Network fill palette (two networks: kegg / combined)
 NET_PAL <- c(kegg = NEG, combined = POS)
@@ -320,7 +321,7 @@ make_empty_placeholder <- function(co, net, reason = "no significant module") {
     labs(
       title    = sprintf("%s [%s] — no module", contrast_label(co), net),
       subtitle = "GATOM SGMWCS returned an empty or failed module for this contrast/network.",
-      caption  = paste0("Claim tier L3. ", PROVISIONAL)) +
+      caption  = paste0("Claim tier L3. ", MAPPING_STAMP)) +
     project_theme(config = FIG_CFG)   # borderless stripping applied at save time (void = TRUE)
 }
 
@@ -406,7 +407,7 @@ for (co in CO) {
       if (is_plottable(res)) as.character(res$n_vertices) else "n/a",
       if (is_plottable(res)) as.character(res$n_edges)    else "n/a",
       if (is_plottable(res)) sprintf("%.2f", res$solution_weight %||% NA_real_) else "n/a",
-      PROVISIONAL)
+      MAPPING_STAMP)
 
     how_to_read_graph <- paste0(
       "Nodes = metabolites/atoms (uniform size — no metabolomics). ",
@@ -505,7 +506,7 @@ if (nrow(sz_df) > 0L) {
       x        = NULL,
       y        = "Number of edges (enzymatic reactions)",
       caption  = paste0("Larger modules = more connected metabolic DE signal · Claim tier L3.\n",
-                        PROVISIONAL)) +
+                        MAPPING_STAMP)) +
     project_theme(config = FIG_CFG)
 
   tryCatch(
@@ -553,7 +554,7 @@ if (nrow(wt_df) > 0L) {
       x        = NULL,
       y        = "Solution weight (SGMWCS objective)",
       caption  = paste0("Higher weight = more concentrated DE signal in the subnetwork · Claim tier L3.\n",
-                        PROVISIONAL)) +
+                        MAPPING_STAMP)) +
     project_theme(config = FIG_CFG)
 
   tryCatch(
@@ -659,7 +660,7 @@ if (!is.null(sum_plot_df) && nrow(sum_plot_df) > 0) {
       caption = paste0(
         "Top: module size (reaction edges). Bottom: mean enzyme log2FC ",
         "(pseudo-NES; positive = net up-regulation). Same contrast ordering in both panels.\n",
-        "Claim tier L3 (enrichment statistics; mechanism is interpretive text). ", PROVISIONAL),
+        "Claim tier L3 (enrichment statistics; mechanism is interpretive text). ", MAPPING_STAMP),
       theme = project_theme(config = FIG_CFG))
 
   tryCatch(
@@ -673,7 +674,7 @@ if (!is.null(sum_plot_df) && nrow(sum_plot_df) > 0) {
         "per contrast × network; bottom panel shows mean module enzyme log2FC (pseudo-NES), ",
         "indicating whether the recruited metabolic sub-network is net up- or down-regulated. ",
         "Corroborates the MitoCarta-anchored Complex-I / metabolic-pseudohypoxia mechanism ",
-        "at the enrichment-statistics tier (L3). ", PROVISIONAL),
+        "at the enrichment-statistics tier (L3). ", MAPPING_STAMP),
       script    = SCRIPT,
       fn        = "module_summary_panel",
       config_kv = sprintf(
@@ -689,7 +690,7 @@ if (!is.null(sum_plot_df) && nrow(sum_plot_df) > 0) {
         "in the contrast numerator. ",
         "Sign convention: positive log2FC = higher in numerator (e.g. 39°C arm for heat contrasts). ",
         "Claim tier L3: module statistics, not metabolic flux measurement. ",
-        "PROVISIONAL: sample-group labels are marker-inferred, pending collaborator sample sheet."),
+        sample_mapping_caption()),
       config    = FIG_CFG,
       width     = OVERVIEW_W,
       height    = SUMMARY_OVERVIEW_H),

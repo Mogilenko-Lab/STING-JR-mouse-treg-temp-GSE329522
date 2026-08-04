@@ -62,6 +62,33 @@ design:
       formula: "0.5*(WT_37 + WT_39) - 0.5*(cGASKO_37 + cGASKO_39)"
   samples_per_group: 5
 
+  # Sample-to-condition assignment provenance — the single source of truth for every
+  # figure stamp and README caption that states how the library -> condition mapping
+  # was established. Read these keys; never restate the status as a literal string in
+  # a script, because that is how a stale hedge outlives the evidence for it.
+  #
+  # Exposed by config.R::sample_mapping_status(), ::sample_mapping_stamp() (short, for
+  # a figure canvas) and ::sample_mapping_caption() (long, for a README caption).
+  # 00_setup_metadata.R writes `status` into every row of
+  # 03_results/master/sample_metadata.csv. Full account, including the per-library
+  # table: 00_data/processed/PROVENANCE.md.
+  #
+  # Scope of the confirmation: it covers the sample -> condition mapping and nothing
+  # else. It is not a statement about power, effect size, or any claim tier.
+  sample_mapping:
+    status: "CONFIRMED"            # CONFIRMED | INFERRED
+    source: "owner sample sheet"
+    confirmed_on: "2026-07-22"
+    concordant: 20                 # libraries whose label-blind call matched the sheet
+    total: 20
+    # Short form for a figure canvas. Detail belongs in the README caption.
+    stamp: "Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)"
+    # Long form for a README caption.
+    caption: "Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call."
+    # Rendered only if `status` is ever set back to INFERRED.
+    stamp_unconfirmed: "Sample mapping inferred from marker expression, pending the owner sample sheet"
+    caption_unconfirmed: "Claim tier: PROVISIONAL (pending collaborator sample sheet)."
+
   # Human-readable DISPLAY labels for each contrast — the single source of truth
   # for every figure title/caption (exposed by figure_style.R::contrast_label()).
   # The contrast KEYS above (WT_heat, Interaction, ...) stay the stable join keys
@@ -182,12 +209,23 @@ semantic:
 # still spans every database listed under `databases:` below.
 #
 # `exclude_databases` drops a database from the PANEL, never from the pooled
-# family, the GSEA sweep, or the results tables. Lombardi2022_HIF is excluded
-# because it is a single hand-curated HIF consensus set: giving it a facet of its
-# own puts a hypothesis-shaped gene set on equal footing with the curated,
-# versioned databases and invites the reader to score the hypoxia question off a
-# set that was assembled to represent hypoxia. The set, its curation script
-# (00b_curate_lombardi_hif.R) and its rows in every 06_gsea table all stay.
+# family, the GSEA sweep, or the results tables. It is currently empty.
+#
+# The Lombardi2022_HIF database used to be listed here, and it has since been
+# removed from this stage entirely rather than only from the panel: the set is no
+# longer built by 04_gsea_set_prep.R or scored by 06_gsea_custom_run.R, and its
+# rows and figures are gone from 03_results/06_gsea/ and from the master tables.
+# The reason is fit, not behaviour. It is a pan-cancer consensus derived under
+# hypoxia in cancer cells, which is the wrong reference for a 39 °C in-vitro
+# contrast in iTregs, and it meets WT_heat_up at 7 of that arm's 213 genes
+# (3.3%; see mouse_anchor/03_results/12_hsr_decomp/README.md). Hypoxia in this
+# stage is now read off the curated, versioned collections instead, which is what
+# 28_hypoxia_focus_viz.R draws.
+#
+# The curation script 00b_curate_lombardi_hif.R and its outputs under
+# 00_data/references/gene_sets/ stay. They still feed the curated comparison lens
+# used by 19_hsr_decomposition_viz.R and by the semantic decomposition, which read
+# the set from 00_data and never from this stage.
 #
 # `top_n_per_db` is the ONLY per-facet selection knob: sets are ranked by pooled
 # BH FDR (ties broken by the raw p-value, then by |NES|) and the top N per
@@ -199,7 +237,6 @@ semantic:
 gsea_pooled_overview:
   top_n_per_db: 5              # sets drawn per database facet, ranked by padj_pooled
   exclude_databases:           # dropped from the PANEL only (see note above)
-    - "Lombardi2022_HIF"
   label_wrap: 38               # wrap column for set names on the y axis (never truncate)
   facet_ncol: 2                # 2 columns keeps long set names legible at width_wide
   # Inches per set row. 0.36 rather than 0.30 because set names wrap to two lines in
@@ -554,8 +591,7 @@ databases:
     - { category: "C5", subcategory: "GO:CC",           name: "GO_CC" }
     - { category: "C3", subcategory: "TFT:GTRD",        name: "TF_Targets" }
   # Non-MSigDB databases, each run SEPARATELY (own GSEA call + own `database` tag).
-  # Toolkit RDS are pre-converted to mouse symbols; the Lombardi set is curated in 00b
-  # (protein-coding only, human->mouse via babelgene, provenance-stamped).
+  # Toolkit RDS are pre-converted to mouse symbols.
   custom:
     - name: "TransportDB"
       path: "01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds"
@@ -563,22 +599,6 @@ databases:
       path: "01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds"
     - name: "MitoXplorer"
       path: "01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds"
-    # Curation-INDEPENDENT HIF check: the published Lombardi 2022 conserved HIF consensus
-    # (doi:10.1016/j.celrep.2022.111652, Ratcliffe/Mole), reconstructed by 00b from the
-    # supplement as the genes recurring across the 32 TCGA per-cancer-type sheets. 100 genes
-    # in mouse symbols. NOT the 48-gene list an earlier revision hardcoded: that vector was
-    # verbatim the single TCGA-ACC sheet, which happens to have 48 rows, and 00b:19-24
-    # documents why it is not the published signature. It is retained there only as
-    # `lombardi48_stale` for a contrast report. Also the direct contrast to the
-    # selectively-subset 16-gene list, which shows what that list dropped.
-    #
-    # NOTE ON SCOPE: this set is deliberately absent from the pooled-overview FIGURE
-    # (gsea_pooled_overview.exclude_databases) because a single hand-curated HIF set given its
-    # own facet presupposes the hypoxia question the analysis tests. It stays in the pooled
-    # correction and in every 06_gsea table, so the pooled-family database count is one higher
-    # than the facet count.
-    - name: "Lombardi2022_HIF"
-      path: "00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds"
     # Curated heat-shock-response (HSR) thermal proteostasis lens — the biology-defined
     # second lens held orthogonal to the empirical WT_heat_up. Two terms: HSR_core (47 mouse,
     # cleaned cytosolic HSF1/chaperone core) and HSR_sensitivity (170 mouse, full union).
@@ -618,7 +638,7 @@ stages:
     purpose: "decoupleR MLM on PROGENy (14 pathways); orthogonal Hypoxia-vs-immune split on the interaction."
   - id: "06_gsea"
     title: "GSEA sweep"
-    purpose: "Ranked GSEA across MSigDB 8 collections (Hallmark/KEGG/Reactome/WikiPathways/GO_BP/MF/CC/TFT:GTRD) and custom DBs (TransportDB/MitoPathways/MitoXplorer/Lombardi2022_HIF), each separate."
+    purpose: "Ranked GSEA across MSigDB 8 collections (Hallmark/KEGG/Reactome/WikiPathways/GO_BP/MF/CC/TFT:GTRD) and custom DBs (TransportDB/MitoPathways/MitoXplorer/HSR_lens/TCR_activation), each separate."
   - id: "07_synthesis"
     title: "Synthesis and reply memo"
     purpose: "Assemble the two-arms panel and the claim-to-evidence reply memo; no new statistics."

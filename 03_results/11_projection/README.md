@@ -1,4 +1,4 @@
-# 11_projection — artifact captions
+# 11_projection: artifact captions
 
 ## figures/_overview/human_signature_sizes.png
 
@@ -11,7 +11,9 @@ contrast carried at two threshold gates gets one bar pair per gate,
 with the gate named in square brackets under its tick — the looser
 gate is the sensitivity read, not a second result. This is the
 human-space counterpart of the mouse-side size bars. Claim tier: L3
-(DE statistics); provisional sample mapping, n=5/group.
+(DE statistics), n=5/group. Sample-to-condition mapping confirmed
+against the owner's sample sheet (2026-07-22): 20 of 20 libraries
+concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -60,4 +62,41 @@ question is shown by `hsr_lens_membership`.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/18_projection_export_viz.R` | `ggplot(geom_col + structural-empty glyph)` | `decisions.projection.gate; decisions.projection.secondary_gate; colors.diverging; colors.okabe_ito` | `03_results/11_projection/tables/_overview/projection_overlap_ledger.csv` |
+
+## figures/_overview/conversion_ledger.png
+
+Each frozen mouse up arm loses genes twice on the way into human
+symbols, once to genes with no accepted ortholog and once to mouse
+paralogs collapsing onto one human symbol: WT_heat_up carries 199 of
+213 (12 dropped, 2 collapsed), KO_heat_up carries 218 of 239 (19
+dropped, 2 collapsed), Interaction_up carries 7 of 9 (1 dropped, 1
+collapsed). One to one arrivals: 194 of 199, 213 of 218, 3 of 7 in
+the same order. One collapse lands on the heat-shock genes: mouse
+Hspa1a and Hspa1b both map to human HSPA1A, so the 3 curated HSR core
+genes in the WT_heat_up and KO_heat_up mouse arms (Hspa1a, Hspa1b,
+Hsph1) arrive as 2 in human (HSPA1A, HSPH1).
+
+**How to read:** One horizontal bar per frozen up arm. Bar length is the mouse genes
+that passed the fdr_logfc gate; the segments are their fate. Blue is
+carried into human, orange is lost when several mouse paralogs
+collapsed onto one human symbol, grey is dropped for want of an
+accepted ortholog. A count sits inside its segment where it fits, and
+is otherwise parked to the right of the bar on a leader line back to
+the sliver.
+
+The map is babelgene 22.9, queried mouse to human at min_support = 3,
+so an edge is accepted when at least three source databases agree; it
+holds 13,334 edges over 13,169 mouse and 12,986 human symbols. A
+binary set takes the union both ways: several mouse onto one human
+shrinks it, one mouse across several human grows it. Every human
+denominator downstream is the carried set rather than the mouse set.
+
+Per-arm arrival routes (one-to-one, several mouse collapsed onto it,
+one mouse split across several human) and the paralog groups that
+collided inside each arm are in the same-stem CSV. Claim tier: a
+direct count over frozen sets.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/18_projection_export_viz.R` | `ggplot(geom_rect + leader-line sliver labels)` | `decisions.projection.gate=fdr_logfc; decisions.projection.contrasts_primary; decisions.projection.ortholog_ambiguity.min_support=3; babelgene=22.9; colors.okabe_ito` | `03_results/human_projection/{manifest.csv,ortholog_map.tsv,signatures/}; 03_results/objects/17_signature_sets.rds` |
 

@@ -45,7 +45,7 @@ source("02_analysis/helpers/figure_style.R")   # FIG_CFG, project_theme(), save_
                                                 # purge_figures(), round_numeric_cols(),
                                                 # direction_cue(), VECTORIZED contrast_label()
 source("02_analysis/config/config.R")          # YAML_CONFIG, DIR_OBJECTS, DIR_MASTER,
-                                                # DE_FDR, DE_LOGFC, provisional_caption(),
+                                                # DE_FDR, DE_LOGFC, sample_mapping_caption(),
                                                 # stage_dir()
 
 ## RNAseq-toolkit DE plotters (source-only library; theme NOT required here --
@@ -112,15 +112,29 @@ interp_note <- function(co) {
   )
 }
 
-#' Per-panel subtitle: contract label + direction key (+ the Interaction caveat).
+#' Per-panel subtitle: the direction key (+ the Interaction caveat).
 #' Direction text is generic (no n-badge) -- the sig counts are annotated inside
 #' the panel via direction_cue glyphs (mirrors the reference DE viz, 11_de_viz.R).
+#'
+#' The subtitle used to open with contrast_label(co), repeating the title verbatim,
+#' and the Interaction variant then ran past the right edge of the canvas and lost
+#' its closing clause. That clause is the standing constraint on reading a null
+#' interaction, so it is the one clause that must never be cut. Two changes keep it
+#' on the canvas: the title repeat is gone, and the result is hard-wrapped to the
+#' plotting width rather than trusted to fit.
+VOLC_W <- 9    # canvas inches; the wrap width and the save call both read it
+VOLC_H <- 8
+
+#' Wrap to the canvas. ~10.2 characters per inch at the config subtitle size.
+volc_wrap <- function(txt, chars_per_inch = 10.2)
+  paste(strwrap(txt, width = as.integer(VOLC_W * chars_per_inch)), collapse = "\n")
+
 panel_subtitle <- function(co) {
-  paste0(contrast_label(co),
-         "  |  logFC>0 = up in numerator; logFC<0 = up in denominator",
-         if (co == "Interaction")
-           "  |  non-sig = no detectable cGAS-dependence at n=5"
-         else "")
+  volc_wrap(paste0(
+    "logFC>0 = up in numerator. logFC<0 = up in denominator.",
+    if (co == "Interaction")
+      " Non-significant = no detectable cGAS-dependence at n=5."
+    else ""))
 }
 
 #' Pick a "nice" x-break step (1-2-5 ladder) targeting ~10 ticks over the full
@@ -171,7 +185,7 @@ write_caption(
     "Also carries Interaction logFC and adj.P.Val from limma-trend (no recomputation in viz). ",
     "READ-ONLY in this script; schema-frozen (also consumed by 03_decoupler_tf.R:687). ",
     "Also the HIGHLIGHT watchlist source for the volcano + MD sweeps. ",
-    "Claim tier: L3. PROVISIONAL sample labels."),
+    "Claim tier: L3. ", sample_mapping_caption()),
   script     = SCRIPT,
   fn         = "read.csv (read-only; produced by 02_de_limma_trend.R)",
   config_kv  = CFG_KV,
@@ -180,7 +194,8 @@ write_caption(
     "Columns: gene, arm (IFN/ISG arm | HIF/glycolysis arm), hif_class (HIF-specific | shared-glycolytic | NA for ISG), ",
     "genotype (WT | cGASKO), temp (37C | 39C), mean_log2cpm, inter_logFC, inter_adjP. ",
     "One row per gene x group (4 rows per gene). inter_adjP is constant within gene. ",
-    "Schema frozen: do NOT rename/relocate; consumed by downstream scripts. Claim tier: L3. PROVISIONAL."),
+    "Schema frozen: do NOT rename/relocate; consumed by downstream scripts. Claim tier: L3. ",
+    sample_mapping_caption()),
   config     = FIG_CFG
 )
 
@@ -190,7 +205,8 @@ write_caption(
   finding    = paste0(
     "Per-marker Interaction contrast statistics table (subset of 02_de_results.rds, Interaction slot) ",
     "for the cGAS-dependence marker genes. Lists logFC, P.Value, adj.P.Val, AveExpr for each marker. ",
-    "Used as supplemental evidence for the two-arms framing. Claim tier: L3. PROVISIONAL."),
+    "Used as supplemental evidence for the two-arms framing. Claim tier: L3. ",
+    sample_mapping_caption()),
   script     = SCRIPT,
   fn         = "produced by 02_de_limma_trend.R (read-only in viz)",
   config_kv  = CFG_KV,
@@ -199,7 +215,7 @@ write_caption(
     "Rows = marker genes; columns = gene_symbol, ensembl, logFC, AveExpr, t, P.Value, adj.P.Val, contrast. ",
     "All values from the Interaction contrast (1 df; logFC > 0 = up in WT relative to cGASKO after removing shared heat effect). ",
     "Non-significant adj.P = no detectable cGAS-dependence at n=5 (NEVER 'cGAS-independent'). ",
-    "Claim tier: L3. PROVISIONAL sample labels."),
+    "Claim tier: L3. ", sample_mapping_caption()),
   config     = FIG_CFG
 )
 
@@ -264,6 +280,32 @@ for (co in CONTRASTS) {
     labs(caption = NULL) +
     project_theme(config = FIG_CFG)
 
+  # The point cloud is ~19,700 genes. Left vector it embeds one glyph per gene, which
+  # is a ~780 KB PDF that fights Illustrator on the collaborator's machine. Rasterise
+  # the Point layers only; the repel labels are GeomTextRepel and stay vector, as do
+  # the axes and legend text. Same treatment 02b_cgas_dependence_geometry_viz.R gives
+  # its scatter.
+  p_volc <- rasterize_axes(p_volc, config = FIG_CFG)
+
+  # ggrepel repels WITHIN a layer, and the toolkit draws two independent repel layers
+  # (top-N labels, then the always-on watchlist). A label from one layer can therefore
+  # land on a label from the other. Widening the boxes and raising the force and the
+  # iteration budget on both layers reduces the collisions; a fixed seed makes the
+  # result reproducible run to run.
+  for (.i in seq_along(p_volc$layers)) {
+    if (inherits(p_volc$layers[[.i]]$geom, "GeomTextRepel")) {
+      gp <- p_volc$layers[[.i]]$geom_params
+      gp$box.padding        <- grid::unit(0.75, "lines")
+      gp$point.padding      <- grid::unit(0.35, "lines")
+      gp$force              <- 8
+      gp$force_pull         <- 0.4
+      gp$max.iter           <- 20000
+      gp$min.segment.length <- grid::unit(0, "lines")
+      gp$seed               <- 42L
+      p_volc$layers[[.i]]$geom_params <- gp
+    }
+  }
+
   # Source table: key columns, ordered by significance then effect size.
   tbl_volc <- tt[order(tt$adj.P.Val, -abs(tt$logFC)),
                  intersect(c("gene_symbol", "ensembl", "logFC", "AveExpr",
@@ -294,7 +336,7 @@ for (co in CONTRASTS) {
         "Labelled = top %d genes by significance per side, PLUS the always-on two-arms ",
         "watchlist (ISG: Ifit1/Isg15/Irf7/...; HIF/glyco: Slc2a1/Vegfa/Egln3/...). ",
         "Data: CPM / limma-trend on log2(CPM+0.5) (no voom). Claim tier: L3. ",
-        "PROVISIONAL sample labels; n=5/group."
+        "n=5/group. ", sample_mapping_caption()
       ),
       FDR, LFC, LBL_TOP
     ),
@@ -302,7 +344,7 @@ for (co in CONTRASTS) {
     # Volcano carries ~30 repel labels (top-N per side + 15-gene watchlist); the
     # default 3.5x3in print column is too small for ggrepel (zero-dimension viewport).
     # Give both variants a roomier square canvas so labels fit and stay legible.
-    width = 9, height = 8
+    width = VOLC_W, height = VOLC_H
   )
 }
 
@@ -374,7 +416,7 @@ for (co in CONTRASTS) {
         "Quadrant numbers = significant-gene counts per quadrant. ",
         "Labelled = top 5 sig genes per side, PLUS the always-on two-arms watchlist. ",
         "Driven from 02_de_results.rds topTable columns (no MArrayLM fit on disk). ",
-        "Claim tier: L3. PROVISIONAL sample labels; n=5/group."
+        "Claim tier: L3; n=5/group. ", sample_mapping_caption()
       ),
       FDR, FDR, LFC
     ),
@@ -552,7 +594,7 @@ if (!file.exists(master_de_path)) {
             "measured 0. Gate for this panel: adj.P < %.2g, no fold-change cut-off -- the ",
             "|log2FC| >= %.1f gate used by the projection export is stricter and keeps far fewer genes. ",
             "A non-significant interaction gene = no detectable cGAS-dependence at n=5, never independence. ",
-            "Claim tier: L3. PROVISIONAL sample labels."
+            "Claim tier: L3. ", sample_mapping_caption()
           ),
           FDR, LFC
         ),
