@@ -51,10 +51,10 @@ Produced by `12_gsea_viz.R` (VIZ-ONLY; GSEA computed by `05_gsea_msigdb_run.R` a
   hardcoded from a single worksheet of a supplement. A hardcoded size is how a wrong label
   survives a re-curation.
 - The bespoke 16-gene HIF list is ~92% heat-shock/glycolytic and its hypoxia-diagnostic core
-  (Pdk1/Bnip3/Bnip3l/Car9) is repressed. That list is not plotted in this stage; see
-  `03_results/04_tf/` for the comparison against it.
-- Sample labels: PROVISIONAL (groups inferred from marker genes Hspa1b + Cgas, pending
-  collaborator sample sheet).
+  (Pdk1/Bnip3/Bnip3l/Car9) is repressed. Hypoxia in this stage is read off the curated,
+  versioned collections instead of off that list.
+- Sample labels: confirmed against the owner's sample sheet (2026-07-22), 20 of 20
+  libraries concordant with the label-blind marker call from Hspa1b and Cgas.
 
 **NES sign convention (applies everywhere in this stage):**
 NES > 0 = gene set enriched in the numerator of the contrast (hot = 39 °C, WT genotype).
@@ -154,7 +154,7 @@ NES (genes concentrated at the bottom/denominator end). The gene-hit tick panel 
 shows where each set member falls in the ranked gene list; dense ticks near rank 0 confirm
 a strongly up-enriched set. The ranked metric panel (bottom) shows the t-statistic landscape:
 positive = up in numerator, negative = up in denominator. NES>0 = enriched in hot/WT
-numerator side. Claim tier: L3. PROVISIONAL sample labels.
+numerator side. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -180,7 +180,7 @@ different things here:** the 20 sets drawn are the top 20 by adjusted p
 (`filterBy = "p.adjust"`, `figures.top_pathways=20`), but the y-axis is then ordered by
 **GeneRatio descending** (`sortBy = "GeneRatio"`, the toolkit default), so vertical position
 is not a significance ranking. Read significance off dot size and the black ring, never off
-row order. Claim tier: L3. PROVISIONAL sample labels.
+row order. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -226,7 +226,7 @@ case, with the directions the other way round from what one might guess: the hyp
 glycolysis and mTORC1 sets sit in the Up facet (HYPOXIA +1.91, GLYCOLYSIS +1.61,
 MTORC1_SIGNALING +1.39, all padj < 0.05) while both interferon-response sets sit in the Down
 facet (INTERFERON_ALPHA_RESPONSE −1.90, INTERFERON_GAMMA_RESPONSE −1.77, padj 1.7e-04 for
-both). Claim tier: L3. PROVISIONAL sample labels.
+both). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -256,7 +256,7 @@ positive at top). Only padj < 0.05 sets are shown (at most top 20 by |NES|). Bar
 encodes effect size (NES magnitude); all bars are significant, so no outline-ring encoding
 is needed here. This is the most compact high-signal view. A cell showing the boxed
 empty-state statement instead of bars had no set survive FDR correction in that
-(contrast × database) cell. Claim tier: L3. PROVISIONAL sample labels.
+(contrast × database) cell. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -976,7 +976,6 @@ gsea_pooled_overview_Interaction.png.
 |---|---|---|---|
 | `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `patchwork / p_wt beside p_int` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[]` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
 
-
 ## figures/_overview/hypoxia_running_sum_wt_heat.png
 
 Running enrichment of the single Hallmark set HALLMARK_HYPOXIA
@@ -1021,8 +1020,10 @@ what it says about where this set stands among them. A set's
 enrichment is not evidence that the program its name invokes is
 present; composition would have to be established separately. What
 this curve locates is where the set's member genes sit in one
-ranking. Claim tier: L3 (DE and enrichment statistics). PROVISIONAL
-sample labels.
+ranking. Claim tier: L3 (DE and enrichment statistics).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1084,7 +1085,9 @@ set's enrichment is not evidence that the program its name invokes is
 present; composition would have to be established separately. The
 four names overlap in wording while their gene content differs, which
 is why each is drawn on its own curve. Claim tier: L3 (DE and
-enrichment statistics). PROVISIONAL sample labels.
+enrichment statistics). Sample-to-condition mapping confirmed against
+the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant
+with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|

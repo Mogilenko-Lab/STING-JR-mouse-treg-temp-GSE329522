@@ -95,6 +95,20 @@ TRACK_LABELS <- c(
 # figure_style.R::sample_mapping_stamp(). Never hard-code the status here.
 PROV_STAMP <- paste0(sample_mapping_stamp(), "; n=5/group")
 
+# Canvas geometry. Declared here because the footer wrap width and the
+# save_overview() geometry override both read it: the footer used to be one
+# unwrapped line anchored at the panel's left edge, so it ran past the right edge
+# of the canvas and lost its closing clause. The sentence it carries comes from
+# sample_mapping_caption() and its length changes with the config, so the wrap has
+# to be computed from the canvas rather than eyeballed once.
+PANEL_W <- 18   # canvas inches
+PANEL_H <- 16
+
+# Wrap a footer to the canvas. The caption renders at figures.caption_size (9 pt),
+# where a conservative 12 characters per inch keeps every line well inside PANEL_W.
+wrap_footer <- function(txt, chars_per_inch = 12)
+  paste(strwrap(txt, width = as.integer(PANEL_W * chars_per_inch)), collapse = "\n")
+
 # ============================================================================
 # 1. GUARD — stop only if BOTH the table and the object are missing; otherwise
 #    read whichever is present (table preferred — it is the canonical source).
@@ -229,19 +243,24 @@ build_two_arms_panel <- function(df) {
         "HIF/glycolysis arm (bottom)\nrises in BOTH heat arms but is flat in the ",
         "Interaction - no detectable cGAS-dependence at n=5.\n", PROV_STAMP),
       x = NULL, y = NULL,
-      caption = paste0(
+      caption = wrap_footer(paste0(
         "Tile = signed score; orange = up in numerator, blue = down. ",
         "Black ring = padj < ", FDR, ". Claim tier: L3 (n=5/group). ", sample_mapping_caption(), " ",
-        "'Flat Interaction' is NOT proven cGAS-independence.")) +
+        "A flat Interaction bounds cGAS-dependence at n=5."))) +
     project_theme(config = FIG_CFG, legend = TRUE) +
     # Structural facet geometry only (NOT styling): the two arm tracks are stacked
     # vertically via facet_grid(arm ~ .), so the y-strip label must be UN-rotated
     # (ggplot defaults strip.text.y to 270 deg, which would make the two-line track
     # names unreadable), and the stacked tracks need breathing room between them.
     # Font/face/grid styling stays owned by project_theme() per the figure contract.
+    # plot.caption.position = "plot" anchors the footer to the canvas edge instead
+    # of the panel edge. The y-axis here is a wide block of method+feature labels,
+    # so a panel-anchored footer starts roughly 40% of the way across and has far
+    # less room than the wrap assumes. Matches plot.title.position, already "plot".
     theme(
-      strip.text.y    = element_text(angle = 0),
-      panel.spacing.y = unit(0.6, "lines"))
+      strip.text.y          = element_text(angle = 0),
+      panel.spacing.y       = unit(0.6, "lines"),
+      plot.caption.position = "plot")
 }
 
 # ============================================================================
@@ -312,10 +331,10 @@ save_overview(
     "READ THE ASYMMETRY DOWN THE 'Interaction' COLUMN: the IFN/ISG track lights ",
     "up (positive, ringed) = cGAS-dependent; the HIF/glycolysis track goes flat ",
     "/ unringed there while staying lit in BOTH heat columns = no detectable ",
-    "cGAS-dependence at n=5. The arm NAMES are labels, not claims that any one ",
-    "TF (e.g. HIF1a/HIF2a) is the driver. Claim tier: L3 (DE/enrichment ",
-    "statistics; n=5/group). 'Flat Interaction' is NOT proven ",
-    "cGAS-independence - the 1-df interaction is the lowest-powered comparison."),
+    "cGAS-dependence at n=5. The arm names are labels; naming a driver such as ",
+    "HIF1a or HIF2a would take a separate test. Claim tier: L3 (DE/enrichment ",
+    "statistics; n=5/group). A flat Interaction bounds cGAS-dependence at this ",
+    "sample size, the 1-df interaction being the lowest-powered comparison."),
   # GEOMETRY OVERRIDE (contract-sanctioned width/height passthrough; NOT raw ggsave):
   # a 40-glyph-row x 4-column faceted heatmap with long method+feature y-labels
   # cannot honour the fixed canvas (10x8 screen / 3.5x3.0 print) - the columns
@@ -327,8 +346,8 @@ save_overview(
   # (a fixed-width text block), so canvas width is spent mostly on the panel: 18in
   # gives each of the 4 columns enough absolute width that the two-line
   # contrast_labels_short stop overprinting (the §B label-collision fix).
-  width  = 18,
-  height = 16,
+  width  = PANEL_W,
+  height = PANEL_H,
   config = FIG_CFG)
 
 message("[16_synthesis_viz] two_arms_panel saved (print + screen + table + caption).")
@@ -359,10 +378,10 @@ if (file.exists(readme_path)) {
       "Headline result (the publication-relevant payoff): a cGAS-dependence",
       "ASYMMETRY. The IFN/ISG arm is cGAS-dependent (positive, significant",
       "Interaction); the HIF/glycolysis arm rises in BOTH heat arms but is flat in",
-      "the Interaction - no detectable cGAS-dependence at n=5. This is an",
-      "asymmetry, NOT proven cGAS-independence (the 1-df interaction is the",
-      "lowest-powered comparison). HIF1a/HIF2a are NOT crowned as drivers; the arm",
-      "names are labels. Figure claims floor at L3 (DE/enrichment statistics);",
+      "the Interaction, so no cGAS-dependence is detectable at n=5. That is an",
+      "asymmetry, and it bounds what the contrast can show, the 1-df interaction",
+      "being the lowest-powered comparison. The arm names are labels rather than",
+      "claims about HIF1a or HIF2a as drivers. Figure claims floor at L3.",
       "mechanism (L7: pseudohypoxia / Complex-I) lives only in the reply memo.",
       "",
       sample_mapping_caption(),

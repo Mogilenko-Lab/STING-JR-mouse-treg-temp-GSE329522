@@ -1,10 +1,10 @@
-# 04_tf — Phase 3: TF Activity (decoupleR) + Hif1a Rank-Cascade Forensics
+# 04_tf: TF activity (decoupleR) and the Hif1a rank cascade
 
 Transcription-factor activity inferred by decoupleR (CollecTRI ULM, primary; DoRothEA-ABC ULM, comparator; CollecTRI MLM and consensus, forensics) from limma t-statistics across seven contrasts of the GSE329522 2×2 cGAS×temperature iTreg factorial design (murine iTreg, WT vs cGAS-KO × 37 °C vs 39 °C fever-heat, n=5/group). The central question this phase answers is whether the HIF/glycolytic program shows cGAS-dependent activation: the data do not support that conclusion at n=5. The IFN members Irf3/Stat2/Stat1 reach significance on the Interaction contrast (padj < 0.05), while the HIF axis (Hif1a/Epas1) is flat and non-significant on the same contrast — asymmetry, not independence.
 
 A secondary forensic thread explains why Hif1a's rank varies from #1 to #142 across inference methods and networks, and concludes that its apparent activation is substantially a heat-generic stress/glycolytic phenomenon whose rank instability is fully accounted for by regulon size, target collinearity, and consensus aggregation arithmetic. A three-figure attribution arc (fig3m → fig3g → fig3l) forms the analytical spine: mechanic (HOW ULM nominates a TF) → landscape (WHERE Hif1a's score comes from: the full ranked 353-member contribution distribution) → biology (WHAT KIND of genes and in which direction: heat-shock/stress up, HIF-selective hypoxic core down). This arc establishes that the program revealed here is **a heat-induced glycolytic/stress program partially overlapping HIF targets**, not a canonical hypoxic-HIF output.
 
-**PROVISIONAL**: sample-to-condition mapping was inferred from GEO metadata; figures carry a provisional stamp pending primary-author confirmation.
+**Sample mapping**: confirmed against the owner's sample sheet on 2026-07-22, 20 of 20 libraries concordant with the label-blind marker call.
 
 ---
 
@@ -31,7 +31,6 @@ A secondary forensic thread explains why Hif1a's rank varies from #1 to #142 acr
 
 ```
 AFFIRM ──────────────▶ fig3i  (real phenomenon; shared HIF/glycolytic target Vegfa up in both genotypes; IFN Ifit1 cGAS-dependent)
-                       fig3h  (provenance/hypoxia control — RELABELLED; both HIF gene lists rise; NOT thermal-HIF proof)
 
 ATTRIBUTION ARC ─────▶ fig3m  (HOW ULM nominates a TF — regulon-weighted aggregation; promiscuous vs specific)
                        fig3g* (WHERE Hif1a's score comes from — full ranked 353-member landscape; stress genes dominate)
@@ -62,11 +61,11 @@ NON-IDENTIFIABILITY ─▶ fig3p  (heat-MAIN ranking: no clean winner — Hif1a 
 
 ### Final wet-lab deck spine (serendipity-resolution ordering)
 
-`fig3i → fig3h → fig3m → fig3g → fig3l → fig3d → fig3e → fig3c → fig3k → fig3a → fig3n`
+`fig3i → fig3m → fig3g → fig3l → fig3d → fig3e → fig3c → fig3k → fig3a → fig3n`
 
-(affirm what's real → provenance/hypoxia control → HOW ULM nominates → WHERE the score comes from → WHAT KIND of genes + direction → **WHY #1 happened (regulon dilution, #1→#12)** → **WHY it isn't robust (target collinearity, #12→#142)** → rank cascade recap → MLM reshuffle → cGAS asymmetry → HSF1 co-elevation.)
+(affirm what's real → HOW ULM nominates → WHERE the score comes from → WHAT KIND of genes + direction → **WHY #1 happened (regulon dilution, #1→#12)** → **WHY it isn't robust (target collinearity, #12→#142)** → rank cascade recap → MLM reshuffle → cGAS asymmetry → HSF1 co-elevation.)
 
-**fig3d and fig3e are REINSTATED into the deck spine** (per `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`, candidate 2 → IN). They are the literal "how the collaborator's DoRothEA-ULM produced HIF1α #1 (#1→#12 regulon dilution) and why CollecTRI-MLM does not hold it (#12→#142 collinearity redistribution)." They sit between fig3l (what the genes are) and fig3c (the full cascade) so mechanism precedes the cascade recap, making fig3c a recap rather than a bare assertion. This overrides the earlier audit's "archive fig3e" vote.
+**fig3d and fig3e sit in the deck spine.** They carry the account of how the collaborator's DoRothEA-ULM produced HIF1α #1 (#1→#12 regulon dilution) and why CollecTRI-MLM does not hold it (#12→#142 collinearity redistribution). They sit between fig3l (what the genes are) and fig3c (the full cascade) so the mechanism precedes the cascade recap, which lets fig3c read as a recap.
 
 
 **Archive-only (retained in phase directory, NOT part of the deck):** fig3b, fig3f, the two fig3j variants, and **lombardi_recurrence** — canonical PDFs and tables are retained; they are simply not placed in the deck. See DROP notes under each legend below.
@@ -182,20 +181,6 @@ MECHANISM: The redesigned viz reads the existing `fig3g_target_decomposition_dat
 | Script | `02_analysis/scripts/03_decoupler_tf_viz.R` (fig3g block, expanded viz) |
 | Function | `contrib = sign(mor) * t_wt` computed in `03_decoupler_tf.R`; coarse 3-class lookup (`hypoxic HIF core` / `shared/glycolytic` / `other`); viz reads pre-computed table |
 | Input | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv`, `03_results/04_tf/tables/fig3g_target_decomposition_summary.csv`, `03_results/04_tf/tables/fig3g_target_landscape_labels.csv` |
-
----
-
-### fig3h_lombardi_vs_phylo.pdf  *(RELABELLED — hypoxia/provenance control)*
-
-**STATEMENT: This is a PROVENANCE / HYPOXIA CONTROL, not a thermal-HIF confirmation. Two independently curated HIF target gene sets — the field-consensus Lombardi-100 (WT_heat ULM score = 6.90, padj = 1.04×10⁻¹¹; KO_heat = 7.15, padj = 1.74×10⁻¹²) and the hand-made Phylo-16 (WT_heat = 2.43, padj = 0.015; KO_heat = 2.64, padj = 0.008) — both rise significantly with heat in both genotypes, and neither shows a significant cGAS×heat Interaction (Lombardi: Interaction score −1.38, padj = 0.34; Phylo: Interaction score −0.88, padj = 0.38). The figure's role is twofold: (1) a provenance check that the hand-made Phylo-16 list is not idiosyncratic relative to the field consensus, and (2) a coarse hypoxia control that the heat-activated signal is not an artifact of one list. It does NOT prove a canonical thermal-HIF program: BOTH curated metagenes COLLAPSE HIF1/HIF2 (Hif1a and HIF2a/Epas1 aggregated into one score) and are DIRECTION-BLIND — they cannot distinguish which members are up vs down — so they are blind to the repressed hypoxic-survival core (Pdk1/Bnip3/Bnip3l/Car9; fig3l). The on-figure title and the "collapses HIF1/HIF2, direction-blind" caveat now state this directly.**
-
-MECHANISM: Lombardi-2022 (n = 100 mouse genes) and Phylo-16 (n = 16 mouse-mapped genes) formatted as unit-mor networks and scored by `run_ulm(.mor="mor", minsize=5)` against the full 7-contrast t-stat matrix; BH correction within contrast; three conditions reported (WT_heat, KO_heat, Interaction). Underlying table and scores are unchanged; the on-figure title was relabelled to the provenance/hypoxia-control framing and the direction-blind/HIF1-HIF2-collapse caveat was added on the figure to match this README.
-
-| | |
-|---|---|
-| Script | `02_analysis/scripts/03_decoupler_tf_viz.R` |
-| Function | `run_ulm(.source="source", .target="target", .mor="mor", minsize=5)` with unit-mor signature networks; BH within contrast |
-| Input | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
 
 ---
 
@@ -694,12 +679,12 @@ All COMPUTE scripts (`03_`, `03b_`, `03c_`, `03d_`, `03e_`) contain no `ggplot`/
 
 ## Notes
 
-- **PROVISIONAL stamp**: all figures carry `provisional_caption()` because sample-to-condition mapping was inferred from GEO metadata and has not been confirmed by the primary authors.
+- **Sample mapping**: every figure reads `sample_mapping_caption()` from `design.sample_mapping` in the config, which records the mapping as owner-confirmed on 2026-07-22, 20 of 20 libraries concordant with the label-blind marker call.
 - **cGAS framing**: the HIF arm shows "no detectable cGAS-dependence at n=5" — this is an underpowered n=5 null, not evidence of independence. Never rephrase as "cGAS-independent," "parallel," or "cascade."
 - **Object name**: the program revealed here is "a heat-induced glycolytic/stress program partially overlapping HIF targets." Never "the HIF program," "HIF1a the TF," or "canonical HIF1a program."
 - **HIF2a/Epas1**: elevated on all heat contrasts (Temp_main decoupleR-ULM score = +4.17, padj = 8.9×10⁻⁴) but named only as an alternative the HIF inhibitor cannot exclude — not crowned as a driver.
 - **fig3n estimator**: fig3n scores are decoupleR-ULM — the SAME `run_ulm(.mor="mor", minsize=5)` estimator as fig3a/fig3c/fig3k, computed on a fresh heat-MAIN t-stat matrix — and ARE axis-comparable to those figures. They equal the `master_tf_activities.csv` `nes` column only because that column is the ULM `score` written under a legacy schema name (`nes = score`); the `nes` name is a misnomer kept for master-schema compatibility, NOT a GSEA score. The Hsf1 cGAS×heat interaction raw p (0.022) is non-significant after BH correction (padj = 0.515) and must not be cited as evidence of cGAS-dependence.
-- **fig3d + fig3e reinstated into the deck spine** (serendipity-resolution decision, `docs/_internal/reasoning/2026-06-09-serendipity-resolution/01-design-proposal.md`): they carry the "how the collaborator got #1, and why it isn't robust" mechanism — regulon dilution (#1→#12) and collinearity redistribution (#12→#142) — and sit between fig3l and fig3c. This overrides the earlier audit's "archive fig3e" vote.
+- **fig3d + fig3e in the deck spine**: they carry how the collaborator got #1 and why it does not hold, regulon dilution (#1→#12) and collinearity redistribution (#12→#142), and they sit between fig3l and fig3c.
 - **Archive figures (not in the deck; canonical PDFs/tables retained)**: fig3b, fig3f, fig3j×2, and **lombardi_recurrence** are forensic/supplement backups (fig3b's broad-program point is made more sharply by fig3g/fig3l; fig3f risks the "consensus recovers HIF1a" mis-read; fig3j belongs in the supplement as the full per-method audit). Canonical artifacts kept, just not on the deck spine.
 
 ## tables/_overview/fig3a_tf_interaction_axes.csv
@@ -771,16 +756,6 @@ Plot-ready data for fig3g: signed contribution (sign(mor) × t_wt) for all 353 H
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
-
-## tables/_overview/fig3h_lombardi_vs_phylo.csv
-
-Plot-ready data for fig3h: ULM scores and BH-adjusted p-values for two HIF metagenes (Lombardi-100 and Phylo-16) across three contrasts (WT_heat, KO_heat, Interaction).
-
-**How to read:** 6 rows. `signature` = Lombardi-100 / Phylo-16; `condition` = WT_heat / KO_heat / Interaction; `score` = ULM activity; `p_value`; `padj` = BH within contrast; `n_genes`; `sig` = logical padj < 0.05. Both metagenes are heat-activated in both genotypes (padj ≤ 0.015); Interaction NS for both (Lombardi padj = 0.34, Phylo padj = 0.38), confirming no detectable cGAS-dependence. Caveat: each metagene collapses HIF1/HIF2 and is direction-blind. Claim tier L3.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.module_colors` | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
 
 ## tables/_overview/fig3i_interaction_primer.csv
 
@@ -992,22 +967,6 @@ drivers + the 7 HIF-specific members (the source table). Tier L3
 |---|---|---|---|
 | `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `design.module_colors` | `03_results/04_tf/tables/fig3g_target_decomposition_data.csv` |
 
-## figures/_overview/fig3h_lombardi_vs_phylo.png
-
-A field-consensus and a hand-made HIF metagene both rise with heat in
-BOTH genotypes (Interaction NS for both): a hypoxia/provenance check
-that the hand-made list isn't idiosyncratic -- not thermal-HIF proof,
-and direction-blind to the repressed hypoxic core.
-
-**How to read:** Grouped bars = signature activity (ULM score) per condition; fill =
-HIF signature (field-consensus vs hand-made). Glyphs: * = BH padj <
-0.05, ns otherwise. Each metagene collapses HIF1/HIF2 and is
-direction-blind. Tier L3 (n=5).
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/03_decoupler_tf_viz.R` | `save_overview` | `colors.diverging; design.module_colors` | `03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv` |
-
 ## figures/_overview/fig3i_interaction_primer.png
 
 Reading the cGAS x heat Interaction as the difference of genotype
@@ -1029,9 +988,8 @@ Interaction + adjP). Tier L3 (n=5).
 ## figures/_overview/fig3j_topTF_allmethods_WT_heat.png
 
 Method comparison for contrast WT_heat: lollipops show the top
-activated / suppressed TFs under all 6 decoupleR statistics.
-PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
-Cgas), pending collaborator sample sheet
+activated / suppressed TFs under all 6 decoupleR statistics. Sample
+mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Lollipops = per-TF activity, faceted by statistic (ULM, MLM, wsum,
 norm_wsum, corr_wsum, consensus), colored by axis (HIF orange;
@@ -1046,9 +1004,8 @@ comparison (ranking identity).
 ## figures/_overview/fig3j_topTF_allmethods_Interaction.png
 
 Method comparison for contrast Interaction: lollipops show the top
-activated / suppressed TFs under all 6 decoupleR statistics.
-PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer +
-Cgas), pending collaborator sample sheet
+activated / suppressed TFs under all 6 decoupleR statistics. Sample
+mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Lollipops = per-TF activity, faceted by statistic (ULM, MLM, wsum,
 norm_wsum, corr_wsum, consensus), colored by axis (HIF orange;
@@ -1066,8 +1023,8 @@ MLM (the only multivariate estimator) reshuffles both axes on
 WT_heat: rank heatmap shows MLM is a structural outlier with a
 Spearman rho of 0.62 vs ULM, while univariate statistics sit at
 0.97-1.00. Top univariate TFs are demoted under MLM: Rela 3->350,
-Nfkb1 6->86, Hif1a 12->142. PROVISIONAL - inferred sample mapping
-(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+Nfkb1 6->86, Hif1a 12->142. Sample mapping owner-confirmed (GSE329522
+iTreg 2x2 genotype x temperature)
 
 **How to read:** Rank heatmap: rows = key TFs, columns = statistics. Fill = binned
 rank quantile (bright yellow = highly activated, dark purple =
@@ -1086,8 +1043,8 @@ activity is carried by a heat-shock/stress fraction (all UP) while
 the HIF1a-selective hypoxic-survival core is repressed; only the
 shared/glycolytic/feedback subset rises. This is a heat-induced
 glycolytic/stress program partially overlapping HIF targets -- NOT a
-canonical hypoxic-HIF output. PROVISIONAL - inferred sample mapping
-(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+canonical hypoxic-HIF output. Sample mapping owner-confirmed
+(GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Horizontal lollipop plot: x = signed contribution = sign(mor) x t_wt
 of Hif1a targets, grouped and colored by module. Facets are ordered
@@ -1108,9 +1065,8 @@ generic heat-shock/stress contaminants it happens to contain (a
 heat-induced glycolytic/stress program partially overlapping HIF
 targets), while a small specific regulon (Stat2) does not pile up.
 This is the scoring MECHANIC, not a biology claim; the Hif1a panel is
-NOT 'the HIF program'/'Hif1a the TF'. PROVISIONAL - inferred sample
-mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator
-sample sheet
+NOT 'the HIF program'/'Hif1a the TF'. Sample mapping owner-confirmed
+(GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Two panels share the x-axis = aligned (signed) target contribution =
 sign(mor) x t_gene. Each jittered point is one regulon member; purple
@@ -1131,9 +1087,8 @@ significantly co-elevated (Temp_main 3.20, padj 0.015) alongside the
 HIF axis (Hif1a +5.14 / Epas1 +4.17) -- co-elevation only, NOT a
 claim that Hsf1 causes or outranks HIF, and no single master TF is
 crowned. The axis is the decoupleR-ULM score, the same estimator as
-fig3a/fig3c and cross-quotable with them. PROVISIONAL - inferred
-sample mapping (Hspa1b/Hsph1 thermometer + Cgas), pending
-collaborator sample sheet
+fig3a/fig3c and cross-quotable with them. Sample mapping
+owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Lollipops = per-TF activity, faceted by heat-MAIN contrast, colored
 by axis (heat-shock purple = Hsf1; HIF orange; IFN blue; other grey).
@@ -1152,8 +1107,8 @@ On heat-MAIN there is no clean winner: Hif1a is #9 in a crowd of
 co-elevated stress / immediate-early / NF-kB TFs separated by tiny
 gaps (all p~1e-7), and the canonical heat-shock TF Hsf1 is far down
 at #50. This ranking crowns NO TF -- not Hif1a, not Jun/AP-1, not
-Epas1/HIF2a. PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1
-thermometer + Cgas), pending collaborator sample sheet
+Epas1/HIF2a. Sample mapping owner-confirmed (GSE329522 iTreg 2x2
+genotype x temperature)
 
 **How to read:** Ranked dotplot: each row is a TF, x = heat-MAIN ULM activity score,
 colored by curated TF family. Top-22 shown; Hsf1 appended below the
@@ -1171,9 +1126,8 @@ identifiable as the driver.
 TFs each); the top sharers are the network's most promiscuous
 regulators (Sp1, Trp53, NF-kB, AP-1, Myc), none hypoxia-specific --
 so Hif1a's heat-MAIN signal cannot be attributed to Hif1a alone, and
-no co-regulator is crowned the driver. PROVISIONAL - inferred sample
-mapping (Hspa1b/Hsph1 thermometer + Cgas), pending collaborator
-sample sheet
+no co-regulator is crowned the driver. Sample mapping owner-confirmed
+(GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Horizontal bars (top-15 sharers): x = % of Hif1a's 353 targets that
 this TF also regulates (shared count in parentheses), colored by TF
@@ -1190,8 +1144,8 @@ Hif1a-specific.
 The same heat-driven genes populate many TFs' CollecTRI regulons:
 every gene (LEFT bar) and every TF (TOP bar) reads high on heat-MAIN,
 so the contrast cannot single out Hif1a -- or any one TF -- as the
-driver. None is identifiable. PROVISIONAL - inferred sample mapping
-(Hspa1b/Hsph1 thermometer + Cgas), pending collaborator sample sheet
+driver. None is identifiable. Sample mapping owner-confirmed
+(GSE329522 iTreg 2x2 genotype x temperature)
 
 **How to read:** Center grid: rows = top-20 heat-MAIN-driving genes of Hif1a's regulon
 (signed contribution order), columns = Hif1a + its 12 largest

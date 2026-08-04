@@ -17,13 +17,12 @@
 #   fig3c_hif1a_rank_cascade_data.csv         fig3f_consensus_zmix_data.csv
 #   fig3d_regulon_swap_data.csv               fig3g_target_decomposition_data.csv
 #   fig3d_regulon_swap_summary.csv            fig3g_target_decomposition_summary.csv
-#                                             fig3h_lombardi_vs_phylo_data.csv
 #
 # Outputs (03_results/04_tf/figures/), one ggsave each:
 #   fig3a_tf_interaction_axes.pdf    fig3e_mlm_collinearity.pdf
 #   fig3b_top_tf_by_contrast.pdf     fig3f_consensus_zmix.pdf
 #   fig3c_hif1a_rank_cascade.pdf     fig3g_target_decomposition.pdf
-#   fig3d_regulon_swap.pdf           fig3h_lombardi_vs_phylo.pdf
+#   fig3d_regulon_swap.pdf
 #
 # Figure discipline (AGENTS.md): ONE claim = ONE dedicated figure. The ONLY
 # multi-panel here is fig3b, and ONLY because all 4 facets share the SAME x-axis
@@ -55,7 +54,7 @@ rd <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsAs
 .OWNED_STEMS  <- c("fig3a_tf_interaction_axes", "fig3b_top_tf_by_contrast",
                    "fig3c_hif1a_rank_cascade", "fig3d_regulon_swap",
                    "fig3e_mlm_collinearity", "fig3f_consensus_zmix",
-                   "fig3g_target_decomposition", "fig3h_lombardi_vs_phylo",
+                   "fig3g_target_decomposition",
                    "fig3i_interaction_primer", "fig3b_hif1a_robustness")
 for (.stale in list.files(.FLAT_FIG_DIR, full.names = TRUE)) {
   if (any(startsWith(basename(.stale), .OWNED_STEMS)) &&
@@ -527,51 +526,6 @@ save_overview(
   config    = FIG_CFG, width = 16, height = 9, wide = TRUE)
 
 # =============================================================================
-# FIG 3h -- Lombardi vs Phylo HIF signatures x 3 contrasts
-# CLAIM: HIF arm is cGAS-independent by a curation-independent measure -- both
-#        signatures up in BOTH heat arms, Interaction NS for both.
-# (Title/legend text taken from the DYNAMIC sig_label column; never hardcoded.)
-# =============================================================================
-fig3h_df <- rd("fig3h_lombardi_vs_phylo_data.csv")
-fig3h_df$condition <- factor(fig3h_df$condition,
-                             levels = c("WT_heat", "KO_heat", "Interaction"))
-fig3h_df$sig <- as.logical(fig3h_df$sig)
-# Build legend labels from the dynamic sig_label per signature.
-sig_lab_map <- tapply(fig3h_df$sig_label, fig3h_df$signature, function(x) x[1])
-
-fig3h <- ggplot(fig3h_df, aes(x = condition, y = score, fill = signature)) +
-  geom_hline(yintercept = 0, color = "grey50", linewidth = 0.3) +
-  geom_col(position = position_dodge(width = 0.75), width = 0.7) +
-  geom_text(aes(label = ifelse(sig, "*", "ns")),
-            position = position_dodge(width = 0.75), vjust = -0.35, size = 3.4) +
-  scale_fill_manual(values = setNames(c(UP, unname(MODULE_COLORS["heatshock_stress"])),
-                                      names(sig_lab_map)),
-                    labels = sig_lab_map, name = "HIF signature") +
-  labs(
-    title = "Fig 3h. Provenance / hypoxia control: a field-consensus and a hand-made HIF list both rise with heat",
-    subtitle = sprintf("Field-consensus %s and hand-made %s both go UP with heat in BOTH genotypes (Interaction NS for both) -- a hypoxia/provenance\ncheck that the hand-made Phylo list isn't idiosyncratic, NOT thermal-HIF proof. CAVEAT: each metagene COLLAPSES HIF1/HIF2 and is\nDIRECTION-BLIND -- it cannot see the repressed hypoxic core (Pdk1/Bnip3/Bnip3l/Car9; fig3l). * = BH padj < 0.05; ns otherwise.",
-                       sig_lab_map[["Lombardi2022_HIF"]], sig_lab_map[["Phylo16_HIF"]]),
-    x = NULL, y = "signature activity (ULM score)"
-  ) +
-  project_theme(config = FIG_CFG)
-
-save_overview(
-  fig3h, STAGE, "fig3h_lombardi_vs_phylo",
-  table     = fig3h_df,
-  finding   = paste0("A field-consensus and a hand-made HIF metagene both rise with heat in BOTH ",
-                     "genotypes (Interaction NS for both): a hypoxia/provenance check that the ",
-                     "hand-made list isn't idiosyncratic -- not thermal-HIF proof, and direction-",
-                     "blind to the repressed hypoxic core."),
-  script    = SCRIPT, fn = "save_overview",
-  config_kv = "colors.diverging; design.module_colors",
-  input     = "03_results/04_tf/tables/fig3h_lombardi_vs_phylo_data.csv",
-  how_to_read = paste0(
-    "Grouped bars = signature activity (ULM score) per condition; fill = HIF signature ",
-    "(field-consensus vs hand-made). Glyphs: * = BH padj < 0.05, ns otherwise. Each ",
-    "metagene collapses HIF1/HIF2 and is direction-blind. Tier L3 (n=5)."),
-  config    = FIG_CFG, width = 11, height = 8)
-
-# =============================================================================
 # FIG 3i -- Interaction primer: how the cGAS x heat Interaction is read
 # CLAIM: The Interaction = (WT_39-WT_37) - (cGASKO_39-cGASKO_37).
 #        Ifit1 (IFN arm, cGAS-dependent): slopes DIVERGE -> large positive Interaction.
@@ -643,4 +597,4 @@ save_overview(
     "values (WT heat / KO heat / Interaction + adjP). Tier L3 (n=5)."),
   config    = FIG_CFG, width = 12, height = 8)
 
-cat("[DONE] 03_decoupler_tf_viz.R -- 9 single-claim Phase-3 figures rendered from tidy tables.\n")
+cat("[DONE] 03_decoupler_tf_viz.R -- 8 single-claim Phase-3 figures rendered from tidy tables.\n")

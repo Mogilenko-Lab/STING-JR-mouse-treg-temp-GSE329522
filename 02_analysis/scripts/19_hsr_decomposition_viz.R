@@ -92,9 +92,9 @@ fit_text <- function(..., width_in, tier = "caption") {
 }
 # One shared way of saying which job a panel is doing, so the reader can walk the
 # stage and never wonder why a panel is there.
-asks <- function(q) paste0("Question — ", q)
-answers <- function(q, a) paste0("Question — ", q, "\nAnswer — ", a)
-corroborates <- function(a) paste0("Corroborates — ", a)
+asks <- function(q) paste0("Question: ", q)
+answers <- function(q, a) paste0("Question: ", q, "\nAnswer: ", a)
+corroborates <- function(a) paste0("Corroborates: ", a)
 
 # The stage used to emit its figures flat under figures/ and their same-stem source
 # tables flat under tables/. Clear both, so a reader cannot open a panel or a table
@@ -667,7 +667,7 @@ fig_euler <- ggplot() +
               ylim = c(bbox_yA[1] - 0.06 * span_yA, bbox_yA[2] + 0.06 * span_yA),
               expand = FALSE, clip = "off") +
   labs(
-    title = "Panel A — Composition: what named programs does WT_heat_up contain?",
+    title = "Panel A: Composition. What named programs does WT_heat_up contain?",
     subtitle = paste(
       sprintf("WT_heat_up unassigned remainder: %d of %d genes (%.1f%%) in no named lens.",
               unassigned_A, length(wt_heat_up_set), 100 * unassigned_A / length(wt_heat_up_set)),
@@ -792,7 +792,7 @@ fig_provenance <- ggplot() +
               ylim = c(bbox_yB[1] - 0.06 * span_yB, bbox_yB[2] + 0.06 * span_yB),
               expand = FALSE, clip = "off") +
   labs(
-    title = "Panel B — Provenance: where does Interaction come from?",
+    title = "Panel B: Provenance. Where does Interaction come from?",
     subtitle = paste(
       sprintf("Interaction_up shares 0 of its %d mouse orthologs with WT_heat_up. Against all four curated lenses,",
               length(inter_up_mouse)),

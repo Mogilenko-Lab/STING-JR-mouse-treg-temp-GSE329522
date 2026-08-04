@@ -1,7 +1,7 @@
 # Differential expression — the 39 °C heat response in WT and cGAS-KO iTregs
 
 **Method:** limma-trend on log2(CPM+0.5) (no voom — input is pre-normalized CPM deposit).
-Model: `~0 + group`, trend=TRUE, robust=TRUE. n=5/group. Sample→group labels are PROVISIONAL (no sample sheet confirmed).
+Model: `~0 + group`, trend=TRUE, robust=TRUE. n=5/group. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 ## Contrasts (7)
 
@@ -42,7 +42,7 @@ All 7 contrasts are built generically from `analysis_config.yaml:design.contrast
 - Never phrase as "cGAS-independent" — use "no detectable cGAS-dependence at n=5".
 - Do not crown HIF1α/HIF2α as the effector; figure claims are floored at L3 (association/correlational); mechanism stays in prose.
 - Interaction is 1 df and underpowered; treat FDR thresholds cautiously.
-- n=5/group; sample→group labels are PROVISIONAL pending sample sheet confirmation.
+- n=5/group; sample→group labels are Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 
 ## tables/fig2_marker_means.csv
@@ -120,39 +120,19 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/WT_heat/volcano.pdf
-
-Print-format companion to `figures/by_contrast/WT_heat/volcano.png`. Same
-limma-trend volcano for WT_heat (WT: heat (39 vs 37 °C)): 339 genes
-pass adj.P < 0.05 & |log2FC| >= 1.0 (213 up, 126 down). PDF format
-for publication; rendered at 9×8 in to accommodate ggrepel labels and
-the toolkit-appended legend count line.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(>0 = up in numerator); y = -log10(P.Value); orange = up, blue = down,
-grey = NS. Significant up/down gene counts (↑ up in numerator, ↓ down)
-are shown as a second line directly beneath the highest-priority populated
-significance line in the legend — priority order: `FDR ≤ 0.05 & |log2FC| ≥ 1.0`,
-else `FDR ≤ 0.05`, else 0/0 when nothing crosses FDR. Sign convention:
-positive logFC = up in WT\_39 vs WT\_37. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/WT_heat/volcano.csv
 
 Source table for the WT_heat volcano panel: all 19,679 genes tested by
 limma-trend for the WT_heat contrast (WT\_39 − WT\_37), ordered by
 adj.P.Val ascending then |logFC| descending. Carries the full per-gene
 statistics used to render figures/by_contrast/WT_heat/volcano.png;
-same-stem sibling to that figure. Claim tier: L3. PROVISIONAL sample labels.
+same-stem sibling to that figure. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up in WT\_39 vs WT\_37; <0 = down),
 AveExpr (average log2CPM across all samples), t (moderated t-statistic), P.Value (raw),
 adj.P.Val (BH-corrected FDR), contrast (constant = "WT_heat"). Significance rule for
 figures: adj.P.Val < 0.05 AND |logFC| >= 1.0. n=5/group; 19,679 genes tested.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -182,34 +162,19 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/WT_heat/md.pdf
-
-Print-format companion to `figures/by_contrast/WT_heat/md.png`. Same
-limma-trend MD plot for WT_heat (WT: heat (39 vs 37 °C)); PDF format
-for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up in WT\_39 vs WT\_37); orange = up,
-blue = down, grey = NS; red dashed = LOESS trend. Claim tier: L3.
-PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/WT_heat/md.csv
 
 Source table for the WT_heat MD (mean-difference) plot: all 19,679 genes
 tested by limma-trend for the WT_heat contrast (WT\_39 − WT\_37), ordered by
 adj.P.Val ascending then |logFC| descending. Same gene-level statistics as
 volcano.csv; same-stem sibling to figures/by_contrast/WT_heat/md.png.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis in the MD plot; >0 = up in
 WT\_39 vs WT\_37), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val,
 contrast. The MD panel plots AveExpr (x) vs logFC (y); this table is its
 complete underlying data. Significance rule for coloring: adj.P.Val < 0.05.
-n=5/group; 19,679 genes tested. Claim tier: L3. PROVISIONAL sample labels.
+n=5/group; 19,679 genes tested. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -242,37 +207,18 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/KO_heat/volcano.pdf
-
-Print-format companion to `figures/by_contrast/KO_heat/volcano.png`. Same
-limma-trend volcano for KO_heat (cGAS-KO: heat (39 vs 37 °C)): 392 genes
-pass adj.P < 0.05 & |log2FC| >= 1.0 (239 up, 153 down). PDF format for
-publication at 9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = up in cGASKO\_39 vs cGASKO\_37); y = -log10(P.Value);
-orange = up, blue = down. Significant up/down gene counts (↑ up in
-numerator, ↓ down) are shown as a second line directly beneath the
-highest-priority populated significance line in the legend — priority order:
-`FDR ≤ 0.05 & |log2FC| ≥ 1.0`, else `FDR ≤ 0.05`, else 0/0 when nothing
-crosses FDR. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/KO_heat/volcano.csv
 
 Source table for the KO_heat volcano panel: all 19,679 genes tested by
 limma-trend for the KO_heat contrast (cGASKO\_39 − cGASKO\_37), ordered by
 adj.P.Val ascending then |logFC| descending. Carries the full per-gene
 statistics used to render figures/by_contrast/KO_heat/volcano.png.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up in cGASKO\_39 vs cGASKO\_37),
 AveExpr (average log2CPM), t, P.Value, adj.P.Val, contrast (constant = "KO_heat").
 Significance rule for figures: adj.P.Val < 0.05 AND |logFC| >= 1.0. n=5/group;
-19,679 genes tested. Claim tier: L3. PROVISIONAL sample labels.
+19,679 genes tested. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -302,32 +248,20 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/KO_heat/md.pdf
-
-Print-format companion to `figures/by_contrast/KO_heat/md.png`. Same
-limma-trend MD plot for KO_heat; PDF format for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up in cGASKO\_39 vs cGASKO\_37);
-orange = up, blue = down; red dashed = LOESS trend. Claim tier: L3.
-PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/KO_heat/md.csv
 
 Source table for the KO_heat MD plot: all 19,679 genes tested by
 limma-trend for the KO_heat contrast (cGASKO\_39 − cGASKO\_37), ordered by
 adj.P.Val ascending then |logFC| descending. Same-stem sibling to
-figures/by_contrast/KO_heat/md.png. Claim tier: L3. PROVISIONAL
-sample labels.
+figures/by_contrast/KO_heat/md.png. Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis in MD plot; >0 = up in
 cGASKO\_39 vs cGASKO\_37), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val,
 contrast. Significance rule for coloring: adj.P.Val < 0.05. n=5/group; 19,679 genes
-tested. Claim tier: L3. PROVISIONAL sample labels.
+tested. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -364,26 +298,6 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Interaction/volcano.pdf
-
-Print-format companion to `figures/by_contrast/Interaction/volcano.png`.
-Same limma-trend volcano for the Interaction (cGAS-dependence) term: 9
-genes pass adj.P < 0.05 & |log2FC| >= 1.0. PDF format for publication
-at 9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = heat response larger in WT vs cGASKO, i.e., cGAS-dependent);
-1 df Interaction term; non-significant = no detectable cGAS-dependence at n=5,
-NOT independence. Significant up/down gene counts (↑ up in numerator, ↓ down)
-are shown as a second line directly beneath the highest-priority populated
-significance line in the legend — priority order: `FDR ≤ 0.05 & |log2FC| ≥ 1.0`,
-else `FDR ≤ 0.05`, else 0/0 when nothing crosses FDR. Claim tier: L3.
-PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Interaction/volcano.csv
 
 Source table for the Interaction volcano panel: all 19,679 genes tested by
@@ -392,14 +306,14 @@ cGASKO\_37); the 1 df cGAS-dependence test), ordered by adj.P.Val ascending
 then |logFC| descending. This is the definitive gene-level cGAS-dependence
 readout from the model; non-significant adj.P.Val = no detectable
 cGAS-dependence at n=5 (NEVER 'cGAS-independent'). Claim tier: L3.
-PROVISIONAL sample labels.
+Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = the heat response is larger in
 WT than cGASKO, i.e., cGAS-dependent induction; <0 = heat response larger in cGASKO),
 AveExpr, t, P.Value, adj.P.Val, contrast (constant = "Interaction"). 1 df test;
 lowest-powered term in the model at n=5/group. 23 genes pass adj.P.Val < 0.05 (no
 logFC gate); 9 pass the combined adj.P.Val < 0.05 AND |logFC| >= 1.0 threshold used
-in the volcano figure. Claim tier: L3. PROVISIONAL sample labels.
+in the volcano figure. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -432,21 +346,6 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Interaction/md.pdf
-
-Print-format companion to `figures/by_contrast/Interaction/md.png`. Same
-limma-trend MD plot for the Interaction (cGAS-dependence) term; PDF
-format for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = cGAS-dependent heat induction);
-orange = up, blue = down; red dashed = LOESS trend. Non-sig y-values =
-no detectable cGAS-dependence at n=5. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Interaction/md.csv
 
 Source table for the Interaction MD plot: all 19,679 genes tested by
@@ -454,13 +353,15 @@ limma-trend for the Interaction contrast (1 df cGAS-dependence test),
 ordered by adj.P.Val ascending then |logFC| descending. Same-stem
 sibling to figures/by_contrast/Interaction/md.png. Non-significant
 adj.P.Val = no detectable cGAS-dependence at n=5, NOT independence.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = cGAS-dependent heat induction;
 <0 = cGAS-dependent heat suppression), AveExpr (average log2CPM), t, P.Value,
 adj.P.Val, contrast. 1 df interaction; underpowered at n=5. Significance rule for
-coloring in the MD figure: adj.P.Val < 0.05. Claim tier: L3. PROVISIONAL sample
-labels.
+coloring in the MD figure: adj.P.Val < 0.05. Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -493,36 +394,18 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_at_39/volcano.pdf
-
-Print-format companion to `figures/by_contrast/Geno_at_39/volcano.png`.
-Same limma-trend volcano for Geno_at_39 (genotype effect under heat):
-17 genes pass adj.P < 0.05 & |log2FC| >= 1.0. PDF format for
-publication at 9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = up in WT\_39 vs cGASKO\_39); orange = up, blue = down.
-Significant up/down gene counts (↑ up in numerator, ↓ down) are shown as a
-second line directly beneath the highest-priority populated significance line
-in the legend — priority order: `FDR ≤ 0.05 & |log2FC| ≥ 1.0`, else
-`FDR ≤ 0.05`, else 0/0 when nothing crosses FDR. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_at_39/volcano.csv
 
 Source table for the Geno_at_39 volcano panel: all 19,679 genes tested by
 limma-trend for the Geno_at_39 contrast (WT\_39 − cGASKO\_39; genotype effect
 under heat stress), ordered by adj.P.Val ascending then |logFC| descending.
 Same-stem sibling to figures/by_contrast/Geno_at_39/volcano.png.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up in WT vs cGASKO at 39 °C;
 <0 = up in cGASKO), AveExpr, t, P.Value, adj.P.Val, contrast (constant = "Geno_at_39").
 Significance rule for figures: adj.P.Val < 0.05 AND |logFC| >= 1.0. n=5/group;
-64 genes pass adj.P.Val < 0.05 (no logFC gate). Claim tier: L3. PROVISIONAL sample labels.
+64 genes pass adj.P.Val < 0.05 (no logFC gate). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -552,31 +435,20 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_at_39/md.pdf
-
-Print-format companion to `figures/by_contrast/Geno_at_39/md.png`. Same
-limma-trend MD plot for Geno_at_39; PDF format for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up in WT vs cGASKO at 39 °C); orange
-= up, blue = down; red dashed = LOESS trend. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_at_39/md.csv
 
 Source table for the Geno_at_39 MD plot: all 19,679 genes tested by
 limma-trend for the Geno_at_39 contrast (WT\_39 − cGASKO\_39), ordered by
 adj.P.Val ascending then |logFC| descending. Same-stem sibling to
-figures/by_contrast/Geno_at_39/md.png. Claim tier: L3. PROVISIONAL
-sample labels.
+figures/by_contrast/Geno_at_39/md.png. Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis; >0 = up in WT vs cGASKO
 at 39 °C), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val, contrast.
 Significance rule for MD coloring: adj.P.Val < 0.05. n=5/group; 19,679 genes tested.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -609,37 +481,21 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_at_37/volcano.pdf
-
-Print-format companion to `figures/by_contrast/Geno_at_37/volcano.png`.
-Same limma-trend volcano for Geno_at_37 (baseline genotype effect at 37 °C):
-2 genes pass adj.P < 0.05 & |log2FC| >= 1.0. PDF format for publication at
-9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = up in WT\_37 vs cGASKO\_37); orange = up, blue = down.
-Significant up/down gene counts (↑ up in numerator, ↓ down) are shown as a
-second line directly beneath the highest-priority populated significance line
-in the legend — priority order: `FDR ≤ 0.05 & |log2FC| ≥ 1.0`, else
-`FDR ≤ 0.05`, else 0/0 when nothing crosses FDR. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_at_37/volcano.csv
 
 Source table for the Geno_at_37 volcano panel: all 19,679 genes tested by
 limma-trend for the Geno_at_37 contrast (WT\_37 − cGASKO\_37; baseline genotype
 effect at 37 °C), ordered by adj.P.Val ascending then |logFC| descending.
 Same-stem sibling to figures/by_contrast/Geno_at_37/volcano.png.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up in WT vs cGASKO at
 37 °C; <0 = up in cGASKO), AveExpr, t, P.Value, adj.P.Val, contrast (constant =
 "Geno_at_37"). Significance rule for figures: adj.P.Val < 0.05 AND |logFC| >= 1.0.
-n=5/group; 5 genes pass adj.P.Val < 0.05 (no logFC gate). Claim tier: L3. PROVISIONAL
-sample labels.
+n=5/group; 5 genes pass adj.P.Val < 0.05 (no logFC gate). Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -669,31 +525,20 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_at_37/md.pdf
-
-Print-format companion to `figures/by_contrast/Geno_at_37/md.png`. Same
-limma-trend MD plot for Geno_at_37; PDF format for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up in WT vs cGASKO at 37 °C); orange
-= up, blue = down; red dashed = LOESS trend. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_at_37/md.csv
 
 Source table for the Geno_at_37 MD plot: all 19,679 genes tested by
 limma-trend for the Geno_at_37 contrast (WT\_37 − cGASKO\_37), ordered by
 adj.P.Val ascending then |logFC| descending. Same-stem sibling to
-figures/by_contrast/Geno_at_37/md.png. Claim tier: L3. PROVISIONAL
-sample labels.
+figures/by_contrast/Geno_at_37/md.png. Claim tier: L3.
+Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis; >0 = up in WT vs cGASKO
 at 37 °C), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val, contrast.
 Significance rule for MD coloring: adj.P.Val < 0.05. n=5/group; 19,679 genes tested.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -728,25 +573,6 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Temp_main/volcano.pdf
-
-Print-format companion to `figures/by_contrast/Temp_main/volcano.png`.
-Same limma-trend volcano for Temp_main (pooled heat main effect): 346
-genes pass adj.P < 0.05 & |log2FC| >= 1.0. PDF format for publication
-at 9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = up at 39 °C vs 37 °C pooled over genotypes; not the
-cGAS-dependence term). Significant up/down gene counts (↑ up in numerator,
-↓ down) are shown as a second line directly beneath the highest-priority
-populated significance line in the legend — priority order:
-`FDR ≤ 0.05 & |log2FC| ≥ 1.0`, else `FDR ≤ 0.05`, else 0/0 when nothing
-crosses FDR. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Temp_main/volcano.csv
 
 Source table for the Temp_main volcano panel: all 19,679 genes tested by
@@ -754,13 +580,13 @@ limma-trend for the Temp_main contrast (½(WT\_39+cGASKO\_39) − ½(WT\_37+cGAS
 pooled/marginal heat main effect), ordered by adj.P.Val ascending then |logFC|
 descending. Same-stem sibling to figures/by_contrast/Temp_main/volcano.png.
 This contrast collapses genotype; it is NOT the cGAS-dependence readout (that is
-the Interaction contrast). Claim tier: L3. PROVISIONAL sample labels.
+the Interaction contrast). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up at 39 °C vs 37 °C pooled
 over genotypes; <0 = down under heat), AveExpr, t, P.Value, adj.P.Val, contrast
 (constant = "Temp_main"). Significance rule for figures: adj.P.Val < 0.05 AND
 |logFC| >= 1.0. n=5/group (10 samples total, pooled); 11,153 genes pass adj.P.Val < 0.05
-(no logFC gate). Claim tier: L3. PROVISIONAL sample labels.
+(no logFC gate). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -792,33 +618,18 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Temp_main/md.pdf
-
-Print-format companion to `figures/by_contrast/Temp_main/md.png`. Same
-limma-trend MD plot for Temp_main (pooled heat main effect); PDF format
-for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up under heat pooled over genotypes;
-not the cGAS-dependence readout); orange = up, blue = down; red dashed
-= LOESS trend. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Temp_main/md.csv
 
 Source table for the Temp_main MD plot: all 19,679 genes tested by
 limma-trend for the Temp_main contrast (pooled heat main effect), ordered by
 adj.P.Val ascending then |logFC| descending. Same-stem sibling to
 figures/by_contrast/Temp_main/md.png. This contrast is NOT the
-cGAS-dependence readout. Claim tier: L3. PROVISIONAL sample labels.
+cGAS-dependence readout. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis; >0 = up under heat pooled
 over genotypes), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val, contrast.
 Significance rule for MD coloring: adj.P.Val < 0.05. n=5/group; 19,679 genes tested.
-Claim tier: L3. PROVISIONAL sample labels.
+Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -853,25 +664,6 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_main/volcano.pdf
-
-Print-format companion to `figures/by_contrast/Geno_main/volcano.png`.
-Same limma-trend volcano for Geno_main (pooled genotype main effect):
-4 genes pass adj.P < 0.05 & |log2FC| >= 1.0. PDF format for
-publication at 9×8 in.
-
-**How to read:** Same content as `volcano.png`; PDF format for print. x = log2FC
-(positive = up in WT vs cGASKO pooled over temperatures; not the
-cGAS-dependence term). Significant up/down gene counts (↑ up in numerator,
-↓ down) are shown as a second line directly beneath the highest-priority
-populated significance line in the legend — priority order:
-`FDR ≤ 0.05 & |log2FC| ≥ 1.0`, else `FDR ≤ 0.05`, else 0/0 when nothing
-crosses FDR. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_standard_volcano (toolkit) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_main/volcano.csv
 
 Source table for the Geno_main volcano panel: all 19,679 genes tested by
@@ -879,13 +671,13 @@ limma-trend for the Geno_main contrast (½(WT\_37+WT\_39) − ½(cGASKO\_37+cGAS
 pooled/marginal genotype main effect), ordered by adj.P.Val ascending then |logFC|
 descending. Same-stem sibling to figures/by_contrast/Geno_main/volcano.png.
 This contrast collapses temperature; it is NOT the cGAS-dependence readout (that is
-the Interaction contrast). Claim tier: L3. PROVISIONAL sample labels.
+the Interaction contrast). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (>0 = up in WT vs cGASKO pooled
 over temperatures; <0 = up in cGASKO), AveExpr, t, P.Value, adj.P.Val, contrast
 (constant = "Geno_main"). Significance rule for figures: adj.P.Val < 0.05 AND
 |logFC| >= 1.0. n=5/group (10 samples total, pooled); 60 genes pass adj.P.Val < 0.05
-(no logFC gate). Claim tier: L3. PROVISIONAL sample labels.
+(no logFC gate). Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -917,33 +709,18 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
 
-## figures/by_contrast/Geno_main/md.pdf
-
-Print-format companion to `figures/by_contrast/Geno_main/md.png`. Same
-limma-trend MD plot for Geno_main (pooled genotype main effect); PDF
-format for publication at 9×8 in.
-
-**How to read:** Same content as `md.png`; PDF format for print. x = AveExpr
-(log2CPM); y = logFC (positive = up in WT vs cGASKO pooled over
-temperatures; not the cGAS-dependence readout); orange = up, blue =
-down; red dashed = LOESS trend. Claim tier: L3. PROVISIONAL.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `create_MD_plot (toolkit; driven from topTable AveExpr/logFC) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/objects/02_de_results.rds` |
-
 ## tables/by_contrast/Geno_main/md.csv
 
 Source table for the Geno_main MD plot: all 19,679 genes tested by
 limma-trend for the Geno_main contrast (pooled genotype main effect), ordered by
 adj.P.Val ascending then |logFC| descending. Same-stem sibling to
 figures/by_contrast/Geno_main/md.png. This contrast is NOT the
-cGAS-dependence readout. Claim tier: L3. PROVISIONAL sample labels.
+cGAS-dependence readout. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: gene_symbol, ensembl, logFC (y-axis; >0 = up in WT vs cGASKO
 pooled over temperatures), AveExpr (x-axis; average log2CPM), t, P.Value, adj.P.Val,
 contrast. Significance rule for MD coloring: adj.P.Val < 0.05. n=5/group; 19,679 genes
-tested. Claim tier: L3. PROVISIONAL sample labels.
+tested. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -983,29 +760,13 @@ label-blind marker call.
 |---|---|---|---|
 | `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
 
-## figures/_overview/de_counts_summary.pdf
-
-Vector companion to `figures/_overview/de_counts_summary.png`, same bars
-and the same printed per-direction gene counts. Wide canvas (12×8 in)
-so the seven two-line comparison labels sit side by side without
-colliding.
-
-**How to read:** Same content as `de_counts_summary.png`, in vector form for print.
-Orange above zero = up, blue below zero = down, relative to the
-first-named side of each comparison. Gate: adj.P < 0.05 with no
-fold-change cut-off. Claim tier: L3. PROVISIONAL sample labels.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02_de_limma_trend_viz.R` | `geom_col + geom_text (signed bars with printed per-direction counts) via save_overview` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1.0; figures.volcano_label_top=10; colors.diverging` | `03_results/master/master_de_genes.csv` |
-
 ## tables/_overview/de_counts_summary.csv
 
 Per-comparison tallies of genes tested, genes significant at adj.P <
 0.05 with no fold-change cut-off, and the split of those into up and
 down. Source table for figures/_overview/de_counts_summary.png, whose
 printed bar labels are exactly n_up and n_down. Claim tier: L3.
-PROVISIONAL sample labels.
+Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 **How to read:** Columns: contrast (config key), n_tested (19,679 genes in every
 contrast's topTable), n_sig (adj.P.Val < 0.05, any fold change), n_up and n_down
@@ -1013,7 +774,7 @@ contrast's topTable), n_sig (adj.P.Val < 0.05, any fold change), n_up and n_down
 n_sig). The volcano and MD panels apply the stricter adj.P.Val < 0.05 AND |logFC|
 >= 1.0 gate, so their counts run lower. Interaction: n_sig = 23, all up. A
 non-significant interaction gene = no detectable cGAS-dependence at n=5, never
-independence. Claim tier: L3. PROVISIONAL sample labels.
+independence. Claim tier: L3. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -1115,33 +876,6 @@ difference. Claim tier: L3.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/02b_cgas_dependence_geometry.R` | `cor + lm + tallies (read-only here; produced by the compute sibling)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/objects/02_de_results.rds` |
-
-## figures/_overview/heat_response_wt_vs_ko.pdf
-
-Vector companion to figures/_overview/heat_response_wt_vs_ko.png, the
-WT heat response plotted against the cGAS-KO heat response. Same plot
-object, with the dense dot layer rasterised so the file stays small
-and the axes and text stay editable. The genotype comparison of the
-heat response is a single-degree-of-freedom test at n=5 per group,
-the least-powered contrast in this design, so 23 genes is a floor on
-the cGAS-dependent arm rather than its full size. A gene on the
-identity line has no detectable cGAS-dependence at n=5, which is
-weaker than independence. Claim tier: L3.
-
-**How to read:** Two subsets of the arm both number 9 and are not the same genes: 9
-clear |logFC| >= 1, the stringent export gate, 9 reverse sign without
-cGAS, and 4 belong to both. Of the reversing genes 6 are individually
-significant in the WT heat contrast and 5 in both genotypes, so the
-flip is a direction read off fitted effects rather than 9 independent
-significant flips. Labels name the top 10 genes by evidence plus
-every gene inside the gate, so both subsets are readable by name.
-Claim tier: L3; n=5/group. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R` | `geom_point + geom_abline (effect-versus-effect scatter, equal axes, gate as parallels)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; figures.volcano_label_top=10; figures.point_size=2.4; figures.cue_size=4.0; colors.okabe_ito` | `03_results/03_de/tables/_overview/cgas_dependence_wide.csv + cgas_dependence_stats.csv` |
 
 ## tables/_overview/heat_response_wt_vs_ko.csv
 

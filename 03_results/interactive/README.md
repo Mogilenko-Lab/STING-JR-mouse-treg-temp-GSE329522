@@ -19,7 +19,7 @@ Standalone interactive HTML dashboard and companion CSV for exploring pathway-le
 - **Highlight search:** Type any fragment of a pathway description; matching pathways are drawn on top in bold black with all other pathways dimmed.
 - **Interaction filter:** Filter down to "Interaction-affected only (cGAS-dependent)" or "No detectable cGAS-dependence (n=5)" to isolate or exclude cGAS-dependent responses.
 - **Claim Tier:** **L3** (enrichment statistics derived from ranked gene list; causal mechanism excluded).
-- **PROVISIONAL sample labels** stamp: All comparisons use provisional sample mappings and are subject to validation in downstream cohorts.
+- **Sample mapping** is owner-confirmed, 20 of 20 libraries concordant with the label-blind marker call. Every comparison here still awaits validation in downstream cohorts.
 - **Caveat:** GSEA pathway-level interaction effects represent collective transcriptional changes and cannot be uniquely attributed to a single transcription factor (non-identifiability caveat, see fig3p/q/r).
 
 ### View 2 — Heat trajectory (WT vs cGASKO)
@@ -37,7 +37,7 @@ Standalone interactive HTML dashboard and companion CSV for exploring pathway-le
 - **Highlight search:** Matching pathways are drawn with a thick black outline and coloured inner line on top of dimmed non-matching pathways in both panels simultaneously.
 - **Y-metric toggle and Curved-lines controls:** Both are hidden in this view. Trajectory mode always uses NES; Bézier curvature encoding does not apply to slope-from-reference lines.
 - **Shared filter pipeline:** All sidebar filters (database, pattern, |NES| range sliders, interaction filter, keyword highlight) apply identically to this view. Switching from View 1 to View 2 preserves every active filter.
-- **Claim Tier:** **L3** (enrichment statistics; mechanistic attribution excluded). **PROVISIONAL sample labels** stamp applies. Non-identifiability caveat applies: a pathway-level interaction signal cannot be uniquely attributed to a single transcription factor (see fig3p/q/r).
+- **Claim Tier:** **L3** (enrichment statistics; mechanistic attribution excluded). **Sample mapping** is owner-confirmed, 20 of 20 libraries concordant with the label-blind marker call. Non-identifiability caveat applies: a pathway-level interaction signal cannot be uniquely attributed to a single transcription factor (see fig3p/q/r).
 
 **Provenance (both views):**
 

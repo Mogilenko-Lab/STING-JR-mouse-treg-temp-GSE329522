@@ -14,8 +14,9 @@ lowest-powered comparison). HIF1a/HIF2a are NOT crowned as drivers; the arm
 names are labels. Figure claims floor at L3 (DE/enrichment statistics);
 mechanism (L7: pseudohypoxia / Complex-I) lives only in the reply memo.
 
-PROVISIONAL - inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas),
-pending the collaborator sample sheet; n=5/group.
+Sample mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call from the Hspa1b/Hsph1
+thermometer and Cgas. n=5/group.
 
 Artifacts:
 - figures/_overview/two_arms_panel.pdf + two_arms_panel.png - the headline panel
@@ -46,56 +47,15 @@ means padj < 0.05 (significant). READ THE ASYMMETRY DOWN THE
 'Interaction' COLUMN: the IFN/ISG track lights up (positive, ringed)
 = cGAS-dependent; the HIF/glycolysis track goes flat / unringed there
 while staying lit in BOTH heat columns = no detectable
-cGAS-dependence at n=5. The arm NAMES are labels, not claims that any
-one TF (e.g. HIF1a/HIF2a) is the driver. Claim tier: L3
-(DE/enrichment statistics; n=5/group). 'Flat Interaction' is NOT
-proven cGAS-independence - the 1-df interaction is the lowest-powered
-comparison.
+cGAS-dependence at n=5. The arm names are labels; naming a driver
+such as HIF1a or HIF2a would take a separate test. Claim tier: L3
+(DE/enrichment statistics; n=5/group). A flat Interaction bounds
+cGAS-dependence at this sample size, the 1-df interaction being the
+lowest-powered comparison.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.2; colors.diverging; design.contrasts` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
-
-## figures/_overview/two_arms_panel.pdf
-
-Two-arms cGAS-dependence asymmetry, multi-method (print-resolution vector PDF):
-the IFN/ISG arm is cGAS-dependent (positive, significant Interaction; 18
-significant method-features in the Interaction column), while the HIF/glycolysis
-arm rises in BOTH WT_heat and KO_heat yet is flat in the Interaction (1
-significant; no detectable cGAS-dependence at n=5). Convergent across GSEA,
-PROGENy, decoupleR-TF, and per-gene DE (plus GATOM/CoReSh where provisioned).
-PROVISIONAL; n=5/group; NOT proven independence.
-
-**How to read:** Vector PDF companion to `two_arms_panel.png` — identical data and
-geometry, rendered at 18 in × 16 in on a capstone canvas sized to the
-40-glyph-row × 4-column layout (expanded from the default 10×8 to prevent column
-collapse and x-label overprinting). Two stacked tracks: TOP = IFN/ISG arm
-(cGAS-dependent), BOTTOM = HIF/glycolysis arm (no detectable cGAS-dependence at
-n=5). Rows within a track = method-feature glyph rows (GSEA gene sets, PROGENy
-pathways, decoupleR TFs, DE marker genes; GATOM modules where present), ordered
-by descending absolute Interaction score (strongest cGAS-dependence signal at
-top); capped to top_n=20 rows per track by |Interaction score|. Columns =
-headline contrasts: WT_heat | cGAS-KO heat | Interaction | Temp_main. Tile fill
-= signed score (orange = up in the numerator condition, blue = down), clamped to
-+/-3.5; the in-tile printed number is the raw score. A BLACK RING (open-square
-border, linewidth 0.9) marks padj < 0.05 — the significance indicator is
-color-blind and grayscale safe (no hue-only encoding). READ THE ASYMMETRY DOWN
-THE 'Interaction' COLUMN: the IFN/ISG track lights up (positive, ringed tiles) =
-cGAS-dependent; the HIF/glycolysis track goes flat / unringed there while staying
-lit in BOTH heat columns = no detectable cGAS-dependence at n=5. The arm NAMES
-(IFN/ISG, HIF/glycolysis) are labels, NOT claims that any one TF (e.g. HIF1a or
-HIF2a) is the driver. HSF1 / heatshock_context rows are held out of this headline
-panel (reply-memo context only). Sign convention: positive score = feature is
-elevated in the numerator condition of each contrast (e.g., WT_heat numerator =
-heated WT vs. vehicle WT). Claim tier: L3 (DE/enrichment statistics; provisional,
-n=5/group). 'Flat Interaction' is NOT proven cGAS-independence — the 1-df
-interaction is the lowest-powered comparison in a 2×2 design at n=5/group.
-[PROVISIONAL — inferred sample mapping (Hspa1b/Hsph1 thermometer + Cgas),
-pending collaborator sample sheet; n=5/group.]
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.5; colors.diverging; design.contrasts; width=18; height=16` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
 
 ## tables/_overview/two_arms_panel.csv
 

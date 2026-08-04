@@ -105,9 +105,9 @@ PROGENY_HIF <- c("Hypoxia")
 # decoupleR TF axes (the CollecTRI ULM forensics axis families).
 TF_IFN <- c("Irf1", "Irf3", "Irf7", "Stat1", "Stat2", "Nfkb1", "Rela")
 TF_HIF <- c("Hif1a", "Epas1")
-# Hsf1 is the true thermal sensor (heat-shock arm); it is the contamination that
-# the bespoke 16-gene HIF score rode. Tracked separately as context, NOT crowned
-# and NOT folded into the HIF arm (it is heat-shock, not hypoxia).
+# Hsf1 is the CollecTRI heat-shock TF. It gets its own axis family here, so the
+# HIF/glycolysis arm stays the Hif1a/Epas1 pair and Hsf1 is carried alongside the
+# two arms as context.
 TF_HEATSHOCK <- c("Hsf1")
 
 # Marker genes for the per-gene DE rollup (from config.R; the single source of truth).
