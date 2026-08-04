@@ -18,6 +18,13 @@ gene sits at 10.21 %. The response moved moderately; the gate kept only extreme 
 The last panel is the handoff: the mouse gate output is 213 genes, the human set the disease
 compartments receive is 199, and it says how much of that 199 each of them can test.
 
+The two euler panels carry a third lens, `Lombardi2022_HIF`: the Lombardi 2022 conserved HIF
+signature, re-derived from that paper's supplement and mapped to 100 mouse symbols. It enters this
+stage as a membership lens over gene symbols, and no stage in these results scores it as a gene-set
+database. A pan-cancer consensus derived under hypoxia in cancer cells is the wrong reference for a
+39 °C in-vitro contrast in iTregs, and it meets `WT_heat_up` at 7 of that arm's 213 genes, 3.3%.
+`mouse_anchor/03_results/06_gsea/README.md` records where it was removed from and why.
+
 The order to read the panels in: `wtheatup_attribution` → `lens_nes_by_contrast` →
 `hsr_rank_position_panel` → `gate_projection_bridge`, with the three `hsr_lens_membership_*` views
 corroborating the first of those.
@@ -132,7 +139,7 @@ much smaller set. Claim tier: direct counts over frozen sets and published ranke
 
 ## figures/_overview/hsr_lens_membership_euler.png
 
-Panel A partitions the mouse 39 °C-derived up arm (`WT_heat_up`, 213 genes) against three curated reference lenses: `HSR_core` (47 genes), `TCR_activation` (66 genes), and the Lombardi 2022 HIF consensus (`Lombardi2022_HIF`, 100 genes).
+Panel A partitions the mouse 39 °C-derived up arm (`WT_heat_up`, 213 genes) against three curated reference lenses: `HSR_core` (47 genes), `TCR_activation` (66 genes), and the Lombardi 2022 HIF consensus (`Lombardi2022_HIF`, 100 genes). `Lombardi2022_HIF` is a published pan-cancer HIF consensus and is drawn here as a membership lens over gene symbols; no stage in these results scores it as a gene-set database.
 
 **How to read:** This corroborates the membership answer and reports the unassigned remainder of `WT_heat_up`: 191 of 213 genes (89.7%) sit in no named lens. Overlaps with `WT_heat_up` are 3 genes for `HSR_core`, 12 for `TCR_activation`, and 7 for `Lombardi2022_HIF`. Areas and overlaps are fitted to exact counts by eulerr (stress 2.4e-17, diagError 1.4e-09). Claim tier: corroborating.
 
@@ -142,7 +149,7 @@ Panel A partitions the mouse 39 °C-derived up arm (`WT_heat_up`, 213 genes) aga
 
 ## figures/_overview/hsr_lens_provenance_euler.png
 
-Panel B partitions `WT_heat_up` (213 genes) against `Interaction_up` (7 human genes / 9 mouse orthologs, `underpowered_reported`), `Lombardi2022_HIF` (100 genes), and `HSR_core` (47 genes) to test where `Interaction` originates. `Interaction_down` is 0 genes (`structurally_absent` at nominal zero).
+Panel B partitions `WT_heat_up` (213 genes) against `Interaction_up` (7 human genes / 9 mouse orthologs, `underpowered_reported`), `Lombardi2022_HIF` (100 genes), and `HSR_core` (47 genes) to test where `Interaction` originates. `Interaction_down` is 0 genes (`structurally_absent` at nominal zero). `Lombardi2022_HIF` is a published pan-cancer HIF consensus and is drawn here as a membership lens over gene symbols; no stage in these results scores it as a gene-set database.
 
 **How to read:** Overlap of `WT_heat_up` with `Interaction_up` is 0 genes. `Lombardi2022_HIF` overlaps `WT_heat_up` by 7 genes, and `HSR_core` by 3 genes. The unassigned remainder is 203 of 213 genes (95.3%). Circle areas are fitted to exact counts by eulerr (stress 7.5e-19, diagError 4.3e-10). Claim tier: corroborating.
 

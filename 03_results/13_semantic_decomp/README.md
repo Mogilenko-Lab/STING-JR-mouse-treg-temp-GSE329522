@@ -38,6 +38,11 @@ similar number of terms. `TCR_activation` has a real penumbra, 23 of 153 scorabl
 more than chance does. `Lombardi2022_HIF` is 4 above 3.6, on only 72 scorable genes, which is too
 thin to read either way and is reported as such.
 
+`Lombardi2022_HIF` is the Lombardi 2022 conserved HIF signature, a pan-cancer consensus derived
+under hypoxia in cancer cells, and it appears in this stage as a proximity lens over GO annotation.
+No stage in these results scores it as a gene-set database.
+`mouse_anchor/03_results/06_gsea/README.md` records where it was removed from and why.
+
 **Two things to know before trusting any number here.** Semantic proximity says two genes carry
 similar annotation. It is not evidence of co-regulation and it is not evidence that a gene takes
 part in the process a lens is named for. And the measure saturates for sparsely annotated genes:
