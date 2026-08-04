@@ -1,6 +1,6 @@
 # 28_hypoxia_focus_viz.R (VIZ)
-## Two hypoxia-focused running-enrichment panels for the 06_gsea stage
-## (03_results/06_gsea/figures/_overview/):
+## Two hypoxia-focused running-enrichment panels, written to
+## 03_results/06_gsea/figures/_overview/:
 ##
 ##   hypoxia_running_sum_wt_heat   HALLMARK_HYPOXIA alone in the WT_heat contrast, drawn
 ##                                 as the canonical three-panel RNAseq-toolkit running-sum
@@ -10,41 +10,24 @@
 ##                                 running-ES curves faceted by the three focal contrasts
 ##                                 WT_heat / KO_heat / Interaction.
 ##
-## VIZ-ONLY. Reads master_gsea_table.csv (the quotable NES/padj), the cached DE topTables
-## (02_de_results.rds) for the ranked vector, and the cached gene-set lists
-## (geneset_{msigdb,custom}_<DB>.rds). It never re-runs GSEA, never re-fits DE, and never
-## writes 03_results/master/.
+## Viz only. Reads master_gsea_table.csv for the quotable NES and padj, the cached DE
+## topTables (02_de_results.rds) for the ranked vector, and the cached gene-set lists
+## (geneset_{msigdb,custom}_<DB>.rds). It re-runs no GSEA, re-fits no DE, and writes nothing
+## under 03_results/master/.
 ##
-## Why a hypoxia-only running sum exists at all
-## -------------------------------------------
-## The general running-sum panels in this stage draw the top figures.running_sum_top (5)
-## sets per (contrast x database) cell by |NES|. HALLMARK_HYPOXIA is 6th by |NES| in the
-## WT_heat Hallmark cell (+1.91) while sitting 4th by adjusted p (4.2e-06), so it falls
-## outside that panel by construction. The general per-database and pooled panels pin no
-## set by name on purpose (an earlier revision force-included the Hallmark hypoxia and
-## interferon sets, which quietly made the panel argue for a conclusion; that pin is gone
-## and is not back-ported here). A dedicated figure whose caption states that its sets
-## were chosen BY NAME is a different object, and that provenance line is mandatory in
-## every caption this script writes.
+## Why these panels exist alongside the general ones. The general running sums of this stage
+## draw the top figures.running_sum_top sets per (contrast x database) cell by |NES|, and
+## HALLMARK_HYPOXIA is 6th by |NES| in the WT_heat Hallmark cell (+1.91) while sitting 4th by
+## adjusted p (4.2e-06), so it falls outside them by construction. The general panels pin no
+## set by name, so a figure that does pin one owes that provenance line in every caption it
+## writes, which is what BY_NAME_NOTE and BY_NAME_NOTE_ONE below carry.
 ##
-## Why the fourth set is drawn
-## ---------------------------
-## REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and non-significant in all three
-## contrasts. It is drawn with the same weight and its own colour key, because three
-## hypoxia-named sets moving at 39 °C and a fourth not moving is the readable content of
-## the panel: agreement between two sets that share a word in their names is something to
-## check, not something to assume.
+## The fourth set earns its curve. REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and
+## non-significant in all three contrasts, and is drawn at the same weight with its own
+## colour key, because whether two sets that share a word in their names behave alike is
+## something the panel shows rather than assumes.
 ##
-## House constraints carried in every caption here:
-##   * A set's enrichment is not evidence that the program its name invokes is present.
-##     Composition would have to be established separately.
-##   * A non-significant Interaction NES reads as no detectable cGAS-dependence at n=5,
-##     never as proven cGAS-independence.
-##   * NES > 0 = enriched in the contrast numerator (39 °C or WT); NES < 0 = denominator.
-##   * No em-dashes, no contrastive negation, no self-approving vocabulary in any title,
-##     subtitle, axis label, legend or caption. A title states what is drawn.
-##   * Claims floor at L3 (DE/enrichment statistics); sample mapping read from the config.
-##
+## Run from the compartment root:
 ##   Rscript 02_analysis/scripts/28_hypoxia_focus_viz.R
 
 # ============================================================================
@@ -58,7 +41,7 @@ source("02_analysis/config/config.R")             # -> YAML_CONFIG, DIR_OBJECTS,
                                                   #    GSEA_FDR_CUTOFF, GSEA_MIN_SIZE/MAX_SIZE, RANK_METRIC
 source("02_analysis/helpers/de_gsea_helpers.R")   # -> load_de_results(), build_ranked_vector()
 
-# RNAseq-toolkit GSEA plotters (source format_pathway_names BEFORE the plotters that call it).
+# RNAseq-toolkit GSEA plotters, with format_pathway_names ahead of the plotters that call it.
 .RTK <- "01_modules/RNAseq-toolkit"
 .GP  <- file.path(.RTK, "scripts", "GSEA", "GSEA_plotting")
 source(file.path(.RTK, "scripts", "custom_minimal_theme.R"))  # custom_minimal_theme_with_grid()
@@ -80,7 +63,7 @@ suppressPackageStartupMessages({
 options(stringsAsFactors = FALSE)
 
 # ============================================================================
-# 1. Constants from config (NEVER hardcoded)
+# 1. Constants, all read from config
 # ============================================================================
 
 STAGE  <- "06_gsea"
@@ -97,17 +80,16 @@ LINEW  <- FIG_CFG$figures$line_width %||% 1.0
 
 OI     <- FIG_CFG$colors$okabe_ito %||% list()
 
-# One colour per drawn gene set, from the centralized colorblind-safe palette. Four
-# clearly separated hues so the null-running Reactome curve is as readable as the rest.
+# One colour per drawn set, from the config's colourblind-safe palette. Four separated hues,
+# so the null-running Reactome curve reads as clearly as the rest.
 SET_COLOR <- c(
   HALLMARK_HYPOXIA                                   = OI$vermillion    %||% "#D55E00",
   GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY = OI$blue          %||% "#0072B2",
   GOBP_RESPONSE_TO_OXYGEN_LEVELS                     = OI$bluish_green  %||% "#009E73",
   REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA              = OI$reddish_purple %||% "#CC79A7")
 
-# The four sets, selected BY NAME (never by rank), one per database, in the order they
-# are keyed in the legend. `tag` is the in-panel short key; because each set comes from a
-# different database, the database name alone identifies it unambiguously.
+# The four sets, selected by name, one per database, in legend order. `tag` is the in-panel
+# short key, and the database name alone identifies a set here, since each comes from its own.
 PICKS <- tibble::tribble(
   ~pathway_id,                                          ~database,   ~tag,
   "HALLMARK_HYPOXIA",                                   "Hallmark",  "Hallmark",
@@ -140,8 +122,8 @@ if (length(missing_cols) > 0)
   stop("28_hypoxia_focus_viz: master_gsea_table.csv is missing required columns: ",
        paste(missing_cols, collapse = ", "))
 
-# Every (set x contrast) cell this script draws must be present in the master. A missing
-# cell is a hard stop: a silently dropped curve would read as a null.
+# Every (set x contrast) cell this script draws has to be in the master, and a missing one is
+# a hard stop, since a silently dropped curve would read as a null.
 want <- tidyr::crossing(PICKS, contrast = FOCAL)
 have <- mg %>% dplyr::semi_join(want, by = c("pathway_id", "database", "contrast"))
 if (nrow(have) != nrow(want)) {
@@ -169,14 +151,13 @@ GS_MANIFEST <- {
 # ============================================================================
 # 3. gseaResult rehydration (the toolkit-plotter input)
 # ============================================================================
-# Same contract as 12_gsea_viz.R's as_gsearesult(contrast, database), generalized from
-# "one whole database" to "an explicit (pathway_id, database) pick list", because the four
-# sets drawn here live in four different databases and one gseaResult carries a single
-# @geneSets list. @result is filled VERBATIM from master_gsea_table.csv, so the figures
-# carry the master's own NES/padj with zero engine drift. @geneList is the ranked vector
-# from the cached DE topTable, @geneSets the cached gene-set lists restricted to the ranked
-# universe, and @params$exponent = 1 so the running ES is computed deterministically by
-# enrichplot::gseaScores() with no permutation re-run.
+# The contract of 12_gsea_viz.R's as_gsearesult(contrast, database), widened from one whole
+# database to an explicit (pathway_id, database) pick list, since the four sets here live in
+# four databases while one gseaResult carries a single @geneSets list. @result is filled
+# verbatim from master_gsea_table.csv, so the figures carry the master's own NES and padj with
+# no engine drift. @geneList is the ranked vector from the cached DE topTable, @geneSets the
+# cached lists restricted to the ranked universe, and @params$exponent = 1, so
+# enrichplot::gseaScores() computes the running ES deterministically with no permutation re-run.
 
 .RANKED_CACHE <- new.env(parent = emptyenv())
 ranked_for <- function(co) {
@@ -213,9 +194,9 @@ as_gsearesult <- function(co, picks) {
 
   ranked <- ranked_for(co)
 
-  # Gene sets, pulled from each pick's OWN database cache and restricted to the ranked
-  # universe. The running-sum needs @geneSets[[ID]] for every plotted pathway, so a set
-  # missing from its cache is a hard stop rather than a quietly undrawn curve.
+  # Gene sets, pulled from each pick's own database cache and restricted to the ranked
+  # universe. The running sum needs @geneSets[[ID]] for every plotted pathway, so a set
+  # missing from its cache is a hard stop ahead of a quietly undrawn curve.
   sets <- list()
   for (i in seq_len(nrow(picks))) {
     id <- picks$pathway_id[i]
@@ -226,8 +207,8 @@ as_gsearesult <- function(co, picks) {
     sets[[id]] <- intersect(as.character(g), names(ranked))
   }
 
-  # @result in the clusterProfiler gseaResult schema. Description = raw pathway_id so the
-  # toolkit format_pathway_name()/strip_prefix renders the SAME display name everywhere.
+  # @result in the clusterProfiler gseaResult schema. Description holds the raw pathway_id, so
+  # the toolkit's format_pathway_name() and strip_prefix render one display name everywhere.
   res <- data.frame(
     ID              = rows$pathway_id,
     Description     = rows$pathway_id,
@@ -279,22 +260,18 @@ n_leading <- function(core) {
 
 wrap_text <- function(x, width) paste(strwrap(as.character(x), width = width), collapse = "\n")
 
-#' Warn if a title or subtitle will run off the canvas. Ported from
-#' 12b_gsea_overview_pooled_viz.R's .title_fits() and corrected in three ways, each of which
-#' was a false pass in the ported form.
+#' Warn if a title or subtitle will run off the canvas. Three things this check needs, each
+#' of which was a false pass in the ported form of it:
 #'
-#' 1. FONT METRICS MUST COME FROM THE OUTPUT DEVICE. grid::convertWidth() answers in the
-#'    units of whatever device is open, and the headless default device understates cairo by
-#'    about 14%. The subtitle that visibly ran off this figure measured 12.30 in on the
-#'    default device, under a 13 in canvas, so the check passed it; on the cairo device
-#'    save_figure() actually writes to, the same string is 13.99 in. So the measurement is
-#'    taken inside a throwaway cairo_pdf of the SAME geometry as the saved figure.
-#' 2. THE SUBTITLE IS CHECKED TOO. It was the string that overran here, and the ported
-#'    helper only ever looked at the title.
-#' 3. THE STRINGS ARE PASSED IN, because the gtable arm alone is blind on a patchwork.
-#'    patchwork flattens its child plots into one top-level gtable whose own "title" and
-#'    "subtitle" cells are zeroGrobs, so a running-sum figure whose title lives on an inner
-#'    panel measures 0.00 in and reads as fitting comfortably.
+#' 1. Font metrics from the output device. grid::convertWidth() answers in the units of
+#'    whatever device is open, and the headless default understates cairo by about 14%: the
+#'    subtitle that visibly overran here measured 12.30 in on the default device under a
+#'    13 in canvas and 13.99 in on the cairo device save_figure() writes to. So the
+#'    measurement happens inside a throwaway cairo_pdf of the saved figure's geometry.
+#' 2. The subtitle measured alongside the title, since the subtitle is what overran.
+#' 3. The strings passed in, because patchwork flattens its child plots into one top-level
+#'    gtable whose "title" and "subtitle" cells are zeroGrobs, so a running-sum figure whose
+#'    title lives on an inner panel measures 0.00 in and reads as comfortable.
 #' Both arms are measured and the larger governs, so neither can hide a clipped string.
 .text_fits <- function(p, canvas_w, title = NULL, subtitle = NULL,
                        canvas_h = NULL, margin_in = 0.4) {
@@ -306,7 +283,7 @@ wrap_text <- function(x, width) paste(strwrap(as.character(x), width = width), c
   spec <- Filter(function(s) !is.null(s$txt) && nzchar(as.character(s$txt)[1]), spec)
   if (!length(spec)) return(invisible(numeric(0)))
 
-  # Open the measurement device: same family and geometry as the saved artifact.
+  # The measurement device: same family and geometry as the saved artifact.
   tmp <- tempfile(fileext = ".pdf")
   dev_ok <- tryCatch({ grDevices::cairo_pdf(tmp, width = canvas_w, height = canvas_h); TRUE },
                      error = function(e) FALSE)
@@ -368,10 +345,9 @@ set_legend_label <- function(id, db, width = 34L) {
 
 #' Thin a running-ES polyline to its exact vertices.
 #' Between two consecutive set members the running score decays by a constant step, so the
-#' curve is exactly piecewise-linear with vertices only at each member's rank and at the
-#' rank just before it. Keeping those ranks plus the two endpoints reproduces the curve
-#' EXACTLY while cutting ~19,700 vertices per curve to a few hundred, which is what keeps
-#' the vector PDF openable in a vector editor.
+#' curve is piecewise-linear with vertices at each member's rank and the rank just before it.
+#' Keeping those ranks plus the two endpoints reproduces the curve exactly while cutting
+#' ~19,700 vertices per curve to a few hundred, which keeps the PDF openable in a vector editor.
 thin_running_sum <- function(d) {
   hits <- which(d$position == 1L)
   keep <- sort(unique(c(1L, nrow(d), hits, pmax(hits - 1L, 1L), pmin(hits + 1L, nrow(d)))))
@@ -379,11 +355,11 @@ thin_running_sum <- function(d) {
 }
 
 #' Running-ES geometry for one gseaResult, as a tidy frame (pathway_id, x, running_score).
-#' The geometry comes from the SAME public plotter the stage uses elsewhere:
-#' enrichplot::gseaplot2(subplots = 1) returns the running-ES panel, and its `$data` is the
-#' fortified running-sum frame, so these curves and figure 1's curves share one code path.
-#' At @params$exponent = 1 the running score is deterministic: no permutation re-run, so the
-#' curve can never disagree with the master NES printed beside it.
+#' The geometry comes from the public plotter the stage uses elsewhere:
+#' enrichplot::gseaplot2(subplots = 1) returns the running-ES panel and its `$data` is the
+#' fortified running-sum frame, so these curves and figure 1's share one code path. At
+#' @params$exponent = 1 the running score is deterministic, so it holds to the master NES
+#' printed beside it.
 es_curve <- function(g, ids, thin = TRUE) {
   p_es <- enrichplot::gseaplot2(g, geneSetID = ids, subplots = 1,
                                 color = unname(SET_COLOR[ids]))   # palette UNNAMED, in `ids` order
@@ -398,7 +374,7 @@ es_curve <- function(g, ids, thin = TRUE) {
       dplyr::group_by(Description) %>%
       dplyr::group_modify(~ thin_running_sum(.x)) %>%
       dplyr::ungroup()
-    # The thinning must be lossless. Assert the per-set extrema survive it.
+    # The thinning is lossless, so assert the per-set extrema survive it.
     chk <- dplyr::full_join(
       d       %>% dplyr::group_by(Description) %>%
                   dplyr::summarise(lo = min(runningScore), hi = max(runningScore), .groups = "drop"),
@@ -433,14 +409,13 @@ SET_LABEL <- FOCUS_ROWS %>%
   { stats::setNames(.$set_label, as.character(.$pathway_id)) }
 SET_LABEL <- SET_LABEL[PICKS$pathway_id]     # legend key order = PICKS order
 
-# How many sets the focus database offered the sweep, so the single-set caption can state
-# what the reader is NOT being shown alongside it.
+# How many sets the focus database offered the sweep, so the single-set caption can name the
+# family its one set was drawn from.
 N_FOCUS_DB_SETS <- dplyr::n_distinct(
   mg$pathway_id[mg$database == FOCUS_DATABASE & mg$contrast == "WT_heat"])
 
-# The provenance sentence that must travel with every artifact this script writes. These
-# figures name their sets; the general panels of this GSEA sweep pin nothing, and that
-# difference is what the reader has to be told.
+# The provenance sentence that travels with every artifact this script writes: these figures
+# name their sets, where the general panels of this GSEA sweep pin nothing.
 BY_NAME_NOTE <- paste0(
   "SELECTION RULE: these ", nrow(PICKS), " sets were chosen BY NAME, one per database, with no ",
   "input from their adjusted p or |NES|. The general per-database and pooled panels of this GSEA ",
@@ -474,7 +449,7 @@ SIGN_NOTE <- paste0(
   "denominator (37 °C or cGAS-KO).")
 
 # ============================================================================
-# 5. FIGURE 1: HALLMARK_HYPOXIA alone, WT_heat, canonical three-panel running sum
+# 5. Figure 1: HALLMARK_HYPOXIA alone, WT_heat, three-panel running sum
 # ============================================================================
 
 f1_pick <- PICKS %>% dplyr::filter(pathway_id == FOCUS_SET, database == FOCUS_DATABASE)
@@ -490,25 +465,25 @@ f1_curve <- es_curve(g1, FOCUS_SET, thin = FALSE)
 f1_peak  <- f1_curve[which.max(abs(f1_curve$running_score)), ]
 f1_n     <- f1_curve$n_ranked[1]
 
-# The legend is the ONLY channel for NES and adjusted p in this plotter: gsea_running_sum_plot()
+# The legend is this plotter's one channel for NES and adjusted p: gsea_running_sum_plot()
 # calls enrichplot::gseaplot2() with pvalue_table = FALSE hardcoded, and the legend text comes
-# from @result$Description, which `labels` overwrites. Two lines rather than one so the legend
-# column does not eat the panel width; the toolkit wraps only past `max_name_length`, so the
-# limit is raised past the longest line rather than left to truncate.
+# from @result$Description, which `labels` overwrites. Two lines keep the legend column off the
+# panel width, and max_name_length sits past the longest line so the toolkit leaves the wrap
+# where this code put it.
 f1_labs <- stats::setNames(
   sprintf("%s\n%d genes ranked\nNES %+.2f,  FDR %s",
           set_legend_label(FOCUS_SET, FOCUS_DATABASE, width = 60L),
           r1$setSize, r1$NES, fmt_p(r1$p.adjust)),
   FOCUS_SET)
 
-# The title is held in a variable so the same string that is drawn is the string that gets
-# measured by .text_fits(); the plotter has no subtitle channel.
+# Held in a variable so .text_fits() measures the same string that gets drawn. The plotter
+# offers no subtitle channel.
 F1_TITLE <- sprintf("%s %s running enrichment, WT heat 39 vs 37 °C",
                     db_display(FOCUS_DATABASE),
                     format_pathway_name(FOCUS_SET, use_formatting = TRUE, strip_prefix = TRUE))
 
-# Palette stays UNNAMED: mouse_anchor's vendored gsea_running_sum_plot.R (@note) warns that a
-# NAMED palette breaks enrichplot::gseaplot2() for databases whose pathway IDs differ from the
+# The palette stays unnamed: the vendored gsea_running_sum_plot.R warns in its @note that a
+# named palette breaks enrichplot::gseaplot2() for databases whose pathway ids differ from the
 # Description field.
 p1 <- gsea_running_sum_plot(
   g1,
@@ -518,8 +493,8 @@ p1 <- gsea_running_sum_plot(
   max_name_length = max(nchar(f1_labs)) + 1L,
   title           = F1_TITLE)
 
-# Mandatory post-styling step: pins the ES y-range to figures.running_sum_ylim, collects ONE
-# legend outside-right, keeps x ticks on the bottom panel only, and applies project_theme.
+# The required post-styling step: pins the ES y-range to figures.running_sum_ylim, collects one
+# legend outside-right, keeps x ticks on the bottom panel, and applies project_theme.
 p1 <- style_series(p1, ylim = RSYLIM, config = FIG_CFG)
 .text_fits(p1, CANVAS_W, title = F1_TITLE)
 
@@ -561,9 +536,9 @@ save_overview(
   config    = FIG_CFG)
 
 # ============================================================================
-# 6. FIGURE 2: four hypoxia-named sets, running ES faceted by contrast
+# 6. Figure 2: four hypoxia-named sets, running ES faceted by contrast
 # ============================================================================
-# A gseaResult carries ONE ranked list, so three objects are built, one per contrast, and
+# A gseaResult carries one ranked list, so three objects are built, one per contrast, and
 # their running-ES geometry is pooled into a single frame that facets by contrast.
 
 es_frames <- list()
@@ -584,11 +559,10 @@ es_df <- dplyr::bind_rows(es_frames) %>%
 
 N_RANKED <- max(es_df$x)
 
-# Per-facet statistics block. A single shared legend can only carry one label per set, so the
-# per-contrast NES and adjusted p are drawn inside each facet in the set's own colour, in the
-# legend's own top-to-bottom order, keyed by the database name (each set comes from a different
-# database, so that key is unique). They sit in the lower band of the panel, which the curves
-# never enter: the ES range across all twelve curves is well inside it.
+# Per-facet statistics block. A shared legend carries one label per set, so the per-contrast
+# NES and adjusted p are drawn inside each facet in the set's own colour, in the legend's
+# top-to-bottom order, keyed by database name. They sit in the lower band of the panel, which
+# the ES range of all twelve curves stays clear of.
 stat_rows <- FOCUS_ROWS %>%
   dplyr::mutate(
     contrast_lab = factor(contrast_label(as.character(contrast), short = TRUE),
@@ -639,8 +613,7 @@ f2_tbl <- FOCUS_ROWS %>%
                    contrast = as.character(contrast), nes, pvalue, padj,
                    set_size, leading_edge_n, panel_key = tag)
 
-# The per-contrast narrative sentence, built from the drawn numbers so the caption can never
-# drift from the figure.
+# The per-contrast sentence, built from the drawn numbers so the caption holds to the figure.
 f2_sig <- FOCUS_ROWS %>% dplyr::filter(padj < FDR)
 f2_line <- function(co) {
   r <- FOCUS_ROWS %>% dplyr::filter(contrast == co) %>% dplyr::arrange(pathway_id)
