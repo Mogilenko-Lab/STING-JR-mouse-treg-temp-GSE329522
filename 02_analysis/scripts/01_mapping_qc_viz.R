@@ -413,10 +413,11 @@ write_caption(
   finding    = sprintf(paste0(
     "Scramble exhibit (mapping-competence demonstration): a 2-row tile per library comparing the ",
     "marker-derived condition assignment (top row) against a naive positional GSM->column join ",
-    "(bottom row), all 20 libraries on the x-axis. %d/20 libraries (026-035) are DISCORDANT ",
-    "(black outline + x marker): the deposited CPM columns are temperature-major while the GEO GSM ",
-    "accessions are genotype-major, so a positional join silently swaps KO-37 <-> WT-39 in the ",
-    "middle block. This is why the mapping MUST be marker-derived, not accession-positional. ",
+    "(bottom row), all 20 libraries on the x-axis. %d of the 20 libraries (026-035) disagree ",
+    "between the two, marked by a black outline and an x glyph: the deposited CPM columns are ",
+    "temperature-major while the GEO GSM accessions are genotype-major, so a positional join ",
+    "silently swaps KO-37 <-> WT-39 in the middle block. This project uses the marker-derived ",
+    "mapping, and this panel is the reason. ",
     SAMPLE_LABEL_NOTE),
     n_disc),
   script     = SCRIPT,
@@ -424,12 +425,12 @@ write_caption(
   config_kv  = CFG_KV,
   input      = "03_results/01_qc/tables/fig1d_scramble_data.csv",
   how_to_read = paste0(
-    "x = library (12630-RS-021..040); y = the two label SOURCES (top = marker-derived, ",
-    "bottom = naive positional GSM->column join). Tile FILL = assigned condition ",
-    "(WT_37/cGASKO_37/WT_39/cGASKO_39, a blue->red diverging-by-condition map). ",
-    "A black tile outline + an x glyph on the strip = the two sources DISAGREE for that library ",
-    "(a mislabeled column under the naive join). Read: the discordant block (026-035) is exactly ",
-    "where the temperature-major vs genotype-major orderings cross."),
+    "x = library (12630-RS-021..040); y = the two label sources, marker-derived on top and the ",
+    "naive positional GSM->column join below. Tile fill = the assigned condition ",
+    "(WT_37/cGASKO_37/WT_39/cGASKO_39, on a blue-to-red by-condition map). A black tile outline ",
+    "with an x glyph on the strip marks a library where the two sources disagree, which is a ",
+    "mislabelled column under the naive join. The discordant block (026-035) sits exactly where ",
+    "the temperature-major and genotype-major orderings cross."),
   config     = FIG_CFG
 )
 

@@ -288,25 +288,26 @@ contrast_finding <- function(df_sub, contrast_name, n_db_shown, n_db_pooled) {
 }
 
 HOW_TO_READ_COMMON <- paste0(
-  "Lollipop panel, one facet per database, x = Normalized Enrichment Score (NES). Orange fill = positive NES ",
+  "Lollipop panel, one facet per database, x = normalised enrichment score (NES). Orange fill = positive NES ",
   "(enriched in the contrast numerator), blue = negative, squished at the configured NES cap. ",
-  "GLYPH = what becomes of a set when the per-database Benjamini-Hochberg correction is replaced by one pooled ",
-  "correction over every database: filled circle = significant under both, diamond = per-database only (lost on ",
-  "pooling), triangle = pooled only (gained on pooling), open circle = neither. The legend keys carry a neutral ",
-  "grey fill because the panel spends fill on NES. ",
-  "SELECTION RULE: top N per database by padj_pooled, ties broken by the raw p-value then by |NES|; N is ",
-  "gsea_pooled_overview.top_n_per_db. Nothing is pinned on top of that rank. An earlier revision force-included ",
-  "the Hallmark HYPOXIA and INTERFERON sets and the three project-curated lenses whatever their rank, which let ",
-  "the panel argue for a conclusion; that pin is gone. ",
-  "FACET HEADER (n/N): n of the N sets in that database pass the pooled FDR, counted over the whole database. ",
-  "A header reading (0/23) marks a real null, and those facets stay on the canvas, since dropping a database ",
-  "because it came out empty would leave a panel selected for positives. ",
-  "EXCLUDED FROM THE PANEL: whatever gsea_pooled_overview.exclude_databases names, which is ",
-  "currently empty, so the facet count and the pooled-family database count agree. An excluded ",
-  "database stays inside the pooled correction and in every 06_gsea table. ",
-  "CAVEAT: padj_pooled is a comparability device across databases rather than a calibrated error rate, since GO ",
-  "terms and pathway sets share genes. ",
-  "Claim tier: L3 (enrichment statistics). Sample mapping owner-confirmed."
+  "The glyph says what becomes of a set when the per-database Benjamini-Hochberg correction is replaced by one ",
+  "pooled correction over every database: filled circle = significant under both, diamond = per-database only ",
+  "(lost on pooling), triangle = pooled only (gained on pooling), open circle = neither. The legend keys carry a neutral ",
+  "grey fill because the panel spends fill on NES.",
+  "\n\nEach facet draws the top N sets in its database by padj_pooled, ties broken on the raw ",
+  "p-value and then on |NES|, with N from gsea_pooled_overview.top_n_per_db. That rank is the ",
+  "whole of the selection. An earlier revision also pinned the Hallmark HYPOXIA and INTERFERON ",
+  "sets and the three project-curated lenses at any rank, which let the panel argue for a ",
+  "conclusion; the pin has been removed.",
+  "\n\nA facet header reads (n/N): n of the N sets in that database pass the pooled FDR, counted ",
+  "over the whole database. A header reading (0/23) marks a real null, and those facets keep ",
+  "their place on the canvas; dropping a database for coming out empty would leave a panel ",
+  "selected for positives. The panel omits whatever gsea_pooled_overview.exclude_databases ",
+  "names, currently nothing, so the facet count and the pooled-family database count agree. An ",
+  "omitted database stays inside the pooled correction and in every 06_gsea table.",
+  "\n\nRead padj_pooled as a comparability device across databases. It is a calibrated error ",
+  "rate only where the sets are independent, and GO terms and pathway sets share genes. Claim ",
+  "tier: L3, enrichment statistics. Sample mapping owner-confirmed."
 )
 
 # ---------------------------------------------------------------------------

@@ -41,7 +41,6 @@ label-blind.
 |---|---|---|---|
 | `02_analysis/scripts/01_mapping_qc_viz.R` | `geom_col + facet_wrap (project_theme + save_figure)` | `figures.width_column=3.5; figures.base_size_column=9; figures.base_size=16` | `03_results/01_qc/tables/fig1a_thermometer_data.csv` |
 
-
 ## figures/fig1b_cgas.png
 
 Cgas genotype check (label-blind within each temperature half):
@@ -67,29 +66,29 @@ label-blind.
 |---|---|---|---|
 | `02_analysis/scripts/01_mapping_qc_viz.R` | `geom_col + facet_grid (project_theme + save_figure)` | `figures.width_column=3.5; figures.base_size_column=9; figures.base_size=16` | `03_results/01_qc/tables/fig1b_cgas_data.csv` |
 
-
 ## figures/fig1d_scramble.png
 
 Scramble exhibit (mapping-competence demonstration): a 2-row tile per
 library comparing the marker-derived condition assignment (top row)
 against a naive positional GSM->column join (bottom row), all 20
-libraries on the x-axis. 10/20 libraries (026-035) are DISCORDANT
-(black outline + x marker): the deposited CPM columns are
-temperature-major while the GEO GSM accessions are genotype-major, so
-a positional join silently swaps KO-37 <-> WT-39 in the middle block.
-This is why the mapping MUST be marker-derived, not
-accession-positional. Sample-to-condition mapping confirmed against
-the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant
-with the label-blind marker call.
+libraries on the x-axis. 10 of the 20 libraries (026-035) disagree
+between the two, marked by a black outline and an x glyph: the
+deposited CPM columns are temperature-major while the GEO GSM
+accessions are genotype-major, so a positional join silently swaps
+KO-37 <-> WT-39 in the middle block. This project uses the
+marker-derived mapping, and this panel is the reason.
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
-**How to read:** x = library (12630-RS-021..040); y = the two label SOURCES (top =
-marker-derived, bottom = naive positional GSM->column join). Tile
-FILL = assigned condition (WT_37/cGASKO_37/WT_39/cGASKO_39, a
-blue->red diverging-by-condition map). A black tile outline + an x
-glyph on the strip = the two sources DISAGREE for that library (a
-mislabeled column under the naive join). Read: the discordant block
-(026-035) is exactly where the temperature-major vs genotype-major
-orderings cross.
+**How to read:** x = library (12630-RS-021..040); y = the two label sources,
+marker-derived on top and the naive positional GSM->column join
+below. Tile fill = the assigned condition
+(WT_37/cGASKO_37/WT_39/cGASKO_39, on a blue-to-red by-condition map).
+A black tile outline with an x glyph on the strip marks a library
+where the two sources disagree, which is a mislabelled column under
+the naive join. The discordant block (026-035) sits exactly where the
+temperature-major and genotype-major orderings cross.
 
 | Script | Function | Config | Input |
 |---|---|---|---|

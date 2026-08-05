@@ -445,8 +445,20 @@ emit_cell <- function(co, db_name, src) {
       # Pin the running-ES y-range to [-1,1] (config running_sum_ylim) + inside legend so
       # the per-DB curves stay directly comparable (style_series = the ported style_running_sum).
       # x becomes rank/n_ranked, taken from this contrast's own ranked vector.
+      #
+      # Each curve also gets its own named tick row. The plotter stacks the rows from the
+      # bottom up in the order the ids arrive, so the labels go in that order. 7 of the 98
+      # cells (the TCR_activation database, which contributes one set) draw a lone curve, and
+      # there the plotter forces the ticks black and drops the legend, so the row also takes
+      # the curve's own colour from the plotter's palette — one colour per curve throughout.
+      # The rows carry each set's full display name, so the outside-right legend would repeat
+      # them; it is dropped and the width it held goes to the three panels.
+      rs_labs <- g_rs@result$Description[match(top_ids, g_rs@result$ID)]
+      rs_cols <- if (length(top_ids) == 1L && exists(".grs_palette"))
+                   .grs_palette(NULL, 1L) else NULL
       p_rs <- style_series(p_rs, ylim = RSYLIM, n_ranked = length(g_rs@geneList),
-                           config = FIG_CFG)
+                           trace_labels = rs_labs, trace_colors = rs_cols,
+                           legend = "none", config = FIG_CFG)
       save_figure(p_rs, STAGE, file.path(db_name, "running_sum"), contrast = co, config = FIG_CFG)
     }
   } else {
@@ -563,7 +575,7 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
                     dplyr::select(arm, pathway_id, pathway_name, contrast, nes, padj, set_size) %>%
                     dplyr::mutate(across(where(is.factor), as.character)),
       finding   = sprintf(
-        "Hallmark GSEA NES for every set whose MSigDB name matches one of two patterns, drawn across the contrasts %s. Top block (pattern %s): the two interferon-response sets carry negative NES in both per-genotype heat contrasts (WT_heat -1.90, KO_heat -2.52 for the alpha set; -1.77 and -2.20 for the gamma set) and positive NES in the interaction term (+3.14, padj 2.7e-24; +2.83, padj 5.0e-22), while the TNF, IL2/STAT5, inflammatory and allograft sets are positive in both heat contrasts with a non-significant interaction. Bottom block (pattern %s): HYPOXIA, GLYCOLYSIS and MTORC1 are positive and FDR-significant in both heat contrasts (HYPOXIA WT_heat +1.91 padj 4.2e-06, KO_heat +1.95 padj 2.5e-06) with a negative, non-significant interaction NES (HYPOXIA -1.27, padj 0.17), and OXIDATIVE_PHOSPHORYLATION is negative and non-significant throughout. A non-significant interaction NES reads as no detectable cGAS-dependence at n=5 and never as proven cGAS-independence: the 1-df interaction term is the least-powered contrast in this design. Set composition is not established by this panel, so a set's enrichment is not evidence that the program its name invokes is present.",
+        "Hallmark GSEA NES for every set whose MSigDB name matches one of two patterns, drawn across the contrasts %s. Top block (pattern %s): the two interferon-response sets carry negative NES in both per-genotype heat contrasts (WT_heat -1.90, KO_heat -2.52 for the alpha set; -1.77 and -2.20 for the gamma set) and positive NES in the interaction term (+3.14, padj 2.7e-24; +2.83, padj 5.0e-22), while the TNF, IL2/STAT5, inflammatory and allograft sets are positive in both heat contrasts with a non-significant interaction. Bottom block (pattern %s): HYPOXIA, GLYCOLYSIS and MTORC1 are positive and FDR-significant in both heat contrasts (HYPOXIA WT_heat +1.91 padj 4.2e-06, KO_heat +1.95 padj 2.5e-06) with a negative, non-significant interaction NES (HYPOXIA -1.27, padj 0.17), and OXIDATIVE_PHOSPHORYLATION is negative and non-significant throughout. A non-significant interaction NES reads as no detectable cGAS-dependence at n=5; the 1-df interaction term is the least-powered contrast in this design. An enrichment locates a set's gene content in a ranking, and establishing that the program a set's name invokes is present takes a separate composition test.",
         paste(FOCAL_CONTRASTS, collapse = ", "), ASYMM_IFN_PATTERN, ASYMM_METAB_PATTERN),
       script    = SCRIPT,
       fn        = "geom_tile",
@@ -572,18 +584,21 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
       how_to_read = paste0(
         "Two-block heatmap, one tile per (gene set x contrast). Rows are the Hallmark sets whose MSigDB ",
         "name matches the block's pattern: top block = '", ASYMM_IFN_PATTERN, "'; bottom block = '",
-        ASYMM_METAB_PATTERN, "'. SELECTION RULE, which governs every absence you see: within each block ",
-        "only the top ", ASYMM_TOP_PER_BLOCK, " sets by max |NES| across the plotted contrasts are drawn, so a ",
-        "set can be missing because its |NES| is small even when its adjusted p is among the smallest. ",
-        asym_absence_note,
-        "The two blocks are NAME-PATTERN groupings over set names and carry no claim about which regulator ",
-        "drives either block. Fill = NES: orange = NES > 0 (enriched in the contrast numerator, 39 °C or WT); ",
-        "blue = NES < 0 (enriched in the denominator, 37 °C or cGAS-KO); fill is squished at +/-", NESCAP, ". ",
-        "* = padj < ", FDR, ". Row order within a block is by NES. The Interaction column is the ",
-        "cGAS-dependence read-out: a positive significant interaction NES is consistent with cGAS-dependent ",
-        "induction; a non-significant interaction NES means no detectable cGAS-dependence at n=5 and never ",
-        "'cGAS-independent'. A set enriching is not evidence that the program its name invokes is present; ",
-        "composition would have to be established separately. Claim tier: L3. ",
+        ASYMM_METAB_PATTERN, "'. Within each block the top ", ASYMM_TOP_PER_BLOCK,
+        " sets by max |NES| across the plotted contrasts are drawn, and that rule governs every ",
+        "absence here: a set can be missing on a small |NES| while its adjusted p is among the ",
+        "smallest. ", asym_absence_note,
+        "\n\nThe two blocks group set names by pattern. Which regulator drives either block is a ",
+        "separate question. Fill = NES: orange = NES > 0, enriched in the contrast numerator, ",
+        "39 °C or WT; blue = NES < 0, enriched in the denominator, 37 °C or cGAS-KO; fill is ",
+        "squished at +/-", NESCAP, ". A star marks padj < ", FDR,
+        ". Row order within a block is by NES.",
+        "\n\nThe Interaction column is the cGAS-dependence read-out. A positive significant ",
+        "interaction NES is consistent with cGAS-dependent induction. A non-significant one reads ",
+        "as no detectable cGAS-dependence at n = 5, the 1-df interaction term being the ",
+        "least-powered contrast in this design. An enrichment locates a set's gene content in a ",
+        "ranking; establishing that the program the set's name invokes is present takes a separate ",
+        "composition test. Claim tier: L3. ",
         sample_mapping_caption()),
       config    = FIG_CFG, wide = TRUE
     )
@@ -605,13 +620,13 @@ if ("Hallmark" %in% db_in_master && length(FOCAL_CONTRASTS) >= 2) {
 # wrong here: it described the HSR and TCR lenses as carrying "metabolic and transport sets
 # only", which is false for both. MSigDB collections fall through to the generic line.
 DB_CONTENT <- c(
-  TransportDB      = "Membrane-transporter sets; this database carries no interferon or heat-shock sets, so nothing here bears on those axes.",
-  MitoPathways     = "MitoCarta MitoPathways sets (mitochondrial function and metabolism); this database carries no interferon or heat-shock sets.",
-  MitoXplorer      = "MitoXplorer sets (mitochondrial metabolic atlas); this database carries no interferon or heat-shock sets.",
-  HSR_lens         = "Two curated heat-shock-response terms (HSR_core, HSR_sensitivity), built by 00d/00e and held anchor-independent of the empirical heat arms. Proteotoxic-stress-general in scope; only the 37/39 °C contrast bears on temperature.",
-  TCR_activation   = "One curated TCR and immediate-early T-cell-activation term, built by 00f and disjoint from the HSR core by construction. Overlap of a heat arm with this term reads as activation."
+  TransportDB      = "Membrane-transporter sets. This database holds transporters alone, so its rows bear on transport and carry no interferon or heat-shock term.",
+  MitoPathways     = "MitoCarta MitoPathways sets: mitochondrial function and metabolism. The collection holds no interferon or heat-shock term.",
+  MitoXplorer      = "MitoXplorer sets, the mitochondrial metabolic atlas. The collection holds no interferon or heat-shock term.",
+  HSR_lens         = "Two curated heat-shock-response terms, HSR_core and HSR_sensitivity, built by the 00d and 00e curation steps and derived independently of the empirical heat arms. Their scope is proteotoxic stress in general; the 37/39 °C contrast is the one that bears on temperature.",
+  TCR_activation   = "One curated TCR and immediate-early T-cell-activation term, built by the 00f curation step with the HSR core's genes excluded. A heat arm overlapping this term reads as activation."
 )
-DB_CONTENT_GENERIC <- "Read each set's direction per contrast on its own; the panels rank sets within a cell and make no statement about which regulator drives any of them."
+DB_CONTENT_GENERIC <- "Each set's direction is read per contrast on its own. These panels rank sets within a cell; which regulator drives a set is a separate question."
 
 for (db_name in ALL_DBS) {
   if (!(db_name %in% db_in_master)) next
@@ -620,24 +635,28 @@ for (db_name in ALL_DBS) {
   # Where the dotplot's rank (adjusted p) and the running-sum's rank (|NES|) disagree, the
   # disagreement is worth stating concretely so a reader never reads an absence as a null.
   db_rank_note <- if (identical(db_name, "Hallmark"))
-    sprintf(" Worked example of the two rankings diverging: in the WT_heat Hallmark cell HALLMARK_HYPOXIA is 6th by |NES| (+1.91) and 4th by adjusted p (4.2e-06), so it is outside the running-sum's top %d by |NES| while sitting well inside the dotplot's top %d by adjusted p. An absence from one panel is a statement about that panel's ranking metric only.",
-            RSTOP, TOPN)
+    sprintf("\n\nThe two rankings diverge, and the WT_heat Hallmark cell shows how. HALLMARK_HYPOXIA sits 6th by |NES| (+1.91) and 4th by adjusted p (4.2e-06), so it falls inside the dotplot's top %d by adjusted p and outside the running sum's top %d by |NES|.",
+            TOPN, RSTOP)
   else ""
   write_caption(
     stage    = STAGE,
     filename = sprintf("figures/by_contrast/<contrast>/%s/*.png", db_name),
     finding  = sprintf(
-      "%s GSEA per contrast (dotplot/facet/barplot/running_sum) via the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult (NES/padj taken verbatim from master_gsea_table.csv; ranked vector from 02_de_results.rds; gene sets from geneset_%s_%s.rds). %s",
+      "%s gene-set enrichment for each contrast, as four panels per cell: dotplot, facet, barplot and running sum. Every NES and adjusted p is read from master_gsea_table.csv, the ranked vector from 02_de_results.rds and the gene sets from geneset_%s_%s.rds, so the panels carry the sweep's own numbers. %s",
       db_name, src, db_name, db_body),
     script   = SCRIPT,
     fn       = "gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot",
     config_kv = CFG_KV,
     input    = sprintf("03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_%s_%s.rds}", src, db_name),
     how_to_read = paste0(sprintf(
-      "SELECTION RULES, one per panel, which govern which sets appear: dotplot and facet draw the top %d sets by ADJUSTED P; barplot draws FDR-significant sets only, top %d by |NES|; running_sum draws the top %d sets by |NES|. Note that the dotplot SELECTS by adjusted p but ORDERS its y-axis by GeneRatio descending, so vertical position on the dotplot is not a significance ranking. dotplot: x = GeneRatio (leading-edge genes / set size), point size = -log10(padj), fill = NES (orange %s = positive / blue %s = negative), black outline = padj < %.2g. facet: the same dotplot split into an NES>0 and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by NES descending. running_sum: a three-panel enrichment curve per set (top = running enrichment score with the leading-edge peak; middle = gene-hit ticks at each member's rank; bottom = the ranked t-statistic), ES y-range pinned to [%.1f,%.1f] so curves stay comparable across databases, and x a gene's position in the ranking as a FRACTION of its length rather than a raw rank, because ranked universes differ in length between compartments; the axis title carries this one's size. NES > 0 = enriched in the contrast numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C or cGAS-KO).",
-      TOPN, TOPN, RSTOP, POS, NEG, FDR, RSYLIM[1], RSYLIM[2]),
+      "Each panel ranks the sets it draws, and the rules differ, so an absence is a statement about that panel's own ranking metric. Dotplot and facet take the top %d by adjusted p. Barplot takes the FDR-significant sets, top %d by |NES|. The running sum takes the top %d by |NES|. The dotplot selects by adjusted p and orders its y axis by GeneRatio descending, so vertical position there is a gene-ratio order.",
+      TOPN, TOPN, RSTOP),
       db_rank_note,
-      " A set's enrichment is not evidence that the program its name invokes is present; composition would have to be established separately. Claim tier: L3. ",
+      sprintf("\n\nDotplot: x = GeneRatio (leading-edge genes / set size), point size = -log10(adjusted p), fill = NES (orange %s positive, blue %s negative), black outline = adjusted p < %.2g. Facet splits that dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from zero, y ordered by NES descending.",
+              POS, NEG, FDR),
+      sprintf("\n\nRunning sum: three stacked panels on one x axis. Top, the running enrichment score, whose peak is the enrichment score and whose set members left of the peak are the leading edge; its y range is pinned to [%.1f, %.1f] so a curve here compares with every running sum in the project. Middle, one named tick row per set in that set's own colour, each tick a member at its rank. Bottom, the ranked moderated t, the statistic the ranking was built on. X is a gene's position as a fraction of the list's length, because ranked universes differ in length between compartments, and the axis title carries this one's size.",
+              RSYLIM[1], RSYLIM[2]),
+      "\n\nNES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 = enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates a set's gene content in a ranking; establishing that the program the set's name invokes is present takes a separate composition test. Claim tier: L3. ",
       sample_mapping_caption())
   )
 }
@@ -649,27 +668,28 @@ write_caption(
   stage      = STAGE,
   filename   = "README overview",
   finding    = sprintf(
-    "06_gsea GSEA stage: %d MSigDB collections (%s) plus %d custom databases (%s) across %d contrasts. Per-contrast figures in by_contrast/<c>/<DB>/ are built with the RNAseq-toolkit plotters (gsea_dotplot/facet/barplot/running_sum) on a gseaResult reconstructed viz-side from the master table plus cached DE ranks plus gene-set lists; the running_sum is a real enrichplot::gseaplot2 three-panel ES curve. Cross-contrast overviews in _overview/. Produced by 12_gsea_viz.R (VIZ-ONLY; GSEA computed by 05/06_gsea_*_run.R). Standing constraints: write 'no detectable cGAS-dependence at n=5' and never 'cGAS-independent'; do not name a gene set or a block of sets after a regulator it is hoped to represent; read every gene-set size at runtime from the master table. Claim tier: L3. %s",
+    "Gene-set enrichment of the iTreg 39/37 °C x cGAS design across %d contrasts, over %d MSigDB collections (%s) and %d curated databases (%s).\n\nEach (contrast x database) cell has its own dotplot, facet, barplot and running sum under by_contrast/<contrast>/<database>/; cross-contrast panels sit in _overview/. The enrichment itself was computed by 05_gsea_msigdb_run.R and 06_gsea_custom_run.R; this stage draws it. Every gene-set size is read at run time from master_gsea_table.csv, so a size on a figure is the size the test used. Claim tier: L3. %s",
+    length(CONTRASTS),
     length(MSIGDB_NAMES), paste(MSIGDB_NAMES, collapse = ", "),
     length(CUSTOM_NAMES), paste(CUSTOM_NAMES, collapse = ", "),
-    length(CONTRASTS), sample_mapping_caption()),
+    sample_mapping_caption()),
   script     = SCRIPT,
   fn         = "save_overview / save_figure",
   config_kv  = CFG_KV,
   input      = "03_results/master/master_gsea_table.csv",
   how_to_read = paste0(
-    "NES > 0 = enriched in the numerator side of the contrast (39 °C or WT genotype). ",
-    "NES < 0 = enriched in the denominator side (37 °C or cGAS-KO). ",
-    "Glyph convention: orange = positive, blue = negative (colors.diverging in config). ",
-    "* or filled point = padj < ", FDR, ". ",
-    "Interaction contrast: (WT_heat) - (KO_heat); a positive Interaction NES is consistent with ",
-    "cGAS-dependent induction, and a non-significant one means no detectable cGAS-dependence at n=5. ",
-    "Every panel in this stage ranks the sets it draws, and the ranking metric differs between panels ",
-    "(adjusted p for dotplot/facet, |NES| for barplot/running_sum), so read an absence against the ",
-    "ranking rule named in that panel's own caption before reading it as a null. ",
-    sample_mapping_caption(), " Group identity was also recovered independently from marker genes ",
-    "(the Hspa1b thermometer plus Cgas), and the two agree. ",
-    "Claim tier: L3 (DE/enrichment statistics). Never L7 (mechanism) in a figure title."),
+    "NES > 0 = enriched in the numerator side of the contrast, 39 °C or WT. NES < 0 = enriched ",
+    "in the denominator side, 37 °C or cGAS-KO. Orange = positive, blue = negative ",
+    "(colors.diverging in the config). A star or a filled point marks adjusted p < ", FDR, ".",
+    "\n\nThe Interaction contrast is (WT_heat) - (KO_heat), and it is the cGAS-dependence ",
+    "read-out. A positive significant Interaction NES is consistent with cGAS-dependent ",
+    "induction. A non-significant one reads as no detectable cGAS-dependence at n = 5; the 1-df ",
+    "interaction term is the least-powered contrast in this design.",
+    "\n\nEvery panel here ranks the sets it draws, on adjusted p for the dotplot and facet and on ",
+    "|NES| for the barplot and running sum. Read an absence against the ranking rule in that ",
+    "panel's own caption. Claim tier: L3, DE and enrichment statistics.",
+    "\n\n", sample_mapping_caption(), " Group identity was recovered independently from marker ",
+    "genes as well, the Hspa1b thermometer plus Cgas, and the two agree."),
   config     = FIG_CFG
 )
 

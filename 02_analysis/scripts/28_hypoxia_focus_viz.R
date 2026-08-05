@@ -2,10 +2,15 @@
 ## Two hypoxia-focused running-enrichment panels, written to
 ## 03_results/06_gsea/figures/_overview/:
 ##
-##   hypoxia_running_sum_wt_heat   HALLMARK_HYPOXIA alone in the WT_heat contrast, drawn
-##                                 as the canonical three-panel RNAseq-toolkit running-sum
-##                                 figure (running ES / gene-hit rug / ranked metric) via
-##                                 gsea_running_sum_plot() -> enrichplot::gseaplot2().
+##   runsum_HALLMARK_HYPOXIA       HALLMARK_HYPOXIA in the three focal contrasts, drawn as
+##                                 one three-panel running sum — running enrichment score,
+##                                 one named gene-hit tick row per contrast, and the three
+##                                 ranked moderated-t curves — with the contrasts overlaid
+##                                 on one fractional-rank axis. This is the layout the human
+##                                 compartments draw the same set in, and the stem is theirs
+##                                 too, so the two panels read against each other row for
+##                                 row. A gseaResult carries one ranked list, so the three
+##                                 panels are composed here from three objects.
 ##   hypoxia_routes_by_contrast    Four hypoxia-named gene sets, one per database, drawn as
 ##                                 running-ES curves faceted by the three focal contrasts
 ##                                 WT_heat / KO_heat / Interaction.
@@ -18,9 +23,9 @@
 ## Why these panels exist alongside the general ones. The general running sums of this stage
 ## draw the top figures.running_sum_top sets per (contrast x database) cell by |NES|, and
 ## HALLMARK_HYPOXIA is 6th by |NES| in the WT_heat Hallmark cell (+1.91) while sitting 4th by
-## adjusted p (4.2e-06), so it falls outside them by construction. The general panels pin no
-## set by name, so a figure that does pin one owes that provenance line in every caption it
-## writes, which is what BY_NAME_NOTE and BY_NAME_NOTE_ONE below carry.
+## adjusted p (4.2e-06), so the |NES| quota leaves it out. The general panels select on
+## statistics alone, so a figure that names its sets owes that provenance line in every
+## caption it writes, which is what BY_NAME_NOTE and BY_NAME_NOTE_ONE below carry.
 ##
 ## The fourth set earns its curve. REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and
 ## non-significant in all three contrasts, and is drawn at the same weight with its own
@@ -97,9 +102,31 @@ PICKS <- tibble::tribble(
   "GOBP_RESPONSE_TO_OXYGEN_LEVELS",                     "GO_BP",     "GO BP",
   "REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA",              "Reactome",  "Reactome")
 
-FOCAL <- c("WT_heat", "KO_heat", "Interaction")   # the three contrasts in figure 2
+FOCAL <- c("WT_heat", "KO_heat", "Interaction")   # the three contrasts in both figures
 FOCUS_SET      <- "HALLMARK_HYPOXIA"              # the single set in figure 1
 FOCUS_DATABASE <- "Hallmark"
+
+# One colour per contrast for figure 1, three separated hues from the config's
+# colourblind-safe palette. Figure 1 draws one set in three contrasts, so colour there keys
+# the contrast; figure 2 draws four sets per contrast, so colour there keys the set.
+CONTRAST_COLOR <- c(
+  WT_heat     = OI$vermillion    %||% "#D55E00",
+  KO_heat     = OI$blue          %||% "#0072B2",
+  Interaction = OI$bluish_green  %||% "#009E73")
+
+# ES : tick-rows : metric height proportions, shared with every other running sum here.
+RSHEIGHTS <- as.numeric(unlist(FIG_CFG$figures$running_sum_heights %||% c(2.4, 0.7, 0.9)))
+
+# Canvas for figure 1, matched to the human compartments' running sums so the two are one
+# geometry and one scale.
+F1_W <- 11.0
+F1_H <- 8.5
+
+# Stride for the drawn ranked-metric curve in figure 1's bottom panel. The ranked vector is
+# sorted by construction, so the curve is monotone and every 25th rank plus both endpoints
+# redraws it exactly at this canvas, where all ~19,700 x 3 would make the vector PDF
+# unopenable in an editor. This thins what is DRAWN; nothing is computed from it.
+F1_METRIC_EVERY <- 25L
 
 CFG_KV <- sprintf(
   "thresholds.gsea_fdr=%.2g; figures.running_sum_ylim=[%.1f,%.1f]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=%d; figures.top_pathways=%d; colors.okabe_ito",
@@ -418,31 +445,27 @@ N_FOCUS_DB_SETS <- dplyr::n_distinct(
   mg$pathway_id[mg$database == FOCUS_DATABASE & mg$contrast == "WT_heat"])
 
 # The provenance sentence that travels with every artifact this script writes: these figures
-# name their sets, where the general panels of this GSEA sweep pin nothing.
+# name their sets, where the general panels of this GSEA sweep select on statistics alone.
 BY_NAME_NOTE <- paste0(
-  "SELECTION RULE: these ", nrow(PICKS), " sets were chosen BY NAME, one per database, with no ",
-  "input from their adjusted p or |NES|. The general per-database and pooled panels of this GSEA ",
-  "sweep pin no set by name, and no pin from this figure is carried back into them. So this is a ",
-  "named-set read-out and says nothing about how these four rank among the thousands of sets they ",
-  "came from.")
+  "These ", nrow(PICKS), " sets were chosen by name, one per database. Their adjusted p and ",
+  "|NES| played no part in the choice, and the sweep's general panels select on those ",
+  "statistics alone. This is a named-set read-out; where these four rank among the thousands ",
+  "of sets they came from is a separate question.")
 
 BY_NAME_NOTE_ONE <- paste0(
-  "SELECTION RULE: this set was chosen BY NAME, and its adjusted p and |NES| played no part ",
-  "in that choice. The general per-database and pooled panels of this GSEA sweep pin no set ",
-  "by name, and no pin from this figure is carried back into them. This panel draws one set ",
-  "out of the ", N_FOCUS_DB_SETS, " that the ", db_display(FOCUS_DATABASE), " collection ",
-  "contributed to this contrast, so read the two ranks quoted above as the whole of what it ",
-  "says about where this set stands among them.")
+  "This set was chosen by name, and its adjusted p and |NES| played no part in the choice. ",
+  "The ", db_display(FOCUS_DATABASE), " collection contributed ", N_FOCUS_DB_SETS,
+  " sets to this sweep, and the two ranks quoted above are the whole of what this panel ",
+  "says about where this one stands among them.")
 
 COMPOSITION_NOTE <- paste0(
-  "A set's enrichment is not evidence that the program its name invokes is present; ",
-  "composition would have to be established separately. The four names overlap in wording ",
-  "while their gene content differs, which is why each is drawn on its own curve.")
+  "An enrichment locates a set's gene content in a ranking. Establishing that the program the ",
+  "set's name invokes is present takes a separate composition test. The four names overlap in ",
+  "wording while their gene content differs, which is why each has its own curve.")
 
 COMPOSITION_NOTE_ONE <- paste0(
-  "A set's enrichment is not evidence that the program its name invokes is present; ",
-  "composition would have to be established separately. What this curve locates is where ",
-  "the set's member genes sit in one ranking.")
+  "An enrichment locates a set's gene content in a ranking. Establishing that the program the ",
+  "set's name invokes is present takes a separate composition test.")
 
 TIER_NOTE <- paste0("Claim tier: L3 (DE and enrichment statistics). ",
                     sample_mapping_caption())
@@ -452,92 +475,186 @@ SIGN_NOTE <- paste0(
   "denominator (37 °C or cGAS-KO).")
 
 # ============================================================================
-# 5. Figure 1: HALLMARK_HYPOXIA alone, WT_heat, three-panel running sum
+# 5. Figure 1: HALLMARK_HYPOXIA across the three focal contrasts
 # ============================================================================
+# The layout the human compartments draw this same set in, down to the stem: running
+# enrichment score, one named gene-hit tick row per series, and the ranked metric, stacked on
+# one fractional-rank axis in the config's running_sum_heights proportions.
+#
+# gsea_running_sum_plot() cannot draw this. It takes ONE gseaResult, and a gseaResult carries
+# one ranked list, so drawing one set against three different rankings needs three objects and
+# a composition here. The toolkit geometry is reproduced rather than called: the ES curves come
+# from es_curve(), which is the stage's existing gseaplot2(subplots = 1) path, so figure 1 and
+# figure 2 still share one running-ES code path.
 
 f1_pick <- PICKS %>% dplyr::filter(pathway_id == FOCUS_SET, database == FOCUS_DATABASE)
-g1      <- as_gsearesult("WT_heat", f1_pick)
-r1      <- g1@result[FOCUS_SET, ]
+f1_g    <- stats::setNames(lapply(FOCAL, function(co) as_gsearesult(co, f1_pick)), FOCAL)
+
+# One master row per contrast, in FOCAL order, for the legend and the source table.
+f1_rows <- FOCUS_ROWS %>% dplyr::filter(pathway_id == FOCUS_SET) %>% dplyr::arrange(contrast)
+r1      <- f1_g[["WT_heat"]]@result[FOCUS_SET, ]        # the contrast the caption quotes
 r1_le   <- n_leading(r1$core_enrichment)
 
-message(sprintf("[28] figure 1 (WT_heat / %s): NES %+.4f, p %.4g, padj %.4g, setSize %d, leading edge %d",
-                FOCUS_SET, r1$NES, r1$pvalue, r1$p.adjust, r1$setSize, r1_le))
+# The drawn geometry, per contrast. Three frames, one x convention.
+#   f1_es      the thinned running-ES polyline
+#   f1_hits    the rank each set member occupies, which is what the tick rows draw
+#   f1_metric  the ranked statistic itself
+# The hit ranks are taken from the ranked vector rather than from the plotter's `position`
+# column, so a tick row and its curve cannot disagree about which genes are in the set.
+f1_es <- list(); f1_hits <- list(); f1_metric <- list()
+for (co in FOCAL) {
+  g  <- f1_g[[co]]
+  rk <- g@geneList
+  if (is.unsorted(rev(rk)))
+    stop("figure 1: the ranked vector for '", co, "' is not sorted descending; ",
+         "rank positions and the drawn metric would disagree.")
+  n  <- length(rk)
+  hit <- match(g@geneSets[[FOCUS_SET]], names(rk))
+  hit <- sort(hit[!is.na(hit)])
 
-# Where the curve peaks, read off the drawn geometry so the caption cannot drift from it.
-f1_curve <- es_curve(g1, FOCUS_SET, thin = FALSE)
-f1_peak  <- f1_curve[which.max(abs(f1_curve$running_score)), ]
-f1_n     <- f1_curve$n_ranked[1]
+  f1_es[[co]] <- es_curve(g, FOCUS_SET) %>% dplyr::mutate(contrast = co, n_ranked = n)
+  f1_hits[[co]] <- data.frame(contrast = co, rank_fraction = hit / n)
+  # The ranked metric is sorted by construction, so the curve is monotone and a regular
+  # subsample plus both endpoints redraws it exactly at this canvas while keeping the vector
+  # PDF openable. F1_METRIC_EVERY is the stride, and the extremes are kept explicitly.
+  keep <- sort(unique(c(1L, n, seq(1L, n, by = F1_METRIC_EVERY))))
+  f1_metric[[co]] <- data.frame(contrast = co, rank_fraction = keep / n,
+                                metric = as.numeric(rk[keep]))
+}
+f1_es     <- dplyr::bind_rows(f1_es)
+f1_hits   <- dplyr::bind_rows(f1_hits)
+f1_metric <- dplyr::bind_rows(f1_metric)
 
-# The legend is this plotter's one channel for NES and adjusted p: gsea_running_sum_plot()
-# calls enrichplot::gseaplot2() with pvalue_table = FALSE hardcoded, and the legend text comes
-# from @result$Description, which `labels` overwrites. Two lines keep the legend column off the
-# panel width, and max_name_length sits past the longest line so the toolkit leaves the wrap
-# where this code put it.
-f1_labs <- stats::setNames(
-  sprintf("%s\n%d genes ranked\nNES %+.2f,  FDR %s",
-          set_legend_label(FOCUS_SET, FOCUS_DATABASE, width = 60L),
-          r1$setSize, r1$NES, fmt_p(r1$p.adjust)),
-  FOCUS_SET)
+# Where each curve peaks, read off the drawn geometry so the caption cannot drift from it.
+f1_peaks <- f1_es %>%
+  dplyr::group_by(contrast) %>%
+  dplyr::slice_max(abs(.data$running_score), n = 1, with_ties = FALSE) %>%
+  dplyr::ungroup()
+f1_peak <- f1_peaks[match("WT_heat", f1_peaks$contrast), ]
+f1_n    <- unique(f1_es$n_ranked)
 
-# Held in a variable so .text_fits() measures the same string that gets drawn. The plotter
-# offers no subtitle channel.
-F1_TITLE <- sprintf("%s %s running enrichment, WT heat 39 vs 37 °C",
+for (i in seq_len(nrow(f1_rows)))
+  message(sprintf("[28] figure 1 (%s / %s): NES %+.4f, p %.4g, padj %.4g, setSize %d, leading edge %d",
+                  as.character(f1_rows$contrast[i]), FOCUS_SET, f1_rows$nes[i], f1_rows$pvalue[i],
+                  f1_rows$padj[i], f1_rows$set_size[i], f1_rows$leading_edge_n[i]))
+
+# Colour keys the contrast here, so the legend is the one channel carrying each contrast's NES
+# and adjusted p. Row order is FOCAL throughout: legend keys, tick rows and statistics.
+F1_LEVELS <- contrast_label(FOCAL, short = TRUE)
+f1_fac <- function(d) dplyr::mutate(
+  d, contrast_lab = factor(contrast_label(.data$contrast, short = TRUE), levels = F1_LEVELS))
+f1_es <- f1_fac(f1_es); f1_hits <- f1_fac(f1_hits); f1_metric <- f1_fac(f1_metric)
+
+F1_COL <- stats::setNames(unname(CONTRAST_COLOR[FOCAL]), F1_LEVELS)
+F1_KEY <- stats::setNames(
+  sprintf("%s   NES %+.2f,  FDR %s,  %d genes ranked of %s",
+          F1_LEVELS, f1_rows$nes, fmt_p(f1_rows$padj), f1_rows$set_size,
+          format(f1_n, big.mark = ",")),
+  F1_LEVELS)
+
+# The tick rows read TOP-DOWN in FOCAL order, so the rows and the legend keys run the same way
+# and the human compartments' panel of this set can be read against this one row for row. y
+# increases upward, so contrast i takes row k - i + 1 and the labels reverse to match.
+f1_hits$row <- length(F1_LEVELS) - as.integer(f1_hits$contrast_lab) + 1L
+
+# The row labels drop the contrast's parenthetical qualifier, which the legend directly above
+# already spells out; a two-line label in a 0.7-share panel crowds the ticks it is naming.
+F1_ROWLAB <- vapply(strsplit(F1_LEVELS, "\n", fixed = TRUE), `[`, character(1), 1)
+
+# Held in variables so .text_fits() measures the strings that get drawn.
+F1_TITLE <- sprintf("%s %s running enrichment across the three contrasts",
                     db_display(FOCUS_DATABASE),
                     format_pathway_name(FOCUS_SET, use_formatting = TRUE, strip_prefix = TRUE))
+F1_SUB   <- SIGN_NOTE
 
-# The palette stays unnamed: the vendored gsea_running_sum_plot.R warns in its @note that a
-# named palette breaks enrichplot::gseaplot2() for databases whose pathway ids differ from the
-# Description field.
-p1 <- gsea_running_sum_plot(
-  g1,
-  gene_set_ids    = FOCUS_SET,
-  palette         = unname(SET_COLOR[[FOCUS_SET]]),
-  labels          = f1_labs,
-  max_name_length = max(nchar(f1_labs)) + 1L,
-  title           = F1_TITLE)
+# --- panel 1: the running enrichment score --------------------------------------------------
+f1_p_es <- ggplot(f1_es, aes(x = rank_fraction, y = running_score, colour = contrast_lab)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
+  geom_line(linewidth = LINEW) +
+  scale_colour_manual(values = F1_COL, labels = F1_KEY, name = NULL) +
+  coord_cartesian(ylim = RSYLIM) +
+  labs(title = F1_TITLE, subtitle = F1_SUB, x = NULL, y = "Running enrichment score") +
+  project_theme(config = FIG_CFG) +
+  theme(legend.position = "inside", legend.position.inside = c(0.02, 0.02),
+        legend.justification = c(0, 0), legend.background = element_blank(),
+        axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-# The required post-styling step: pins the ES y-range to figures.running_sum_ylim, puts rank
-# fraction on x, collects one legend outside-right, keeps x ticks on the bottom panel, and
-# applies project_theme.
-p1 <- style_series(p1, ylim = RSYLIM, n_ranked = f1_n, config = FIG_CFG)
-.text_fits(p1, CANVAS_W, title = F1_TITLE)
+# --- panel 2: one named tick row per contrast -----------------------------------------------
+f1_p_rug <- ggplot(f1_hits, aes(x = rank_fraction, colour = contrast_lab)) +
+  geom_linerange(aes(ymin = row - 0.92, ymax = row - 0.08), linewidth = 0.5) +
+  scale_colour_manual(values = F1_COL, guide = "none") +
+  scale_y_continuous(breaks = seq_along(F1_ROWLAB) - 0.5, labels = rev(F1_ROWLAB),
+                     limits = c(0, length(F1_ROWLAB)), expand = c(0, 0)) +
+  labs(x = NULL, y = NULL) +
+  project_theme(config = FIG_CFG) +
+  theme(panel.grid = element_blank(), axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(), axis.title.y = element_blank())
 
-f1_tbl <- FOCUS_ROWS %>%
-  dplyr::filter(pathway_id == FOCUS_SET, contrast == "WT_heat") %>%
+# --- panel 3: the ranked metric each curve was computed on ----------------------------------
+f1_p_met <- ggplot(f1_metric, aes(x = rank_fraction, y = metric, colour = contrast_lab)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
+  geom_line(linewidth = LINEW * 0.7) +
+  scale_colour_manual(values = F1_COL, guide = "none") +
+  labs(x = rank_fraction_lab(f1_n), y = metric_axis_lab(FIG_CFG)) +
+  project_theme(config = FIG_CFG)
+
+# The three panels share one x by construction: every frame carries rank_fraction on [0, 1] and
+# every panel takes the same scale, so patchwork aligns the panel regions column-wise. No panel
+# sets aspect.ratio, which is what would desync the widths.
+p1 <- (f1_p_es / f1_p_rug / f1_p_met) +
+  patchwork::plot_layout(heights = RSHEIGHTS) &
+  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2),
+                     labels = format(seq(0, 1, by = 0.2)), expand = c(0, 0))
+.text_fits(p1, F1_W, title = F1_TITLE, subtitle = F1_SUB, canvas_h = F1_H)
+
+f1_tbl <- f1_rows %>%
+  dplyr::left_join(f1_peaks %>% dplyr::transmute(contrast, peak_es = running_score,
+                                                 peak_rank_fraction = rank_fraction),
+                   by = "contrast") %>%
   dplyr::transmute(pathway_id = as.character(pathway_id), pathway_name, database,
                    contrast = as.character(contrast), nes, pvalue, padj,
-                   set_size, leading_edge_n, n_ranked = f1_n, panel_key = tag)
+                   set_size, leading_edge_n, n_ranked = f1_n, peak_es, peak_rank_fraction,
+                   panel_key = tag)
 
 save_overview(
   plot      = p1,
   stage     = STAGE,
-  name      = "hypoxia_running_sum_wt_heat",
+  name      = sprintf("runsum_%s", FOCUS_SET),
   table     = f1_tbl,
+  width     = F1_W,
+  height    = F1_H,
   finding   = sprintf(
-    "Running enrichment of the single Hallmark set HALLMARK_HYPOXIA against the WT 39-vs-37 °C ranked %s-statistic. NES %+.4f, p %.4g, adjusted p %.4g, %d of the set's genes present in the %s-gene ranked universe, %d of them in the leading edge. The curve peaks at an enrichment score of %+.3f at rank %s, which is the top %.0f%% of the ranking, so the set's members are concentrated toward the 39 °C end of the WT ordering. The statistics on the figure are taken verbatim from master_gsea_table.csv, and the curve geometry is recomputed deterministically from the same ranked vector the sweep used, at exponent 1, with no permutation re-run. This set sits 6th by |NES| and 4th by adjusted p in the WT_heat Hallmark cell, so it falls outside the general running-sum panels of this GSEA sweep, which draw the top %d sets per cell by |NES|. Its enrichment locates where these %d genes sit in one ranking, and the gene content of the set is a separate question from the name the set carries.",
+    "Running enrichment of the single Hallmark set HALLMARK_HYPOXIA against each of the three focal contrasts' ranked %s-statistics, on one axis. In WT heat: NES %+.4f, p %.4g, adjusted p %.4g, %d of the set's genes present in the %s-gene ranked universe, %d of them in the leading edge, and the curve peaks at an enrichment score of %+.3f in the top %.0f%% of the ranking, so the set's members are concentrated toward the 39 °C end. Across the three contrasts the NES values are %s, so the set separates warmed from unwarmed iTregs in both genotypes while the interaction term carries %s. The statistics are taken verbatim from master_gsea_table.csv, and every curve is recomputed deterministically from the same ranked vector the sweep used, at exponent 1, with no permutation re-run. This set sits 6th by |NES| and 4th by adjusted p in the WT_heat Hallmark cell, so the |NES| quota of this sweep's general running-sum panels leaves it out. Its enrichment locates where these %d genes sit in a ranking, and the gene content of the set is a separate question from the name the set carries.",
     RANK_METRIC, r1$NES, r1$pvalue, r1$p.adjust, r1$setSize,
     format(f1_n, big.mark = ","), r1_le,
-    f1_peak$running_score, format(f1_peak$x, big.mark = ","),
-    100 * f1_peak$x / f1_n, RSTOP, r1$setSize),
+    f1_peak$running_score, 100 * f1_peak$rank_fraction,
+    paste(sprintf("%s %+.2f (FDR %s)", F1_LEVELS, f1_rows$nes, fmt_p(f1_rows$padj)),
+          collapse = ", "),
+    if (any(f1_rows$padj[f1_rows$contrast == "Interaction"] < FDR)) "a significant difference"
+    else "none",
+    r1$setSize),
   script    = SCRIPT,
-  fn        = "gsea_running_sum_plot",
+  fn        = "top-level (f1_p_es / f1_p_rug / f1_p_met)",
   config_kv = CFG_KV,
   input     = "03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}",
   how_to_read = paste0(
-    "Three stacked panels sharing one x axis: each gene's position in the WT_heat ranked list as a ",
-    "FRACTION of its length, most 39 °C-shifted at 0, most 37 °C-shifted at 1, because ranked ",
-    "universes differ in length between compartments; the axis title carries this one's size. ",
-    "Top panel: the running enrichment score, which steps up at each gene belonging to the set ",
-    "and decays between them. Its peak is the enrichment score, and the set members left of the ",
-    "peak are the leading edge. ",
-    "The y range is pinned to [", RSYLIM[1], ", ", RSYLIM[2], "] so the curve stays comparable to ",
-    "every other running-sum figure in this GSEA sweep. Middle panel: one tick per set member at ",
-    "that member's rank, over a band showing where the ranking crosses zero. Bottom panel: the ",
-    "ranked ", RANK_METRIC, "-statistic, which shows how much signal each rank carries. The ",
-    "legend carries the set name, its genes present in the ranked universe, its NES and its ",
-    "adjusted p. ", SIGN_NOTE, " This set is 6th by |NES| and 4th by adjusted p in its cell, so ",
-    "the general running-sum panels of this GSEA sweep, which draw the top ", RSTOP,
-    " per cell by |NES|, leave it out by construction. ",
+    "Three stacked panels sharing one x axis, which is each gene's position in that contrast's ",
+    "ranked list as a FRACTION of its length, most 39 °C-shifted at 0, most 37 °C-shifted at 1, ",
+    "because ranked universes differ in length between compartments; the axis title carries this ",
+    "one's size. Colour keys the CONTRAST, and the same three colours run through all three ",
+    "panels. Top panel: the running enrichment score, which steps up at each gene belonging to ",
+    "the set and decays between them. Its peak is the enrichment score, and the set members left ",
+    "of the peak are the leading edge. The y range is pinned to [", RSYLIM[1], ", ", RSYLIM[2],
+    "] so the curves stay comparable to every other running-sum figure in this GSEA sweep. ",
+    "Middle panel: one tick per set member at that member's rank, in its own labelled row per ",
+    "contrast, so where a contrast places the same genes can be read row against row. Bottom ",
+    "panel: the ranked ", RANK_METRIC, "-statistic each curve above was computed on, which shows ",
+    "how much signal each rank carries; it is drawn at every ", F1_METRIC_EVERY,
+    "th rank plus both endpoints, which redraws a sorted vector exactly at this size. The legend ",
+    "carries each contrast's NES, adjusted p and genes present in the ranked universe. ",
+    SIGN_NOTE, " This set is 6th by |NES| and 4th by adjusted p in its WT_heat cell, so the ",
+    "general running-sum panels of this GSEA sweep, which draw the top ", RSTOP,
+    " per cell by |NES|, leave it out. ",
     BY_NAME_NOTE_ONE, " ", COMPOSITION_NOTE_ONE, " ", TIER_NOTE),
   config    = FIG_CFG)
 
@@ -642,7 +759,7 @@ save_overview(
   name      = "hypoxia_routes_by_contrast",
   table     = f2_tbl,
   finding   = sprintf(
-    "Running-enrichment curves for four hypoxia-named gene sets, one per database, across the three focal contrasts. %s. %s. %s. Three of the four sets carry a positive NES and reach FDR < %.2g in both per-genotype heat contrasts, and the fourth, REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no significance in any of the three; %d of the 12 (set x contrast) cells reach FDR < %.2g. Every Interaction NES is non-significant, which reads as no detectable cGAS-dependence at n=5 and never as proven cGAS-independence: the 1-df interaction term is the least-powered contrast in this design. All four sets were chosen by name, so the panel reports these four curves and ranks nothing.",
+    "Running-enrichment curves for four hypoxia-named gene sets, one per database, across the three focal contrasts. %s. %s. %s. Three of the four sets carry a positive NES and reach FDR < %.2g in both per-genotype heat contrasts, and the fourth, REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no significance in any of the three; %d of the 12 (set x contrast) cells reach FDR < %.2g. Every Interaction NES is non-significant, which reads as no detectable cGAS-dependence at n=5; the 1-df interaction term is the least-powered contrast in this design. All four sets were chosen by name, so the panel reports these four curves and leaves ranking to the general panels.",
     f2_line("WT_heat"), f2_line("KO_heat"), f2_line("Interaction"),
     FDR, nrow(f2_sig), FDR),
   script    = SCRIPT,
@@ -650,25 +767,24 @@ save_overview(
   config_kv = CFG_KV,
   input     = "03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}",
   how_to_read = paste0(
-    "One facet per contrast, and within each facet four overlaid running-enrichment curves, one ",
-    "per gene set, keyed by colour in the shared legend below the panels. The x axis is each gene's ",
-    "position in THAT contrast's ranked list as a FRACTION of its length, most numerator-shifted at ",
-    "0, most denominator-shifted at 1, so the facets share an axis and each carries its own ",
-    "ordering; a fraction rather than a rank because ranked universes differ in length between ",
-    "compartments, and the axis title carries these rankings' size. A curve steps up at each gene ",
-    "belonging to its set and decays between them: an early high peak means the members are packed ",
-    "at the numerator end, and a curve near zero ",
-    "means they are spread through the list. The y range is pinned to [",
-    RSYLIM[1], ", ", RSYLIM[2], "] so every curve stays comparable to every other running-sum ",
-    "figure in this GSEA sweep. Inside each facet the NES and adjusted p for that contrast are ",
-    "printed in each set's own colour, in the legend's own top-to-bottom order, keyed by database ",
-    "name because each of the four sets comes from a different database. The member ticks and the ",
-    "ranked-metric panel are left off to keep four curves per facet legible; the companion figure ",
-    "hypoxia_running_sum_wt_heat.png draws all three panels for one set. ", SIGN_NOTE, " ",
-    "The Interaction facet is the cGAS-dependence read-out: a positive significant Interaction NES ",
-    "is consistent with cGAS-dependent induction, and a non-significant one means no detectable ",
-    "cGAS-dependence at n=5. ", BY_NAME_NOTE, " ",
-    "Read the fourth curve as carefully as the other three: three of these hypoxia-named sets ",
+    "One facet per contrast, and inside each facet four overlaid running-enrichment curves, one ",
+    "per gene set, keyed by colour in the shared legend below the panels. X is each gene's position ",
+    "in that facet's own ranked list as a fraction of its length, most numerator-shifted at 0 and ",
+    "most denominator-shifted at 1, so the facets share an axis while each keeps its own ordering. ",
+    "The fraction carries across ranked universes of different length, and the axis title carries ",
+    "these rankings' size.",
+    "\n\nA curve steps up at each gene belonging to its set and decays between them, so an early ",
+    "high peak places the members at the numerator end and a curve near zero spreads them through ",
+    "the list. The y range is pinned to [", RSYLIM[1], ", ", RSYLIM[2], "] so every curve here ",
+    "compares with every other running sum in this GSEA sweep. Inside each facet the NES and ",
+    "adjusted p for that contrast are printed in each set's own colour, in the legend's ",
+    "top-to-bottom order and keyed by database name, each of the four sets coming from a different ",
+    "database. Four curves per facet stay legible with the member ticks and the ranked-metric ",
+    "panel left off; the companion three-panel figure draws them for one set. ", SIGN_NOTE,
+    "\n\nThe Interaction facet is the cGAS-dependence read-out. A positive significant Interaction ",
+    "NES is consistent with cGAS-dependent induction; a non-significant one reads as no detectable ",
+    "cGAS-dependence at n=5. ", BY_NAME_NOTE,
+    "\n\nRead the fourth curve as closely as the other three. Three of these hypoxia-named sets ",
     "carry a positive NES in both heat contrasts and the Reactome set carries a negative one, so ",
     "shared wording in two set names leaves shared behaviour an open question. ",
     COMPOSITION_NOTE, " ", TIER_NOTE),
@@ -679,7 +795,7 @@ save_overview(
 # ============================================================================
 ov_fig <- overview_path(STAGE, "figures", config = FIG_CFG)
 ov_tbl <- overview_path(STAGE, "tables",  config = FIG_CFG)
-expect <- c("hypoxia_running_sum_wt_heat", "hypoxia_routes_by_contrast")
+expect <- c(sprintf("runsum_%s", FOCUS_SET), "hypoxia_routes_by_contrast")
 for (nm in expect) {
   for (ext in c("png", "pdf")) {
     fp <- file.path(ov_fig, paste0(nm, ".", ext))

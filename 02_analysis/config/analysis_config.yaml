@@ -562,6 +562,11 @@ figures:
   top_pathways: 20                    # top-N pathways per dotplot/facet/barplot (toolkit showCategory/top_n)
   running_sum_top: 5                  # # of curves per running-sum panel (top-N by |NES|)
   running_sum_ylim: [-1.0, 1.0]       # shared running-ES y-range so curves are comparable across DBs/contrasts
+  # y label for a running sum's bottom panel: the statistic the ranking was built on. These
+  # rankings are limma-trend moderated t (config.R RANK_METRIC = "t"), and the human
+  # compartments label the same axis with the same words, so a panel here and a panel there
+  # read against each other.
+  metric_axis_label: "Moderated t"
   volcano_label_top: 10
   z_clamp: 2.5
   # Symmetric limit for diverging NES fills. Kept fixed rather than per-contrast so one

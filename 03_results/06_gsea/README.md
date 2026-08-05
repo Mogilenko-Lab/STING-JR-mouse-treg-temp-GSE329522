@@ -290,37 +290,39 @@ contrasts (HYPOXIA WT_heat +1.91 padj 4.2e-06, KO_heat +1.95 padj
 2.5e-06) with a negative, non-significant interaction NES (HYPOXIA
 -1.27, padj 0.17), and OXIDATIVE_PHOSPHORYLATION is negative and
 non-significant throughout. A non-significant interaction NES reads
-as no detectable cGAS-dependence at n=5 and never as proven
-cGAS-independence: the 1-df interaction term is the least-powered
-contrast in this design. Set composition is not established by this
-panel, so a set's enrichment is not evidence that the program its
-name invokes is present.
+as no detectable cGAS-dependence at n=5; the 1-df interaction term is
+the least-powered contrast in this design. An enrichment locates a
+set's gene content in a ranking, and establishing that the program a
+set's name invokes is present takes a separate composition test.
 
 **How to read:** Two-block heatmap, one tile per (gene set x contrast). Rows are the
 Hallmark sets whose MSigDB name matches the block's pattern: top
 block =
 'INTERFERON|INNATE_IMMUNE|INFLAMMATORY|TNF|IL6|IL2|ALLOGRAFT'; bottom
-block = 'HYPOXIA|GLYCOLYSIS|MTORC1|OXIDATIVE_PHOSPHORYLATION'.
-SELECTION RULE, which governs every absence you see: within each
-block only the top 12 sets by max |NES| across the plotted contrasts
-are drawn, so a set can be missing because its |NES| is small even
-when its adjusted p is among the smallest. The cap does not bite here
-(Interferon and inflammatory sets = 7, Hypoxia and metabolic sets =
-4), so every Hallmark set matching either pattern is on the panel and
-no absence needs explaining. The two blocks are NAME-PATTERN
-groupings over set names and carry no claim about which regulator
-drives either block. Fill = NES: orange = NES > 0 (enriched in the
-contrast numerator, 39 °C or WT); blue = NES < 0 (enriched in the
-denominator, 37 °C or cGAS-KO); fill is squished at +/-3.2. * = padj
-< 0.05. Row order within a block is by NES. The Interaction column is
-the cGAS-dependence read-out: a positive significant interaction NES
-is consistent with cGAS-dependent induction; a non-significant
-interaction NES means no detectable cGAS-dependence at n=5 and never
-'cGAS-independent'. A set enriching is not evidence that the program
-its name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+block = 'HYPOXIA|GLYCOLYSIS|MTORC1|OXIDATIVE_PHOSPHORYLATION'. Within
+each block the top 12 sets by max |NES| across the plotted contrasts
+are drawn, and that rule governs every absence here: a set can be
+missing on a small |NES| while its adjusted p is among the smallest.
+The cap does not bite here (Interferon and inflammatory sets = 7,
+Hypoxia and metabolic sets = 4), so every Hallmark set matching
+either pattern is on the panel and no absence needs explaining.
+
+The two blocks group set names by pattern. Which regulator drives
+either block is a separate question. Fill = NES: orange = NES > 0,
+enriched in the contrast numerator, 39 °C or WT; blue = NES < 0,
+enriched in the denominator, 37 °C or cGAS-KO; fill is squished at
++/-3.2. A star marks padj < 0.05. Row order within a block is by NES.
+
+The Interaction column is the cGAS-dependence read-out. A positive
+significant interaction NES is consistent with cGAS-dependent
+induction. A non-significant one reads as no detectable
+cGAS-dependence at n = 5, the 1-df interaction term being the
+least-powered contrast in this design. An enrichment locates a set's
+gene content in a ranking; establishing that the program the set's
+name invokes is present takes a separate composition test. Claim
+tier: L3. Sample-to-condition mapping confirmed against the owner's
+sample sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -328,43 +330,51 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/Hallmark/*.png
 
-Hallmark GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_Hallmark.rds).
-Read each set's direction per contrast on its own; the panels rank
-sets within a cell and make no statement about which regulator drives
-any of them.
+Hallmark gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_Hallmark.rds,
+so the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). Worked example of the two rankings diverging: in the
-WT_heat Hallmark cell HALLMARK_HYPOXIA is 6th by |NES| (+1.91) and
-4th by adjusted p (4.2e-06), so it is outside the running-sum's top 5
-by |NES| while sitting well inside the dotplot's top 20 by adjusted
-p. An absence from one panel is a statement about that panel's
-ranking metric only. A set's enrichment is not evidence that the
-program its name invokes is present; composition would have to be
-established separately. Claim tier: L3. Sample-to-condition mapping
-confirmed against the owner's sample sheet (2026-07-22): 20 of 20
-libraries concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+The two rankings diverge, and the WT_heat Hallmark cell shows how.
+HALLMARK_HYPOXIA sits 6th by |NES| (+1.91) and 4th by adjusted p
+(4.2e-06), so it falls inside the dotplot's top 20 by adjusted p and
+outside the running sum's top 5 by |NES|.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -372,38 +382,46 @@ libraries concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/KEGG/*.png
 
-KEGG GSEA per contrast (dotplot/facet/barplot/running_sum) via the
-RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_KEGG.rds). Read
-each set's direction per contrast on its own; the panels rank sets
-within a cell and make no statement about which regulator drives any
-of them.
+KEGG gene-set enrichment for each contrast, as four panels per cell:
+dotplot, facet, barplot and running sum. Every NES and adjusted p is
+read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_KEGG.rds, so
+the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -411,38 +429,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/Reactome/*.png
 
-Reactome GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_Reactome.rds).
-Read each set's direction per contrast on its own; the panels rank
-sets within a cell and make no statement about which regulator drives
-any of them.
+Reactome gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_Reactome.rds,
+so the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -450,38 +476,47 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/WikiPathways/*.png
 
-WikiPathways GSEA per contrast (dotplot/facet/barplot/running_sum)
-via the RNAseq-toolkit plotters on a viz-side-reconstructed
-gseaResult (NES/padj taken verbatim from master_gsea_table.csv;
-ranked vector from 02_de_results.rds; gene sets from
-geneset_msigdb_WikiPathways.rds). Read each set's direction per
-contrast on its own; the panels rank sets within a cell and make no
-statement about which regulator drives any of them.
+WikiPathways gene-set enrichment for each contrast, as four panels
+per cell: dotplot, facet, barplot and running sum. Every NES and
+adjusted p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_msigdb_WikiPathways.rds, so the panels carry the sweep's own
+numbers. Each set's direction is read per contrast on its own. These
+panels rank sets within a cell; which regulator drives a set is a
+separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -489,38 +524,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/GO_BP/*.png
 
-GO_BP GSEA per contrast (dotplot/facet/barplot/running_sum) via the
-RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_GO_BP.rds).
-Read each set's direction per contrast on its own; the panels rank
-sets within a cell and make no statement about which regulator drives
-any of them.
+GO_BP gene-set enrichment for each contrast, as four panels per cell:
+dotplot, facet, barplot and running sum. Every NES and adjusted p is
+read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_GO_BP.rds, so
+the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -528,38 +571,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/GO_MF/*.png
 
-GO_MF GSEA per contrast (dotplot/facet/barplot/running_sum) via the
-RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_GO_MF.rds).
-Read each set's direction per contrast on its own; the panels rank
-sets within a cell and make no statement about which regulator drives
-any of them.
+GO_MF gene-set enrichment for each contrast, as four panels per cell:
+dotplot, facet, barplot and running sum. Every NES and adjusted p is
+read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_GO_MF.rds, so
+the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -567,38 +618,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/GO_CC/*.png
 
-GO_CC GSEA per contrast (dotplot/facet/barplot/running_sum) via the
-RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_msigdb_GO_CC.rds).
-Read each set's direction per contrast on its own; the panels rank
-sets within a cell and make no statement about which regulator drives
-any of them.
+GO_CC gene-set enrichment for each contrast, as four panels per cell:
+dotplot, facet, barplot and running sum. Every NES and adjusted p is
+read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_msigdb_GO_CC.rds, so
+the panels carry the sweep's own numbers. Each set's direction is
+read per contrast on its own. These panels rank sets within a cell;
+which regulator drives a set is a separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -606,38 +665,47 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/TF_Targets/*.png
 
-TF_Targets GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from
-geneset_msigdb_TF_Targets.rds). Read each set's direction per
-contrast on its own; the panels rank sets within a cell and make no
-statement about which regulator drives any of them.
+TF_Targets gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_msigdb_TF_Targets.rds, so the panels carry the sweep's own
+numbers. Each set's direction is read per contrast on its own. These
+panels rank sets within a cell; which regulator drives a set is a
+separate question.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -645,38 +713,47 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/TransportDB/*.png
 
-TransportDB GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from
-geneset_custom_TransportDB.rds). Membrane-transporter sets; this
-database carries no interferon or heat-shock sets, so nothing here
-bears on those axes.
+TransportDB gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_custom_TransportDB.rds, so the panels carry the sweep's own
+numbers. Membrane-transporter sets. This database holds transporters
+alone, so its rows bear on transport and carry no interferon or
+heat-shock term.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -684,38 +761,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/MitoPathways/*.png
 
-MitoPathways GSEA per contrast (dotplot/facet/barplot/running_sum)
-via the RNAseq-toolkit plotters on a viz-side-reconstructed
-gseaResult (NES/padj taken verbatim from master_gsea_table.csv;
-ranked vector from 02_de_results.rds; gene sets from
-geneset_custom_MitoPathways.rds). MitoCarta MitoPathways sets
-(mitochondrial function and metabolism); this database carries no
-interferon or heat-shock sets.
+MitoPathways gene-set enrichment for each contrast, as four panels
+per cell: dotplot, facet, barplot and running sum. Every NES and
+adjusted p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_custom_MitoPathways.rds, so the panels carry the sweep's own
+numbers. MitoCarta MitoPathways sets: mitochondrial function and
+metabolism. The collection holds no interferon or heat-shock term.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -723,38 +808,46 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/MitoXplorer/*.png
 
-MitoXplorer GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from
-geneset_custom_MitoXplorer.rds). MitoXplorer sets (mitochondrial
-metabolic atlas); this database carries no interferon or heat-shock
-sets.
+MitoXplorer gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_custom_MitoXplorer.rds, so the panels carry the sweep's own
+numbers. MitoXplorer sets, the mitochondrial metabolic atlas. The
+collection holds no interferon or heat-shock term.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -762,39 +855,48 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/HSR_lens/*.png
 
-HSR_lens GSEA per contrast (dotplot/facet/barplot/running_sum) via
-the RNAseq-toolkit plotters on a viz-side-reconstructed gseaResult
-(NES/padj taken verbatim from master_gsea_table.csv; ranked vector
-from 02_de_results.rds; gene sets from geneset_custom_HSR_lens.rds).
-Two curated heat-shock-response terms (HSR_core, HSR_sensitivity),
-built by 00d/00e and held anchor-independent of the empirical heat
-arms. Proteotoxic-stress-general in scope; only the 37/39 °C contrast
-bears on temperature.
+HSR_lens gene-set enrichment for each contrast, as four panels per
+cell: dotplot, facet, barplot and running sum. Every NES and adjusted
+p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from geneset_custom_HSR_lens.rds,
+so the panels carry the sweep's own numbers. Two curated
+heat-shock-response terms, HSR_core and HSR_sensitivity, built by the
+00d and 00e curation steps and derived independently of the empirical
+heat arms. Their scope is proteotoxic stress in general; the 37/39 °C
+contrast is the one that bears on temperature.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -802,39 +904,47 @@ concordant with the label-blind marker call.
 
 ## figures/by_contrast/<contrast>/TCR_activation/*.png
 
-TCR_activation GSEA per contrast (dotplot/facet/barplot/running_sum)
-via the RNAseq-toolkit plotters on a viz-side-reconstructed
-gseaResult (NES/padj taken verbatim from master_gsea_table.csv;
-ranked vector from 02_de_results.rds; gene sets from
-geneset_custom_TCR_activation.rds). One curated TCR and
-immediate-early T-cell-activation term, built by 00f and disjoint
-from the HSR core by construction. Overlap of a heat arm with this
-term reads as activation.
+TCR_activation gene-set enrichment for each contrast, as four panels
+per cell: dotplot, facet, barplot and running sum. Every NES and
+adjusted p is read from master_gsea_table.csv, the ranked vector from
+02_de_results.rds and the gene sets from
+geneset_custom_TCR_activation.rds, so the panels carry the sweep's
+own numbers. One curated TCR and immediate-early T-cell-activation
+term, built by the 00f curation step with the HSR core's genes
+excluded. A heat arm overlapping this term reads as activation.
 
-**How to read:** SELECTION RULES, one per panel, which govern which sets appear:
-dotplot and facet draw the top 20 sets by ADJUSTED P; barplot draws
-FDR-significant sets only, top 20 by |NES|; running_sum draws the top
-5 sets by |NES|. Note that the dotplot SELECTS by adjusted p but
-ORDERS its y-axis by GeneRatio descending, so vertical position on
-the dotplot is not a significance ranking. dotplot: x = GeneRatio
-(leading-edge genes / set size), point size = -log10(padj), fill =
-NES (orange #B35806 = positive / blue #2166AC = negative), black
-outline = padj < 0.05. facet: the same dotplot split into an NES>0
-and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by
-NES descending. running_sum: a three-panel enrichment curve per set
-(top = running enrichment score with the leading-edge peak; middle =
-gene-hit ticks at each member's rank; bottom = the ranked
-t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases, and x a gene's position in the ranking
-as a FRACTION of its length rather than a raw rank, because ranked
-universes differ in length between compartments; the axis title
-carries this one's size. NES > 0 = enriched in the contrast numerator
-(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
-cGAS-KO). A set's enrichment is not evidence that the program its
-name invokes is present; composition would have to be established
-separately. Claim tier: L3. Sample-to-condition mapping confirmed
-against the owner's sample sheet (2026-07-22): 20 of 20 libraries
-concordant with the label-blind marker call.
+**How to read:** Each panel ranks the sets it draws, and the rules differ, so an
+absence is a statement about that panel's own ranking metric. Dotplot
+and facet take the top 20 by adjusted p. Barplot takes the
+FDR-significant sets, top 20 by |NES|. The running sum takes the top
+5 by |NES|. The dotplot selects by adjusted p and orders its y axis
+by GeneRatio descending, so vertical position there is a gene-ratio
+order.
+
+Dotplot: x = GeneRatio (leading-edge genes / set size), point size =
+-log10(adjusted p), fill = NES (orange #B35806 positive, blue #2166AC
+negative), black outline = adjusted p < 0.05. Facet splits that
+dotplot into an NES > 0 and an NES < 0 panel. Barplot: NES bars from
+zero, y ordered by NES descending.
+
+Running sum: three stacked panels on one x axis. Top, the running
+enrichment score, whose peak is the enrichment score and whose set
+members left of the peak are the leading edge; its y range is pinned
+to [-1.0, 1.0] so a curve here compares with every running sum in the
+project. Middle, one named tick row per set in that set's own colour,
+each tick a member at its rank. Bottom, the ranked moderated t, the
+statistic the ranking was built on. X is a gene's position as a
+fraction of the list's length, because ranked universes differ in
+length between compartments, and the axis title carries this one's
+size.
+
+NES > 0 = enriched in the contrast numerator, 39 °C or WT. NES < 0 =
+enriched in the denominator, 37 °C or cGAS-KO. An enrichment locates
+a set's gene content in a ranking; establishing that the program the
+set's name invokes is present takes a separate composition test.
+Claim tier: L3. Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -842,41 +952,43 @@ concordant with the label-blind marker call.
 
 ## README overview
 
-06_gsea GSEA stage: 8 MSigDB collections (Hallmark, KEGG, Reactome,
-WikiPathways, GO_BP, GO_MF, GO_CC, TF_Targets) plus 5 custom
+Gene-set enrichment of the iTreg 39/37 °C x cGAS design across 7
+contrasts, over 8 MSigDB collections (Hallmark, KEGG, Reactome,
+WikiPathways, GO_BP, GO_MF, GO_CC, TF_Targets) and 5 curated
 databases (TransportDB, MitoPathways, MitoXplorer, HSR_lens,
-TCR_activation) across 7 contrasts. Per-contrast figures in
-by_contrast/<c>/<DB>/ are built with the RNAseq-toolkit plotters
-(gsea_dotplot/facet/barplot/running_sum) on a gseaResult
-reconstructed viz-side from the master table plus cached DE ranks
-plus gene-set lists; the running_sum is a real enrichplot::gseaplot2
-three-panel ES curve. Cross-contrast overviews in _overview/.
-Produced by 12_gsea_viz.R (VIZ-ONLY; GSEA computed by
-05/06_gsea_*_run.R). Standing constraints: write 'no detectable
-cGAS-dependence at n=5' and never 'cGAS-independent'; do not name a
-gene set or a block of sets after a regulator it is hoped to
-represent; read every gene-set size at runtime from the master table.
-Claim tier: L3. Sample-to-condition mapping confirmed against the
-owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
-the label-blind marker call.
+TCR_activation).
 
-**How to read:** NES > 0 = enriched in the numerator side of the contrast (39 °C or WT
-genotype). NES < 0 = enriched in the denominator side (37 °C or
-cGAS-KO). Glyph convention: orange = positive, blue = negative
-(colors.diverging in config). * or filled point = padj < 0.05.
-Interaction contrast: (WT_heat) - (KO_heat); a positive Interaction
-NES is consistent with cGAS-dependent induction, and a
-non-significant one means no detectable cGAS-dependence at n=5. Every
-panel in this stage ranks the sets it draws, and the ranking metric
-differs between panels (adjusted p for dotplot/facet, |NES| for
-barplot/running_sum), so read an absence against the ranking rule
-named in that panel's own caption before reading it as a null.
+Each (contrast x database) cell has its own dotplot, facet, barplot
+and running sum under by_contrast/<contrast>/<database>/;
+cross-contrast panels sit in _overview/. The enrichment itself was
+computed by 05_gsea_msigdb_run.R and 06_gsea_custom_run.R; this stage
+draws it. Every gene-set size is read at run time from
+master_gsea_table.csv, so a size on a figure is the size the test
+used. Claim tier: L3. Sample-to-condition mapping confirmed against
+the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant
+with the label-blind marker call.
+
+**How to read:** NES > 0 = enriched in the numerator side of the contrast, 39 °C or
+WT. NES < 0 = enriched in the denominator side, 37 °C or cGAS-KO.
+Orange = positive, blue = negative (colors.diverging in the config).
+A star or a filled point marks adjusted p < 0.05.
+
+The Interaction contrast is (WT_heat) - (KO_heat), and it is the
+cGAS-dependence read-out. A positive significant Interaction NES is
+consistent with cGAS-dependent induction. A non-significant one reads
+as no detectable cGAS-dependence at n = 5; the 1-df interaction term
+is the least-powered contrast in this design.
+
+Every panel here ranks the sets it draws, on adjusted p for the
+dotplot and facet and on |NES| for the barplot and running sum. Read
+an absence against the ranking rule in that panel's own caption.
+Claim tier: L3, DE and enrichment statistics.
+
 Sample-to-condition mapping confirmed against the owner's sample
 sheet (2026-07-22): 20 of 20 libraries concordant with the
-label-blind marker call. Group identity was also recovered
-independently from marker genes (the Hspa1b thermometer plus Cgas),
-and the two agree. Claim tier: L3 (DE/enrichment statistics). Never
-L7 (mechanism) in a figure title.
+label-blind marker call. Group identity was recovered independently
+from marker genes as well, the Hspa1b thermometer plus Cgas, and the
+two agree.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -892,32 +1004,37 @@ gained). The panel draws the top 5 sets per database for 13 of the 13
 pooled databases. MitoXplorer carries no pooled-significant set at
 all and keeps its facet so the null stays visible.
 
-**How to read:** Lollipop panel, one facet per database, x = Normalized Enrichment
-Score (NES). Orange fill = positive NES (enriched in the contrast
-numerator), blue = negative, squished at the configured NES cap.
-GLYPH = what becomes of a set when the per-database
+**How to read:** Lollipop panel, one facet per database, x = normalised enrichment
+score (NES). Orange fill = positive NES (enriched in the contrast
+numerator), blue = negative, squished at the configured NES cap. The
+glyph says what becomes of a set when the per-database
 Benjamini-Hochberg correction is replaced by one pooled correction
 over every database: filled circle = significant under both, diamond
 = per-database only (lost on pooling), triangle = pooled only (gained
 on pooling), open circle = neither. The legend keys carry a neutral
-grey fill because the panel spends fill on NES. SELECTION RULE: top N
-per database by padj_pooled, ties broken by the raw p-value then by
-|NES|; N is gsea_pooled_overview.top_n_per_db. Nothing is pinned on
-top of that rank. An earlier revision force-included the Hallmark
-HYPOXIA and INTERFERON sets and the three project-curated lenses
-whatever their rank, which let the panel argue for a conclusion; that
-pin is gone. FACET HEADER (n/N): n of the N sets in that database
-pass the pooled FDR, counted over the whole database. A header
-reading (0/23) marks a real null, and those facets stay on the
-canvas, since dropping a database because it came out empty would
-leave a panel selected for positives. EXCLUDED FROM THE PANEL:
-whatever gsea_pooled_overview.exclude_databases names, which is
-currently empty, so the facet count and the pooled-family database
-count agree. An excluded database stays inside the pooled correction
-and in every 06_gsea table. CAVEAT: padj_pooled is a comparability
-device across databases rather than a calibrated error rate, since GO
-terms and pathway sets share genes. Claim tier: L3 (enrichment
-statistics). Sample mapping owner-confirmed.
+grey fill because the panel spends fill on NES.
+
+Each facet draws the top N sets in its database by padj_pooled, ties
+broken on the raw p-value and then on |NES|, with N from
+gsea_pooled_overview.top_n_per_db. That rank is the whole of the
+selection. An earlier revision also pinned the Hallmark HYPOXIA and
+INTERFERON sets and the three project-curated lenses at any rank,
+which let the panel argue for a conclusion; the pin has been removed.
+
+A facet header reads (n/N): n of the N sets in that database pass the
+pooled FDR, counted over the whole database. A header reading (0/23)
+marks a real null, and those facets keep their place on the canvas;
+dropping a database for coming out empty would leave a panel selected
+for positives. The panel omits whatever
+gsea_pooled_overview.exclude_databases names, currently nothing, so
+the facet count and the pooled-family database count agree. An
+omitted database stays inside the pooled correction and in every
+06_gsea table.
+
+Read padj_pooled as a comparability device across databases. It is a
+calibrated error rate only where the sets are independent, and GO
+terms and pathway sets share genes. Claim tier: L3, enrichment
+statistics. Sample mapping owner-confirmed.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -935,32 +1052,37 @@ them carry no pooled-significant set at all (HSR_lens, MitoPathways,
 MitoXplorer, TCR_activation, TransportDB) and keep their facets so
 the nulls stay visible.
 
-**How to read:** Lollipop panel, one facet per database, x = Normalized Enrichment
-Score (NES). Orange fill = positive NES (enriched in the contrast
-numerator), blue = negative, squished at the configured NES cap.
-GLYPH = what becomes of a set when the per-database
+**How to read:** Lollipop panel, one facet per database, x = normalised enrichment
+score (NES). Orange fill = positive NES (enriched in the contrast
+numerator), blue = negative, squished at the configured NES cap. The
+glyph says what becomes of a set when the per-database
 Benjamini-Hochberg correction is replaced by one pooled correction
 over every database: filled circle = significant under both, diamond
 = per-database only (lost on pooling), triangle = pooled only (gained
 on pooling), open circle = neither. The legend keys carry a neutral
-grey fill because the panel spends fill on NES. SELECTION RULE: top N
-per database by padj_pooled, ties broken by the raw p-value then by
-|NES|; N is gsea_pooled_overview.top_n_per_db. Nothing is pinned on
-top of that rank. An earlier revision force-included the Hallmark
-HYPOXIA and INTERFERON sets and the three project-curated lenses
-whatever their rank, which let the panel argue for a conclusion; that
-pin is gone. FACET HEADER (n/N): n of the N sets in that database
-pass the pooled FDR, counted over the whole database. A header
-reading (0/23) marks a real null, and those facets stay on the
-canvas, since dropping a database because it came out empty would
-leave a panel selected for positives. EXCLUDED FROM THE PANEL:
-whatever gsea_pooled_overview.exclude_databases names, which is
-currently empty, so the facet count and the pooled-family database
-count agree. An excluded database stays inside the pooled correction
-and in every 06_gsea table. CAVEAT: padj_pooled is a comparability
-device across databases rather than a calibrated error rate, since GO
-terms and pathway sets share genes. Claim tier: L3 (enrichment
-statistics). Sample mapping owner-confirmed.
+grey fill because the panel spends fill on NES.
+
+Each facet draws the top N sets in its database by padj_pooled, ties
+broken on the raw p-value and then on |NES|, with N from
+gsea_pooled_overview.top_n_per_db. That rank is the whole of the
+selection. An earlier revision also pinned the Hallmark HYPOXIA and
+INTERFERON sets and the three project-curated lenses at any rank,
+which let the panel argue for a conclusion; the pin has been removed.
+
+A facet header reads (n/N): n of the N sets in that database pass the
+pooled FDR, counted over the whole database. A header reading (0/23)
+marks a real null, and those facets keep their place on the canvas;
+dropping a database for coming out empty would leave a panel selected
+for positives. The panel omits whatever
+gsea_pooled_overview.exclude_databases names, currently nothing, so
+the facet count and the pooled-family database count agree. An
+omitted database stays inside the pooled correction and in every
+06_gsea table.
+
+Read padj_pooled as a comparability device across databases. It is a
+calibrated error rate only where the sets are independent, and GO
+terms and pathway sets share genes. Claim tier: L3, enrichment
+statistics. Sample mapping owner-confirmed.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
@@ -981,94 +1103,44 @@ Interaction on the right, sharing the single legend at the foot. The
 facet order is identical on both sides, so a database sits at the
 same height in each; each panel's own subtitle carries its
 pooled-family counts, which differ between contrasts. Lollipop panel,
-one facet per database, x = Normalized Enrichment Score (NES). Orange
+one facet per database, x = normalised enrichment score (NES). Orange
 fill = positive NES (enriched in the contrast numerator), blue =
-negative, squished at the configured NES cap. GLYPH = what becomes of
-a set when the per-database Benjamini-Hochberg correction is replaced
-by one pooled correction over every database: filled circle =
-significant under both, diamond = per-database only (lost on
+negative, squished at the configured NES cap. The glyph says what
+becomes of a set when the per-database Benjamini-Hochberg correction
+is replaced by one pooled correction over every database: filled
+circle = significant under both, diamond = per-database only (lost on
 pooling), triangle = pooled only (gained on pooling), open circle =
 neither. The legend keys carry a neutral grey fill because the panel
-spends fill on NES. SELECTION RULE: top N per database by
-padj_pooled, ties broken by the raw p-value then by |NES|; N is
-gsea_pooled_overview.top_n_per_db. Nothing is pinned on top of that
-rank. An earlier revision force-included the Hallmark HYPOXIA and
-INTERFERON sets and the three project-curated lenses whatever their
-rank, which let the panel argue for a conclusion; that pin is gone.
-FACET HEADER (n/N): n of the N sets in that database pass the pooled
-FDR, counted over the whole database. A header reading (0/23) marks a
-real null, and those facets stay on the canvas, since dropping a
-database because it came out empty would leave a panel selected for
-positives. EXCLUDED FROM THE PANEL: whatever
-gsea_pooled_overview.exclude_databases names, which is currently
-empty, so the facet count and the pooled-family database count agree.
-An excluded database stays inside the pooled correction and in every
-06_gsea table. CAVEAT: padj_pooled is a comparability device across
-databases rather than a calibrated error rate, since GO terms and
-pathway sets share genes. Claim tier: L3 (enrichment statistics).
-Sample mapping owner-confirmed. This canvas is double width by
-construction (two full facet grids at N sets per database); for
-reading one contrast, prefer gsea_pooled_overview_WT_heat.png or
+spends fill on NES.
+
+Each facet draws the top N sets in its database by padj_pooled, ties
+broken on the raw p-value and then on |NES|, with N from
+gsea_pooled_overview.top_n_per_db. That rank is the whole of the
+selection. An earlier revision also pinned the Hallmark HYPOXIA and
+INTERFERON sets and the three project-curated lenses at any rank,
+which let the panel argue for a conclusion; the pin has been removed.
+
+A facet header reads (n/N): n of the N sets in that database pass the
+pooled FDR, counted over the whole database. A header reading (0/23)
+marks a real null, and those facets keep their place on the canvas;
+dropping a database for coming out empty would leave a panel selected
+for positives. The panel omits whatever
+gsea_pooled_overview.exclude_databases names, currently nothing, so
+the facet count and the pooled-family database count agree. An
+omitted database stays inside the pooled correction and in every
+06_gsea table.
+
+Read padj_pooled as a comparability device across databases. It is a
+calibrated error rate only where the sets are independent, and GO
+terms and pathway sets share genes. Claim tier: L3, enrichment
+statistics. Sample mapping owner-confirmed. This canvas is double
+width by construction (two full facet grids at N sets per database);
+for reading one contrast, prefer gsea_pooled_overview_WT_heat.png or
 gsea_pooled_overview_Interaction.png.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/12b_gsea_overview_pooled_viz.R` | `patchwork / p_wt beside p_int` | `thresholds.gsea_fdr=0.05; gsea_pooled_overview.top_n_per_db=5; gsea_pooled_overview.exclude_databases=[]` | `03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv` |
-
-## figures/_overview/hypoxia_running_sum_wt_heat.png
-
-Running enrichment of the single Hallmark set HALLMARK_HYPOXIA
-against the WT 39-vs-37 °C ranked t-statistic. NES +1.9240, p
-4.256e-07, adjusted p 5.32e-06, 172 of the set's genes present in the
-19,679-gene ranked universe, 57 of them in the leading edge. The
-curve peaks at an enrichment score of +0.458 at rank 2,297, which is
-the top 12% of the ranking, so the set's members are concentrated
-toward the 39 °C end of the WT ordering. The statistics on the figure
-are taken verbatim from master_gsea_table.csv, and the curve geometry
-is recomputed deterministically from the same ranked vector the sweep
-used, at exponent 1, with no permutation re-run. This set sits 6th by
-|NES| and 4th by adjusted p in the WT_heat Hallmark cell, so it falls
-outside the general running-sum panels of this GSEA sweep, which draw
-the top 5 sets per cell by |NES|. Its enrichment locates where these
-172 genes sit in one ranking, and the gene content of the set is a
-separate question from the name the set carries.
-
-**How to read:** Three stacked panels sharing one x axis: each gene's position in the
-WT_heat ranked list as a FRACTION of its length, most 39 °C-shifted
-at 0, most 37 °C-shifted at 1, because ranked universes differ in
-length between compartments; the axis title carries this one's size.
-Top panel: the running enrichment score, which steps up at each gene
-belonging to the set and decays between them. Its peak is the
-enrichment score, and the set members left of the peak are the
-leading edge. The y range is pinned to [-1, 1] so the curve stays
-comparable to every other running-sum figure in this GSEA sweep.
-Middle panel: one tick per set member at that member's rank, over a
-band showing where the ranking crosses zero. Bottom panel: the ranked
-t-statistic, which shows how much signal each rank carries. The
-legend carries the set name, its genes present in the ranked
-universe, its NES and its adjusted p. NES > 0 = enriched in the
-contrast numerator (39 °C or WT). NES < 0 = enriched in the
-denominator (37 °C or cGAS-KO). This set is 6th by |NES| and 4th by
-adjusted p in its cell, so the general running-sum panels of this
-GSEA sweep, which draw the top 5 per cell by |NES|, leave it out by
-construction. SELECTION RULE: this set was chosen BY NAME, and its
-adjusted p and |NES| played no part in that choice. The general
-per-database and pooled panels of this GSEA sweep pin no set by name,
-and no pin from this figure is carried back into them. This panel
-draws one set out of the 50 that the Hallmark collection contributed
-to this contrast, so read the two ranks quoted above as the whole of
-what it says about where this set stands among them. A set's
-enrichment is not evidence that the program its name invokes is
-present; composition would have to be established separately. What
-this curve locates is where the set's member genes sit in one
-ranking. Claim tier: L3 (DE and enrichment statistics).
-Sample-to-condition mapping confirmed against the owner's sample
-sheet (2026-07-22): 20 of 20 libraries concordant with the
-label-blind marker call.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
 
 ## figures/_overview/hypoxia_routes_by_contrast.png
 
@@ -1086,54 +1158,114 @@ FDR < 0.05 in both per-genotype heat contrasts, and the fourth,
 REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no
 significance in any of the three; 6 of the 12 (set x contrast) cells
 reach FDR < 0.05. Every Interaction NES is non-significant, which
-reads as no detectable cGAS-dependence at n=5 and never as proven
-cGAS-independence: the 1-df interaction term is the least-powered
-contrast in this design. All four sets were chosen by name, so the
-panel reports these four curves and ranks nothing.
+reads as no detectable cGAS-dependence at n=5; the 1-df interaction
+term is the least-powered contrast in this design. All four sets were
+chosen by name, so the panel reports these four curves and leaves
+ranking to the general panels.
 
-**How to read:** One facet per contrast, and within each facet four overlaid
+**How to read:** One facet per contrast, and inside each facet four overlaid
 running-enrichment curves, one per gene set, keyed by colour in the
-shared legend below the panels. The x axis is each gene's position in
-THAT contrast's ranked list as a FRACTION of its length, most
-numerator-shifted at 0, most denominator-shifted at 1, so the facets
-share an axis and each carries its own ordering; a fraction rather
-than a rank because ranked universes differ in length between
-compartments, and the axis title carries these rankings' size. A
-curve steps up at each gene belonging to its set and decays between
-them: an early high peak means the members are packed at the
-numerator end, and a curve near zero means they are spread through
-the list. The y range is pinned to [-1, 1] so every curve stays
-comparable to every other running-sum figure in this GSEA sweep.
-Inside each facet the NES and adjusted p for that contrast are
-printed in each set's own colour, in the legend's own top-to-bottom
-order, keyed by database name because each of the four sets comes
-from a different database. The member ticks and the ranked-metric
-panel are left off to keep four curves per facet legible; the
-companion figure hypoxia_running_sum_wt_heat.png draws all three
-panels for one set. NES > 0 = enriched in the contrast numerator (39
-°C or WT). NES < 0 = enriched in the denominator (37 °C or cGAS-KO).
-The Interaction facet is the cGAS-dependence read-out: a positive
+shared legend below the panels. X is each gene's position in that
+facet's own ranked list as a fraction of its length, most
+numerator-shifted at 0 and most denominator-shifted at 1, so the
+facets share an axis while each keeps its own ordering. The fraction
+carries across ranked universes of different length, and the axis
+title carries these rankings' size.
+
+A curve steps up at each gene belonging to its set and decays between
+them, so an early high peak places the members at the numerator end
+and a curve near zero spreads them through the list. The y range is
+pinned to [-1, 1] so every curve here compares with every other
+running sum in this GSEA sweep. Inside each facet the NES and
+adjusted p for that contrast are printed in each set's own colour, in
+the legend's top-to-bottom order and keyed by database name, each of
+the four sets coming from a different database. Four curves per facet
+stay legible with the member ticks and the ranked-metric panel left
+off; the companion three-panel figure draws them for one set. NES > 0
+= enriched in the contrast numerator (39 °C or WT). NES < 0 =
+enriched in the denominator (37 °C or cGAS-KO).
+
+The Interaction facet is the cGAS-dependence read-out. A positive
 significant Interaction NES is consistent with cGAS-dependent
-induction, and a non-significant one means no detectable
-cGAS-dependence at n=5. SELECTION RULE: these 4 sets were chosen BY
-NAME, one per database, with no input from their adjusted p or |NES|.
-The general per-database and pooled panels of this GSEA sweep pin no
-set by name, and no pin from this figure is carried back into them.
-So this is a named-set read-out and says nothing about how these four
-rank among the thousands of sets they came from. Read the fourth
-curve as carefully as the other three: three of these hypoxia-named
-sets carry a positive NES in both heat contrasts and the Reactome set
-carries a negative one, so shared wording in two set names leaves
-shared behaviour an open question. A set's enrichment is not evidence
-that the program its name invokes is present; composition would have
-to be established separately. The four names overlap in wording while
-their gene content differs, which is why each is drawn on its own
-curve. Claim tier: L3 (DE and enrichment statistics).
-Sample-to-condition mapping confirmed against the owner's sample
-sheet (2026-07-22): 20 of 20 libraries concordant with the
-label-blind marker call.
+induction; a non-significant one reads as no detectable
+cGAS-dependence at n=5. These 4 sets were chosen by name, one per
+database. Their adjusted p and |NES| played no part in the choice,
+and the sweep's general panels select on those statistics alone. This
+is a named-set read-out; where these four rank among the thousands of
+sets they came from is a separate question.
+
+Read the fourth curve as closely as the other three. Three of these
+hypoxia-named sets carry a positive NES in both heat contrasts and
+the Reactome set carries a negative one, so shared wording in two set
+names leaves shared behaviour an open question. An enrichment locates
+a set's gene content in a ranking. Establishing that the program the
+set's name invokes is present takes a separate composition test. The
+four names overlap in wording while their gene content differs, which
+is why each has its own curve. Claim tier: L3 (DE and enrichment
+statistics). Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/28_hypoxia_focus_viz.R` | `geom_line / facet_wrap` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
+
+## figures/_overview/runsum_HALLMARK_HYPOXIA.png
+
+Running enrichment of the single Hallmark set HALLMARK_HYPOXIA
+against each of the three focal contrasts' ranked t-statistics, on
+one axis. In WT heat: NES +1.9240, p 4.256e-07, adjusted p 5.32e-06,
+172 of the set's genes present in the 19,679-gene ranked universe, 57
+of them in the leading edge, and the curve peaks at an enrichment
+score of +0.458 in the top 12% of the ranking, so the set's members
+are concentrated toward the 39 °C end. Across the three contrasts the
+NES values are WT heat (39 vs 37 °C) +1.92 (FDR 5.32e-06), cGAS-KO
+heat (39 vs 37 °C) +1.96 (FDR 3.01e-06), Interaction -1.27 (FDR
+0.171), so the set separates warmed from unwarmed iTregs in both
+genotypes while the interaction term carries none. The statistics are
+taken verbatim from master_gsea_table.csv, and every curve is
+recomputed deterministically from the same ranked vector the sweep
+used, at exponent 1, with no permutation re-run. This set sits 6th by
+|NES| and 4th by adjusted p in the WT_heat Hallmark cell, so the
+|NES| quota of this sweep's general running-sum panels leaves it out.
+Its enrichment locates where these 172 genes sit in a ranking, and
+the gene content of the set is a separate question from the name the
+set carries.
+
+**How to read:** Three stacked panels sharing one x axis, which is each gene's
+position in that contrast's ranked list as a FRACTION of its length,
+most 39 °C-shifted at 0, most 37 °C-shifted at 1, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. Colour keys the CONTRAST, and the same three
+colours run through all three panels. Top panel: the running
+enrichment score, which steps up at each gene belonging to the set
+and decays between them. Its peak is the enrichment score, and the
+set members left of the peak are the leading edge. The y range is
+pinned to [-1, 1] so the curves stay comparable to every other
+running-sum figure in this GSEA sweep. Middle panel: one tick per set
+member at that member's rank, in its own labelled row per contrast,
+so where a contrast places the same genes can be read row against
+row. Bottom panel: the ranked t-statistic each curve above was
+computed on, which shows how much signal each rank carries; it is
+drawn at every 25th rank plus both endpoints, which redraws a sorted
+vector exactly at this size. The legend carries each contrast's NES,
+adjusted p and genes present in the ranked universe. NES > 0 =
+enriched in the contrast numerator (39 °C or WT). NES < 0 = enriched
+in the denominator (37 °C or cGAS-KO). This set is 6th by |NES| and
+4th by adjusted p in its WT_heat cell, so the general running-sum
+panels of this GSEA sweep, which draw the top 5 per cell by |NES|,
+leave it out. This set was chosen by name, and its adjusted p and
+|NES| played no part in the choice. The Hallmark collection
+contributed 50 sets to this sweep, and the two ranks quoted above are
+the whole of what this panel says about where this one stands among
+them. An enrichment locates a set's gene content in a ranking.
+Establishing that the program the set's name invokes is present takes
+a separate composition test. Claim tier: L3 (DE and enrichment
+statistics). Sample-to-condition mapping confirmed against the
+owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
+the label-blind marker call.
+
+| Script | Function | Config | Input |
+|---|---|---|---|
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `top-level (f1_p_es / f1_p_rug / f1_p_met)` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
 

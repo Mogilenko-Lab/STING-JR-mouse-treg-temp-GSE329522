@@ -384,8 +384,15 @@ emit_coresh_cell <- function(co) {
                      error = function(e) { message(sprintf("  [15] running_sum skipped (%s): %s", co, conditionMessage(e))); NULL })
     if (!is.null(p_rs)) {
       # x becomes rank/n_ranked, taken from this contrast's own ranked vector.
+      #
+      # Each curve also gets its own named tick row, and the plotter stacks the rows from the
+      # bottom up in the order the ids arrive, so the labels go in that order. The row key is
+      # the source accession, which is the one token that separates these sets from each other
+      # and is the tail of the legend entry beside it; the rest of the derived-set name is the
+      # same words on every curve and would cost the panel width it does not repay.
+      rs_labs <- sub("^.*_(GSE[0-9]+)$", "\\1", top_ids)
       p_rs <- style_series(p_rs, ylim = RSYLIM, n_ranked = length(g_rs@geneList),
-                           config = FIG_CFG)
+                           trace_labels = rs_labs, config = FIG_CFG)
       save_figure(p_rs, STAGE, file.path(DB_NAME, "running_sum"), contrast = co, config = FIG_CFG, wide = TRUE)
     }
   } else {

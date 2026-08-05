@@ -154,6 +154,16 @@ save_overview <- function(plot, stage, name, table, finding, script, fn, config_
 ##    universes of different length, and the human compartments rank fewer genes.
 ##    The ticks relabel in place, so the drawn geometry is untouched, and the axis
 ##    title carries the universe size the fraction hides. Patchwork branches only.
+##
+##    Two further knobs bring these panels to the idiom the human compartments draw
+##    the same figure in. `metric_lab` names the bottom axis for the statistic it
+##    plots (config figures.metric_axis_label). `trace_labels`/`trace_colors` give
+##    each trace its own named tick row in its own colour, and the blue-to-red strip
+##    the plotter adds under a lone trace's ticks is dropped, since it bins the same
+##    metric the bottom panel plots at full resolution. Both are applied to the
+##    composed figure by ROLE — the rug is found by its lineranges and the metric
+##    panel by its label, never by position — so the plotter's subplot order can
+##    change without silently retargeting the edit.
 ## ---------------------------------------------------------------------------
 
 ## The x-axis title for a fractional-rank axis. ONE phrasing for every running sum here.
@@ -166,12 +176,75 @@ rank_fraction_lab <- function(n_ranked, of = NULL)
           if (is.null(of)) "" else paste0(" in ", of),
           paste(format(n_ranked, big.mark = ",", trim = TRUE), collapse = "/"))
 
-style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL) {
+## The bottom panel of a running sum plots the statistic the ranking was built on. Naming the
+## axis for that statistic is what lets a panel here be read against the matching panel in the
+## human compartments, which label the same axis the same way. The plotter's own label names
+## the slot rather than the number in it.
+metric_axis_lab <- function(config = NULL)
+  as.character((config %||% FIG_CFG)$figures$metric_axis_label %||% "Moderated t")
+
+## The plotter's label for the metric panel, matched so the panel can be found by role.
+.RS_METRIC_LAB0 <- "Ranked List Metric"
+
+## Which of a composed running sum's three panels this is, read off the panel itself: the rug
+## is the one drawing gene-hit lineranges, the metric panel the one carrying the plotter's
+## metric y label, the enrichment trace the rest. Role is identified from content rather than
+## from position, so a change in the plotter's subplot order cannot silently retarget an edit.
+.rs_role <- function(p) {
+  geoms <- if (length(p$layers)) vapply(p$layers, function(l) class(l$geom)[1], character(1))
+           else character(0)
+  if (any(geoms == "GeomLinerange")) return("rug")
+  if (grepl(.RS_METRIC_LAB0, as.character(p$labels$y %||% ""), fixed = TRUE)) return("metric")
+  "trace"
+}
+
+## Name the metric axis, and give every trace its own labelled tick row.
+##
+## Two things the vendored plotter draws that this undoes. It labels the metric axis for the
+## slot; `metric_lab` names the statistic. And when one set is drawn it adds a blue-to-red
+## strip under the ticks binning that same metric, which re-encodes what the panel below
+## already plots at full resolution, so the strip is dropped and the space goes to the ticks.
+##
+## `trace_labels` is one label per trace in the order the traces were passed to the plotter,
+## which is the order it stacks the tick rows from the bottom up. Row i therefore centres on
+## i - 0.5. `trace_colors` recolours the ticks where the plotter forces black, which it does
+## for a lone trace, so a tick row and its curve carry one colour throughout.
+.rs_name_panels <- function(pw, metric_lab, trace_labels = NULL, trace_colors = NULL) {
+  if (!inherits(pw, "patchwork")) return(pw)
+  for (i in seq_len(length(pw))) {
+    role <- .rs_role(pw[[i]])
+    if (identical(role, "metric")) {
+      pw[[i]] <- pw[[i]] + ggplot2::labs(y = metric_lab)
+    } else if (identical(role, "rug")) {
+      p <- pw[[i]]
+      keep <- !vapply(p$layers, function(l) inherits(l$geom, "GeomRect"), logical(1))
+      if (!all(keep)) p$layers <- p$layers[keep]
+      if (length(trace_labels)) {
+        k <- length(trace_labels)
+        p <- p + ggplot2::scale_y_continuous(
+          breaks = seq_len(k) - 0.5, labels = as.character(trace_labels),
+          limits = c(0, k), expand = c(0, 0))
+        p <- p + ggplot2::theme(axis.text.y  = ggplot2::element_text(),
+                                axis.title.y = ggplot2::element_blank())
+        if (length(trace_colors) == k)
+          p <- suppressMessages(p + ggplot2::scale_colour_manual(values = unname(trace_colors)))
+      }
+      pw[[i]] <- p
+    }
+  }
+  pw
+}
+
+style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL,
+                         trace_labels = NULL, trace_colors = NULL, metric_lab = NULL,
+                         legend = c("right", "none")) {
+  legend <- match.arg(legend)
   if (!requireNamespace("ggplot2", quietly = TRUE)) stop("style_series() needs ggplot2.")
   cfg  <- config %||% FIG_CFG
   ylim <- as.numeric(unlist(ylim %||% (cfg$figures$running_sum_ylim %||% c(-1, 1))))
   stopifnot(length(ylim) == 2, all(is.finite(ylim)))
   ph <- as.numeric(unlist(cfg$figures$running_sum_heights %||% c(2.4, 0.7, 0.9)))
+  metric_lab <- as.character(metric_lab %||% metric_axis_lab(cfg))
 
   ## Relabel the shared x of every panel as a fraction; ticks at the same fifths the
   ## human panels use, so the two read against each other tick for tick.
@@ -192,11 +265,18 @@ style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL) {
   if (is.function(restyle)) {
     styled <- restyle(
       es_ylim         = ylim,                       # clamp ES y for comparability
-      legend_position = "right",                    # ONE legend, outside-right
+      ## ONE legend, outside-right. A call site that puts each trace's full name on its own
+      ## tick row passes legend = "none": the two would carry the same names and colours, and
+      ## the legend column is the wider of the two.
+      legend_position = legend,
       xticks          = "bottom",                   # x ticks only on the bottom panel
-      rug_ylabels     = FALSE,                       # hide rug y-index labels
+      ## Row labels are named traces when the call site supplies them, and the plotter's
+      ## bare row indices carry no meaning, so they stay hidden when it does not.
+      rug_ylabels     = length(trace_labels) > 0,
       panel_heights   = ph,                          # ES : rug : metric proportions
       base_theme      = project_theme(config = cfg)) # project base; chrome re-asserted on top
+    styled <- .rs_name_panels(styled, metric_lab = metric_lab,
+                              trace_labels = trace_labels, trace_colors = trace_colors)
     ## Top-align the collected outside-right legend so it sits at the level of the
     ## top (ES) panel rather than vertically centred across all three panels.
     return(as_fraction(styled) & ggplot2::theme(
@@ -221,6 +301,8 @@ style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL) {
   styled <- tryCatch(plot & project_theme(config = cfg), error = function(e) plot)
   styled <- tryCatch(styled + patchwork::plot_layout(heights = ph, guides = "collect"),
                      error = function(e) styled)
+  styled <- .rs_name_panels(styled, metric_lab = metric_lab,
+                            trace_labels = trace_labels, trace_colors = trace_colors)
   as_fraction(styled) & ggplot2::theme(
     legend.position      = "right",
     legend.key.spacing.y = ggplot2::unit(3, "pt"),
@@ -228,8 +310,12 @@ style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL) {
     legend.key.size      = ggplot2::unit(0.8, "lines"))
 }
 ## Canonical name for the same operation (so a viz script can call either).
-style_running_sum <- function(p, ylim = NULL, config = NULL, n_ranked = NULL)
-  style_series(p, ylim = ylim, config = config, n_ranked = n_ranked)
+style_running_sum <- function(p, ylim = NULL, config = NULL, n_ranked = NULL,
+                              trace_labels = NULL, trace_colors = NULL, metric_lab = NULL,
+                              legend = c("right", "none"))
+  style_series(p, ylim = ylim, config = config, n_ranked = n_ranked,
+               trace_labels = trace_labels, trace_colors = trace_colors,
+               metric_lab = metric_lab, legend = match.arg(legend))
 
 ## ---------------------------------------------------------------------------
 ## 5. PALETTE — colorblind-safe scales sourced from FIG_CFG$colors (semantic categories).
