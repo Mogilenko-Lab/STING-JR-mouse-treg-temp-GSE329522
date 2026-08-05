@@ -36,22 +36,24 @@ variant on every figure and never replaces it. For `WT_heat_up` two of the pins 
 did not reach the bar, so they carry NA significance, are printed in purple wherever they
 appear, and their share is a gene count.
 
-**How much of `WT_heat_up` carries a hypoxia annotation.** Three sets hold hypoxia-annotated
-arm genes: 18, 11 and 4. Those three counts cannot be added. Their union is 26 genes, 13.1% of
+**How much of `WT_heat_up` carries a hypoxia annotation.** Recorded in
+`composition_hypoxia_sources.csv`. Three sets hold hypoxia-annotated arm genes: 18, 11 and 4.
+Those three counts cannot be added. Their union is 26 genes, 13.1% of
 the 199, and Hallmark and GO BP share only 3 of them at a Jaccard of 0.115. Only
 `HALLMARK_HYPOXIA` reached significance. GO MF and KEGG carry no hypoxia set at all, and a
 fourth pinned GO BP set has 7 background genes against a 10-gene floor, so those three cells
 record an absence of opportunity rather than a zero.
 
-**What the null frame contains.** A gene set drawn at random and matched on annotation depth
-already reaches significance in a median of 59 GO BP sets, while reaching a median of zero in
+**What the null frame contains.** Recorded in `composition_null_summary.csv`. A gene set drawn
+at random and matched on annotation depth
+reaches significance in a median of 59 GO BP sets already, while reaching a median of zero in
 Reactome, GO MF and KEGG. Annotation depth does most of the work in GO BP, and the three
 smaller collections separate an observed result from a depth artefact far more sharply. Read
 any term count in this directory against that frame.
 
 **Claim tier.** Everything here is descriptive composition of a gene set derived elsewhere, and
 it is hypothesis-generating. A set reaching significance is not evidence that the process it is
-named for is present. The hypoxia figure measures annotation overlap and says nothing about
+named for is present. The hypoxia counts measure annotation overlap and say nothing about
 causal structure.
 
 Background: 12,986 human symbols from `WT_heat_ranked.rnk`. Gene sets: msigdbr 26.1.0 / MSigDB
@@ -129,128 +131,14 @@ descriptive, and the purple rows support no enrichment claim at all.
 |---|---|---|---|
 | `02_analysis/scripts/27_arm_composition_viz.R` | `variant_panel() / top-level (pV1/pV2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
-## figures/_overview/arm_hypoxia_sources.png
-
-Three sets hold hypoxia-annotated genes of WT_heat_up:
-HALLMARK_HYPOXIA with 18, GOBP_RESPONSE_TO_OXYGEN_LEVELS with 11 and
-GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS with 4. Those counts add to
-33 and the union is 26 genes, 12.9% of the 202. Hallmark and GO BP
-share 3 genes, a Jaccard of 0.115, so the two collections read
-largely different genes under the same word. Only HALLMARK_HYPOXIA
-reached significance. GO MF and KEGG carry no hypoxia set at all, and
-a fourth pinned GO BP set has 7 background genes against the 10-gene
-floor, so three cells of panel C record an absence of opportunity.
-
-**How to read:** Panel A is a membership grid: one column per arm gene, one row per
-set, a filled cell where the set holds the gene. Columns are ordered
-by how many sets hold them, so the shared genes stand on the left and
-the union is the width of the panel. Panel B puts the two candidate
-numbers side by side, the sum of the three set counts in grey and the
-count of distinct genes in blue. The blue one answers how much of the
-arm carries a hypoxia annotation. Panel C is the opportunity audit,
-one cell per set per arm: orange reached significance, blue was
-tested and did not, and the two greys are a set below the tested size
-window and a collection with no hypoxia set to test. A grey cell is
-an absence of opportunity and is drawn as a labelled cell rather than
-as a bar of height zero. Panels A and B cover the two arms holding
-hypoxia genes, and the two interaction arms hold none, which panel C
-records. Claim tier: descriptive gene-content accounting. It measures
-annotation overlap and says nothing about causal structure.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pH1/pH2/pH3)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
-
-## figures/_overview/arm_remainder.png
-
-WT_heat_up leaves 74 of 202 genes in no selected set, 36.6% of the
-arm. Of those, 64 carry an annotation in a set that was testable, 10
-carry none in any of the five collections, and 34 of the 74 sit in a
-set that did reach significance and lost its place to the redundancy
-prune or the ten-per-collection cap. KO_heat_up leaves 100 of 221 and
-Interaction_fdrOnly_up 1 of 19. Interaction_up leaves 0 of 7, which
-is what a 7-gene list with one dominant annotation looks like.
-
-**How to read:** Panel A stacks three mutually exclusive classes, so the bar length is
-the whole residue and the text beside it repeats that as a count and
-a share of the arm. The yellow class is in the key because it
-completes the partition and it is zero for all four arms, which is
-why no yellow band is drawn. Panel B asks a different question of the
-same total: grey is the residue again and red counts the genes inside
-it that do sit in a set that reached significance and then lost its
-place to the redundancy prune or the ten-per-collection cap. The red
-count is a subset of panel A's blue band, so the two panels are read
-against each other and never added. An arm with a residue of zero
-carries its zero as a label rather than an empty row. The ten
-WT_heat_up genes with no annotation anywhere are named in
-composition_remainder.csv. Claim tier: descriptive coverage
-accounting.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pR1/pR2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
-
-## figures/_overview/arm_composition_null.png
-
-For WT_heat_up a gene set drawn at random and matched on annotation
-depth reaches significance in a median of 53 GO BP sets and covers a
-median of 100 of the drawn genes, against 203 sets and 150 genes
-observed. In Reactome, GO MF and KEGG the same random draw reaches a
-median of zero significant sets and covers a median of zero genes,
-against 68, 64 and 30 genes observed. Annotation depth does most of
-the work in GO BP, and the three smaller collections separate an
-observed result from a depth artefact far more sharply. Every
-coverage p is 0.0005, the floor of a 2,000-replicate permutation.
-
-**How to read:** Each row is one collection. The thick grey bar spans the median to
-the 95th percentile of the depth-matched null, with a tick at each
-end, and the filled circle with the number above it is what the arm
-achieved. A row where the grey bar collapses to a point sits at a
-null median and 95th percentile of zero, which is the strongest frame
-a collection can offer. Left column counts sets reaching
-significance, right column counts genes of the arm covered by at
-least one such set. A cross at zero with a label means the engine had
-under two of the arm's genes annotated in that collection and ran no
-test there, which is the case for Interaction_up in KEGG. The uniform
-null is in composition_null_summary.csv and is left off the panel,
-because the gate that produced these arms admits well-studied genes
-and only the depth-matched draw carries the comparison. Claim tier:
-this is the calibration frame for every count elsewhere in this
-directory, and by itself supports no biological claim.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig5)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
-
-## figures/_overview/interaction_up_genes.png
-
-Interaction_up holds 7 genes, IFI16, IFIT1B, IRF7, MX1, RTP4, TRIM5,
-XAF1, and each of them lands in at least two selected sets, so its
-residue is 0 of 7. Under `winner_take_all` they go 6 to
-GOBP_DEFENSE_RESPONSE_TO_VIRUS and 1 to
-REACTOME_INTERFERON_ALPHA_BETA_SIGNALING, which is why that
-accounting has 2 categories for this arm against 14 fractional. Seven
-genes over five collections is a gene list, and this stage draws it
-as one.
-
-**How to read:** One column per gene, one row per selected set, a filled cell where
-the set holds the gene, and fill giving the collection. The white
-ring marks the set that gene goes to under `winner_take_all`. The
-column header repeats how many selected sets hold the gene, which is
-the k that `fractional` divides its weight by. Rows are ordered by
-how many of the seven genes they hold. Claim tier: a gene list drawn
-in full, hypothesis-generating, and no share statistic is computed
-from 7 genes anywhere in this directory.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig6)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## tables/_overview/
 
 Every table sits in `tables/_overview/`. The ten `composition_*.csv` are written by
-`02_analysis/scripts/26_arm_composition.R`. The six named after a figure are that figure's
-same-stem sibling and are written by `02_analysis/scripts/27_arm_composition_viz.R`.
+`02_analysis/scripts/26_arm_composition.R`. The two named after a figure are that figure's
+same-stem sibling and are written by `02_analysis/scripts/27_arm_composition_viz.R`. Several
+`composition_*.csv` carry readings this directory no longer draws as a panel; each is cited by
+name where its numbers are quoted above.
 
 | File | What is in it | How to read it |
 |---|---|---|
@@ -267,8 +155,4 @@ same-stem sibling and are written by `02_analysis/scripts/27_arm_composition_viz
 | `composition_provenance.csv` | Package versions, the gene-set object md5, every threshold, the seed, the winner-take-all tie-break rule, the permutation floor, and the seam check between the matrix recomputation and `clusterProfiler::enricher`. | `seam_max_abs_dk` and `seam_max_abs_dq` are both 0, so the permutation engine and the ORA call agree set by set. Any change to `genesets_md5` invalidates every share in this directory. |
 | `arm_composition.csv` | 36 rows, the rows as the composition figure drew them: the ten named sets per arm, the roll-up with its set count, and the residue. | `n_sets_rolled_up` is filled only on the roll-up row. For the full per-set list behind that row, use `composition_shares.csv`. |
 | `arm_composition_variants.csv` | 96 rows, every category of the three arms carrying a composition, under both variants, with the two deltas. | `delta_fractional` and `delta_winner_take_all` are anchored minus `unpinned`. A row with `pinned` TRUE and `status` `tested, not enriched` gained its share by configuration and carries no significance. |
-| `arm_hypoxia_sources.csv` | 34 rows in two grains, marked by `row_grain`: 28 `set` rows, one for each pinned hypoxia set per arm, and 6 `set_pair` rows carrying the overlap between two sets that hold arm genes. `n_union` and `union_share_of_arm` are constant within an arm. | Filter on `row_grain` before aggregating. The per-set columns (`term`, `status`, `n_arm_hits`, `hits`) are empty on `set_pair` rows and the pair columns (`term_a`, `term_b`, `n_shared`, `jaccard`) are empty on `set` rows, so no column carries two meanings. Summing `n_arm_hits` over the `set` rows of one arm gives 33 for `WT_heat_up`, which is panel B's grey bar and the number a reader should not treat as the hypoxia content. `n_union` at 26 is the answer. A `set` row with an empty `term` is a collection carrying no hypoxia set, and its empty `n_arm_hits` is an absence of opportunity rather than a zero. |
-| `arm_remainder.csv` | 4 rows, the `unpinned` residue of each arm as the remainder figure drew it. | Same columns as `composition_remainder.csv`, restricted to the `unpinned` variant. |
-| `arm_composition_null.csv` | 20 rows, the depth-matched null rows as the null figure drew them, plus the one `not_tested` row it marks with a cross. | One row for each arm and collection. The `not_tested` row is `Interaction_up` in KEGG, and `not_tested_reason` carries the engine's own account of why, which is the text printed beside the cross on the panel. |
-| `interaction_up_genes.csv` | 28 rows, one per gene and selected set for the 7-gene arm. | `n_sets_for_gene` is the k behind `weight_fractional`, and `winner_id` is the set the gene goes to under `winner_take_all`. No share statistic is computed from 7 genes anywhere in this directory. |
 

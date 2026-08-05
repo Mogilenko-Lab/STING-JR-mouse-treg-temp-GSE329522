@@ -47,7 +47,6 @@
 #   03_results/13_semantic_decomp/tables/semantic_coherence_sets.csv
 #   03_results/13_semantic_decomp/tables/lens_proximity_per_gene.csv
 #   03_results/13_semantic_decomp/tables/semantic_provenance.csv
-#   03_results/13_semantic_decomp/tables/_overview/wtheatup_semantic_coherence.csv
 #   03_results/13_semantic_decomp/tables/_overview/wtheatup_lens_proximity.csv
 #   03_results/objects/20_semantic_decomp.rds
 #   03_results/objects/20_semantic_decomp__GOSemSim-<version>.rds   (engine-stamped copy)

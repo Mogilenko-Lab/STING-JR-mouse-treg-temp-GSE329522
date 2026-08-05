@@ -8,8 +8,6 @@
 #
 #   wtheatup_term_blocks        the 35 Wang-similarity blocks the primary arm's
 #                               enriched terms collapse to, sized by term count
-#   arms_observed_vs_null       both headline counts against the depth-matched
-#                               permutation null, per arm. Read this one first.
 #   wtheatup_null_recurrence    how often a depth-matched random draw reaches
 #                               significance for each term, against the term's rank
 #   wtheatup_proteostasis_probe every configured proteostasis probe with its size,
@@ -187,123 +185,6 @@ save_overview(
     nrow(enr_p), n_blocks, prov[["simplify_cutoff"]], prov[["cluster_height"]],
     prov[["GOSemSim_version"]], arm_n, 100 * PCUT, prov[["n_null"]], HYP_REP, n_blocks),
   config = FIG_CFG, wide = TRUE, height = 17)
-
-## ===========================================================================
-## Figure 2 -- both headline counts against the depth-matched null
-## ===========================================================================
-
-Q_TERMS <- "GO BP terms reaching significance"
-Q_GENES <- "arm genes in a term reaching significance"
-
-draws <- obj$null_draws %>%
-  dplyr::filter(.data$ontology == ONT, .data$iea_variant == IEA,
-                .data$null == "depth_matched")
-ts <- obj$term_summary %>%
-  dplyr::filter(.data$ontology == ONT, .data$iea_variant == IEA)
-
-obs_base <- draws %>%
-  dplyr::distinct(.data$arm, .data$n_signif_obs, .data$n_covered_obs,
-                  .data$n_query_annotated)
-
-marks <- dplyr::bind_rows(
-  dplyr::left_join(obs_base, ts[, c("arm", "p_n_signif_matched", "null_median_n_signif",
-                                "null_q95_n_signif", "uniform_median_n_signif")],
-                   by = "arm") %>%
-    dplyr::transmute(arm = .data$arm, quantity = Q_TERMS,
-                     observed = .data$n_signif_obs, p_value = .data$p_n_signif_matched,
-                     null_median = .data$null_median_n_signif,
-                     null_q95 = .data$null_q95_n_signif,
-                     uniform_median = .data$uniform_median_n_signif,
-                     n_drawn = .data$n_query_annotated),
-  dplyr::left_join(obs_base, ts[, c("arm", "p_covered_matched", "null_median_covered",
-                                "null_q95_covered", "uniform_median_covered")],
-                   by = "arm") %>%
-    dplyr::transmute(arm = .data$arm, quantity = Q_GENES,
-                     observed = .data$n_covered_obs, p_value = .data$p_covered_matched,
-                     null_median = .data$null_median_covered,
-                     null_q95 = .data$null_q95_covered,
-                     uniform_median = .data$uniform_median_covered,
-                     n_drawn = .data$n_query_annotated))
-
-long <- dplyr::bind_rows(
-  draws %>% dplyr::transmute(arm = .data$arm, quantity = Q_TERMS,
-                             value = .data$n_signif),
-  draws %>% dplyr::transmute(arm = .data$arm, quantity = Q_GENES,
-                             value = .data$covered))
-long$arm <- factor(long$arm, levels = ARMS)
-long$quantity <- factor(long$quantity, levels = c(Q_TERMS, Q_GENES))
-marks$arm <- factor(marks$arm, levels = ARMS)
-marks$quantity <- factor(marks$quantity, levels = c(Q_TERMS, Q_GENES))
-marks$note <- sprintf("observed %d, permutation p %s\nnull median %.0f, 95th percentile %.0f",
-                      marks$observed, pfmt(marks$p_value),
-                      marks$null_median, marks$null_q95)
-
-arm_lab <- stats::setNames(
-  sprintf("%s\n%d genes drawn", obs_base$arm, obs_base$n_query_annotated), obs_base$arm)
-
-p2 <- ggplot(long, aes(x = .data$value)) +
-  geom_histogram(bins = 34, fill = "grey72", colour = NA) +
-  geom_vline(data = marks, aes(xintercept = .data$observed, colour = "observed"),
-             linewidth = 1.1) +
-  geom_point(data = marks, aes(x = .data$uniform_median, y = 0,
-                               colour = "uniform null median"),
-             shape = 17, size = PT * 1.5) +
-  # A label rather than plain text: the observed rule spans the whole panel height, so in
-  # the arms where it lands early it runs straight through the annotation.
-  geom_label(data = marks, aes(x = -Inf, y = Inf, label = .data$note),
-             hjust = -0.02, vjust = 1.05, size = LAB * 0.82, colour = "grey20",
-             fill = "white", linewidth = 0, label.padding = unit(0.18, "lines"),
-             lineheight = 1.05) +
-  facet_grid(arm ~ quantity, scales = "free", switch = "y",
-             labeller = labeller(arm = arm_lab, quantity = label_wrap_gen(34))) +
-  scale_colour_manual(values = c("observed" = OI$vermillion,
-                                 "uniform null median" = OI$sky_blue), name = NULL) +
-  scale_y_continuous(expand = expansion(mult = c(0.02, 0.42))) +
-  scale_x_continuous(expand = expansion(mult = c(0.06, 0.06))) +
-  labs(title = "Observed counts against the depth-matched permutation null, per arm",
-       subtitle = sprintf(paste0(
-         "Each histogram is %s draws of a gene set the size of that arm's annotated part, matched to it band by band on how many GO %s terms each gene\n",
-         "carries, scored through the same hypergeometric and the same BH adjustment as the arm. The left column counts terms reaching q below %.2f, the\n",
-         "right counts drawn genes falling in at least one of them. The triangle marks the median of a uniformly drawn null of the same size, which is the\n",
-         "comparison the annotation-depth matching replaces. Seed %s."),
-         prov[["n_null"]], ONT, PCUT, prov[["seed"]]),
-       x = "count in one replicate", y = "replicates") +
-  project_theme(config = FIG_CFG) +
-  theme(legend.position = "bottom", panel.spacing.x = unit(1.1, "lines"),
-        panel.spacing.y = unit(0.9, "lines"),
-        strip.placement = "outside",
-        strip.text.y.left = element_text(angle = 0, hjust = 1))
-
-save_overview(
-  p2, STAGE, "arms_observed_vs_null",
-  table = marks[, c("arm", "quantity", "n_drawn", "observed", "null_median",
-                    "null_q95", "uniform_median", "p_value")],
-  finding = sprintf(paste0(
-    "For %s the %d enriched GO %s terms sit against a depth-matched null median of %.0f and 95th percentile of %.0f, permutation p %s over %s replicates. ",
-    "The %d arm genes in at least one enriched term sit against a null median of %.0f and 95th percentile of %.0f, permutation p %s. ",
-    "A uniformly drawn null of the same size reaches a median of %.0f terms, so annotation depth accounts for most of the term count before any biology is read."),
-    ARM,
-    marks$observed[marks$arm == ARM & marks$quantity == Q_TERMS],
-    ONT,
-    marks$null_median[marks$arm == ARM & marks$quantity == Q_TERMS],
-    marks$null_q95[marks$arm == ARM & marks$quantity == Q_TERMS],
-    pfmt(marks$p_value[marks$arm == ARM & marks$quantity == Q_TERMS]),
-    prov[["n_null"]],
-    marks$observed[marks$arm == ARM & marks$quantity == Q_GENES],
-    marks$null_median[marks$arm == ARM & marks$quantity == Q_GENES],
-    marks$null_q95[marks$arm == ARM & marks$quantity == Q_GENES],
-    pfmt(marks$p_value[marks$arm == ARM & marks$quantity == Q_GENES]),
-    marks$uniform_median[marks$arm == ARM & marks$quantity == Q_TERMS]),
-  script = SCRIPT, fn = "top-level (p2)",
-  config_kv = CFG_KV, input = "03_results/objects/24_go_decomposition.rds",
-  how_to_read = paste0(
-    "Grey is the null over 2000 depth-matched draws, the red rule the arm's own value, the blue triangle the ",
-    "median of a uniformly drawn null of the same size. The permutation p is the share of draws reaching the ",
-    "observed value or more, floored at 1/2001. Rows are arms and carry the genes drawn per replicate, which is ",
-    "the arm's annotated size. Left column: terms clearing the adjusted-p gate. Right column: drawn genes ",
-    "landing in one of those terms, the null for the coverage number the rest of this directory rests on. ",
-    "Claim tier: this panel bounds what the rest of the stage can support."),
-  config = FIG_CFG, wide = TRUE, height = 12.5)
 
 ## ===========================================================================
 ## Figure 3 -- null recurrence against rank

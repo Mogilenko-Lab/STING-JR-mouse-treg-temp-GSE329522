@@ -15,7 +15,7 @@ of the 202 genes sit in exactly one enriched term. Collapsed to the 36 similarit
 974 memberships with 22 genes in one block. Shares taken off that do not add up to the arm. The
 partition question is asked off frozen MSigDB collections in `16_arm_composition`.
 
-**Read `arms_observed_vs_null.png` before anything else.** The gate that produced these arms
+**Read the null comparison in `go_term_summary.csv` before anything else.** The gate that produced these arms
 thresholds effect size, which preferentially admits well-studied genes, and the hypergeometric
 conditions on set size and universe only. Every count here is therefore compared against 2000
 random gene sets matched to the arm band by band on GO BP terms per gene. For `WT_heat_up` the
@@ -97,30 +97,6 @@ descriptive, hypothesis-generating.
 | Script | Function | Config | Input |
 |---|---|---|---|
 | `02_analysis/scripts/25_go_decomposition_viz.R` | `top-level (p1a | p1b)` | `go_decomposition.primary_ontology = BP, go_decomposition.primary_iea = with_iea, go_decomposition.p_cutoff = 0.05, go_decomposition.min_gs_size = 10, go_decomposition.max_gs_size = 500, go_decomposition.n_null = 2000, go_decomposition.seed = 20260730` | `03_results/objects/24_go_decomposition.rds` |
-
-## figures/_overview/arms_observed_vs_null.png
-
-For WT_heat_up the 384 enriched GO BP terms sit against a
-depth-matched null median of 230 and 95th percentile of 370,
-permutation p 0.037 over 2000 replicates. The 160 arm genes in at
-least one enriched term sit against a null median of 147 and 95th
-percentile of 159, permutation p 0.04. A uniformly drawn null of the
-same size reaches a median of 0 terms, so annotation depth accounts
-for most of the term count before any biology is read.
-
-**How to read:** Grey is the null over 2000 depth-matched draws, the red rule the
-arm's own value, the blue triangle the median of a uniformly drawn
-null of the same size. The permutation p is the share of draws
-reaching the observed value or more, floored at 1/2001. Rows are arms
-and carry the genes drawn per replicate, which is the arm's annotated
-size. Left column: terms clearing the adjusted-p gate. Right column:
-drawn genes landing in one of those terms, the null for the coverage
-number the rest of this directory rests on. Claim tier: this panel
-bounds what the rest of the stage can support.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/25_go_decomposition_viz.R` | `top-level (p2)` | `go_decomposition.primary_ontology = BP, go_decomposition.primary_iea = with_iea, go_decomposition.p_cutoff = 0.05, go_decomposition.min_gs_size = 10, go_decomposition.max_gs_size = 500, go_decomposition.n_null = 2000, go_decomposition.seed = 20260730` | `03_results/objects/24_go_decomposition.rds` |
 
 ## figures/_overview/wtheatup_null_recurrence.png
 
@@ -224,7 +200,7 @@ cheap to enrich. A term wants both a small `p_matched` and a small recurrence.
 | `go_term_summary.csv` | One row per arm x ontology x IEA variant: arm size, annotated size, background size, terms testable, terms with at least one hit, terms enriched, terms after `simplify()`, blocks, and the null summary for both headline counts. | `n_enriched` against `null_median_n_signif` and `null_q95_n_signif` is the term-count read, `n_genes_covered` against `null_median_covered` and `null_q95_covered` the coverage read, with `p_n_signif_matched` and `p_covered_matched` the permutation p for each. `uniform_median_*` sizes the annotation-depth confound and supports no claim on its own. |
 | `go_depth_null.csv` | Per-term null detail for the enriched terms of the primary ontology: observed hit count, recomputed p and q, the matched-null mean and 95th percentile of the hit count, `p_matched`, recurrence, and the same three against a uniform null. | Sorted by adjusted p within arm. `k_obs` and `p_obs_recomputed` are the matrix recomputation, and they agree with `go_enriched_terms.csv` to zero by the seam check in `go_provenance.csv`. |
 | `go_null_design.csv` | Two row kinds. `band` rows give the annotation-depth bands: edges, how many query genes fall in each, how big the pool is, and whether the pool was short. `null_summary` rows give both nulls' summary statistics per arm. | A TRUE in `pool_short_of_query` means that band could not supply enough genes and the shortfall was borrowed from neighbouring bands; `mean_genes_borrowed` and `max_genes_borrowed` on the summary row say how much. Borrowing keeps every replicate exactly the query's size, which matters because both statistics scale with n. |
-| `go_null_draws.csv` | Every one of the 2000 replicates of both nulls for all four arms: terms reaching significance and genes covered, per replicate, 16,000 rows. | The substrate behind `arms_observed_vs_null.png`. `n_signif_obs` and `n_covered_obs` repeat the arm's own values on every row so a permutation p can be recomputed from this file alone. |
+| `go_null_draws.csv` | Every one of the 2000 replicates of both nulls for all four arms: terms reaching significance and genes covered, per replicate, 16,000 rows. | The substrate behind every null number quoted above. `n_signif_obs` and `n_covered_obs` repeat the arm's own values on every row so a permutation p can be recomputed from this file alone. |
 | `go_term_clusters.csv` | Every enriched term's block assignment under average-linkage clustering of the Wang similarity matrix at height 0.7, with the block's size, representative and best adjusted p. | `cluster_representative` is the block's most significant term, chosen by adjusted p. Blocks are numbered per arm x ontology x IEA variant and the ids do not carry across those. |
 | `go_iea_comparison.csv` | Per arm x ontology, what the IEA evidence filter changes: annotated query and background sizes, term counts each way, overlap, Jaccard, and both top-10 lists. | `n_top10_shared` is the number that matters: for `WT_heat_up` BP it is 4 of 10, so the headline list is not stable to the evidence filter and both variants are reported everywhere. |
 | `go_vs_curated_lenses.csv` | For every arm x curated lens, the GO term whose name means the same thing, how many arm genes each of the two claims, the shared count, the Jaccard, and all three gene lists spelled out. Both IEA variants sit on the same row. | `go_term_status` says why a row has the result it has: `tested`, `above_max_gs_size`, `below_min_gs_size`, `no_arm_gene_in_term`, `term_absent_from_universe`, `ontology_not_run`, `absent_from_GO.db`. `go_term_enriched` is TRUE or FALSE only when `go_term_status` is `tested` and NA otherwise, so an untested term can never be read as a negative result. The `no_iea_*` columns repeat the same set of answers under the other evidence filter. |
@@ -234,7 +210,6 @@ cheap to enrich. A term wants both a small `p_matched` and a small recurrence.
 | `go_mouse_replicate.csv` | The same over-representation asked in mouse space before the ortholog map, against the mouse universe, with the overlap against the human-space result. | Secondary by construction, since the arms are defined in human projection space. A term that appears only in human space is attributable to the projection rather than to the biology. |
 | `go_provenance.csv` | Script, stage, run date, every package version, every cutoff, the null design, the seed, and the two seam checks. | `seam_enricher_vs_enrichGO_*` checks the hand-built annotation map against the canonical `enrichGO()` call. `seam_null_matrix_*` checks the sparse-matrix recomputation the null runs on against `enricher()`. Both are 0 here, which is what makes a null count and an observed count the same quantity. |
 | `_overview/wtheatup_term_blocks.csv` | Per block for `WT_heat_up`: terms, genes, best adjusted p, terms passing `p_matched`, and median recurrence. | The figure's source table. `n_genes` is a union across the block's terms and the column does not sum to the arm. |
-| `_overview/arms_observed_vs_null.csv` | Per arm x quantity: genes drawn per replicate, observed, null median, null 95th percentile, uniform null median, permutation p. | The eight numbers the panel prints, in one place. |
 | `_overview/wtheatup_null_recurrence.csv` | All 384 enriched terms for `WT_heat_up` in rank order with size, hit count, adjusted p, `p_matched`, recurrence and the `simplify()` flag. | Sorted by adjusted p, so `rank` 1 is the strongest hypergeometric result. Scan `frac_matched_reaching_q` down the first twenty rows before quoting any of them. |
 | `_overview/wtheatup_proteostasis_probe.csv` | The probe table for the primary arm with one row per distinct term and a `found_by` column. | Deduplicated against `go_proteostasis_probe.csv`: a term found both by id and by the name sweep appears once, with `found_by` naming both. |
 | `_overview/arms_coverage_ladder.csv` | The three-way coverage split per arm with the coverage null and its permutation p. | Same columns as `go_coverage_summary.csv`, kept as the figure's same-stem neighbour. |

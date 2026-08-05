@@ -1,4 +1,3 @@
 "lens","n_lens_annotated","n_members_in_query","n_scored","n_excluded_saturated_band","n_above_p95","n_expected_by_chance","n_member_above_p95","n_nonmember_above_p95","n_members_scored","mean_pct_uniform","mean_pct_matched","rho_max_vs_n_terms"
 "HSR_core",47,3,153,43,11,7.65,3,8,3,0.454276283,0.488393143,0.25865585
 "TCR_activation",65,12,153,43,23,7.65,7,16,12,0.530430439,0.588693182,0.0717174485
-"Lombardi2022_HIF",95,6,72,124,4,3.6,0,4,2,0.507007385,0.561428491,0.209795169
