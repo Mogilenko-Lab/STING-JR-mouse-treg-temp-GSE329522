@@ -92,7 +92,7 @@ fig3a <- ggplot(fig3a_df, aes(x = score, y = source)) +
   guides(color = guide_legend(override.aes = list(size = 3, shape = c(17, 15, 16))),
          shape = "none") +
   labs(
-    title = "Fig 3a. TF activity on the cGAS x heat Interaction contrast (CollecTRI ULM)",
+    title = "TF activity on the cGAS x heat Interaction contrast (CollecTRI ULM)",
     subtitle = "HIF axis (orange triangles) is flat/NS -> no detectable cGAS-dependence; the IFN members Irf3/Stat2/Stat1 are interaction-positive\n(* = BH padj < 0.05). NFkB members (Nfkb1/Rela) lean positive but are NS at n=5.",
     x = "TF activity (ULM score; Interaction = WT_heat - KO_heat)", y = NULL
   ) +
@@ -145,7 +145,7 @@ fig3b <- ggplot(fig3b_df, aes(x = score, y = row_key)) +
   scale_color_manual(values = AXIS_COLORS, name = "TF axis", labels = AXIS_LABELS) +
   scale_size_manual(values = c("TRUE" = 2.8, "FALSE" = 1.5), guide = "none") +
   labs(
-    title = "Fig 3b. Top activated / suppressed TFs per contrast (CollecTRI ULM)",
+    title = "Top activated and suppressed TFs per contrast (CollecTRI ULM)",
     subtitle = "Shared x-axis (ULM score) across all four facets. Key TFs (HIF orange, IFN/NFkB blue) labelled.\nReads out what each contrast captures: heat arms vs the temperature main effect vs the cGAS x heat Interaction.",
     x = "TF activity (ULM score)", y = NULL
   ) +
@@ -183,9 +183,9 @@ fig3c <- ggplot(fig3c_df, aes(x = method, y = rank, color = score, group = 1)) +
   scale_color_gradient2(low = DOWN, mid = NEUT, high = UP, midpoint = 0, name = "ULM/consensus\nscore") +
   scale_y_reverse(expand = expansion(mult = c(0.10, 0.22))) +
   labs(
-    title = sprintf("Fig 3c. Hif1a rank cascade across inference method / network (%s)",
+    title = sprintf("Hif1a rank across inference method and network, %s",
                     contrast_label("WT_heat")),
-    subtitle = "rank #1 (top) = most activated. The DoRothEA #1 collapses under the CollecTRI swap (#12), the\nmultivariate MLM de-confounding (#142), and is partially re-inflated by the consensus (#8): method/network-fragile.",
+    subtitle = "Rank 1 is the most activated. Each point is labelled with the rank and the score behind it.",
     x = NULL, y = "Hif1a rank among activated TFs (lower = higher activity)"
   ) +
   project_theme(config = FIG_CFG)
@@ -238,8 +238,8 @@ fig3d <- ggplot(fig3d_df, aes(x = membership, y = t_wt, fill = membership)) +
   annotate("label", x = 0.6, y = max(fig3d_df$t_wt) * 0.96, hjust = 0, vjust = 1,
            label = swap_note, size = 2.7, fill = "grey96", color = "grey15") +
   labs(
-    title = "Fig 3d. Regulon swap dilutes Hif1a's ULM signal (explains #1 -> #12)",
-    subtitle = "Per-target WT_heat t-statistic by membership. The CollecTRI-only targets the swap ADDS carry high |t| but\nMIXED sign (their box straddles 0), so they cancel and add little net directional signal -> diluting the\nmor-weighted regulon mean and dragging the Hif1a ULM score below the tighter DoRothEA value.",
+    title = "Per-target heat t-statistic by Hif1a regulon membership",
+    subtitle = "The step from rank 1 to rank 12. The CollecTRI-only targets the swap adds carry high |t| at mixed sign,\nso their box straddles zero and they cancel. That dilutes the mor-weighted regulon mean and carries the\nHif1a ULM score below its tighter DoRothEA value.",
     x = "Hif1a target membership across networks", y = "WT_heat target t-statistic"
   ) +
   project_theme(config = FIG_CFG)
@@ -283,8 +283,8 @@ fig3e <- ggplot(fig3e_df, aes(x = n_other_TFs)) +
   annotate("label", x = max(fig3e_df$n_other_TFs) * 0.98, y = Inf, hjust = 1, vjust = 1.1,
            label = collapse_note, size = 2.9, fill = "grey96", color = "grey15") +
   labs(
-    title = "Fig 3e. Target collinearity collapses Hif1a under MLM (explains #12 -> #142)",
-    subtitle = "For each Hif1a target: how many OTHER CollecTRI TFs also regulate it. The dashed line marks the mean.\nBecause nearly every Hif1a target is co-regulated, the multivariate MLM re-attributes its signal away from Hif1a.",
+    title = "Hif1a targets by how many other CollecTRI regulons claim them",
+    subtitle = "The step from rank 12 to rank 142. The dashed line marks the mean. Nearly every Hif1a target is\nco-regulated, so the multivariate MLM attributes its signal across the regulons that share it.",
     x = "number of OTHER CollecTRI TFs sharing each Hif1a target", y = "Hif1a targets (count)"
   ) +
   project_theme(config = FIG_CFG)
@@ -325,8 +325,8 @@ fig3f <- ggplot(fig3f_df, aes(x = statistic, y = z_score, fill = family)) +
            label = sprintf("consensus mean z = %.2f", consensus_z), size = 2.9, color = "grey35") +
   scale_fill_manual(values = fam_cols, name = "statistic family") +
   labs(
-    title = "Fig 3f. The consensus outvotes MLM, re-inflating Hif1a (explains #142 -> #8)",
-    subtitle = "Hif1a's per-statistic folded-z. Only mlm (multivariate) is low; the four univariate statistics stay high\nand the consensus is their mean (dashed line) -> Hif1a is pulled back up to #8 despite the MLM verdict.",
+    title = "Hif1a folded z per decoupleR statistic, against the consensus mean",
+    subtitle = "The step from rank 142 back to rank 8. The four univariate statistics stay high and mlm alone is low,\nand the consensus is their mean (dashed line), which carries Hif1a back up.",
     x = "decoupleR statistic", y = "Hif1a folded z-score"
   ) +
   project_theme(config = FIG_CFG)
@@ -453,7 +453,7 @@ fig3g <- ggplot(fig3g_df, aes(x = rank, y = contrib, color = legend_class)) +
   scale_size_manual(values = c("TRUE" = 2.2, "FALSE" = 0.8), guide = "none") +
   scale_x_continuous(breaks = NULL) +
   labs(
-    title    = sprintf("Fig 3g. WHERE Hif1a's score comes from: full ranked regulon contribution landscape (%s)",
+    title    = sprintf("Hif1a target contribution across the ranked regulon, %s",
                        contrast_label("WT_heat")),
     subtitle = sub_g_expanded,
     x        = "regulon members ranked by contribution (left = most negative; right = most positive)",
@@ -515,7 +515,7 @@ fig3i <- ggplot(fig3i_df, aes(x = temp, y = mean_log2cpm,
   # Headroom so slopes never crowd the strip band above.
   scale_y_continuous(expand = expansion(mult = c(0.08, 0.12))) +
   labs(
-    title    = "Fig 3i. Reading the cGAS x heat Interaction: difference of the two genotype heat-slopes",
+    title    = "The cGAS x heat Interaction as the difference of the two genotype heat-slopes",
     subtitle = paste0(
       "Interaction = (WT_39 - WT_37) - (KO_39 - KO_37).  WT solid, cGAS-KO dashed.\n",
       "Diverging slopes = cGAS-dependent (Ifit1, IFN arm).  ",
