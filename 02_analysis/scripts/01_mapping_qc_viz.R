@@ -50,6 +50,10 @@ suppressPackageStartupMessages({
   library(tidyr)
 })
 
+# Fixed so fig1c's repelled library labels land in the same place on every run. Without it
+# the panel redraws differently each time and a re-render reads as a changed result.
+set.seed(42)
+
 # -----------------------------------------------------------------------------
 # 0. Style-contract constants + provenance strings (caption metadata)
 # -----------------------------------------------------------------------------
