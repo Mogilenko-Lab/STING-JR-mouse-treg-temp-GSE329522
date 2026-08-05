@@ -1,4 +1,4 @@
-"arm","contrast","direction","gate","n_mouse_at_gate","n_human_carried","n_lost_to_collapse","n_dropped_no_ortholog","pct_of_mouse_arm_carried","n_arrived_one_to_one","n_arrived_by_collapse","n_arrived_by_split","n_arrived_not_in_map","collapsed_within_arm","n_mouse_arm_object","n_human_remapped_from_arm","manifest_n_human"
-"WT_heat_up","WT_heat","up","fdr_logfc",213,199,2,12,93.4,194,5,0,0,"HSPA1A <- Hspa1a+Hspa1b; IDI2 <- Gm9745+Idi2",213,199,199
-"KO_heat_up","KO_heat","up","fdr_logfc",239,218,2,19,91.2,213,5,0,0,"HSPA1A <- Hspa1a+Hspa1b; IDI2 <- Gm9745+Idi2",239,218,218
-"Interaction_up","Interaction","up","fdr_logfc",9,7,1,1,77.8,3,4,0,0,"IFI16 <- Ifi206+Ifi208",9,7,7
+"arm","contrast","direction","gate","n_mouse_at_gate","n_human_carried","n_lost_to_collapse","n_dropped_no_ortholog","n_dropped_stale_query_symbol","n_dropped_unmapped_total","n_query_symbol_normalised","pct_of_mouse_arm_carried","n_arrived_one_to_one","n_arrived_by_collapse","n_arrived_by_split","n_arrived_not_in_map","collapsed_within_arm","n_mouse_arm_object","n_human_remapped_from_arm","manifest_n_human"
+"WT_heat_up","WT_heat","up","fdr_logfc",213,202,2,8,1,9,3,94.8,197,5,0,0,"HSPA1A <- Hspa1a+Hspa1b; IDI2 <- Gm9745+Idi2",213,202,202
+"KO_heat_up","KO_heat","up","fdr_logfc",239,221,2,11,5,16,3,92.5,216,5,0,0,"HSPA1A <- Hspa1a+Hspa1b; IDI2 <- Gm9745+Idi2",239,221,221
+"Interaction_up","Interaction","up","fdr_logfc",9,7,1,1,0,1,0,77.8,3,4,0,0,"IFI16 <- Ifi206+Ifi208",9,7,7

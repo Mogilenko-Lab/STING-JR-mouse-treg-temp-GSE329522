@@ -1,5 +1,5 @@
 "arm","variant","n_arm_in_background","n_unclaimed","n_unclaimed_in_an_enriched_set","n_unclaimed_annotated_testable","n_unclaimed_annotated_only_untestable_size","n_unclaimed_no_annotation_at_all","genes_no_annotation_at_all"
-"WT_heat_up","unpinned",199,74,37,64,0,10,"ANKRD33B/C11orf86/C15orf48/C22orf15/GPRIN2/MAB21L3/OAF/TMEM125/TMEM205/ZNF583"
-"KO_heat_up","unpinned",218,95,40,83,0,12,"ANKRD33B/ANKRD37/C11orf86/C15orf48/C22orf15/CCDC184/FAM43A/GPRIN2/OAF/TMEM125/TMEM205/ZNF583"
+"WT_heat_up","unpinned",202,74,34,64,0,10,"ANKRD33B/C11orf86/C15orf48/C22orf15/GPRIN2/MAB21L3/OAF/TMEM125/TMEM205/ZNF583"
+"KO_heat_up","unpinned",221,100,42,88,0,12,"ANKRD33B/ANKRD37/C11orf86/C15orf48/C22orf15/CCDC184/FAM43A/GPRIN2/OAF/TMEM125/TMEM205/ZNF583"
 "Interaction_up","unpinned",7,0,0,0,0,0,""
-"Interaction_fdrOnly_up","unpinned",18,2,1,2,0,0,""
+"Interaction_fdrOnly_up","unpinned",19,1,0,1,0,0,""

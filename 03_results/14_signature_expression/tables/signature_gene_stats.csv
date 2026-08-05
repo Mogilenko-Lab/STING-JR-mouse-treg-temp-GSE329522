@@ -66,7 +66,7 @@ WT_heat_up,Npr3,WT_heat,fdr_logfc,1.76500236,13.0782559,8.17238848e-12,64,NPR3,o
 WT_heat_up,Gm44851,WT_heat,fdr_logfc,1.19067462,13.0584277,8.42006369e-12,65,NA,NA,FALSE
 WT_heat_up,Syt15,WT_heat,fdr_logfc,1.62761032,12.6987225,1.43593167e-11,66,SYT15,one2one,TRUE
 WT_heat_up,Tex15,WT_heat,fdr_logfc,1.2147474,12.6596265,5.4995234e-11,67,TEX15,one2one,TRUE
-WT_heat_up,Fam160a1,WT_heat,fdr_logfc,1.48039253,12.6119931,1.63812183e-11,68,NA,NA,FALSE
+WT_heat_up,Fam160a1,WT_heat,fdr_logfc,1.48039253,12.6119931,1.63812183e-11,68,FHIP1A,one2one,TRUE
 WT_heat_up,Plxnb2,WT_heat,fdr_logfc,1.17854571,12.5706999,5.95003276e-11,69,PLXNB2,one2one,TRUE
 WT_heat_up,Bcam,WT_heat,fdr_logfc,1.62712277,12.4965507,4.89011907e-10,70,BCAM,one2one,TRUE
 WT_heat_up,Pak1,WT_heat,fdr_logfc,1.28274982,12.3992924,7.01134919e-11,71,PAK1,one2one,TRUE
@@ -116,7 +116,7 @@ WT_heat_up,Nppc,WT_heat,fdr_logfc,2.08036463,10.471255,4.10120326e-8,114,NPPC,on
 WT_heat_up,Adcy4,WT_heat,fdr_logfc,1.21468815,10.3956391,8.123803e-10,115,ADCY4,one2one,TRUE
 WT_heat_up,Ccl20,WT_heat,fdr_logfc,1.36431198,10.347817,1.85469442e-7,116,CCL20,one2one,TRUE
 WT_heat_up,Mab21l3,WT_heat,fdr_logfc,1.08370169,10.3207928,4.12297636e-8,117,MAB21L3,one2one,TRUE
-WT_heat_up,Fam71b,WT_heat,fdr_logfc,1.42698524,10.3042365,1.71468695e-7,118,NA,NA,FALSE
+WT_heat_up,Fam71b,WT_heat,fdr_logfc,1.42698524,10.3042365,1.71468695e-7,118,GARIN3,one2one,TRUE
 WT_heat_up,Gm12708,WT_heat,fdr_logfc,1.02748387,10.2516223,1.07165558e-9,119,NA,NA,FALSE
 WT_heat_up,Anxa3,WT_heat,fdr_logfc,1.00293111,10.2462719,3.20236305e-8,120,ANXA3,one2one,TRUE
 WT_heat_up,Nr4a1,WT_heat,fdr_logfc,1.7757563,10.2439985,2.34060803e-7,121,NR4A1,one2one,TRUE
@@ -133,7 +133,7 @@ WT_heat_up,Tmem125,WT_heat,fdr_logfc,1.19365154,9.80657724,2.5713365e-9,131,TMEM
 WT_heat_up,Hk2,WT_heat,fdr_logfc,1.35020649,9.71988286,4.35110402e-7,132,HK2,one2one,TRUE
 WT_heat_up,S1pr3,WT_heat,fdr_logfc,1.2614867,9.67845652,5.79629159e-8,133,S1PR3,one2one,TRUE
 WT_heat_up,Samd4,WT_heat,fdr_logfc,1.16867534,9.6595385,3.45433178e-9,134,SAMD4A,one2one,TRUE
-WT_heat_up,Tctex1d2,WT_heat,fdr_logfc,1.188763,9.59886507,3.881103e-9,135,NA,NA,FALSE
+WT_heat_up,Tctex1d2,WT_heat,fdr_logfc,1.188763,9.59886507,3.881103e-9,135,DYNLT2B,one2one,TRUE
 WT_heat_up,Aplp1,WT_heat,fdr_logfc,1.27787169,9.58833408,7.8627646e-8,136,APLP1,one2one,TRUE
 WT_heat_up,Ccl3,WT_heat,fdr_logfc,2.63634102,9.5677964,5.37759698e-7,137,CCL3,one2one,TRUE
 WT_heat_up,Wnt3,WT_heat,fdr_logfc,1.11185515,9.46682468,5.00650557e-9,138,WNT3,one2one,TRUE
@@ -280,7 +280,7 @@ KO_heat_up,Asb2,KO_heat,fdr_logfc,1.24957024,12.95121,8.83886623e-12,65,ASB2,one
 KO_heat_up,Ret,KO_heat,fdr_logfc,1.03234997,12.9415943,1.76057679e-11,66,RET,one2one,TRUE
 KO_heat_up,Actbl2,KO_heat,fdr_logfc,1.4372245,12.9193763,9.20545254e-12,67,ACTBL2,one2one,TRUE
 KO_heat_up,Tnfsf11,KO_heat,fdr_logfc,1.3320337,12.8954462,9.69953138e-9,68,TNFSF11,one2one,TRUE
-KO_heat_up,Fam160a1,KO_heat,fdr_logfc,1.51307902,12.890461,9.62547572e-12,69,NA,NA,FALSE
+KO_heat_up,Fam160a1,KO_heat,fdr_logfc,1.51307902,12.890461,9.62547572e-12,69,FHIP1A,one2one,TRUE
 KO_heat_up,Hspa1b,KO_heat,fdr_logfc,1.76502825,12.8874536,8.12088616e-11,70,HSPA1A,many2one,TRUE
 KO_heat_up,Fasl,KO_heat,fdr_logfc,1.049592,12.7912619,2.77740432e-11,71,FASLG,one2one,TRUE
 KO_heat_up,Grp,KO_heat,fdr_logfc,1.19040364,12.7260434,1.24788287e-11,72,GRP,one2one,TRUE
@@ -321,7 +321,7 @@ KO_heat_up,Npr3,KO_heat,fdr_logfc,1.46076263,10.8239105,3.27594453e-10,106,NPR3,
 KO_heat_up,Nr4a2,KO_heat,fdr_logfc,1.06301456,10.8101329,5.15238099e-8,107,NR4A2,one2one,TRUE
 KO_heat_up,Il23a,KO_heat,fdr_logfc,1.64259031,10.7680224,3.65431989e-10,108,IL23A,one2one,TRUE
 KO_heat_up,Nppc,KO_heat,fdr_logfc,2.13833202,10.7630266,2.53988118e-8,109,NPPC,one2one,TRUE
-KO_heat_up,Fam71b,KO_heat,fdr_logfc,1.48914461,10.7530883,9.17584311e-8,110,NA,NA,FALSE
+KO_heat_up,Fam71b,KO_heat,fdr_logfc,1.48914461,10.7530883,9.17584311e-8,110,GARIN3,one2one,TRUE
 KO_heat_up,Adcy4,KO_heat,fdr_logfc,1.24871493,10.6868498,4.22441662e-10,111,ADCY4,one2one,TRUE
 KO_heat_up,Inhba,KO_heat,fdr_logfc,2.06925027,10.6552276,1.32446806e-7,112,INHBA,one2one,TRUE
 KO_heat_up,Ccl4,KO_heat,fdr_logfc,2.69944997,10.6446776,1.35246707e-7,113,CCL4,one2one,TRUE
@@ -370,7 +370,7 @@ KO_heat_up,Camk2n1,KO_heat,fdr_logfc,1.01850133,9.04116721,2.1975483e-7,155,CAMK
 KO_heat_up,Gm26781,KO_heat,fdr_logfc,1.12959242,9.03531162,1.07358751e-8,156,NA,NA,FALSE
 KO_heat_up,Cdcp1,KO_heat,fdr_logfc,1.02895084,9.03323197,1.07679792e-8,157,CDCP1,one2one,TRUE
 KO_heat_up,Klf5,KO_heat,fdr_logfc,1.00072476,9.00353719,1.14557127e-8,158,KLF5,one2one,TRUE
-KO_heat_up,Tctex1d2,KO_heat,fdr_logfc,1.11474552,9.0011986,1.14859033e-8,159,NA,NA,FALSE
+KO_heat_up,Tctex1d2,KO_heat,fdr_logfc,1.11474552,9.0011986,1.14859033e-8,159,DYNLT2B,one2one,TRUE
 KO_heat_up,Gm7334,KO_heat,fdr_logfc,1.0074417,8.96316574,2.03236255e-7,160,NA,NA,FALSE
 KO_heat_up,Atp2b4,KO_heat,fdr_logfc,1.1517696,8.96224097,1.07602844e-6,161,ATP2B4,one2one,TRUE
 KO_heat_up,Il1a,KO_heat,fdr_logfc,2.46759537,8.95228126,1.07427674e-6,162,IL1A,one2one,TRUE
@@ -480,6 +480,6 @@ Interaction_up_fdrOnly,Trim12c,Interaction,fdr_only,0.299932645,5.1859235,0.0180
 Interaction_up_fdrOnly,Trim30a,Interaction,fdr_only,0.556771899,5.06163116,0.048742511,18,TRIM5,many2one,TRUE
 Interaction_up_fdrOnly,Lgals9,Interaction,fdr_only,0.318182759,5.00224061,0.026293037,19,LGALS9,one2one,TRUE
 Interaction_up_fdrOnly,Mx2,Interaction,fdr_only,0.940312097,4.92702776,0.0307560701,20,MX1,many2one,TRUE
-Interaction_up_fdrOnly,Ddx58,Interaction,fdr_only,0.682743437,4.84380087,0.0430540129,21,NA,NA,FALSE
+Interaction_up_fdrOnly,Ddx58,Interaction,fdr_only,0.682743437,4.84380087,0.0430540129,21,RIGI,one2one,TRUE
 Interaction_up_fdrOnly,Trim34a,Interaction,fdr_only,0.493041433,4.82404342,0.0389906852,22,TRIM34,many2one,TRUE
 Interaction_up_fdrOnly,Dhx58,Interaction,fdr_only,0.567672784,4.70720813,0.048742511,23,DHX58,one2one,TRUE

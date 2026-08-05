@@ -439,7 +439,16 @@ for (s in SIGS) {
     n_genes_mouse = n_mouse,
     n_mapped_to_human = n_mapped,
     n_distinct_human_symbols = length(human_all),
-    n_dropped_no_ortholog = n_mouse - n_mapped,
+    # Every gene of the arm with no edge in the map, which is what this stage can recompute.
+    # The frozen ledger SPLITS that total in two, and the split is not recomputable here:
+    # babelgene keys on current MGI symbols while this matrix carries GENCODE vM25's older
+    # vintage, so a symbol babelgene could not key at all used to be counted as having no
+    # ortholog. Those two are carried through from the manifest rather than re-derived, and
+    # the cross-check below is against the TOTAL, which is the quantity both sides own.
+    n_dropped_unmapped_total = n_mouse - n_mapped,
+    n_dropped_no_ortholog = as.integer(mrow$n_dropped_no_ortholog),
+    n_dropped_stale_query_symbol = as.integer(mrow$n_dropped_stale_query_symbol),
+    n_query_symbol_normalised = as.integer(mrow$n_query_symbol_normalised),
     n_one2one   = sum(fate$mapping_type == "one2one",  na.rm = TRUE),
     n_one2many  = sum(fate$mapping_type == "one2many", na.rm = TRUE),
     n_many2one  = sum(fate$mapping_type == "many2one", na.rm = TRUE),
@@ -448,14 +457,21 @@ for (s in SIGS) {
     stringsAsFactors = FALSE)
 
   # Frozen-ledger cross-check on ortholog fate. manifest.csv columns:
-  #   n_human               -> distinct human symbols   (our n_distinct_human_symbols)
-  #   n_dropped_no_ortholog -> mouse genes with no edge (our n_dropped_no_ortholog)
-  #   n_many_mapped         -> mouse genes mapping to MANY human (our n_one2many)
+  #   n_human                  -> distinct human symbols   (our n_distinct_human_symbols)
+  #   n_dropped_unmapped_total -> mouse genes with no edge (our n_dropped_unmapped_total)
+  #   n_many_mapped            -> mouse genes mapping to MANY human (our n_one2many)
+  # Plus the ledger's own closure, so a manifest whose split does not add up to its total is
+  # caught here rather than propagated into this stage's summary.
+  if (!identical(as.integer(mrow$n_dropped_no_ortholog) +
+                   as.integer(mrow$n_dropped_stale_query_symbol),
+                 as.integer(mrow$n_dropped_unmapped_total)))
+    stop("[22] the frozen ledger's drop split does not close for ", s$name,
+         ": no_ortholog + stale_query_symbol != unmapped_total. Report this.")
   led <- c(n_human = as.integer(mrow$n_human),
-           n_dropped = as.integer(mrow$n_dropped_no_ortholog),
+           n_dropped = as.integer(mrow$n_dropped_unmapped_total),
            n_many = as.integer(mrow$n_many_mapped))
   ours <- c(n_human = as.integer(summ$n_distinct_human_symbols),
-            n_dropped = as.integer(summ$n_dropped_no_ortholog),
+            n_dropped = as.integer(summ$n_dropped_unmapped_total),
             n_many = as.integer(summ$n_one2many))
   if (!identical(led, ours))
     stop("[22] MISMATCH vs the frozen projection ledger for ", s$name, ":\n",
@@ -464,9 +480,11 @@ for (s in SIGS) {
          "  Report this mismatch — do NOT adjust the code to force agreement.")
   summ_rows[[s$name]] <- summ
 
-  message(sprintf("  [%s] %s/%s: %d mouse genes | %d mapped -> %d human symbols (%d dropped) | median|t|=%.2f",
+  message(sprintf("  [%s] %s/%s: %d mouse genes | %d mapped -> %d human symbols (%d dropped: %d no ortholog + %d symbol not keyable; %d arrived only after normalisation) | median|t|=%.2f",
                   s$name, s$source_contrast, s$gate, n_mouse, n_mapped,
-                  summ$n_distinct_human_symbols, summ$n_dropped_no_ortholog, summ$median_abs_t))
+                  summ$n_distinct_human_symbols, summ$n_dropped_unmapped_total,
+                  summ$n_dropped_no_ortholog, summ$n_dropped_stale_query_symbol,
+                  summ$n_query_symbol_normalised, summ$median_abs_t))
 }
 
 SIG_LEVELS <- vapply(SIGS, `[[`, character(1), "name")
@@ -539,8 +557,12 @@ stopifnot(
       sum(signature_expression_summary$n_genes_plotted) * length(GROUP_LEVELS),
   "mapped + dropped != n_genes_mouse" =
     all(signature_expression_summary$n_mapped_to_human +
-        signature_expression_summary$n_dropped_no_ortholog ==
+        signature_expression_summary$n_dropped_unmapped_total ==
         signature_expression_summary$n_genes_mouse),
+  "the drop split does not close against its total" =
+    all(signature_expression_summary$n_dropped_no_ortholog +
+        signature_expression_summary$n_dropped_stale_query_symbol ==
+        signature_expression_summary$n_dropped_unmapped_total),
   "one2one + one2many + many2one != n_mapped_to_human" =
     all(signature_expression_summary$n_one2one + signature_expression_summary$n_one2many +
         signature_expression_summary$n_many2one ==

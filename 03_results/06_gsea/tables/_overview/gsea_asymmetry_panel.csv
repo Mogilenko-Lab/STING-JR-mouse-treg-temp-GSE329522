@@ -1,45 +1,45 @@
 "arm","pathway_id","pathway_name","contrast","nes","padj","set_size"
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","Interaction",3.14455856,2.64886572e-24,95
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","Interaction",2.82535921,4.94867124e-22,185
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","Interaction",3.13844797,6.94214619e-24,96
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","Interaction",2.8450962,1.20497972e-22,187
 "Interferon and inflammatory sets","HALLMARK_INFLAMMATORY_RESPONSE","Inflammatory Response","Interaction",1.46896515,0.0519643379,167
-"Interferon and inflammatory sets","HALLMARK_IL6_JAK_STAT3_SIGNALING","IL-6/JAK/STAT3 Signaling","Interaction",1.43878497,0.112721778,78
-"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","Interaction",1.31876263,0.130564732,183
-"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","Interaction",-1.27036841,0.169394806,171
-"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","Interaction",-1.1398167,0.384840218,174
-"Hypoxia and metabolic sets","HALLMARK_OXIDATIVE_PHOSPHORYLATION","Oxidative Phosphorylation","Interaction",-1.12875102,0.384840218,196
-"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","Interaction",1.0091686,0.697817646,189
-"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","Interaction",-0.887279805,0.924211045,195
-"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","Interaction",0.785104485,0.997453794,197
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","KO_heat",-2.52172421,7.98479215e-12,95
-"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","KO_heat",2.2892655,7.98479215e-12,189
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","KO_heat",-2.20130507,1.67451556e-10,185
-"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","KO_heat",2.07432245,1.70060158e-08,197
-"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","KO_heat",1.94796926,2.48384213e-06,171
+"Interferon and inflammatory sets","HALLMARK_IL6_JAK_STAT3_SIGNALING","IL-6/JAK/STAT3 Signaling","Interaction",1.43878497,0.122969213,78
+"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","Interaction",1.30963198,0.142935153,184
+"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","Interaction",-1.26975198,0.170791408,172
+"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","Interaction",-1.13484953,0.390258024,176
+"Hypoxia and metabolic sets","HALLMARK_OXIDATIVE_PHOSPHORYLATION","Oxidative Phosphorylation","Interaction",-1.12875102,0.390258024,196
+"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","Interaction",1.12845757,0.415468307,190
+"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","Interaction",-0.892792486,0.927492666,199
+"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","Interaction",0.779120418,0.997453794,198
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","KO_heat",-2.50193863,2.87649829e-12,96
+"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","KO_heat",2.25562596,3.00151685e-11,190
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","KO_heat",-2.21073675,8.32798631e-11,187
+"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","KO_heat",2.0615781,3.31655772e-08,198
+"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","KO_heat",1.96212293,3.01167277e-06,172
 "Interferon and inflammatory sets","HALLMARK_INFLAMMATORY_RESPONSE","Inflammatory Response","KO_heat",1.76768803,0.000139407602,167
-"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","KO_heat",1.58335091,0.00196807426,174
-"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","KO_heat",1.42596696,0.0120267153,195
-"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","KO_heat",1.30440838,0.0492389663,183
+"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","KO_heat",1.60039297,0.00154592061,176
+"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","KO_heat",1.47102931,0.00593980433,199
+"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","KO_heat",1.29485003,0.0529647658,184
 "Hypoxia and metabolic sets","HALLMARK_OXIDATIVE_PHOSPHORYLATION","Oxidative Phosphorylation","KO_heat",-1.187701,0.168884097,196
 "Interferon and inflammatory sets","HALLMARK_IL6_JAK_STAT3_SIGNALING","IL-6/JAK/STAT3 Signaling","KO_heat",-1.02136321,0.488665438,78
-"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","Temp_main",2.27077909,9.86629791e-12,189
-"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","Temp_main",2.08423158,4.28491231e-08,197
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","Temp_main",-2.21940061,9.92933221e-08,95
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","Temp_main",-1.96430767,8.4818422e-07,185
-"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","Temp_main",1.94045495,1.66791122e-06,171
-"Interferon and inflammatory sets","HALLMARK_INFLAMMATORY_RESPONSE","Inflammatory Response","Temp_main",1.79884753,6.00110077e-05,167
-"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","Temp_main",1.61850521,0.00136740116,174
-"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","Temp_main",1.42716201,0.0117556175,195
-"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","Temp_main",1.30999413,0.0501222494,183
+"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","Temp_main",2.24668127,4.46680912e-11,190
+"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","Temp_main",2.07033682,2.69119645e-08,198
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","Temp_main",-2.23128388,5.32636603e-08,96
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","Temp_main",-1.98747622,1.80705115e-07,187
+"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","Temp_main",1.95509884,1.4442856e-06,172
+"Interferon and inflammatory sets","HALLMARK_INFLAMMATORY_RESPONSE","Inflammatory Response","Temp_main",1.79884753,4.69194808e-05,167
+"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","Temp_main",1.63634033,0.00101026074,176
+"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","Temp_main",1.47916349,0.00557133326,199
+"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","Temp_main",1.30113547,0.0536830661,184
 "Hypoxia and metabolic sets","HALLMARK_OXIDATIVE_PHOSPHORYLATION","Oxidative Phosphorylation","Temp_main",-1.23664462,0.104089004,196
 "Interferon and inflammatory sets","HALLMARK_IL6_JAK_STAT3_SIGNALING","IL-6/JAK/STAT3 Signaling","Temp_main",1.19249192,0.20117808,78
-"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","WT_heat",2.36401715,5.54955009e-13,189
-"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","WT_heat",2.08853169,1.84211979e-08,197
-"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","WT_heat",1.90778685,4.1639519e-06,171
+"Interferon and inflammatory sets","HALLMARK_TNFA_SIGNALING_VIA_NFKB","TNF-alpha Signaling via NF-kappaB","WT_heat",2.34932927,8.60229191e-13,190
+"Interferon and inflammatory sets","HALLMARK_IL2_STAT5_SIGNALING","IL-2/STAT5 Signaling","WT_heat",2.07383446,1.58288706e-08,198
+"Hypoxia and metabolic sets","HALLMARK_HYPOXIA","Hypoxia","WT_heat",1.92400544,5.31968594e-06,172
 "Interferon and inflammatory sets","HALLMARK_INFLAMMATORY_RESPONSE","Inflammatory Response","WT_heat",1.88972822,6.67209643e-06,167
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","WT_heat",-1.89788424,0.000167299088,95
-"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","WT_heat",-1.76612904,0.000167299088,185
-"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","WT_heat",1.60759161,0.00184403488,174
-"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","WT_heat",1.38546081,0.0231719314,195
-"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","WT_heat",1.33591591,0.0404635632,183
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_GAMMA_RESPONSE","Interferon-gamma Response","WT_heat",-1.77844563,9.05320282e-05,187
+"Interferon and inflammatory sets","HALLMARK_INTERFERON_ALPHA_RESPONSE","Interferon-alpha Response","WT_heat",-1.89666074,0.000173742641,96
+"Hypoxia and metabolic sets","HALLMARK_GLYCOLYSIS","Glycolysis","WT_heat",1.6284556,0.000887487104,176
+"Hypoxia and metabolic sets","HALLMARK_MTORC1_SIGNALING","Mtorc1 Signaling","WT_heat",1.44263954,0.0109815052,199
+"Interferon and inflammatory sets","HALLMARK_ALLOGRAFT_REJECTION","Allograft Rejection","WT_heat",1.32789227,0.0440707578,184
 "Hypoxia and metabolic sets","HALLMARK_OXIDATIVE_PHOSPHORYLATION","Oxidative Phosphorylation","WT_heat",-1.28791009,0.0605044564,196
 "Interferon and inflammatory sets","HALLMARK_IL6_JAK_STAT3_SIGNALING","IL-6/JAK/STAT3 Signaling","WT_heat",1.2716178,0.143580267,78

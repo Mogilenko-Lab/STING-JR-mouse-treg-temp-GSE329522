@@ -1,28 +1,28 @@
 "arm","collection","term","status","size_in_background","n_arm_hits","hits","p.adjust","p_matched"
-"WT_heat_up","Hallmark","HALLMARK_HYPOXIA","tested, enriched",171,18,"ADM/ADORA2B/AK4/ANXA2/ATF3/CCN1/CDKN1A/EGFR/F3/FOSL2/HK2/IER3/P4HA2/PDGFB/PLAUR/SDC4/SERPINE1/TGM2",9.75807515390371e-06,0.000999500249875062
-"WT_heat_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",274,11,"ADAM8/AK4/EGR1/FOSL2/HK2/INHBA/LTA/NPPC/NR4A2/PAK1/PTGS2",NA,NA
-"WT_heat_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",142,4,"ADAM8/AK4/INHBA/PTGS2",NA,NA
+"WT_heat_up","Hallmark","HALLMARK_HYPOXIA","tested, enriched",172,18,"ADM/ADORA2B/AK4/ANXA2/ATF3/CCN1/CDKN1A/EGFR/F3/FOSL2/HK2/IER3/P4HA2/PDGFB/PLAUR/SDC4/SERPINE1/TGM2",1.01210827551184e-05,0.000499750124937531
+"WT_heat_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",275,11,"ADAM8/AK4/EGR1/FOSL2/HK2/INHBA/LTA/NPPC/NR4A2/PAK1/PTGS2",NA,NA
+"WT_heat_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",143,4,"ADAM8/AK4/INHBA/PTGS2",NA,NA
 "WT_heat_up","GO_BP","GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY","below min_gs_size (7)",7,0,"",NA,NA
 "WT_heat_up","GO_MF",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "WT_heat_up","KEGG",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "WT_heat_up","Reactome","REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA","tested, not enriched",61,0,"",NA,NA
-"KO_heat_up","Hallmark","HALLMARK_HYPOXIA","tested, enriched",171,19,"ADM/ADORA2B/AK4/ANXA2/CAVIN1/CCN1/CDKN1A/EGFR/F3/FOSL2/HK2/IER3/P4HA2/PDGFB/PLAUR/SDC4/SERPINE1/SLC2A1/TGM2",5.5739013715091e-06,0.00149925037481259
-"KO_heat_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",274,11,"ADAM8/AK4/EGR1/FOSL2/HK2/INHBA/LTA/NPPC/NR4A2/PAK1/SLC2A1",NA,NA
-"KO_heat_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",142,3,"ADAM8/AK4/INHBA",NA,NA
+"KO_heat_up","Hallmark","HALLMARK_HYPOXIA","tested, enriched",172,19,"ADM/ADORA2B/AK4/ANXA2/CAVIN1/CCN1/CDKN1A/EGFR/F3/FOSL2/HK2/IER3/P4HA2/PDGFB/PLAUR/SDC4/SERPINE1/SLC2A1/TGM2",5.79349190597546e-06,0.000499750124937531
+"KO_heat_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",275,11,"ADAM8/AK4/EGR1/FOSL2/HK2/INHBA/LTA/NPPC/NR4A2/PAK1/SLC2A1",NA,NA
+"KO_heat_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",143,3,"ADAM8/AK4/INHBA",NA,NA
 "KO_heat_up","GO_BP","GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY","below min_gs_size (7)",7,0,"",NA,NA
 "KO_heat_up","GO_MF",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "KO_heat_up","KEGG",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "KO_heat_up","Reactome","REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA","tested, not enriched",61,0,"",NA,NA
-"Interaction_up","Hallmark","HALLMARK_HYPOXIA","tested, not enriched",171,0,"",NA,NA
-"Interaction_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",274,0,"",NA,NA
-"Interaction_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",142,0,"",NA,NA
+"Interaction_up","Hallmark","HALLMARK_HYPOXIA","tested, not enriched",172,0,"",NA,NA
+"Interaction_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",275,0,"",NA,NA
+"Interaction_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",143,0,"",NA,NA
 "Interaction_up","GO_BP","GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY","below min_gs_size (7)",7,0,"",NA,NA
 "Interaction_up","GO_MF",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "Interaction_up","KEGG",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "Interaction_up","Reactome","REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA","tested, not enriched",61,0,"",NA,NA
-"Interaction_fdrOnly_up","Hallmark","HALLMARK_HYPOXIA","tested, not enriched",171,0,"",NA,NA
-"Interaction_fdrOnly_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",274,0,"",NA,NA
-"Interaction_fdrOnly_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",142,0,"",NA,NA
+"Interaction_fdrOnly_up","Hallmark","HALLMARK_HYPOXIA","tested, not enriched",172,0,"",NA,NA
+"Interaction_fdrOnly_up","GO_BP","GOBP_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",275,0,"",NA,NA
+"Interaction_fdrOnly_up","GO_BP","GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS","tested, not enriched",143,0,"",NA,NA
 "Interaction_fdrOnly_up","GO_BP","GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY","below min_gs_size (7)",7,0,"",NA,NA
 "Interaction_fdrOnly_up","GO_MF",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA
 "Interaction_fdrOnly_up","KEGG",NA,"collection carries no hypoxia set",NA,NA,NA,NA,NA

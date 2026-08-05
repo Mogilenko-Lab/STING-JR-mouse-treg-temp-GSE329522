@@ -690,11 +690,18 @@ bridge <- dplyr::bind_rows(
   if (nrow(census_rows) > 0L) dplyr::bind_rows(lapply(seq_len(nrow(census_rows)), function(i) {
     r <- census_rows[i, ]
     dplyr::bind_rows(
+      # The denominator is read off the frozen arm, never written into the prose. It moved
+      # from 199 to 202 when the ortholog step stopped counting stale mouse symbols as having
+      # no human ortholog, and a hardcoded number would have gone quietly stale here.
       bridge_row("downstream_min", 5L, "human", r$compartment, r$n_eff_min,
-                 length(human_wt_up), "fewest of the 199 present in any one of this compartment's lists",
+                 length(human_wt_up),
+                 sprintf("fewest of the %d present in any one of this compartment's lists",
+                         length(human_wt_up)),
                  n_lists = r$n_lists, list_len_min = r$list_len_min, list_len_max = r$list_len_max),
       bridge_row("downstream_max", 5L, "human", r$compartment, r$n_eff_max,
-                 length(human_wt_up), "most of the 199 present in any one of this compartment's lists",
+                 length(human_wt_up),
+                 sprintf("most of the %d present in any one of this compartment's lists",
+                         length(human_wt_up)),
                  n_lists = r$n_lists, list_len_min = r$list_len_min, list_len_max = r$list_len_max))
   })) else NULL
 )

@@ -65,10 +65,17 @@ OV_DIR <- file.path("03_results", STAGE, "tables", FIG_CFG$figures$overview_dir 
 
 POS <- FIG_CFG$colors$diverging$up   %||% "#B35806"   # up
 NEG <- FIG_CFG$colors$diverging$down %||% "#2166AC"   # down
+# The grey bucket used to be ONE segment called "dropped (no human ortholog)", and for 146
+# genes of the projection background that label was wrong: babelgene keys on CURRENT MGI
+# symbols and this matrix carries GENCODE vM25's vintage, so a symbol babelgene could not key
+# at all was recorded as having no ortholog. Those are now two segments, because one is a
+# statement about orthology and the other about vocabulary, and drawing them in one colour is
+# the defect this figure exists to expose.
 LOSS_COLORS <- c(
-  n_mapped_1to1 = FIG_CFG$colors$okabe_ito$bluish_green %||% "#009E73",
-  n_many_mapped = FIG_CFG$colors$okabe_ito$orange       %||% "#E69F00",
-  n_unmapped    = "grey65")
+  n_mapped_1to1                = FIG_CFG$colors$okabe_ito$bluish_green %||% "#009E73",
+  n_many_mapped                = FIG_CFG$colors$okabe_ito$orange       %||% "#E69F00",
+  n_dropped_no_ortholog        = "grey55",
+  n_dropped_stale_query_symbol = FIG_CFG$colors$okabe_ito$reddish_purple %||% "#CC79A7")
 # Alarm line: flag a contrast/direction that loses > this fraction to no-ortholog drops.
 ALARM_FRAC <- 0.5
 
@@ -184,12 +191,13 @@ fig_sizes <- ggplot(sizes_p, aes(x = unit, y = n_human, fill = direction)) +
 # ============================================================================
 
 loss_long <- as_unit(loss_df) %>%
-  tidyr::pivot_longer(cols = c(n_mapped_1to1, n_many_mapped, n_unmapped),
+  tidyr::pivot_longer(cols = c(n_mapped_1to1, n_many_mapped, n_dropped_no_ortholog,
+                               n_dropped_stale_query_symbol),
                       names_to = "category", values_to = "n") %>%
-  dplyr::mutate(category = factor(category,
-                                  levels = c("n_mapped_1to1", "n_many_mapped", "n_unmapped")))
+  dplyr::mutate(category = factor(category, levels = names(LOSS_COLORS)))
 
-# human-out annotation + alarm flag per unit/direction
+# human-out annotation + alarm flag per unit/direction. The alarm still fires on the TOTAL
+# drop, because a set losing half its genes is worth flagging whichever bucket took them.
 loss_ann <- as_unit(loss_df) %>%
   dplyr::mutate(frac_unmapped = ifelse(n_mouse > 0, n_unmapped / n_mouse, 0),
                 alarm = frac_unmapped > ALARM_FRAC)
@@ -206,8 +214,10 @@ fig_loss <- ggplot(loss_long, aes(x = unit, y = n, fill = category)) +
   facet_wrap(~ direction, nrow = 1,
              labeller = labeller(direction = c(up = "UP set", down = "DOWN set"))) +
   scale_fill_manual(values = LOSS_COLORS,
-                    labels = c(n_mapped_1to1 = "mapped 1:1", n_many_mapped = "one mouse -> many human",
-                               n_unmapped = "dropped (no human ortholog)"),
+                    labels = c(n_mapped_1to1 = "mapped 1:1",
+                               n_many_mapped = "one mouse -> many human",
+                               n_dropped_no_ortholog = "dropped: keyed, no human ortholog",
+                               n_dropped_stale_query_symbol = "dropped: symbol not keyable"),
                     name = "mouse gene fate") +
   scale_x_discrete(labels = unit_label) +
   scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
@@ -217,7 +227,11 @@ fig_loss <- ggplot(loss_long, aes(x = unit, y = n, fill = category)) +
                         round(100 * ALARM_FRAC), "% dropped (alarm)."),
        x = NULL, y = "mouse genes in set",
        caption = paste0("Bar height = mouse-set size; green kept 1:1, orange one->many (each human gets ",
-                        "the mouse t), grey dropped. Claim tier: L3. Correlative input, not a causal claim.")) +
+                        "the mouse t). The two drop segments are different statements: grey means the ",
+                        "orthology source knew the symbol and had no human counterpart, purple means it ",
+                        "could not key the symbol at all because this matrix carries an older MGI ",
+                        "vintage — a vocabulary result, not a biological one. Claim tier: L3. ",
+                        "Correlative input, not a causal claim.")) +
   project_theme(config = FIG_CFG) +
   theme(axis.text.x = element_text(angle = 0))
 
@@ -253,13 +267,14 @@ save_overview(
                      "decisions.projection.secondary_gate"),
   input   = f_loss,
   how_to_read = paste0("Per exported contrast (x) and direction (facet), the mouse up/down set is stacked by ",
-                       "fate: green = mapped 1:1, orange = one-mouse->many-human (each human ortholog inherits ",
-                       "the mouse t in the ranked list; unioned in the binary set), grey = dropped (no human ",
-                       "ortholog). A contrast carried at two threshold gates gets one bar per gate, with the ",
-                       "gate named in square brackets under its tick. Bar height = mouse-set size; '->N' above ",
-                       "= resulting human-set size. A red * marks > ", round(100 * ALARM_FRAC),
-                       "% dropped — a decimated signature to demote. Read it as the sanity check that the ",
-                       "frozen human sets are not hollow. Claim tier: L3."),
+                       "fate. Green = mapped 1:1. Orange = one mouse to many human, each ortholog inheriting ",
+                       "the mouse t. Grey = the orthology source keyed the symbol and had no human ",
+                       "counterpart. Purple = it could not key the symbol at all.\n\n",
+                       "Grey and purple were one segment until now, which reported a vocabulary loss as a ",
+                       "biological one. A contrast carried at two gates gets one bar per gate, the gate named ",
+                       "in brackets under its tick. Bar height = mouse-set size; '->N' = human-set size. A ",
+                       "red * marks > ", round(100 * ALARM_FRAC), "% dropped, a decimated signature to ",
+                       "demote. Claim tier: L3."),
   # Two direction facets x every exported (contrast, gate) unit: the canvas widens with
   # the unit count so the full contrast+gate ticks stay legible and untruncated.
   width = max(11, 3.0 + 1.6 * 2 * length(UNITS)), height = 6.5,
@@ -495,9 +510,14 @@ led_rows <- lapply(seq_len(nrow(led_man)), function(i) {
     gate                       = r$gate,
     n_mouse_at_gate            = as.integer(r$n_mouse),
     n_human_carried            = length(human_set),
-    n_lost_to_collapse         = as.integer(r$n_mouse) - as.integer(r$n_dropped_no_ortholog) -
-                                 length(human_set),
+    # The collapse loss is what is left after the human genes carried and EVERY drop, so it
+    # nets against the unmapped total rather than against one of the two drop classes.
+    n_lost_to_collapse         = as.integer(r$n_mouse) -
+                                 as.integer(r$n_dropped_unmapped_total) - length(human_set),
     n_dropped_no_ortholog      = as.integer(r$n_dropped_no_ortholog),
+    n_dropped_stale_query_symbol = as.integer(r$n_dropped_stale_query_symbol),
+    n_dropped_unmapped_total   = as.integer(r$n_dropped_unmapped_total),
+    n_query_symbol_normalised  = as.integer(r$n_query_symbol_normalised),
     pct_of_mouse_arm_carried   = round(100 * length(human_set) / as.integer(r$n_mouse), 1),
     n_arrived_one_to_one       = sum(routes == "one-to-one"),
     n_arrived_by_collapse      = sum(routes == "several mouse collapsed onto it"),
@@ -567,21 +587,31 @@ if (file.exists(HSR_LENS_PATH)) {
 }
 
 # ---- geometry: one horizontal stacked bar per arm, WT at the top ----
-LED_SEGS <- c(n_human_carried       = "human genes carried",
-              n_lost_to_collapse    = "lost when paralogs collapsed",
-              n_dropped_no_ortholog = "dropped, no accepted ortholog")
+# Four segments, not three. The old grey segment carried two different statements at once:
+# a gene the orthology source knew and had no human counterpart for, and a gene whose symbol
+# it could not key at all because this matrix carries GENCODE vM25's older MGI vintage. The
+# second is a vocabulary result, and 146 genes of the projection background sat in it
+# labelled as orthology losses. They get their own colour so the label cannot lie again.
+LED_SEGS <- c(n_human_carried              = "human genes carried",
+              n_lost_to_collapse           = "lost when paralogs collapsed",
+              n_dropped_no_ortholog        = "dropped: keyed, no human ortholog",
+              n_dropped_stale_query_symbol = "dropped: symbol not keyable")
 LED_FILL <- c("human genes carried"          = FIG_CFG$colors$okabe_ito$blue   %||% "#0072B2",
               "lost when paralogs collapsed" = FIG_CFG$colors$okabe_ito$orange %||% "#E69F00",
-              "dropped, no accepted ortholog" = "grey65")
-# Text sitting ON a segment: white reads on the dark carried fill, near-black on the two
-# light ones. The leader lines keep the segment's own colour so a parked number stays
-# keyed to its sliver, except the grey fill which is darkened to stay visible as a line.
+              "dropped: keyed, no human ortholog" = "grey55",
+              "dropped: symbol not keyable" =
+                FIG_CFG$colors$okabe_ito$reddish_purple %||% "#CC79A7")
+# Text sitting ON a segment: white reads on the dark carried fill, near-black on the light
+# ones. The leader lines keep the segment's own colour so a parked number stays keyed to its
+# sliver, except the grey fill which is darkened to stay visible as a line.
 LED_INK  <- c("human genes carried"          = "white",
               "lost when paralogs collapsed" = "grey10",
-              "dropped, no accepted ortholog" = "grey10")
+              "dropped: keyed, no human ortholog" = "grey10",
+              "dropped: symbol not keyable" = "grey10")
 LED_LEAD <- c("human genes carried"           = unname(LED_FILL[1]),
               "lost when paralogs collapsed"  = unname(LED_FILL[2]),
-              "dropped, no accepted ortholog" = "grey45")
+              "dropped: keyed, no human ortholog" = "grey45",
+              "dropped: symbol not keyable"   = unname(LED_FILL[4]))
 
 conv_ledger$y    <- rev(seq_len(nrow(conv_ledger)))
 conv_ledger$tick <- sprintf("%s\n%d mouse genes",
@@ -657,13 +687,15 @@ fig_conv <- ggplot() +
         plot.caption.position = "plot")
 
 LED_FINDING <- paste0(
-  "Each frozen mouse up arm loses genes twice on the way into human symbols, once to genes ",
-  "with no accepted ortholog and once to mouse paralogs collapsing onto one human symbol: ",
-  paste(sprintf("%s carries %d of %d (%d dropped, %d collapsed)",
+  "Each frozen mouse up arm loses genes three ways: no human counterpart, a symbol the ",
+  "orthology source could not key, and paralogs collapsing onto one human symbol. ",
+  paste(sprintf("%s carries %d of %d (%d no ortholog, %d not keyable, %d collapsed, %d recovered by normalisation)",
                 conv_ledger$arm, conv_ledger$n_human_carried, conv_ledger$n_mouse_at_gate,
-                conv_ledger$n_dropped_no_ortholog, conv_ledger$n_lost_to_collapse),
-        collapse = ", "),
-  ". One to one arrivals: ",
+                conv_ledger$n_dropped_no_ortholog,
+                conv_ledger$n_dropped_stale_query_symbol, conv_ledger$n_lost_to_collapse,
+                conv_ledger$n_query_symbol_normalised),
+        collapse = "; "),
+  ".\n\nOne-to-one arrivals: ",
   paste(sprintf("%d of %d", conv_ledger$n_arrived_one_to_one, conv_ledger$n_human_carried),
         collapse = ", "),
   " in the same order. ", led_hs_sentence)
@@ -683,8 +715,11 @@ save_overview(
     "One horizontal bar per frozen up arm. Bar length is the mouse genes that passed the ",
     GATE_PRIMARY, " gate; the segments are their fate. Blue is carried into human, orange ",
     "is lost when several mouse paralogs collapsed onto one human symbol, grey is dropped ",
-    "for want of an accepted ortholog. A count sits inside its segment where it fits, and ",
-    "is otherwise parked to the right of the bar on a leader line back to the sliver.\n\n",
+    "for want of an accepted ortholog, and purple is dropped because the orthology source ",
+    "could not key the symbol at all. Those last two used to share one grey segment, which ",
+    "read every vocabulary loss as a biological one; purple is the honest half of that bucket. ",
+    "A count sits inside its segment where it fits, and is otherwise parked to the right of ",
+    "the bar on a leader line back to the sliver.\n\n",
     "The map is babelgene ", BABELGENE_VER, ", queried mouse to human at min_support = ",
     MIN_SUPPORT, ", so an edge is accepted when at least three source databases agree; it ",
     "holds ", format(nrow(omap), big.mark = ","), " edges over ",
@@ -698,6 +733,55 @@ save_overview(
     "same-stem CSV. Claim tier: a direct count over frozen sets."),
   width = LED_W, height = 5.0,
   config = FIG_CFG)
+
+# ============================================================================
+# 5e. CAPTION the one stage table that has no figure.
+# ============================================================================
+# query_normalisation_ledger.csv is a decision record rather than a plot: one row per matrix
+# symbol babelgene could not key, with what org.Mm.eg.db proposed and whether the guards took
+# it. It gets a caption here because 18_projection_export.R is compute-only and this stage's
+# README is owned by its viz sibling. No figure is drawn from it deliberately — the numbers
+# that matter already appear as the purple segment of conversion_ledger and mapping_loss, and
+# a per-symbol table is read, not looked at.
+
+f_qnl <- file.path(OV_DIR, "query_normalisation_ledger.csv")
+if (file.exists(f_qnl)) {
+  qnl <- readr::read_csv(f_qnl, show_col_types = FALSE, progress = FALSE)
+  n_acc <- sum(qnl$resolution == "accepted")
+  n_rec <- sum(qnl$mapped_after_normalisation)
+  write_caption(
+    STAGE, "tables/_overview/query_normalisation_ledger.csv",
+    finding = sprintf(paste0("Of %d matrix symbols the orthology source could not key, %d ",
+                             "resolved one-to-one to a current MGI symbol and %d of those then ",
+                             "mapped to a human ortholog — genes that had been counted as ",
+                             "having no human ortholog when the truth was that their name had ",
+                             "changed. %d pairs were withheld by a guard and %d by human ",
+                             "decision."),
+                     nrow(qnl), n_acc, n_rec,
+                     sum(!qnl$resolution %in% c("accepted", "flagged_for_review")),
+                     sum(qnl$resolution == "flagged_for_review")),
+    script = SCRIPT, fn = "helpers/ortholog_utils.R::normalise_mouse_query (written by 18_projection_export.R)",
+    config_kv = "symbol_alias.ortholog_query_flagged_for_review; org.Mm.eg.db",
+    input = "03_results/objects/17_signature_sets.rds (the modelled symbol universe)",
+    how_to_read = paste0(
+      "One row per candidate. `matrix_symbol` is the name the data carries, `current_symbol` ",
+      "what org.Mm.eg.db calls the same Entrez id today, `resolution` what happened.\n\n",
+      "`accepted` means the symbol resolved to exactly one Entrez id, the current symbol is ",
+      "that id's own official symbol and no other gene's, no second candidate claimed it, and ",
+      "it is not already a separate row here. `flagged_for_review` is withheld by decision, not ",
+      "by a guard: Ndufb1-ps because handing a pseudogene-named row the real gene's ortholog ",
+      "judges the vM25 annotation, H2aw because histone renaming is many-to-many.\n\n",
+      "`rejected_current_symbol_already_in_vocabulary` is the guard that matters most quietly. ",
+      "Normalising there would give one gene two rows and let the many-mouse-to-one-human rule ",
+      "silently replace an existing gene's ranked metric.\n\n",
+      "`mapped_after_normalisation` splits the two outcomes an accepted pair can have. TRUE is ",
+      "a recovery. FALSE means the symbol was re-asked correctly and still has no human ",
+      "ortholog at this min_support — a real orthology result, not a vocabulary loss. Claim ",
+      "tier: a direct count over an annotation database, no statistics."),
+    config = FIG_CFG)
+  message(sprintf("[18_viz] captioned query_normalisation_ledger.csv (%d candidates, %d recovered).",
+                  nrow(qnl), n_rec))
+}
 
 # ============================================================================
 # 6. FINAL SUMMARY

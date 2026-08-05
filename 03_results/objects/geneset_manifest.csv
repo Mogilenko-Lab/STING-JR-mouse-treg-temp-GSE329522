@@ -1,14 +1,14 @@
-database,type,n_sets,source,cache_path
-Hallmark,msigdb,50,MSigDB H,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_Hallmark.rds
-KEGG,msigdb,139,MSigDB C2/CP:KEGG,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_KEGG.rds
-Reactome,msigdb,735,MSigDB C2/CP:REACTOME,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_Reactome.rds
-WikiPathways,msigdb,477,MSigDB C2/CP:WIKIPATHWAYS,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_WikiPathways.rds
-GO_BP,msigdb,2679,MSigDB C5/GO:BP,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_BP.rds
-GO_MF,msigdb,429,MSigDB C5/GO:MF,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_MF.rds
-GO_CC,msigdb,335,MSigDB C5/GO:CC,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_CC.rds
-TF_Targets,msigdb,354,MSigDB C3/TFT:GTRD,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_TF_Targets.rds
-TransportDB,custom,17,01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TransportDB.rds
-MitoPathways,custom,60,01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoPathways.rds
-MitoXplorer,custom,25,01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoXplorer.rds
-HSR_lens,custom,2,00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_HSR_lens.rds
-TCR_activation,custom,1,00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TCR_activation.rds
+database,type,n_sets,source,cache_path,n_unique_set_genes,n_matched,n_matched_via_alias,n_alias_flagged_for_review,n_alias_rejected_ambiguous,n_expression_filtered,n_below_detection,n_absent_from_reference,reference_vocabulary_available
+Hallmark,msigdb,50,MSigDB H,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_Hallmark.rds,4393,3673,12,2,21,0,685,0,FALSE
+KEGG,msigdb,139,MSigDB C2/CP:KEGG,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_KEGG.rds,2311,1945,7,2,11,0,346,0,FALSE
+Reactome,msigdb,737,MSigDB C2/CP:REACTOME,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_Reactome.rds,3688,3098,10,2,17,0,561,0,FALSE
+WikiPathways,msigdb,477,MSigDB C2/CP:WIKIPATHWAYS,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_WikiPathways.rds,3340,2795,6,1,15,0,523,0,FALSE
+GO_BP,msigdb,2682,MSigDB C5/GO:BP,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_BP.rds,4313,3608,12,2,21,0,670,0,FALSE
+GO_MF,msigdb,429,MSigDB C5/GO:MF,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_MF.rds,4089,3409,10,2,20,0,648,0,FALSE
+GO_CC,msigdb,336,MSigDB C5/GO:CC,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_GO_CC.rds,3847,3231,8,2,18,0,588,0,FALSE
+TF_Targets,msigdb,354,MSigDB C3/TFT:GTRD,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_msigdb_TF_Targets.rds,4170,3560,12,2,18,0,578,0,FALSE
+TransportDB,custom,17,01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TransportDB.rds,859,538,12,0,7,0,302,0,FALSE
+MitoPathways,custom,60,01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoPathways.rds,1007,921,20,0,0,0,66,0,FALSE
+MitoXplorer,custom,25,01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_MitoXplorer.rds,1217,1099,0,0,2,0,116,0,FALSE
+HSR_lens,custom,2,00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_HSR_lens.rds,170,148,0,0,0,0,22,0,FALSE
+TCR_activation,custom,1,00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds,/workspaces/STING-JR/mouse_anchor/03_results/objects/geneset_custom_TCR_activation.rds,66,66,0,0,0,0,0,0,FALSE

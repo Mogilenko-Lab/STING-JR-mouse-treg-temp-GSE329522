@@ -575,6 +575,58 @@ figures:
   overview_dir: "_overview"
 
 # =============================================================================
+# SYMBOL ALIAS RESOLUTION
+# =============================================================================
+# The collaborators' delivered CPM table was quantified against GRCm38 + GENCODE vM25, so
+# this project's vocabulary is frozen to that build's MGI vintage: 2,341 of the 19,679
+# modelled symbols are no longer current official MGI symbols. Reference gene sets ship
+# CURRENT symbols. Exact string matching therefore drops genes that are present, and the
+# loss reads as absence. The whole ATP-synthase block is the worst case — the matrix
+# carries Atp5a1 … Atpif1 while MitoCarta 3.0 ships Atp5f1a … Atp5po, so
+# MITOPATHWAYS_OXPHOS.Complex_V matched 7 of its 22 genes, fell under gsea_min_size, and
+# was absent from master_gsea_table.csv entirely.
+#
+# TWO DIRECTIONS, TWO MECHANISMS, and conflating them is the mistake to avoid:
+#   gene sets   reference symbol (newer) -> matrix symbol (older).
+#               helpers/symbol_alias.R::build_alias_map, applied at 04_gsea_set_prep.R.
+#   orthology   matrix symbol (older) -> current symbol (newer), because babelgene keys on
+#               current MGI. helpers/ortholog_utils.R::normalise_mouse_query, applied
+#               inside build_ortholog_map at 18_projection_export.R.
+# The one-to-one safety condition means something different in each direction, which is why
+# they are separate functions with separate flagged-pair lists.
+
+symbol_alias:
+  # The committed asset. Regenerable by 02_analysis/scripts/00_symbol_alias_map.R, so it is
+  # negated out of the 00_data/references/* ignore rule rather than left untracked —
+  # regenerating it must produce a reviewable diff.
+  map_path: "00_data/references/symbol_alias/symbol_alias_map.csv"
+  provenance_path: "00_data/references/symbol_alias/symbol_alias_provenance.csv"
+
+  # The vocabulary reference symbols are resolved INTO: the modelled DE universe, which in
+  # this project is also every symbol the delivered CPM table carries (19,679 either way —
+  # the duplicate-symbol collapse at 01_mapping_qc.R drops Ensembl ids, never symbols).
+  # There is consequently exactly ONE vocabulary layer here, so n_expression_filtered is
+  # structurally 0 and absence means "not in the delivered quantification".
+  matrix_vocabulary: "03_results/objects/gene_universe.txt"
+  quantified_vocabulary: "00_data/processed/GSE329522_normalized_counts_CPM_iTreg.csv"
+  quantified_vocabulary_column: "gene_name"
+
+  # Pairs the one-to-one + ownership guards accept but a human declined, so they are
+  # recorded as flagged_for_review and NEVER applied. Both are the same two decisions seen
+  # from the two directions, and they are listed twice because the pair strings differ.
+  #   Ndufb1 / Ndufb1-ps  the matrix row is pseudogene-suffixed. Attaching a curated NDUFB1
+  #                       set member to it, or handing it NDUFB1's human ortholog, is a
+  #                       judgement about the vM25 annotation and not about nomenclature.
+  #   H2ac25 / H2aw       histone cluster renaming is many-to-many; the one-to-one
+  #                       condition passing here is close to accidental.
+  flagged_for_review:
+    - "Ndufb1->Ndufb1-ps"
+    - "H2ac25->H2aw"
+  ortholog_query_flagged_for_review:
+    - "Ndufb1-ps->Ndufb1"
+    - "H2aw->H2ac25"
+
+# =============================================================================
 # DATABASES TO ANALYZE
 # =============================================================================
 

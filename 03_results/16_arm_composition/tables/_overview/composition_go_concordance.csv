@@ -1,5 +1,5 @@
 "arm","n_terms_15_go_decomposition","n_terms_here","n_label_matched","jaccard_by_label","n_genes_covered_15","n_genes_covered_here"
-"WT_heat_up",386,206,201,0.514066496163683,159,151
-"KO_heat_up",316,170,158,0.481707317073171,165,150
-"Interaction_up",47,40,37,0.74,7,7
-"Interaction_fdrOnly_up",66,53,49,0.7,14,14
+"WT_heat_up",386,203,199,0.51025641025641,159,150
+"KO_heat_up",316,167,155,0.472560975609756,165,150
+"Interaction_up",47,41,37,0.725490196078431,7,7
+"Interaction_fdrOnly_up",66,65,49,0.597560975609756,14,15

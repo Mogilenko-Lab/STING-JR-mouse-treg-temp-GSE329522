@@ -1050,8 +1050,13 @@ bridge_headline <- sprintf(
 # two half-width panels clip them. One column gives both the full emitted width.
 fig_bridge <- patchwork::wrap_plots(fig_funnel, fig_down, ncol = 1, heights = c(1, 0.82)) +
   patchwork::plot_annotation(
-    title = fit_text("Mouse gate 213, human projection 199, and 17 genes every human list can test",
-                     width_in = W_BRIDGE, tier = "title"),
+    # Every number in this title is read from the data. The human count moved from 199 to 202
+    # when the ortholog step stopped counting stale mouse symbols as having no human ortholog,
+    # and a title carrying its own literal would have gone on saying 199 over a 202-gene bar.
+    title = fit_text(sprintf(
+      "Mouse gate %d, human projection %d, and %d genes every human list can test",
+      funnel$n_genes[funnel$step == 3][1], n_human, n_everywhere),
+      width_in = W_BRIDGE, tier = "title"),
     subtitle = fit_text(
       answers("what does the human side actually receive from the mouse gate?", bridge_headline),
       width_in = W_BRIDGE, tier = "subtitle"),

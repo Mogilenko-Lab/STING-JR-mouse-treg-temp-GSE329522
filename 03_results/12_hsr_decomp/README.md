@@ -16,7 +16,7 @@ gate thresholds effect size, not pathway. `WT_heat_up` genes sit at median rank 
 gene sits at 10.21 %. The response moved moderately; the gate kept only extreme movers.
 
 The last panel is the handoff: the mouse gate output is 213 genes, the human set the disease
-compartments receive is 199, and it says how much of that 199 each of them can test.
+compartments receive is 202, and it says how much of that 202 each of them can test.
 
 The two euler panels carry a third lens, `Lombardi2022_HIF`: the Lombardi 2022 conserved HIF
 signature, re-derived from that paper's supplement and mapped to 100 mouse symbols. It enters this
@@ -102,19 +102,25 @@ frozen ranking and frozen sets.
 
 ## figures/_overview/gate_projection_bridge.png
 
-The 213-gene mouse gate output and the 199-gene human set are the same object seen either side of
-ortholog projection, and only 17 of that 199 are present in all eighteen human ranked lists that
-consume it — so the 199 is not the same 199 in every compartment.
+The 213-gene mouse gate output and the 202-gene human set are the same object seen either side of
+ortholog projection, and only 17 of that 202 are present in all eighteen human ranked lists that
+consume it — so the 202 is not the same 202 in every compartment.
+
+The human count was 199 until the ortholog step stopped reporting a vocabulary loss as a biological
+one. babelgene keys on current MGI symbols and this matrix was quantified against GENCODE vM25, so
+symbols it could not key were counted as having no human ortholog; three genes of this arm were in
+that position and arrive now (`DYNLT2B`, `FHIP1A`, `GARIN3`, from `Tctex1d2`, `Fam160a1`, `Fam71b`).
 
 **How to read:** The top half is a funnel of counts on a log axis, because the first and last steps
 differ by three orders of magnitude: 19,679 measured genes, 2,010 inside the gate's rank span, 213
-through the gate, 199 after mouse-to-human ortholog projection, 17 present everywhere downstream.
+through the gate, 202 after mouse-to-human ortholog projection, 17 present everywhere downstream.
 Colour marks which species' symbols each row is counted in.
 
 Curated-lens membership is printed beside the two set rows: `HSR_core` 3 of 213 in mouse against a
-47-gene lens and 2 of 199 in human against a 56-gene lens, `TCR_activation` 12 of 213 and 12 of 199
+47-gene lens and 2 of 202 in human against a 56-gene lens, `TCR_activation` 12 of 213 and 12 of 202
 against a 66-gene lens in both. The two lenses behave differently under ortholog projection and that
-is a real property, not a transcription slip.
+is a real property, not a transcription slip. Neither lens count moved with the three new arrivals,
+so the arm grew without the curated membership growing.
 
 `TCR_activation` is a hand-curated panel whose build asserts a strictly 1:1 human-to-mouse map — 66
 human symbols to 66 unique mouse symbols, with the script stopping if any gene maps more than once.
@@ -126,7 +132,7 @@ against 56 human. Its mouse three are `Hspa1a`, `Hspa1b`, `Hsph1`, and the `Hspa
 pair collapses to one human symbol in the projected set, leaving `HSPA1A` and `HSPH1`. Read the
 mouse and human lens counts as counterparts, not as one measurement.
 
-The bottom half spans the fewest to the most of the 199 present in any single ranked list of each
+The bottom half spans the fewest to the most of the 202 present in any single ranked list of each
 compartment, with the list count and length range printed; the dashed rule at 17 marks the genes
 present in every one of them. Recovery is a property of the analysis that produced each ranked list,
 not of the biology, and the shallowest compartment — RA synovium at 2,896–5,585 genes per list —
@@ -329,12 +335,12 @@ frozen `WT_heat_up` set are the same object. `gate_min_rank_pct` is 0.00508 % an
 ## tables/_overview/gate_projection_bridge.csv
 
 The source table for `figures/_overview/gate_projection_bridge.png` reconciles the 213-gene mouse
-gate with the 199-gene human set, carries each side's curated-lens membership, and records how much
+gate with the 202-gene human set, carries each side's curated-lens membership, and records how much
 of the human set is present in each human compartment's ranked lists.
 
 **How to read:** `block` selects the part of the ledger — `funnel` is the five counted steps,
 `lens` is curated-lens membership on the mouse and human sides, and `downstream_min` /
-`downstream_max` bracket the recovery of the 199 within one compartment. `side` says which species'
+`downstream_max` bracket the recovery of the 202 within one compartment. `side` says which species'
 symbols a row is counted in, `pct_of_denominator` is `n_genes / denominator`, and `note` names the
 provenance of each row. The downstream sweep is a read-only census of every published
 `ranked_*.tsv` under the sibling compartments; a ranked list shorter than 1,000 rows is treated as a

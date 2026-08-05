@@ -43,8 +43,28 @@
 #
 # Collision policy (from decisions.projection.ortholog_ambiguity; ortholog_utils encodes it):
 #   one mouse → many human : binary sets UNION; ranked list assigns the mouse t to EACH human.
-#   many mouse → one human : ranked keeps MAX |t| per human; binary dedupe by union.
+#   many mouse → one human : ranked keeps MAX |t| per human, except that a primary-query
+#     edge outranks a recovered one (see below); binary dedupe by union.
 #   no human ortholog      : dropped and logged (auditable).
+#   stale query symbol     : re-asked under its current MGI symbol, then mapped back.
+#
+# WHY "no human ortholog" USED TO BE THE WRONG LABEL. babelgene keys on CURRENT MGI symbols.
+# This matrix was quantified against GRCm38 + GENCODE vM25, so 2,341 of its 19,679 symbols
+# are no longer current, babelgene cannot key them, they were absent from ortholog_map.tsv,
+# and this script counted them as n_dropped_no_ortholog and SIGNATURES.md rendered that as
+# "no human ortholog: dropped". For 146 of the 6,510 that was a vocabulary loss wearing an
+# orthology label. Ddx58 is the one to remember: RIG-I, a cytosolic nucleic-acid sensor,
+# significantly down at 39 °C in WT and at logFC −1.28 in KO_heat, missing from the human
+# projection entirely because its current symbol is Rigi. build_ortholog_map() now re-asks
+# those symbols under their current names and the ledger splits the bucket three ways:
+#   n_query_symbol_normalised     recovered — mapped only because it was re-asked
+#   n_dropped_stale_query_symbol  still unmapped AND not a current MGI symbol; we could not
+#                                 key it, which is a VOCABULARY statement
+#   n_dropped_no_ortholog         still unmapped AND a current MGI symbol; babelgene knows
+#                                 the key and returns nothing, which is an ORTHOLOGY statement
+# The recovery is strictly additive by construction: 0 edges lost, 0 pre-existing human
+# symbols change their ranked t (policy recovered_edge_precedence = "primary_query_wins"),
+# and both are asserted below rather than trusted.
 #   Interaction (1 df, underpowered): if its post-mapping human set is trivially small
 #     (< trivial_min_genes) and drop_interaction_if_trivial, it is DEMOTED from the export
 #     and flagged in SIGNATURES.md rather than shipped hollow.
@@ -150,19 +170,63 @@ message("=================================================================")
 
 mouse_universe <- sort(unique(unlist(lapply(CONTRASTS_EXPORT, function(co)
   sig$sets[[co]]$ranked$gene_symbol), use.names = FALSE)))
+QUERY_FLAGGED <- unlist(YAML_CONFIG$symbol_alias$ortholog_query_flagged_for_review) %||%
+  character()
 message("[map] building applied ortholog map over ", length(mouse_universe),
         " mouse symbols (babelgene min_support=", MIN_SUPPORT, ") ...")
-omap <- build_ortholog_map(mouse_universe, min_support = MIN_SUPPORT)
+omap <- build_ortholog_map(mouse_universe, min_support = MIN_SUPPORT,
+                           flagged_pairs = QUERY_FLAGGED)
+qledger <- attr(omap, "query_normalisation")
 prov <- babelgene_provenance(min_support = MIN_SUPPORT)
 message(sprintf("  [map] edges=%d  mapped mouse genes=%d  babelgene=%s (data %s)",
                 nrow(omap), length(unique(omap$mouse_symbol)), prov$version, prov$data_date))
 
-# helper: count how many mouse genes in a set are unmapped / one→many (for the manifest).
+# ---- the query-normalisation recovery, as a decision ledger -----------------------------
+# Every candidate is a row, accepted or not, so a recovery never has to be inferred from an
+# absence and a withholding never from a shrug. `mapped_after_normalisation` separates
+# "re-asked and babelgene answered" from "re-asked and it still has no ortholog at this
+# min_support" — the second is a real orthology result and must not be filed as a recovery.
+recovered_symbols <- unique(omap$mouse_symbol[omap$normalisation_source == "org.Mm.eg.db"])
+qledger$mapped_after_normalisation <- qledger$matrix_symbol %in% recovered_symbols
+CURRENT_MGI <- if (requireNamespace("org.Mm.eg.db", quietly = TRUE))
+  AnnotationDbi::keys(org.Mm.eg.db::org.Mm.eg.db, keytype = "SYMBOL") else character()
+message(sprintf(
+  "  [map] query normalisation: %d candidates, %d accepted, %d of those recovered a mapping; %d flagged for review, %d rejected by a guard",
+  nrow(qledger), sum(qledger$resolution == "accepted"), length(recovered_symbols),
+  sum(qledger$resolution == "flagged_for_review"),
+  sum(!qledger$resolution %in% c("accepted", "flagged_for_review"))))
+print(as.data.frame(qledger %>%
+  dplyr::count(.data$resolution, .data$mapped_after_normalisation, name = "n")),
+  row.names = FALSE)
+
+# The recovery may only ADD. A lost edge or a changed metric would mean the map was rewritten
+# rather than extended, which is the failure mode the two-pass design exists to prevent.
+prev_map_path <- file.path(DIR_RESULTS, "human_projection", "ortholog_map.tsv")
+if (file.exists(prev_map_path)) {
+  prev <- readr::read_tsv(prev_map_path, show_col_types = FALSE, progress = FALSE)
+  lost_edges <- dplyr::anti_join(prev[c("mouse_symbol", "human_symbol")],
+                                 omap[c("mouse_symbol", "human_symbol")],
+                                 by = c("mouse_symbol", "human_symbol"))
+  if (nrow(lost_edges))
+    stop(sprintf(paste0("[18] the rebuilt ortholog map LOST %d edge(s) that the published ",
+                        "one carried (e.g. %s -> %s). The query normalisation must extend ",
+                        "the map, never rewrite it."),
+                 nrow(lost_edges), lost_edges$mouse_symbol[1], lost_edges$human_symbol[1]))
+  message(sprintf("  [check] map is additive against the published one: %d edges -> %d, 0 lost.",
+                  nrow(prev), nrow(omap)))
+}
+
+# helper: count how many mouse genes in a set are unmapped / one→many (for the manifest), and
+# split the unmapped into the orthology statement and the vocabulary one.
 n_unmapped   <- function(ms) sum(!(unique(ms) %in% omap$mouse_symbol))
 n_many_mapped <- function(ms) {
   ms <- unique(ms); tt <- table(omap$mouse_symbol[omap$mouse_symbol %in% ms])
   sum(ms %in% names(tt)[tt > 1L])
 }
+.unmapped_of <- function(ms) setdiff(unique(ms), omap$mouse_symbol)
+n_dropped_no_ortholog    <- function(ms) sum(.unmapped_of(ms) %in% CURRENT_MGI)
+n_dropped_stale_query    <- function(ms) sum(!.unmapped_of(ms) %in% CURRENT_MGI)
+n_query_normalised       <- function(ms) sum(unique(ms) %in% recovered_symbols)
 
 # ============================================================================
 # 3. MAP each exported contrast; assemble manifest rows + mapping-loss rows; decide
@@ -182,7 +246,15 @@ add_manifest_row <- function(co, direction, gate, n_mouse, n_human, ms, file_rel
   manifest_rows[[length(manifest_rows) + 1L]] <<- data.frame(
     contrast = co, role = role_of(co), direction = direction, gate = gate,
     n_mouse = n_mouse, n_human = n_human,
-    n_dropped_no_ortholog = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
+    # n_dropped_no_ortholog KEEPS its name but no longer keeps its old meaning: it is now
+    # only the genes babelgene could key and had no ortholog for. The vocabulary half moved
+    # to n_dropped_stale_query_symbol, and n_dropped_unmapped_total is the old column's value
+    # so the pre-fix number stays legible beside the split.
+    n_dropped_no_ortholog = n_dropped_no_ortholog(ms),
+    n_dropped_stale_query_symbol = n_dropped_stale_query(ms),
+    n_dropped_unmapped_total = n_unmapped(ms),
+    n_query_symbol_normalised = n_query_normalised(ms),
+    n_many_mapped = n_many_mapped(ms),
     file = file_rel, stringsAsFactors = FALSE)
 }
 
@@ -190,7 +262,11 @@ add_mapping_loss_row <- function(co, direction, gate, ms, hs) {
   mapping_loss_rows[[length(mapping_loss_rows) + 1L]] <<- data.frame(
     contrast = co, role = role_of(co), direction = direction, gate = gate,
     n_mouse = length(ms),
-    n_unmapped = n_unmapped(ms), n_many_mapped = n_many_mapped(ms),
+    n_unmapped = n_unmapped(ms),
+    n_dropped_no_ortholog = n_dropped_no_ortholog(ms),
+    n_dropped_stale_query_symbol = n_dropped_stale_query(ms),
+    n_query_symbol_normalised = n_query_normalised(ms),
+    n_many_mapped = n_many_mapped(ms),
     n_human = length(hs), stringsAsFactors = FALSE)
 }
 
@@ -308,8 +384,9 @@ manifest_path <- file.path(hp_dir, "manifest.csv")
 readr::write_csv(round_numeric_cols(manifest), manifest_path)
 
 # ortholog_map.tsv (the applied map)
-omap_out <- omap[, c("mouse_symbol", "mouse_ensembl", "human_symbol",
-                     "mapping_type", "babelgene_version")]
+omap_out <- omap[, c("mouse_symbol", "mouse_ensembl", "human_symbol", "mapping_type",
+                     "matrix_symbol_normalised_to", "normalisation_source",
+                     "babelgene_version")]
 readr::write_tsv(omap_out, file.path(hp_dir, "ortholog_map.tsv"))
 
 # stage tables for the viz sibling
@@ -328,6 +405,30 @@ readr::write_csv(round_numeric_cols(human_sizes), file.path(ov_dir, "human_signa
 mapping_loss <- dplyr::bind_rows(mapping_loss_rows) %>%
   dplyr::mutate(n_mapped_1to1 = n_mouse - n_unmapped - n_many_mapped)
 readr::write_csv(round_numeric_cols(mapping_loss), file.path(ov_dir, "mapping_loss.csv"))
+
+# The query-normalisation ledger, published at the same granularity the decision was made:
+# one row per candidate matrix symbol. This is the artifact that makes the split auditable —
+# without it "146 recovered" is a claim rather than a record.
+readr::write_csv(
+  qledger %>% dplyr::transmute(
+    .data$matrix_symbol, .data$current_symbol, .data$entrez_id, .data$resolution,
+    .data$mapped_after_normalisation,
+    normalisation_source = "org.Mm.eg.db",
+    org_mm_eg_db_version = if (length(CURRENT_MGI))
+      as.character(packageVersion("org.Mm.eg.db")) else NA_character_) %>%
+    dplyr::arrange(.data$resolution, .data$matrix_symbol),
+  file.path(ov_dir, "query_normalisation_ledger.csv"))
+
+# Closure, asserted rather than reviewed: every mouse gene is mapped, mapped-many, dropped
+# for a real orthology reason, or dropped because we could not key its symbol. There is no
+# fifth outcome, and the two drop classes may never be folded back together.
+closure <- mapping_loss %>%
+  dplyr::mutate(check = n_mapped_1to1 + n_many_mapped + n_dropped_no_ortholog +
+                  n_dropped_stale_query_symbol)
+if (any(closure$check != closure$n_mouse))
+  stop("[18] conversion ledger does not close: n_mouse != mapped_1to1 + many_mapped + ",
+       "dropped_no_ortholog + dropped_stale_query_symbol for ",
+       sum(closure$check != closure$n_mouse), " row(s).")
 
 # Panel 1D source table: count from the frozen text files just written, not from
 # in-memory pre-write vectors. This keeps the plotted ledger tied to the public
@@ -488,8 +589,21 @@ md <- c(
   sprintf("- %s %s, bundled data %s; direction: %s; min_support = %d.",
           prov$package, prov$version, prov$data_date, prov$mapping_dir, prov$min_support),
   "- one mouse → many human: binary sets UNION; ranked assigns the mouse t to each human ortholog.",
-  "- many mouse → one human: ranked keeps MAX |t| per human symbol; binary dedupe by union.",
-  "- no human ortholog: dropped (see `ortholog_map.tsv` for every applied edge; unmapped genes absent).",
+  "- many mouse → one human: ranked keeps MAX |t| per human symbol, except that an edge from",
+  "  the original query outranks one recovered by symbol normalisation regardless of |t|;",
+  "  binary dedupe by union.",
+  sprintf("- stale mouse symbol: babelgene keys on CURRENT MGI symbols, and this matrix was quantified against GENCODE vM25, so %d of its %d symbols are no longer current. babelgene knows some of them and not others, idiosyncratically, so the ones it could not key at all are re-asked under their current symbol via org.Mm.eg.db %s and the edges mapped back — `mouse_symbol` below always stays the symbol the data carries.",
+          sum(!mouse_universe %in% CURRENT_MGI), length(mouse_universe),
+          if (length(CURRENT_MGI)) as.character(packageVersion("org.Mm.eg.db")) else "unavailable"),
+  sprintf("- %d genes arrived that way, each previously counted as having no human ortholog, which was the wrong label for a vocabulary loss.",
+          length(recovered_symbols)),
+  sprintf("- the recovery is strictly additive: %d edges added, none removed, and a human symbol the map already carried keeps the ranked metric it had. Every candidate, accepted or withheld, is a row in `03_results/11_projection/tables/_overview/query_normalisation_ledger.csv`.",
+          sum(omap$normalisation_source == "org.Mm.eg.db")),
+  "- no human ortholog: dropped. This now means what it says — babelgene could key the symbol",
+  "  and returned no ortholog at this min_support. A symbol it could not key at all is counted",
+  "  separately as `n_dropped_stale_query_symbol`, because that is a statement about vocabulary",
+  "  rather than about orthology, and `n_dropped_unmapped_total` keeps the two together for",
+  "  comparison with earlier builds. See `ortholog_map.tsv` for every applied edge.",
   "",
   "## Exported contrasts",
   "")
@@ -509,10 +623,14 @@ for (co in names(per_contrast)) {
   md <- c(md,
     sprintf("### %s — role: %s", co, role_of(co)),
     sprintf("- definition: %s%s", lab, note),
-    sprintf("- up:   %d mouse → %d human (dropped %d, many-mapped %d)",
-            m_up$n_mouse, m_up$n_human, m_up$n_dropped_no_ortholog, m_up$n_many_mapped),
-    sprintf("- down: %d mouse → %d human (dropped %d, many-mapped %d)",
-            m_dn$n_mouse, m_dn$n_human, m_dn$n_dropped_no_ortholog, m_dn$n_many_mapped),
+    sprintf("- up:   %d mouse → %d human (no ortholog %d, symbol not keyable %d, recovered by normalisation %d, many-mapped %d)",
+            m_up$n_mouse, m_up$n_human, m_up$n_dropped_no_ortholog,
+            m_up$n_dropped_stale_query_symbol, m_up$n_query_symbol_normalised,
+            m_up$n_many_mapped),
+    sprintf("- down: %d mouse → %d human (no ortholog %d, symbol not keyable %d, recovered by normalisation %d, many-mapped %d)",
+            m_dn$n_mouse, m_dn$n_human, m_dn$n_dropped_no_ortholog,
+            m_dn$n_dropped_stale_query_symbol, m_dn$n_query_symbol_normalised,
+            m_dn$n_many_mapped),
     sprintf("- ranked: %d mouse → %d human genes (`%s_ranked.rnk`, signed t, descending)",
             m_rk$n_mouse, m_rk$n_human, co),
     "")
@@ -553,8 +671,14 @@ if (length(demoted)) {
 md <- c(md,
   "## Files",
   "",
-  "- `manifest.csv` — one row per (contrast, direction): role, gate, n_mouse, n_human, n_dropped_no_ortholog, n_many_mapped, file.",
-  "- `ortholog_map.tsv` — the applied map: mouse_symbol, mouse_ensembl, human_symbol, mapping_type, babelgene_version.",
+  "- `manifest.csv` — one row per (contrast, direction): role, gate, n_mouse, n_human, then the",
+  "  four-way conversion accounting — n_dropped_no_ortholog (babelgene keyed it, no ortholog),",
+  "  n_dropped_stale_query_symbol (babelgene could not key it), n_dropped_unmapped_total (the two",
+  "  together, i.e. what earlier builds reported as one number), n_query_symbol_normalised (genes",
+  "  that arrived only because their symbol was normalised) — plus n_many_mapped and file.",
+  "- `ortholog_map.tsv` — the applied map: mouse_symbol, mouse_ensembl, human_symbol, mapping_type,",
+  "  matrix_symbol_normalised_to (the current symbol babelgene was keyed on, or NA),",
+  "  normalisation_source, babelgene_version.",
   "- `signatures/<contrast>/<contrast>_up.txt` / `_down.txt` — human HGNC symbols, one per line (AUCell/UCell).",
   "- `signatures/<contrast>/<contrast>_ranked.rnk` — 2-col TSV (human_symbol⇥t), signed, descending (fgsea/decoupleR).",
   "")

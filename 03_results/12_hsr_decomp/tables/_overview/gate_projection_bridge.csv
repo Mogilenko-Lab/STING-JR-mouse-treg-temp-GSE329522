@@ -2,17 +2,17 @@ block,step,side,label,n_genes,denominator,pct_of_denominator,n_lists,list_len_mi
 funnel,1,mouse,WT_heat ranking (every measured gene),19679,19679,100,NA,NA,NA,signed-t ranking of the WT 39-vs-37 °C contrast
 funnel,2,mouse,"inside the gate's rank span (rank 1 to 2,010)",2010,19679,10.2139336,NA,NA,NA,deepest admitted gene Cpne6 at rank 2010
 funnel,3,mouse,passed the gate: WT_heat_up,213,2010,10.5970149,NA,NA,NA,gate is adj.P < 0.05 and logFC >= 1
-funnel,4,human,after mouse-to-human ortholog projection,199,213,93.42723,NA,NA,NA,frozen at 03_results/human_projection/signatures/WT_heat/WT_heat_up.txt
-funnel,5,human,present in every one of the 18 human ranked lists,17,199,8.54271357,18,NA,NA,common universe across the 18 lists is 2247 symbols
+funnel,4,human,after mouse-to-human ortholog projection,202,213,94.8356808,NA,NA,NA,frozen at 03_results/human_projection/signatures/WT_heat/WT_heat_up.txt
+funnel,5,human,present in every one of the 18 human ranked lists,17,202,8.41584158,18,NA,NA,common universe across the 18 lists is 2247 symbols
 lens,3,mouse,"of WT_heat_up, in curated HSR_core (47 genes)",3,213,1.4084507,NA,NA,NA,"mouse lens, direct set membership"
 lens,3,mouse,"of WT_heat_up, in curated TCR_activation (66 genes)",12,213,5.63380282,NA,NA,NA,"mouse lens, direct set membership"
-lens,4,human,"of WT_heat_up, in curated HSR_core (56 genes)",2,199,1.00502513,NA,NA,NA,"human ortholog lens, direct set membership"
-lens,4,human,"of WT_heat_up, in curated TCR_activation (66 genes)",12,199,6.03015075,NA,NA,NA,"human ortholog lens, direct set membership"
-downstream_min,5,human,human_pbmc_febrile,45,199,22.6130653,8,9174,11342,fewest of the 199 present in any one of this compartment's lists
-downstream_max,5,human,human_pbmc_febrile,73,199,36.6834171,8,9174,11342,most of the 199 present in any one of this compartment's lists
-downstream_min,5,human,human_ra_synovium,29,199,14.5728643,4,2896,5585,fewest of the 199 present in any one of this compartment's lists
-downstream_max,5,human,human_ra_synovium,46,199,23.1155779,4,2896,5585,most of the 199 present in any one of this compartment's lists
-downstream_min,5,human,human_treg_arthritis,113,199,56.7839196,3,13999,14411,fewest of the 199 present in any one of this compartment's lists
-downstream_max,5,human,human_treg_arthritis,130,199,65.3266332,3,13999,14411,most of the 199 present in any one of this compartment's lists
-downstream_min,5,human,sting_positive_control,129,199,64.8241206,3,15859,21010,fewest of the 199 present in any one of this compartment's lists
-downstream_max,5,human,sting_positive_control,167,199,83.919598,3,15859,21010,most of the 199 present in any one of this compartment's lists
+lens,4,human,"of WT_heat_up, in curated HSR_core (56 genes)",2,202,0.99009901,NA,NA,NA,"human ortholog lens, direct set membership"
+lens,4,human,"of WT_heat_up, in curated TCR_activation (66 genes)",12,202,5.94059406,NA,NA,NA,"human ortholog lens, direct set membership"
+downstream_min,5,human,human_pbmc_febrile,45,202,22.2772277,8,9174,11342,fewest of the 202 present in any one of this compartment's lists
+downstream_max,5,human,human_pbmc_febrile,73,202,36.1386139,8,9174,11342,most of the 202 present in any one of this compartment's lists
+downstream_min,5,human,human_ra_synovium,29,202,14.3564356,4,2896,5585,fewest of the 202 present in any one of this compartment's lists
+downstream_max,5,human,human_ra_synovium,46,202,22.7722772,4,2896,5585,most of the 202 present in any one of this compartment's lists
+downstream_min,5,human,human_treg_arthritis,113,202,55.9405941,3,13999,14411,fewest of the 202 present in any one of this compartment's lists
+downstream_max,5,human,human_treg_arthritis,130,202,64.3564356,3,13999,14411,most of the 202 present in any one of this compartment's lists
+downstream_min,5,human,sting_positive_control,129,202,63.8613861,3,15859,21010,fewest of the 202 present in any one of this compartment's lists
+downstream_max,5,human,sting_positive_control,167,202,82.6732673,3,15859,21010,most of the 202 present in any one of this compartment's lists

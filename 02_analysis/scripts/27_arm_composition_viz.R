@@ -834,7 +834,9 @@ save_overview(
   finding = sprintf(paste0(
     "Three sets hold hypoxia-annotated genes of WT_heat_up: HALLMARK_HYPOXIA with 18, ",
     "GOBP_RESPONSE_TO_OXYGEN_LEVELS with 11 and GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS with 4. ",
-    "Those counts add to 33 and the union is %d genes, %s of the 199. Hallmark and GO BP share 3 ",
+    # The arm size is read from the data rather than written here: it moved from 199 to 202
+    # when the ortholog step stopped counting stale mouse symbols as having no human ortholog.
+    "Those counts add to 33 and the union is %d genes, %s of the %d. Hallmark and GO BP share 3 ",
     "genes, a Jaccard of %s, so the two collections read largely different genes under the same ",
     "word. Only HALLMARK_HYPOXIA reached significance. GO MF and KEGG carry no hypoxia set at ",
     "all, and a fourth pinned GO BP set has 7 background genes against the 10-gene floor, so ",
@@ -843,6 +845,8 @@ save_overview(
                   union_tbl$quantity == "genes in at least one set"],
     pct(union_tbl$frac[union_tbl$arm == "WT_heat_up" &
                          union_tbl$quantity == "genes in at least one set"]),
+    union_tbl$n_arm[union_tbl$arm == "WT_heat_up" &
+                      union_tbl$quantity == "genes in at least one set"],
     num3(HYP_OVL$jaccard[HYP_OVL$arm == "WT_heat_up" &
                            HYP_OVL$term_a == "HALLMARK_HYPOXIA" &
                            HYP_OVL$term_b == "GOBP_RESPONSE_TO_OXYGEN_LEVELS"])),

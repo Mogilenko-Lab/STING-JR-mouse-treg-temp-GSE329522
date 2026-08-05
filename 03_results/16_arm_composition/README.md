@@ -1,8 +1,10 @@
 # What each mouse heat-contrast arm is made of
 
 Two earlier decompositions of these arms could not carry a composition figure. A hand-picked
-nine-lens panel left 132 of `WT_heat_up`'s 199 genes unclaimed. A whole-ontology GO run gave
-972 module-memberships over 159 genes, a 6.1-fold double count.
+nine-lens panel left 132 of `WT_heat_up` unclaimed, against the 199-gene arm as it then stood — the
+arm is 202 genes now, three of which arrived once the ortholog step stopped reporting symbols it
+could not key as having no human ortholog, and that earlier panel has not been re-run against it. A
+whole-ontology GO run gave 972 module-memberships over 159 genes, a 6.1-fold double count.
 
 This directory holds the third attempt. Sets come from five frozen MSigDB collections
 (Hallmark, GO BP, GO MF, KEGG, Reactome). A set enters only when a depth-matched random gene
@@ -58,18 +60,18 @@ with seed 20260731 on 2026-07-31.
 
 ## figures/_overview/arm_composition.png
 
-Under the `unpinned` variant 74 of 199 genes of WT_heat_up sit in no
+Under the `unpinned` variant 74 of 202 genes of WT_heat_up sit in no
 selected set. The largest named category under `fractional` is
-HALLMARK_TNFA_SIGNALING_VIA_NFKB at 0.044 of the arm, and the same
-set takes 0.136 under `winner_take_all`. 2 categories tie exactly at
+HALLMARK_TNFA_SIGNALING_VIA_NFKB at 0.042 of the arm, and the same
+set takes 0.134 under `winner_take_all`. 2 categories tie exactly at
 the head of `winner_take_all`, GOMF_CYTOKINE_ACTIVITY and
 HALLMARK_TNFA_SIGNALING_VIA_NFKB, each on 27 genes and each taking
-0.136 of the arm, and they come from collections of very different
+0.134 of the arm, and they come from collections of very different
 size, so that accounting names no single leading pathway here. Which
 pathway leads the composition therefore depends on how a gene held by
 several sets is counted, which is why both readings are drawn and
-neither is called primary. KO_heat_up leaves 95 of 218 unclaimed and
-Interaction_fdrOnly_up 2 of 18.
+neither is called primary. KO_heat_up leaves 100 of 221 unclaimed and
+Interaction_fdrOnly_up 1 of 19.
 
 **How to read:** Panel A is every gene at collection resolution: six bands, two bars
 per arm, each bar summing to 1.0. Panels B to D go to set resolution.
@@ -79,7 +81,7 @@ where a gene in k selected sets gives 1/k to each, and a triangle for
 The grey segment between them is the size of the disagreement and
 both readings are reported. A mark on the zero line is a real zero
 under that accounting, which is why the set-level panels use paired
-points and not bars: 12 of WT_heat_up's 40 categories take a share of
+points and not bars: 11 of WT_heat_up's 40 categories take a share of
 exactly zero under one of the two. The pair of numbers on the right
 repeats each row as fractional / winner-take-all, and fill is the
 collection the set came from. Rows are ordered by the larger of the
@@ -93,18 +95,18 @@ hypothesis-generating.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `set_panel() / top-level (pA-pD)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `set_panel() / top-level (pA-pD)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## figures/_overview/arm_composition_variants.png
 
 Pinning the hypoxia sets takes WT_heat_up from 41 to 43 categories
-fractional and 29 to 30 winner-take-all. Both additions carry NA
+fractional and 30 to 30 winner-take-all. Both additions carry NA
 significance, because GOBP_RESPONSE_TO_OXYGEN_LEVELS and
 GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS were tested and did not reach
-the bar. The residue falls by 0.005, from 0.372 to 0.367, which is
+the bar. The residue falls by 0.000, from 0.366 to 0.366, which is
 the whole of what anchoring recovers. HALLMARK_HYPOXIA gives
-fractional weight to the pins it shares genes with, 0.028 down to
-0.023, while its winner-take-all share holds at 0.020.
+fractional weight to the pins it shares genes with, 0.026 down to
+0.022, while its winner-take-all share holds at 0.020.
 REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA was tested in every arm and
 holds none of their genes, so it sits at zero under both variants.
 
@@ -125,14 +127,14 @@ descriptive, and the purple rows support no enrichment claim at all.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `variant_panel() / top-level (pV1/pV2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `variant_panel() / top-level (pV1/pV2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## figures/_overview/arm_hypoxia_sources.png
 
 Three sets hold hypoxia-annotated genes of WT_heat_up:
 HALLMARK_HYPOXIA with 18, GOBP_RESPONSE_TO_OXYGEN_LEVELS with 11 and
 GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS with 4. Those counts add to
-33 and the union is 26 genes, 13.1% of the 199. Hallmark and GO BP
+33 and the union is 26 genes, 12.9% of the 202. Hallmark and GO BP
 share 3 genes, a Jaccard of 0.115, so the two collections read
 largely different genes under the same word. Only HALLMARK_HYPOXIA
 reached significance. GO MF and KEGG carry no hypoxia set at all, and
@@ -157,16 +159,16 @@ annotation overlap and says nothing about causal structure.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pH1/pH2/pH3)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pH1/pH2/pH3)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## figures/_overview/arm_remainder.png
 
-WT_heat_up leaves 74 of 199 genes in no selected set, 37.2% of the
+WT_heat_up leaves 74 of 202 genes in no selected set, 36.6% of the
 arm. Of those, 64 carry an annotation in a set that was testable, 10
-carry none in any of the five collections, and 37 of the 74 sit in a
+carry none in any of the five collections, and 34 of the 74 sit in a
 set that did reach significance and lost its place to the redundancy
-prune or the ten-per-collection cap. KO_heat_up leaves 95 of 218 and
-Interaction_fdrOnly_up 2 of 18. Interaction_up leaves 0 of 7, which
+prune or the ten-per-collection cap. KO_heat_up leaves 100 of 221 and
+Interaction_fdrOnly_up 1 of 19. Interaction_up leaves 0 of 7, which
 is what a 7-gene list with one dominant annotation looks like.
 
 **How to read:** Panel A stacks three mutually exclusive classes, so the bar length is
@@ -186,13 +188,13 @@ accounting.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pR1/pR2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (pR1/pR2)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## figures/_overview/arm_composition_null.png
 
 For WT_heat_up a gene set drawn at random and matched on annotation
-depth reaches significance in a median of 59 GO BP sets and covers a
-median of 102 of the drawn genes, against 206 sets and 151 genes
+depth reaches significance in a median of 53 GO BP sets and covers a
+median of 100 of the drawn genes, against 203 sets and 150 genes
 observed. In Reactome, GO MF and KEGG the same random draw reaches a
 median of zero significant sets and covers a median of zero genes,
 against 68, 64 and 30 genes observed. Annotation depth does most of
@@ -218,7 +220,7 @@ directory, and by itself supports no biological claim.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig5)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig5)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## figures/_overview/interaction_up_genes.png
 
@@ -227,7 +229,7 @@ XAF1, and each of them lands in at least two selected sets, so its
 residue is 0 of 7. Under `winner_take_all` they go 6 to
 GOBP_DEFENSE_RESPONSE_TO_VIRUS and 1 to
 REACTOME_INTERFERON_ALPHA_BETA_SIGNALING, which is why that
-accounting has 2 categories for this arm against 13 fractional. Seven
+accounting has 2 categories for this arm against 14 fractional. Seven
 genes over five collections is a gene list, and this stage draws it
 as one.
 
@@ -242,7 +244,7 @@ from 7 genes anywhere in this directory.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig6)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 1056c7922924210c48666ba58a3807cb)` |
+| `02_analysis/scripts/27_arm_composition_viz.R` | `top-level (fig6)` | `arm_composition.collections = Hallmark,GO_BP,GO_MF,KEGG,Reactome, p_matched_cutoff = 0.05, max_null_recurrence = 0.25, prune_hit_jaccard = 0.5, top_n_per_collection = 10, n_null = 2000, seed = 20260731, winner_take_all_tiebreak = enriched, then p_matched, then raw hypergeometric pvalue, then fold_enrichment` | `03_results/objects/26_arm_composition.rds (md5 f06575ef9131a0061c39156a3065a0e6)` |
 
 ## tables/_overview/
 

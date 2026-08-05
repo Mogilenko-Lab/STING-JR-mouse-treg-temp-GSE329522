@@ -1,15 +1,15 @@
 "direction","display_group","component","gate","n_human","total_human","heat_union_n","heat_shared_n","heat_jaccard","n_intersect_wt","n_intersect_ko","n_intersect_heat_union","glyph","underpowered","wt_only_up_n","wt_only_up_cgas_dependent_n","cgas_flag_source"
-"up","WT/KO heat union","WT_heat only","fdr_logfc",17,199,235,182,0.774468085,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
-"up","WT/KO heat union","WT_heat ∩ KO_heat","fdr_logfc",182,235,235,182,0.774468085,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
-"up","WT/KO heat union","KO_heat only","fdr_logfc",36,218,235,182,0.774468085,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"up","WT/KO heat union","WT_heat only","fdr_logfc",17,202,238,185,0.777310924,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"up","WT/KO heat union","WT_heat ∩ KO_heat","fdr_logfc",185,238,238,185,0.777310924,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"up","WT/KO heat union","KO_heat only","fdr_logfc",36,221,238,185,0.777310924,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
 "up","Interaction
-[fdr_logfc]","Interaction","fdr_logfc",7,7,235,182,0.774468085,0,0,0,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+[fdr_logfc]","Interaction","fdr_logfc",7,7,238,185,0.777310924,0,0,0,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
 "up","Interaction
-[fdr_only]","Interaction","fdr_only",18,18,235,182,0.774468085,0,0,0,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
-"down","WT/KO heat union","WT_heat only","fdr_logfc",14,94,127,80,0.62992126,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
-"down","WT/KO heat union","WT_heat ∩ KO_heat","fdr_logfc",80,127,127,80,0.62992126,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
-"down","WT/KO heat union","KO_heat only","fdr_logfc",33,113,127,80,0.62992126,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+[fdr_only]","Interaction","fdr_only",19,19,238,185,0.777310924,0,0,0,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"down","WT/KO heat union","WT_heat only","fdr_logfc",15,96,130,81,0.623076923,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"down","WT/KO heat union","WT_heat ∩ KO_heat","fdr_logfc",81,130,130,81,0.623076923,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+"down","WT/KO heat union","KO_heat only","fdr_logfc",34,115,130,81,0.623076923,NA,NA,NA,"bar",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
 "down","Interaction
-[fdr_logfc]","Interaction","fdr_logfc",0,0,127,80,0.62992126,0,0,0,"structural_empty",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+[fdr_logfc]","Interaction","fdr_logfc",0,0,130,81,0.623076923,0,0,0,"structural_empty",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
 "down","Interaction
-[fdr_only]","Interaction","fdr_only",0,0,127,80,0.62992126,0,0,0,"structural_empty",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"
+[fdr_only]","Interaction","fdr_only",0,0,130,81,0.623076923,0,0,0,"structural_empty",FALSE,17,0,"03_results/03_de/tables/_overview/cgas_dependence_wide.csv"

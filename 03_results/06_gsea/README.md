@@ -886,8 +886,8 @@ L7 (mechanism) in a figure title.
 
 Cross-database GSEA overview for the WT_heat contrast, labelled WT:
 heat (39 vs 37 °C), under the pooled Benjamini-Hochberg family of
-4,786 tests across 13 databases. Per-database FDR < 0.05 gives 854
-significant sets; the pooled FDR gives 853 (44 lost on pooling, 43
+4,792 tests across 13 databases. Per-database FDR < 0.05 gives 860
+significant sets; the pooled FDR gives 865 (46 lost on pooling, 51
 gained). The panel draws the top 5 sets per database for 13 of the 13
 pooled databases. MitoXplorer carries no pooled-significant set at
 all and keeps its facet so the null stays visible.
@@ -927,9 +927,9 @@ statistics). Sample mapping owner-confirmed.
 
 Cross-database GSEA overview for the Interaction contrast, labelled
 Heat × genotype interaction (cGAS-dependence of the heat response),
-under the pooled Benjamini-Hochberg family of 4,786 tests across 13
-databases. Per-database FDR < 0.05 gives 186 significant sets; the
-pooled FDR gives 154 (36 lost on pooling, 4 gained). The panel draws
+under the pooled Benjamini-Hochberg family of 4,792 tests across 13
+databases. Per-database FDR < 0.05 gives 192 significant sets; the
+pooled FDR gives 164 (32 lost on pooling, 4 gained). The panel draws
 the top 5 sets per database for 13 of the 13 pooled databases. 5 of
 them carry no pooled-significant set at all (HSR_lens, MitoPathways,
 MitoXplorer, TCR_activation, TransportDB) and keep their facets so
@@ -971,9 +971,9 @@ statistics). Sample mapping owner-confirmed.
 The two per-contrast pooled-FDR overviews abreast on one canvas, WT
 heat on the left and Interaction on the right, so the 13 displayed
 databases line up block for block between the contrasts. Under the
-shared pooled family of 4,786 tests across 13 databases, WT heat
-carries 854 significant sets before pooling and 853 after,
-Interaction 186 and 154. The per-contrast panels hold the full
+shared pooled family of 4,792 tests across 13 databases, WT heat
+carries 860 significant sets before pooling and 865 after,
+Interaction 192 and 164. The per-contrast panels hold the full
 numbers.
 
 **How to read:** Two copies of the per-contrast panel abreast: WT heat on the left,
@@ -1018,10 +1018,10 @@ gsea_pooled_overview_Interaction.png.
 ## figures/_overview/hypoxia_running_sum_wt_heat.png
 
 Running enrichment of the single Hallmark set HALLMARK_HYPOXIA
-against the WT 39-vs-37 °C ranked t-statistic. NES +1.9078, p
-3.331e-07, adjusted p 4.164e-06, 171 of the set's genes present in
-the 19,679-gene ranked universe, 56 of them in the leading edge. The
-curve peaks at an enrichment score of +0.455 at rank 2,297, which is
+against the WT 39-vs-37 °C ranked t-statistic. NES +1.9240, p
+4.256e-07, adjusted p 5.32e-06, 172 of the set's genes present in the
+19,679-gene ranked universe, 57 of them in the leading edge. The
+curve peaks at an enrichment score of +0.458 at rank 2,297, which is
 the top 12% of the ranking, so the set's members are concentrated
 toward the 39 °C end of the WT ordering. The statistics on the figure
 are taken verbatim from master_gsea_table.csv, and the curve geometry
@@ -1030,7 +1030,7 @@ used, at exponent 1, with no permutation re-run. This set sits 6th by
 |NES| and 4th by adjusted p in the WT_heat Hallmark cell, so it falls
 outside the general running-sum panels of this GSEA sweep, which draw
 the top 5 sets per cell by |NES|. Its enrichment locates where these
-171 genes sit in one ranking, and the gene content of the set is a
+172 genes sit in one ranking, and the gene content of the set is a
 separate question from the name the set carries.
 
 **How to read:** Three stacked panels sharing one x axis: each gene's position in the
@@ -1074,14 +1074,14 @@ label-blind marker call.
 
 Running-enrichment curves for four hypoxia-named gene sets, one per
 database, across the three focal contrasts. WT: heat (39 vs 37 °C):
-Hallmark NES +1.91 (padj 4.16e-06), GO MF NES +1.75 (padj 0.0408), GO
-BP NES +1.71 (padj 0.00113), Reactome NES -0.91 (padj 0.723).
-cGAS-KO: heat (39 vs 37 °C): Hallmark NES +1.95 (padj 2.48e-06), GO
-MF NES +1.77 (padj 0.0431), GO BP NES +1.54 (padj 0.0162), Reactome
-NES -0.92 (padj 0.716). Heat × genotype interaction (cGAS-dependence
-of the heat response): Hallmark NES -1.27 (padj 0.169), GO MF NES
-+0.67 (padj 0.987), GO BP NES +1.34 (padj 0.31), Reactome NES -0.78
-(padj 0.942). Three of the four sets carry a positive NES and reach
+Hallmark NES +1.92 (padj 5.32e-06), GO MF NES +1.75 (padj 0.0374), GO
+BP NES +1.73 (padj 5.96e-04), Reactome NES -0.91 (padj 0.723).
+cGAS-KO: heat (39 vs 37 °C): Hallmark NES +1.96 (padj 3.01e-06), GO
+MF NES +1.77 (padj 0.04), GO BP NES +1.56 (padj 0.00991), Reactome
+NES -0.92 (padj 0.708). Heat × genotype interaction (cGAS-dependence
+of the heat response): Hallmark NES -1.27 (padj 0.171), GO MF NES
++0.67 (padj 0.987), GO BP NES +1.34 (padj 0.306), Reactome NES -0.78
+(padj 0.937). Three of the four sets carry a positive NES and reach
 FDR < 0.05 in both per-genotype heat contrasts, and the fourth,
 REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no
 significance in any of the three; 6 of the 12 (set x contrast) cells

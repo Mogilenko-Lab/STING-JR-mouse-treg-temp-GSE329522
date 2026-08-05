@@ -6,6 +6,12 @@
 !00_data/processed/PROVENANCE.md
 00_data/references/*
 !00_data/references/.gitkeep
+# Committed reference: the symbol-alias map IS regenerable (00_symbol_alias_map.R), but it
+# is a decision surface rather than bytes — every accepted reference->matrix pair has to be
+# readable cold and every rejection auditable — so it is tracked, and regenerating it must
+# produce a reviewable diff instead of a silent local difference.
+!00_data/references/symbol_alias/
+!00_data/references/symbol_alias/**
 
 # Results — track the directory skeleton (.gitkeep) and caption READMEs, never artifacts.
 # Hard-ignore checkpoint state objects at any depth (large + recomputable).

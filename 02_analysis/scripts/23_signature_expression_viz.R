@@ -334,13 +334,20 @@ write_caption(
   how_to_read = paste0(
     "TWO senses of 'mapped' sit side by side because they differ and both matter downstream. ",
     "n_mapped_to_human counts MOUSE genes with at least one human ortholog, so n_genes_mouse - ",
-    "n_dropped_no_ortholog = n_mapped_to_human = n_one2one + n_one2many + n_many2one; it is the ",
-    "sum of the per-gene mapped_to_human flag in signature_gene_stats.csv. ",
+    "n_dropped_unmapped_total = n_mapped_to_human = n_one2one + n_one2many + n_many2one; it is ",
+    "the sum of the per-gene mapped_to_human flag in signature_gene_stats.csv. ",
     "n_distinct_human_symbols counts the HUMAN symbols the arm lands on — what ",
     "03_results/human_projection/manifest.csv calls n_human — and is smaller whenever two mouse ",
-    "genes collapse onto one ortholog: for WT_heat_up, 201 against 199. median_abs_t is 10.8/10.3 ",
-    "for the heat arms against 6.7/5.8 for the interaction arm, the power gap between a 10-vs-10 ",
-    "contrast and a 1-df interaction term. n_genes_plotted records the figure's cap. Tier: L3."),
+    "genes collapse onto one ortholog.\n\n",
+    "The drop total then splits, and the split is the point. n_dropped_no_ortholog is the ",
+    "orthology source knowing the symbol and having no human counterpart. ",
+    "n_dropped_stale_query_symbol is it not being able to key the symbol at all, because this ",
+    "matrix carries an older MGI vintage than the source expects — a vocabulary result that used ",
+    "to be reported as the first kind. n_query_symbol_normalised counts genes that arrived ONLY ",
+    "because their symbol was lifted to its current form before the source was asked.\n\n",
+    "median_abs_t is 10.8/10.3 for the heat arms against 6.7/5.8 for the interaction arm, the ",
+    "power gap between a 10-vs-10 contrast and a 1-df interaction term. n_genes_plotted records ",
+    "the figure's cap. Tier: L3."),
   config   = FIG_CFG)
 
 # ============================================================================
