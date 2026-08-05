@@ -78,6 +78,17 @@ axis_sizes  <- c("HIF" = 3.4, "IFN" = 3.4, "other" = 1.9)
 
 # Segments and points share one family colour, from AXIS_COLORS, so the HIF cluster near
 # zero and the positive IFN/NFkB cluster separate at a glance.
+# Drawn text (2026-08-05): the previous subtitle stated the finding and used
+# "->" as prose. It now says only what the glyphs are; the flat/NS HIF axis and
+# the interaction-positive IFN members are in the README caption below.
+FIG3A_W     <- 11   # must match the width passed to save_overview()
+FIG3A_TITLE <- "TF activity on the cGAS x heat Interaction contrast (CollecTRI ULM)"
+FIG3A_SUBTITLE <- paste0(
+  "One lollipop per TF; x = its ULM activity score on the Interaction contrast, zero rule marked.\n",
+  "Colour and shape mark the TF axis: orange triangle HIF, blue square IFN/NFkB, grey other. * = BH padj < 0.05 (n=5).")
+fits_canvas(FIG3A_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG3A_W, "fig3a title")
+fits_canvas(FIG3A_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG3A_W, "fig3a subtitle")
+
 fig3a <- ggplot(fig3a_df, aes(x = score, y = source)) +
   geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
   geom_segment(aes(xend = 0, yend = source, color = axis), linewidth = 0.7) +
@@ -92,8 +103,8 @@ fig3a <- ggplot(fig3a_df, aes(x = score, y = source)) +
   guides(color = guide_legend(override.aes = list(size = 3, shape = c(17, 15, 16))),
          shape = "none") +
   labs(
-    title = "TF activity on the cGAS x heat Interaction contrast (CollecTRI ULM)",
-    subtitle = "HIF axis (orange triangles) is flat/NS -> no detectable cGAS-dependence; the IFN members Irf3/Stat2/Stat1 are interaction-positive\n(* = BH padj < 0.05). NFkB members (Nfkb1/Rela) lean positive but are NS at n=5.",
+    title = FIG3A_TITLE,
+    subtitle = FIG3A_SUBTITLE,
     x = "TF activity (ULM score; Interaction = WT_heat - KO_heat)", y = NULL
   ) +
   project_theme(config = FIG_CFG)
@@ -230,6 +241,18 @@ swap_note <- sprintf(
   dor$n, dor$mean_abs_t, ct$n, ct$mean_abs_t,
   dor$n_intersection[1], dor$n_dorothea_only[1], dor$n_collectri_only[1])
 
+# Drawn text (2026-08-05): the previous subtitle carried the whole dilution
+# mechanism -- mixed-sign CollecTRI-only targets cancelling and dragging the
+# mor-weighted mean down. That is the explanation for the #1 -> #12 step and it
+# is already stated in the README caption below, so the subtitle keeps only the
+# encoding.
+FIG3D_TITLE <- "Per-target heat t-statistic by Hif1a regulon membership"
+FIG3D_SUBTITLE <- paste0(
+  "Box and jitter of the per-target WT_heat t-statistic, split by which network lists the target in\n",
+  "Hif1a's regulon. The label gives the three regulon sizes behind the DoRothEA-to-CollecTRI swap.")
+fits_canvas(FIG3D_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  11, "fig3d title")
+fits_canvas(FIG3D_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", 11, "fig3d subtitle")
+
 fig3d <- ggplot(fig3d_df, aes(x = membership, y = t_wt, fill = membership)) +
   geom_hline(yintercept = 0, color = "grey60", linewidth = 0.3) +
   geom_boxplot(width = 0.55, outlier.shape = NA, alpha = 0.55) +
@@ -238,8 +261,8 @@ fig3d <- ggplot(fig3d_df, aes(x = membership, y = t_wt, fill = membership)) +
   annotate("label", x = 0.6, y = max(fig3d_df$t_wt) * 0.96, hjust = 0, vjust = 1,
            label = swap_note, size = 2.7, fill = "grey96", color = "grey15") +
   labs(
-    title = "Per-target heat t-statistic by Hif1a regulon membership",
-    subtitle = "The step from rank 1 to rank 12. The CollecTRI-only targets the swap adds carry high |t| at mixed sign,\nso their box straddles zero and they cancel. That dilutes the mor-weighted regulon mean and carries the\nHif1a ULM score below its tighter DoRothEA value.",
+    title = FIG3D_TITLE,
+    subtitle = FIG3D_SUBTITLE,
     x = "Hif1a target membership across networks", y = "WT_heat target t-statistic"
   ) +
   project_theme(config = FIG_CFG)
@@ -277,15 +300,27 @@ collapse_note <- sprintf(
   "Hif1a ULM score %.2f (rank #%d)\n  -> MLM score %.2f (rank #%d)\n%.0f%% of targets co-regulated; mean %.0f other TFs/target",
   ulm$score, ulm$rank, mlm$score, mlm$rank, pct_co, mean_ot)
 
+# Drawn text (2026-08-05): the previous subtitle carried the load-bearing
+# sentence of the whole rank cascade -- nearly every Hif1a target is
+# co-regulated, so the multivariate MLM spreads its signal across the regulons
+# that share it. That sentence is preserved in the README caption below, which
+# is where the contract asks for it; the subtitle keeps only the encoding.
+FIG3E_TITLE <- "Hif1a targets by how many other CollecTRI regulons claim them"
+FIG3E_SUBTITLE <- paste0(
+  "Histogram of Hif1a's CollecTRI targets by the number of other CollecTRI regulons that also list\n",
+  "each target. The dashed line marks the mean; the label gives Hif1a's ULM and MLM scores and ranks.")
+fits_canvas(FIG3E_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  11, "fig3e title")
+fits_canvas(FIG3E_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", 11, "fig3e subtitle")
+
 fig3e <- ggplot(fig3e_df, aes(x = n_other_TFs)) +
   geom_histogram(binwidth = 10, fill = DOWN, color = "white", boundary = 0) +
   geom_vline(xintercept = mean_ot, color = UP, linewidth = 0.8, linetype = "22") +
   annotate("label", x = max(fig3e_df$n_other_TFs) * 0.98, y = Inf, hjust = 1, vjust = 1.1,
            label = collapse_note, size = 2.9, fill = "grey96", color = "grey15") +
   labs(
-    title = "Hif1a targets by how many other CollecTRI regulons claim them",
-    subtitle = "The step from rank 12 to rank 142. The dashed line marks the mean. Nearly every Hif1a target is\nco-regulated, so the multivariate MLM attributes its signal across the regulons that share it.",
-    x = "number of OTHER CollecTRI TFs sharing each Hif1a target", y = "Hif1a targets (count)"
+    title = FIG3E_TITLE,
+    subtitle = FIG3E_SUBTITLE,
+    x = "number of other CollecTRI TFs sharing each Hif1a target", y = "Hif1a targets (count)"
   ) +
   project_theme(config = FIG_CFG)
 
@@ -410,18 +445,20 @@ fig3g_lab_sub <- fig3g_df[fig3g_df$target %in% LABEL_GENES, ]
 get_pct_g  <- function(cl) fig3g_sum$pct_of_total[fig3g_sum$class == cl]
 get_sum_g  <- function(cl) fig3g_sum$sum_contrib[fig3g_sum$class == cl]
 annot_text <- sprintf(
-  "Score provenance (%%  of aggregate signal):\n  other (unclassified):    %.1f%%\n  shared/glycolytic:        %.1f%%\n  hypoxic HIF core:         %.1f%% (REPRESSED)",
+  "Score provenance (%%  of aggregate signal):\n  other (unclassified):    %.1f%%\n  shared/glycolytic:        %.1f%%\n  hypoxic HIF core:         %.1f%% (below zero)",
   get_pct_g("other"), get_pct_g("shared/glycolytic"), get_pct_g("hypoxic HIF core"))
 
 # A coarse three-class view of the regulon fig3l decomposes finer, which is why the two
 # figures report different percentages for the same genes.
 sub_g_expanded <- paste0(
-  "All 353 Hif1a regulon members, ranked by signed contribution (sign(mor) x t_wt). Stress/ECM genes (purple) tower over the\n",
-  sprintf("regulon; the HIF-diagnostic hypoxic core (Pdk1/Bnip3/Bnip3l/Car9, teal) is REPRESSED (%+.2f total).\n",
+  "All 353 Hif1a regulon members, ranked by signed contribution (sign(mor) x t_wt); colour marks the coarse regulon class, and\n",
+  sprintf("the four members of the hypoxic HIF core (Pdk1/Bnip3/Bnip3l/Car9, teal) sum to %+.2f.\n",
           get_sum_g("hypoxic HIF core")),
-  sprintf("Coarse 3-class provenance: %.1f%% other | %.1f%% shared/glycolytic | %.1f%% hypoxic HIF core (fig3l decomposes 'other' finer).",
+  sprintf("Class shares of the aggregate signal: %.1f%% other | %.1f%% shared/glycolytic | %.1f%% hypoxic HIF core (fig3l splits 'other' finer).",
           get_pct_g("other"), get_pct_g("shared/glycolytic"), get_pct_g("hypoxic HIF core"))
 )
+# fig3g is saved at width = 16 (wide = TRUE); guard the drawn lines against it.
+fits_canvas(sub_g_expanded, FIG_CFG$figures$subtitle_size %||% 11, "plain", 16, "fig3g subtitle")
 
 fig3g <- ggplot(fig3g_df, aes(x = rank, y = contrib, color = legend_class)) +
   geom_hline(yintercept = 0, color = "grey55", linewidth = 0.35) +

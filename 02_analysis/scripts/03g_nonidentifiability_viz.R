@@ -107,6 +107,20 @@ plot_p$lab <- ifelse(plot_p$tf == "Hif1a", "Hif1a  #9",
 hif_score <- plot_p$score[plot_p$tf == "Hif1a"]
 xmax <- max(plot_p$score) * 1.18
 
+# Drawn text (2026-08-05): the previous title carried an internal figure tag and
+# stated the finding, and the four-line subtitle ran off the right edge of the
+# canvas. Title names the panel; subtitle gives the estimator and the glyphs.
+# The reading -- tiny gaps, no identifiable driver -- is in the caption below.
+FIG_W_G     <- FIG_CFG$figures$width %||% 8.5
+FIG3P_TITLE <- "TF activity ranking on the heat-MAIN contrast (CollecTRI ULM)"
+FIG3P_SUBTITLE <- sprintf(paste0(
+  "decoupleR-ULM (CollecTRI, .mor='mor', minsize=5) on the Temp_main t-stat vector; %d TFs scored.\n",
+  "Top-22 by score, coloured by curated TF family; the ringed point is Hif1a (%.2f, p=%.0e, rank #9).\n",
+  "Hsf1 is appended below the dashed break at its own rank, #50 (3.20)."),
+  nrow(p), hif_score, p$p_value[p$tf == "Hif1a"])
+fits_canvas(FIG3P_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG_W_G, "fig3p title")
+fits_canvas(FIG3P_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG_W_G, "fig3p subtitle")
+
 fig3p <- ggplot(plot_p, aes(x = score, y = ypos, color = family)) +
   # discontinuity rule between the top-22 block (ypos>=1) and the appended Hsf1 (ypos=0)
   geom_hline(yintercept = 0.5, linetype = "22", color = "grey60", linewidth = 0.4) +
@@ -122,13 +136,8 @@ fig3p <- ggplot(plot_p, aes(x = score, y = ypos, color = family)) +
   scale_x_continuous(limits = c(0, xmax), expand = expansion(mult = c(0, 0.02))) +
   scale_y_continuous(breaks = NULL) +
   labs(
-    title = "Fig 3p. No clean winner on heat-MAIN: Hif1a is #9 in a crowd of co-elevated TFs",
-    subtitle = sprintf(paste0(
-      "decoupleR-ULM (CollecTRI, .mor='mor', minsize=5) on the Temp_main t-stat vector; %d TFs scored. The top scores are\n",
-      "separated by tiny gaps (Jun 6.06 down to Nfkb1 5.12), all at p~1e-7 -- Hif1a (%.2f, p=%.0e) sits at #9 among generic\n",
-      "stress / immediate-early / NF-kB regulators, not atop a hypoxia-specific peak. Hsf1 -- the canonical heat-shock TF --\n",
-      "is far down at #50 (3.20, appended below the dashed break). Colored by curated TF family; this ranking crowns no TF."),
-      nrow(p), hif_score, p$p_value[p$tf == "Hif1a"]),
+    title = FIG3P_TITLE,
+    subtitle = FIG3P_SUBTITLE,
     x = "heat-MAIN (Temp_main) ULM activity score", y = NULL
   ) +
   project_theme(config = FIG_CFG)
@@ -138,9 +147,10 @@ save_overview(
   table = plot_p[, c("rank", "tf", "score", "family", "is_hif")],
   finding = paste0(
     "On heat-MAIN there is no clean winner: Hif1a is #9 in a crowd of co-elevated ",
-    "stress / immediate-early / NF-kB TFs separated by tiny gaps (all p~1e-7), and ",
-    "the canonical heat-shock TF Hsf1 is far down at #50. This ranking crowns NO ",
-    "TF -- not Hif1a, not Jun/AP-1, not Epas1/HIF2a. ", PROV),
+    "stress / immediate-early / NF-kB TFs separated by tiny gaps (Jun 6.06 down to ",
+    "Nfkb1 5.12, all p~1e-7), it does not sit atop a hypoxia-specific peak, and the ",
+    "canonical heat-shock TF Hsf1 is far down at #50. This ranking crowns no TF -- ",
+    "not Hif1a, not Jun/AP-1, not Epas1/HIF2a. ", PROV),
   script = SCRIPT, fn = "save_overview",
   config_kv = "figures.top_n=22; figures.base_size=16; figures.base_size_column=9",
   input = "03_results/04_tf/tables/fig3p_heatmain_ranking_data.csv",
@@ -166,20 +176,31 @@ qd$family <- fam_factor(qd$family)
 qd$tf <- factor(qd$tf, levels = rev(qd$tf))   # highest at top
 qd$lab <- sprintf("%.0f%%  (%d)", qd$pct_of_hif1a_set, qd$shared_targets)
 
+# Drawn text (2026-08-05): the previous title stated the finding ("Hif1a's
+# targets belong to everyone") behind an internal figure tag, and the four-line
+# subtitle ran off the right edge. Title names the panel; subtitle gives the
+# encoding and the two set-level counts. The reading is in the caption below.
+FIG3Q_TITLE <- "Sharing of Hif1a's CollecTRI targets with other regulators"
+FIG3Q_SUBTITLE <- paste0(
+  "Top-15 sharers. Bars = the share of Hif1a's 353 analyzed targets that this TF also regulates,\n",
+  "with the shared count in parentheses; fill marks the curated TF family. Across the whole set,\n",
+  "325 of 353 targets (92.1%) are regulated by at least one other TF, a mean of 22.2 other TFs each.")
+fits_canvas(FIG3Q_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG_W_G, "fig3q title")
+fits_canvas(FIG3Q_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG_W_G, "fig3q subtitle")
+
 fig3q <- ggplot(qd, aes(x = pct_of_hif1a_set, y = tf, fill = family)) +
   geom_col(width = 0.72) +
   geom_text(aes(label = lab), hjust = -0.08, size = 4.0, color = "grey15") +
   scale_fill_manual(values = FAMILY_COLORS, drop = TRUE, name = "TF family/role") +
-  scale_x_continuous(limits = c(0, max(qd$pct_of_hif1a_set) * 1.18),
+  # Headroom 1.18 -> 1.30: at 1.18 the widest value label ("48%  (171)", on the
+  # top bar) ran past the panel and shipped as "48%  (171" with the closing
+  # paren cut off. The multiplier has to clear the LABEL, not the bar.
+  scale_x_continuous(limits = c(0, max(qd$pct_of_hif1a_set) * 1.30),
                      expand = expansion(mult = c(0, 0.02)),
                      labels = function(x) paste0(x, "%")) +
   labs(
-    title = "Fig 3q. Hif1a's targets belong to everyone",
-    subtitle = paste0(
-      "Of Hif1a's 353 analyzed CollecTRI targets, 325 (92.1%) are also regulated by >=1 other TF (mean 22.2 other TFs per\n",
-      "target). The top sharers are the network's most promiscuous regulators -- housekeeping (Sp1), stress/senescence\n",
-      "(Trp53), NF-kB, AP-1/immediate-early, proliferation (Myc) -- none hypoxia-specific. Bars = % of the 353-target set the\n",
-      "TF also regulates (shared count in parentheses); this is why Hif1a's heat-MAIN signal cannot be attributed to Hif1a alone."),
+    title = FIG3Q_TITLE,
+    subtitle = FIG3Q_SUBTITLE,
     x = "share of Hif1a's 353 targets also regulated by this TF",
     y = NULL
   ) +
@@ -288,14 +309,21 @@ comp <- (blank + topbar + plot_layout(widths = c(1, 4))) /
         (left  + grid   + plot_layout(widths = c(1, 4))) +
         plot_layout(heights = c(1, 5))
 
+# Drawn text (2026-08-05): the previous title stated the finding behind an
+# internal figure tag, and the five-line subtitle used "->" as prose and
+# capitals for emphasis. Title names the panel; subtitle describes the grid and
+# its two margins. The reading is in the caption below.
+FIG3R_TITLE <- "Shared regulon membership of Hif1a's top heat-MAIN genes"
+FIG3R_SUBTITLE <- paste0(
+  "Rows are the top-20 heat-MAIN-driving genes of Hif1a's regulon, ordered by signed contribution; columns are\n",
+  "Hif1a (orange) and its 12 largest target-sharers, ordered by heat-MAIN ULM score. A filled tile means the gene\n",
+  "is in that TF's CollecTRI regulon. The left margin bar gives each gene's heat-MAIN t, the top margin bar each\n",
+  "TF's heat-MAIN score, so both margins can be read against the grid.")
+fits_canvas(FIG3R_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  10, "fig3r title")
+fits_canvas(FIG3R_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", 10, "fig3r subtitle")
+
 fig3r <- comp + plot_annotation(
-  title = "Fig 3r. The same heat-driven genes populate many TFs' regulons -- why none is identifiable",
-  subtitle = paste0(
-    "Top-20 heat-MAIN-driving genes of Hif1a's regulon (rows, ordered by signed contribution) x Hif1a + its 12 largest target-\n",
-    "sharers (columns, ordered by heat-MAIN ULM score; Hif1a in orange). Filled = the gene is in that TF's CollecTRI regulon.\n",
-    "LEFT bar = each gene's heat-MAIN t (all high -> the rows are genuinely heat-driven); TOP bar = each TF's heat-MAIN score\n",
-    "(all high -> every column reads as 'active'). Because the same heat-driven genes sit in many regulons, the contrast cannot\n",
-    "single out Hif1a -- or any one TF -- as the driver."))
+  title = FIG3R_TITLE, subtitle = FIG3R_SUBTITLE)
 
 # fig3r table neighbor: the membership grid the figure draws.
 fig3r_tbl <- m[, c("gene", "tf", "in_regulon", "gene_heat_t",

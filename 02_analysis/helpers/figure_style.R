@@ -134,6 +134,58 @@ if (!exists("provisional_caption", mode = "function")) {
 }
 
 ## ---------------------------------------------------------------------------
+## 3c. CANVAS-FIT GUARD — make an over-wide title/subtitle line a hard error.
+##     ggsave() draws a line that is wider than the canvas straight off the edge
+##     and still exits 0, so a clipped title is invisible to every text-level
+##     check and survives review. On 2026-08-05 six of the seventeen 04_tf
+##     overview panels were shipping with their title or subtitle cut off at the
+##     right edge for exactly this reason. Measure the drawn line and stop.
+##
+##     Deliberately OPT-IN — call it from a viz script next to its labs(), do not
+##     wire it into save_figure(). A silent global guard would begin failing
+##     renders across every stage at once, which is a migration, not a fix.
+##
+##     Usage:
+##       fits_canvas(my_title,    FIG_CFG$figures$title_size,    "bold",  W, "title")
+##       fits_canvas(my_subtitle, FIG_CFG$figures$subtitle_size, "plain", W, "subtitle")
+##     `width_in` must be the SAME width later passed to save_figure/save_overview
+##     (or FIG_CFG$figures$width when the call site does not override it).
+## ---------------------------------------------------------------------------
+##     MEASURE ON THE OUTPUT DEVICE, NOT pdf(NULL). The base pdf device carries
+##     Helvetica metrics; save_figure() renders through cairo_pdf and ragg/cairo
+##     png, whose default sans is ~16% wider. Measuring on pdf(NULL) passes
+##     strings that then ship clipped -- that mistake was made and caught here on
+##     2026-08-05, so the device below is chosen to match the real output.
+fits_canvas <- function(text, fontsize, fontface, width_in, what = "text",
+                        margin_in = 0.45) {
+    if (is.null(text) || !nzchar(as.character(text))) return(invisible(TRUE))
+    tmp <- tempfile(fileext = ".png")
+    if (requireNamespace("ragg", quietly = TRUE)) {
+        ragg::agg_png(tmp, width = width_in, height = 4, units = "in", res = 300)
+    } else if (isTRUE(grDevices::capabilities()[["cairo"]])) {
+        grDevices::png(tmp, width = width_in, height = 4, units = "in",
+                       res = 300, type = "cairo")
+    } else {
+        grDevices::pdf(NULL, width = width_in, height = 4)
+    }
+    on.exit({ grDevices::dev.off(); unlink(tmp) }, add = TRUE)
+    avail <- width_in - margin_in
+    for (ln in strsplit(as.character(text), "\n", fixed = TRUE)[[1]]) {
+        if (!nzchar(ln)) next
+        w <- grid::convertWidth(
+            grid::grobWidth(grid::textGrob(
+                ln, gp = grid::gpar(fontsize = fontsize, fontface = fontface))),
+            "inches", valueOnly = TRUE)
+        if (w > avail) {
+            stop(sprintf(paste0("%s line is %.2fin wide on a %.2fin canvas ",
+                                "(%.2fin usable) and would be CLIPPED: %s"),
+                         what, w, width_in, avail, ln), call. = FALSE)
+        }
+    }
+    invisible(TRUE)
+}
+
+## ---------------------------------------------------------------------------
 ## 4. UNIFIED STYLE OVERRIDES — single-variant theme + dual-format (pdf+png) export.
 ##    Sourced LAST so it SHADOWS the toolkit lib's project_theme / save_figure /
 ##    save_overview / style_series with the unified contract (no .print/.screen split;

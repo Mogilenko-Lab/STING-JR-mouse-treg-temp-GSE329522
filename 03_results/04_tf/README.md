@@ -246,11 +246,15 @@ MECHANISM: Per-statistic TF ranks tabulated for the WT_heat contrast across all 
 
 ### fig3l_hif_attribution.pdf  *(NEW — attribution arc, panel 3 of 3: WHAT KIND)*
 
-**STATEMENT: When the 353 members of the Hif1a CollecTRI regulon are re-bucketed by curated biological module, the positive WT_heat "activity" signal is dominated by a heat-shock/stress fraction: the 7 `heatshock_stress` members (Timp1, Sdc1, Spp1, Cdkn1a, Serpine1, Eno2, Hspa1a) all move UP and sum to +108.54, exceeding the contribution of every other curated class. By contrast, the HIF1a-selective hypoxic-survival core (`hif1a_hypoxic_core`: Pdk1, Bnip3, Bnip3l, Car9) is uniformly REPRESSED (all 4 members down, sum = −8.46). The shared angiogenic/glycolytic class (Vegfa/Slc2a1, sum = +15.93) and the autoregulatory feedback member (Egln3, sum = +6.81) both rise, but neither is diagnostic for canonical hypoxic HIF1a biology. The 339 `other_unclassified` members account for 90.7% of the total. This pattern identifies the program as a heat-induced glycolytic/stress program partially overlapping HIF targets — not a canonical hypoxic-HIF output.**
+**Of the 353 members of the Hif1a CollecTRI regulon, the four curated modules carry 9.3% of the regulon's contribution magnitude and the 339 unassigned members carry 90.7%, so the curated partition accounts for under a tenth of the score and is a reading aid rather than an explanation. Within that tenth: the 7 `heatshock_stress` members (Timp1, Sdc1, Spp1, Cdkn1a, Serpine1, Eno2, Hspa1a) all rise and sum to +108.54, while the four genes diagnostic of canonical HIF1a output — `hif1a_hypoxic_core`: Pdk1, Bnip3, Bnip3l, Car9 — are all four repressed, sum −8.46. The shared angiogenic/glycolytic pair (Vegfa/Slc2a1, +15.93) and the autoregulatory feedback member (Egln3, +6.81) both rise, and neither is diagnostic for HIF1a specifically. The directional result is the one that does not depend on how the buckets were drawn: the genes whose induction is the signature of HIF1a activity move the other way in the contrast that is supposed to induce them. What the remaining 90.7% represents is not established here, and the module sums are not a partition of the score.**
 
 VOCABULARY RECONCILE (fig3l ↔ fig3g): fig3l is the FINER module decomposition of the SAME 353-member Hif1a regulon shown coarsely in fig3g. "The HIF core" denotes ONE set across both figures — Pdk1/Bnip3/Bnip3l/Car9, sum = −8.46 (REPRESSED). The 7 `heatshock_stress` genes are carved OUT of fig3g's 340-member 91.8% "other" lump, leaving the 339-member 90.7% residual `other_unclassified` here; the % "other" differs (91.8% vs 90.7%) BY CONSTRUCTION (coarse vs finer bucketing of the identical regulon), not by error. Vegfa/Slc2a1/Egln3 are `shared_angio_glucose`/`autoreg_feedback` (shared/glycolytic), NOT HIF-specific. Per-gene contribution values are unchanged from fig3g; only class names/membership boundaries changed.
 
-MECHANISM: `03c_hif_program_attribution.R` reads `fig3g_target_decomposition_data.csv` and joins it to a curated module/isoform lookup (module assignment per a curated lookup; definitions and refs in the script header). No statistical recomputation — `t_wt` and `contrib` are copied from the existing fig3g table. Emits `fig3l_hif_attribution_data.csv` (per-gene with `module`, `isoform_attribution`, `direction` columns) and `fig3l_module_summary.csv` (per-module aggregates). The viz renders a horizontal sign-aware lollipop on the signed-contribution (x = `contrib`) axis, faceted by module with the curated buckets foregrounded and `other_unclassified` shown as a compact context row; facet order top→bottom: `heatshock_stress` → `shared_angio_glucose` → `autoreg_feedback` → `hif1a_hypoxic_core`, so the reading is "stress up … shared up … feedback up … hypoxic core DOWN." Module palette (single source of truth in `config.R::MODULE_COLORS`): `heatshock_stress` = `#762A83` (purple); `shared_angio_glucose` = `#E08214` (orange); `autoreg_feedback` = `#FDB863` (pale orange); `hif1a_hypoxic_core` = `#01665E` (DARK TEAL — repalette; the repressed diagnostic core is now teal, not a third orange, so it separates cleanly from the orange shared/glycolytic up-set and the purple heat-shock bucket); `other_unclassified` = `grey80`.
+MECHANISM: `03c_hif_program_attribution.R` reads `fig3g_target_decomposition_data.csv` and joins it to a curated module/isoform lookup (module assignment per a curated lookup; definitions and refs in the script header). No statistical recomputation — `t_wt` and `contrib` are copied from the existing fig3g table. Emits `fig3l_hif_attribution_data.csv` (per-gene with `module`, `isoform_attribution`, `direction` columns) and `fig3l_module_summary.csv` (per-module aggregates). The viz renders a horizontal sign-aware lollipop on the signed-contribution (x = `contrib`) axis, faceted by module; the four curated buckets are drawn and `other_unclassified` is left off the panel (its 339 members stay in `fig3l_hif_attribution_data.csv`). Facet order top→bottom: `heatshock_stress` → `shared_angio_glucose` → `autoreg_feedback` → `hif1a_hypoxic_core`, so the module whose members sit left of zero reads last.
+
+Module palette (single source of truth in `config.R::MODULE_COLORS`): `heatshock_stress` = `#762A83` (purple); `shared_angio_glucose` = `#E08214` (orange); `autoreg_feedback` = `#FDB863` (pale orange); `hif1a_hypoxic_core` = `#01665E` (dark teal — repalette; the repressed core is teal, not a third orange, so it separates cleanly from the orange up-set and the purple heat-shock bucket); `other_unclassified` = `grey80`. Bucket **names** come from the companion `config.R::MODULE_LABELS` (added 2026-08-05, same keys as `MODULE_COLORS`), so the human counterpart of this panel can reuse one bucket definition — colour *and* name — through the frozen ortholog map instead of retyping the labels. The viz script appends only each bucket's `n_targets` and `sum_contrib`, read from `fig3l_module_summary.csv`, into that bucket's facet strip.
+
+Drawn text (rebuilt 2026-08-05, canvas 11 × 7.5 in): the title names the panel, the subtitle is two descriptive lines giving what a point is and what x means, and each facet strip names its bucket by curated membership plus that bucket's n and sum. The reading of the pattern lives in the caption below, not on the canvas. A `fits_canvas()` guard in the viz script measures every drawn title/subtitle line against the canvas width and errors out rather than letting `ggsave` emit a silently clipped line — the previous render shipped with its title cut off mid-word and three subtitle lines cut off at the right edge.
 
 | | |
 |---|---|
@@ -597,7 +601,7 @@ MECHANISM: `03g_nonidentifiability.R` selects the top-20 Hif1a targets by signed
 
 ### fig3l_module_summary.csv
 
-**Per-module aggregation of signed contributions confirming: heatshock_stress sum = +108.54 (7 genes, all UP, 7.2% of total); shared_angio_glucose sum = +15.93 (2 genes, all UP, 1.1%); autoreg_feedback sum = +6.81 (1 gene, UP, 0.5%); hif1a_hypoxic_core sum = −8.46 (4 genes, ALL DOWN, −0.56% — `pct_of_total` is SIGNED, consistent with `sum_contrib` and with the fig3g signed-share convention); other_unclassified sum = +259.97 (339 genes, 189 up / 150 down, 90.7%).**
+**Per-module aggregation of signed contributions. Two percentage columns, and they answer different questions — quote the one you mean. `pct_of_total_magnitude` is each module's share of the regulon's total contribution magnitude; it sums to 100 and it is the column to use when the claim is how much of the score a module accounts for: other_unclassified 90.7%, heatshock_stress 7.2%, shared_angio_glucose 1.1%, hif1a_hypoxic_core 0.6%, autoreg_feedback 0.5%. `pct_of_total` keeps the signed convention `fig3g_target_decomposition_summary` uses — a net module sum over the same gross denominator — so its sign tracks `sum_contrib` and it reads −0.56% for the repressed core. It does not sum to 100, and it understates any module whose members cancel: other_unclassified is 189 up against 150 down, so it reads 17.3% there against a true magnitude share of 90.7%. The two columns are identical for every module of uniform sign, which is why they diverge on exactly the two modules where the distinction matters. Sums: heatshock_stress +108.54 (7 genes, all up); shared_angio_glucose +15.93 (2, all up); autoreg_feedback +6.81 (1, up); hif1a_hypoxic_core −8.46 (4, all down); other_unclassified +259.97 (339, 189 up / 150 down).**
 
 5 rows × 6 columns. `module`; `n_targets`; `sum_contrib`; `pct_of_total`; `n_up`; `n_down`.
 
@@ -1022,9 +1026,11 @@ comparison (ranking identity).
 MLM (the only multivariate estimator) reshuffles both axes on
 WT_heat: rank heatmap shows MLM is a structural outlier with a
 Spearman rho of 0.62 vs ULM, while univariate statistics sit at
-0.97-1.00. Top univariate TFs are demoted under MLM: Rela 3->350,
-Nfkb1 6->86, Hif1a 12->142. Sample mapping owner-confirmed (GSE329522
-iTreg 2x2 genotype x temperature)
+0.97-1.00. Top univariate TFs are demoted under MLM across both axes:
+Rela 3->350, Nfkb1 6->86, Hif1a 12->142. Hif1a's collapse is one
+instance of that general de-confounding reshuffle, not a HIF-specific
+quirk. Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x
+temperature)
 
 **How to read:** Rank heatmap: rows = key TFs, columns = statistics. Fill = binned
 rank quantile (bright yellow = highly activated, dark purple =
@@ -1038,24 +1044,37 @@ divergence.
 
 ## figures/_overview/fig3l_hif_attribution.png
 
-Re-bucketed by curated biological module, Hif1a's positive WT_heat
-activity is carried by a heat-shock/stress fraction (all UP) while
-the HIF1a-selective hypoxic-survival core is repressed; only the
-shared/glycolytic/feedback subset rises. This is a heat-induced
-glycolytic/stress program partially overlapping HIF targets -- NOT a
-canonical hypoxic-HIF output. Sample mapping owner-confirmed
+Regrouping Hif1a's WT_heat target contributions by curated module
+splits the positive signal into a heat-shock/stress fraction summing
+to +108.54, all seven members up, against a HIF-annotated remainder
+of +14.27 (shared angio/glucose +15.93, autoregulatory feedback
++6.81, HIF1a-selective hypoxic core -8.46). Pdk1, Bnip3, Bnip3l and
+Car9 are canonical HIF1a-induced targets, yet all four sit left of
+zero on the contrast where Hif1a scores positive. The positive score
+is thus consistent with a heat-induced stress/glycolytic program
+overlapping the HIF1a regulon, not with canonical hypoxic HIF1a
+output. Correlative: attribution of an inferred activity score, not
+evidence about HIF1a protein. Sample mapping owner-confirmed
 (GSE329522 iTreg 2x2 genotype x temperature)
 
-**How to read:** Horizontal lollipop plot: x = signed contribution = sign(mor) x t_wt
-of Hif1a targets, grouped and colored by module. Facets are ordered
-from stress/contamination (top) to hypoxic-survival core (bottom;
-diagnostic of true hypoxia, all repressed). Claim tier: descriptive
-target attribution. Note: Heat-shock genes carved out of fig3g's
-91.8% 'other' -> 90.7% residual here.
+**How to read:** Horizontal lollipop, one row per gene. x = the signed contribution
+sign(mor) x t_wt this gene makes to Hif1a's WT_heat ULM score; the
+grey rule marks zero, so points right of it are genes the contrast
+moves up and points left of it genes it moves down, on a symmetric
+scale. Facets are the four curated modules, ordered
+heat-shock/stress, shared angio/glucose, autoregulatory feedback,
+HIF1a-selective hypoxic core; each strip carries that module's gene
+count and summed contribution. Colour encodes module only
+(config.R::MODULE_COLORS). Per-gene isoform attributions and the 339
+unclassified regulon members sit in fig3l_hif_attribution_data.csv.
+Claim tier: descriptive attribution; no statistics are computed here.
+The seven heat-shock genes here are carved out of the coarser 91.8%
+'other' lump in fig3g, leaving a 339-member 90.7% residual: the two
+figures differ by construction, not by error.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/03c_hif_program_attribution_viz.R` | `save_overview` | `figures.base_size=16; figures.base_size_column=9; modules` | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv` |
+| `02_analysis/scripts/03c_hif_program_attribution_viz.R` | `save_overview` | `figures.title_size=16; figures.subtitle_size=11; MODULE_COLORS; MODULE_LABELS` | `03_results/04_tf/tables/fig3l_hif_attribution_data.csv` |
 
 ## figures/_overview/fig3m_ulm_mechanic.png
 
@@ -1105,9 +1124,10 @@ master TF.
 
 On heat-MAIN there is no clean winner: Hif1a is #9 in a crowd of
 co-elevated stress / immediate-early / NF-kB TFs separated by tiny
-gaps (all p~1e-7), and the canonical heat-shock TF Hsf1 is far down
-at #50. This ranking crowns NO TF -- not Hif1a, not Jun/AP-1, not
-Epas1/HIF2a. Sample mapping owner-confirmed (GSE329522 iTreg 2x2
+gaps (Jun 6.06 down to Nfkb1 5.12, all p~1e-7), it does not sit atop
+a hypoxia-specific peak, and the canonical heat-shock TF Hsf1 is far
+down at #50. This ranking crowns no TF -- not Hif1a, not Jun/AP-1,
+not Epas1/HIF2a. Sample mapping owner-confirmed (GSE329522 iTreg 2x2
 genotype x temperature)
 
 **How to read:** Ranked dotplot: each row is a TF, x = heat-MAIN ULM activity score,

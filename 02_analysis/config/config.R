@@ -211,9 +211,41 @@ AXIS_LABELS <- c(
 MODULE_COLORS <- c(
   "heatshock_stress"     = "#762A83",  # purple -- the contamination (Hspa1a/Timp1/Sdc1/Cdkn1a/Serpine1/Eno2)
   "shared_angio_glucose" = "#E08214",  # orange -- Vegfa/Slc2a1 (shared HIF1/HIF2 angio-glucose; UP, least diagnostic)
-  "autoreg_feedback"     = "#FDB863",  # pale orange -- Egln3/PHD3 (HIF-induced feedback brake; UP)
+  # Egln3/PHD3 (HIF-induced feedback brake; UP). Was pale orange #FDB863 until
+  # 2026-08-05. That hex sits at L* 79.7 and carries a 1.72:1 contrast ratio
+  # against white -- below any legibility floor -- and this bucket holds exactly
+  # ONE observation, so an unreadable point is an unreadable bucket. #8C510A is
+  # the dark-brown pole of ColorBrewer BrBG, whose other pole is the #01665E
+  # already used for the hypoxic core: 6.37:1 against white (3.7x better), and
+  # its separation from the neighbouring #E08214 IMPROVES (dE76 25.2 -> 31.7)
+  # because the two now differ in lightness, which is the channel that survives
+  # every colour-vision deficiency. Stays warm, so the HIF-annotated up-arm still
+  # reads as one family against the cool repressed core.
+  "autoreg_feedback"     = "#8C510A",  # dark brown -- Egln3/PHD3 (HIF-induced feedback brake; UP)
   "hif1a_hypoxic_core"   = "#01665E",  # dark teal -- Pdk1/Bnip3/Bnip3l/Car9 (diagnostic core; REPRESSED/DOWN)
   "other_unclassified"   = "grey80"    # faint context -- the ~333 uncurated "other" members
+)
+
+# ----------------------------------------------------------------------------
+# MODULE-BUCKET DISPLAY LABELS -- companion to MODULE_COLORS, same keys, same
+# single-source-of-truth role. Lifted out of 03c_hif_program_attribution_viz.R
+# (2026-08-05) so the bucket NAMES travel with the bucket colours: the human
+# counterpart of the attribution panel reuses these bucket definitions through
+# the frozen ortholog map, and a label that lives inside one species' viz script
+# cannot be reused by the other without being retyped (and drifting).
+#
+# Each label names the bucket by its CURATED MEMBERSHIP -- what the genes are --
+# never by what the enrichment is taken to mean. The per-gene membership itself
+# is carried in the emitted tables (`module` column of
+# fig3l_hif_attribution_data.csv, all 353 members, and of the figure's sibling
+# fig3l_hif_attribution.csv, the 14 curated members), so a consumer never has to
+# read an R literal to recover which gene sits in which bucket.
+MODULE_LABELS <- c(
+  "heatshock_stress"     = "heat-shock / stress",
+  "shared_angio_glucose" = "shared angio / glucose",
+  "autoreg_feedback"     = "autoregulatory feedback",
+  "hif1a_hypoxic_core"   = "HIF1a-selective hypoxic core",
+  "other_unclassified"   = "unclassified"
 )
 
 # fig3n heat-MAIN regulator axes: HIF/IFN reuse AXIS_COLORS; the heat-shock

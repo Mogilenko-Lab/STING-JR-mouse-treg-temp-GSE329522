@@ -222,6 +222,21 @@ mlm_x <- which(STAT_ORDER == "mlm")
 # was invisible. Switch to a BINNED viridis scale on rank quantiles: top ranks
 # pop bright, demoted ranks go dark -- so an MLM cell jumping from bright (top)
 # to dark (demoted) is immediately obvious. (No statistics: just display bins.)
+# Drawn text (2026-08-05): the previous title carried an internal figure tag,
+# stated the finding and shouted "BOTH"; the subtitle asserted the outlier
+# reading and listed the rank demotions. Title names the panel, subtitle gives
+# the encoding and the two Spearman values a reader needs to read the boxed
+# column. The demotions and the reading are in the README caption below.
+FIG3K_W     <- 11   # must match the width passed to save_overview()
+FIG3K_TITLE <- "TF rank under six decoupleR statistics, WT_heat contrast"
+FIG3K_SUBTITLE <- paste0(
+  "Rows are key TFs, columns the six decoupleR statistics; fill = binned rank\n",
+  "quantile and the cell label is the absolute rank. The boxed column is MLM, the\n",
+  "one multivariate statistic; its Spearman against ULM over the full 658-TF\n",
+  "ranking is 0.62, against 0.97-1.00 for each univariate statistic.")
+fits_canvas(FIG3K_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG3K_W, "fig3k title")
+fits_canvas(FIG3K_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG3K_W, "fig3k subtitle")
+
 fig3k <- ggplot(wt_div, aes(x = statistic, y = source, fill = rank)) +
   geom_tile(color = "white", linewidth = 0.35) +
   # Boxed MLM column = the structural outlier the eye should land on.
@@ -246,14 +261,8 @@ fig3k <- ggplot(wt_div, aes(x = statistic, y = source, fill = rank)) +
                "other" = "other TFs"
              ))) +
   labs(
-    title    = "Fig 3k. MLM (the only multivariate estimator) reshuffles BOTH axes (WT_heat)",
-    subtitle = paste0(
-      "Rank of each TF under the 6 decoupleR statistics; boxed MLM column is the outlier.  ",
-      "Spearman vs ULM (full 658-TF ranking) is 0.62 for MLM\n",
-      "but 0.97-1.00 for every univariate statistic.  Under MLM, the univariate top set is demoted across ",
-      "BOTH axes: Rela 3->350, Nfkb1 6->86, Hif1a 12->142.\n",
-      "HIF1a's collapse is ONE instance of this general MLM de-confounding reshuffle, not a HIF-specific quirk."
-    ),
+    title    = FIG3K_TITLE,
+    subtitle = FIG3K_SUBTITLE,
     x = "decoupleR statistic (rho = Spearman rank-corr vs ULM, full WT_heat ranking)",
     y = NULL
   ) +
@@ -272,7 +281,9 @@ save_overview(
     "MLM (the only multivariate estimator) reshuffles both axes on WT_heat: rank ",
     "heatmap shows MLM is a structural outlier with a Spearman rho of 0.62 vs ULM, ",
     "while univariate statistics sit at 0.97-1.00. Top univariate TFs are demoted ",
-    "under MLM: Rela 3->350, Nfkb1 6->86, Hif1a 12->142. ", cap),
+    "under MLM across both axes: Rela 3->350, Nfkb1 6->86, Hif1a 12->142. Hif1a's ",
+    "collapse is one instance of that general de-confounding reshuffle, not a ",
+    "HIF-specific quirk. ", cap),
   script = SCRIPT, fn = "save_overview",
   config_kv = "figures.base_size=16; figures.base_size_column=9; statistics",
   input = "03_results/04_tf/tables/fig3k_method_rank_divergence_data.csv; fig3k_method_rank_spearman.csv",

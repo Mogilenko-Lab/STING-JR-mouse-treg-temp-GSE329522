@@ -141,7 +141,14 @@ summ <- do.call(rbind, lapply(module_levels, function(m) {
     # SIGNED pct (matches the signed convention in fig3g_target_decomposition_summary):
     # numerator is the signed module sum so the sign tracks sum_contrib
     # (hif1a_hypoxic_core sum_contrib = -8.46 -> pct_of_total = -0.56%).
+    # It is a net numerator over a gross denominator, so it does NOT sum to 100 and it
+    # understates any module whose members cancel -- other_unclassified is 189 up against
+    # 150 down, so its net is small while its magnitude is the largest of any module.
     pct_of_total = 100 * sum(sub$contrib) / total_abs,
+    # Gross share of the regulon's contribution magnitude. This is the column that answers
+    # "how much of the signal is this module", and it sums to 100 across modules. Quote this
+    # one whenever the claim is about how much of the score a module accounts for.
+    pct_of_total_magnitude = 100 * sum(abs(sub$contrib)) / total_abs,
     n_up        = sum(sub$direction == "Up"),
     n_down      = sum(sub$direction == "Down"),
     stringsAsFactors = FALSE

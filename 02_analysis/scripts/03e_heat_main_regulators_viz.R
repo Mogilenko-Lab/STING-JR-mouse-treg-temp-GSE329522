@@ -57,15 +57,31 @@ tf_order <- fig3n_df %>%
   pull(tf)
 fig3n_df$tf <- factor(fig3n_df$tf, levels = tf_order)
 
-# Pretty facet (contrast) labels.
-contrast_labs <- c(
-  Temp_main = "Temp_main (heat, both genotypes)",
-  WT_heat   = "WT_heat (39 vs 37, WT)",
-  KO_heat   = "KO_heat (39 vs 37, cGAS-KO)"
-)
+# Facet (contrast) labels. These were local single-line literals until 2026-08-05
+# and every one of the three was cut off at BOTH ends by the strip rectangle
+# ("...in (heat, both ge", "_heat (39 vs 37, W", "at (39 vs 37, cGA") -- three
+# 1.8in-wide strips cannot hold a 32-character single line, and the truncation
+# is silent. Read the project's short contrast labels instead: they are the
+# single source of truth, they already carry the line break a narrow strip
+# needs, and they drop the analytic key that was eating the width.
+contrast_labs <- vapply(c("Temp_main", "WT_heat", "KO_heat"),
+                        function(k) contrast_label(k, short = TRUE), character(1))
 
 # Axis legend labels -- extend the shared AXIS_LABELS with the heat-shock entry.
 heat_axis_labels <- c("heatshock" = "heat-shock axis (Hsf1)", AXIS_LABELS)
+
+# Drawn text (2026-08-05): the previous title carried an internal figure tag,
+# stated the finding, and ran 9.86in on an 8.05in usable canvas -- it shipped
+# clipped at the right edge. The title now names the panel and the subtitle says
+# only what the glyphs are; Hsf1's score, its padj and the HIF-axis scores are
+# in the README caption below, which is where the reading belongs.
+FIG3N_W     <- FIG_CFG$figures$width %||% 8.5
+FIG3N_TITLE <- "TF activity on the three heat-MAIN contrasts (CollecTRI ULM)"
+FIG3N_SUBTITLE <- paste0(
+  "Lollipops are per-TF activity, faceted by heat-MAIN contrast; x = the CollecTRI ULM score.\n",
+  "Same estimator as fig3a and fig3c, so the scores are cross-quotable. * = BH padj < 0.05.")
+fits_canvas(FIG3N_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG3N_W, "fig3n title")
+fits_canvas(FIG3N_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG3N_W, "fig3n subtitle")
 
 fig3n <- ggplot(fig3n_df, aes(x = score, y = tf)) +
   geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
@@ -78,12 +94,8 @@ fig3n <- ggplot(fig3n_df, aes(x = score, y = tf)) +
                      labels = heat_axis_labels, drop = TRUE) +
   scale_x_continuous(expand = expansion(mult = c(0.06, 0.14))) +
   labs(
-    title = "Fig 3n. The heat-shock regulator Hsf1 is co-elevated with HIF on heat-MAIN (CollecTRI ULM)",
-    subtitle = paste0(
-      "Hsf1 (purple) is significantly UP on all three heat-MAIN contrasts (Temp_main 3.20, padj 0.015), co-elevated with the HIF\n",
-      "axis (Hif1a +5.14 / Epas1 +4.17, orange) -- not foregrounded earlier in this analysis. Same decoupleR-ULM estimator as\n",
-      "fig3a/fig3c (cross-quotable). * = BH padj < 0.05. Co-elevation only: NOT a claim that Hsf1 causes or outranks HIF."
-    ),
+    title = FIG3N_TITLE,
+    subtitle = FIG3N_SUBTITLE,
     x = "TF activity (CollecTRI ULM score)", y = NULL
   ) +
   project_theme(config = FIG_CFG) +

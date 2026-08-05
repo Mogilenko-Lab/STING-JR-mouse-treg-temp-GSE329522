@@ -130,14 +130,30 @@ formula_df <- data.frame(
 stat2_cue_df <- data.frame(
   panel = factor(panel_lab(TF_B), levels = levels(dat$panel)),
   x = xmin, y = 1.82,
-  lab = "no pile-up of aligned targets -> low score\n(targets straddle 0; no coherent heat-MAIN signal)"
+  lab = "no pile-up of aligned targets, so a low score\n(targets straddle 0; no coherent heat-MAIN signal)"
 )
 
 # =============================================================================
 # FIG 3m -- the scoring mechanic (two panels, SHARED x = aligned contribution)
 #   Geom-text sizes lifted off the 2.5-3pt floor so they survive the per-variant
 #   re-theme; the contract enforces the print >=9 / screen >=16 base floors.
+#
+#   Drawn text (2026-08-05): the previous title carried an internal figure tag
+#   and ran 8.47in on an 8.05in usable canvas, so it shipped clipped at the
+#   right edge; the subtitle stated the finding. The title now names the panel,
+#   the subtitle says only what a point and the diamond are, and the reading of
+#   the two piles lives in the README caption below. fits_canvas() makes any
+#   future overflow a hard error.
 # =============================================================================
+FIG3M_W      <- FIG_CFG$figures$width %||% 8.5
+FIG3M_TITLE  <- "How decoupleR-ULM scores a TF: the regulon's pile-up"
+FIG3M_SUBTITLE <- paste0(
+  "Each jittered point is one regulon member; x = its aligned signed\n",
+  "contribution, sign(mor) x t_gene. The diamond and dashed rule mark each\n",
+  "regulon's weighted centre, which is that TF's ULM score.")
+fits_canvas(FIG3M_TITLE,    FIG_CFG$figures$title_size    %||% 16, "bold",  FIG3M_W, "fig3m title")
+fits_canvas(FIG3M_SUBTITLE, FIG_CFG$figures$subtitle_size %||% 11, "plain", FIG3M_W, "fig3m subtitle")
+
 fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
   geom_vline(xintercept = 0, color = "grey60", linewidth = 0.3) +
   # regulon members as a jittered strip/beeswarm on the SHARED contribution axis
@@ -185,11 +201,8 @@ fig3m <- ggplot(dat, aes(x = aligned_contrib, y = 1)) +
   facet_wrap(~ panel, ncol = 1, scales = "free_y") +
   guides(color = guide_legend(override.aes = list(size = 3, alpha = 1))) +
   labs(
-    title = "Fig 3m. How decoupleR-ULM nominates a TF: the score is the regulon's pile-up",
-    subtitle = paste0(
-      "A broad (promiscuous) regulon scores high off any high-|t| members it happens to contain -- here generic heat-shock/stress genes\n",
-      "(purple) push the ", TF_A, " pile right, scoring a heat-induced glycolytic/stress program that partially overlaps HIF targets.\n",
-      "A small, specific regulon (", TF_B, ") only piles up when its OWN targets coherently move -- on this contrast they do not."),
+    title = FIG3M_TITLE,
+    subtitle = FIG3M_SUBTITLE,
     x = "Aligned (signed) target contribution  =  sign(mor) x t_gene  (shared axis)",
     y = NULL
   ) +
