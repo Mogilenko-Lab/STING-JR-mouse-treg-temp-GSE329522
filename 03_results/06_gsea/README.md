@@ -324,7 +324,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `geom_tile` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
+| `02_analysis/scripts/12_gsea_viz.R` | `geom_tile` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
 
 ## figures/by_contrast/<contrast>/Hallmark/*.png
 
@@ -350,9 +350,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). Worked example of the two rankings diverging: in the
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). Worked example of the two rankings diverging: in the
 WT_heat Hallmark cell HALLMARK_HYPOXIA is 6th by |NES| (+1.91) and
 4th by adjusted p (4.2e-06), so it is outside the running-sum's top 5
 by |NES| while sitting well inside the dotplot's top 20 by adjusted
@@ -365,7 +368,7 @@ libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
 
 ## figures/by_contrast/<contrast>/KEGG/*.png
 
@@ -391,9 +394,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -401,7 +407,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_KEGG.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_KEGG.rds}` |
 
 ## figures/by_contrast/<contrast>/Reactome/*.png
 
@@ -427,9 +433,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -437,7 +446,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Reactome.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Reactome.rds}` |
 
 ## figures/by_contrast/<contrast>/WikiPathways/*.png
 
@@ -463,9 +472,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -473,7 +485,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_WikiPathways.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_WikiPathways.rds}` |
 
 ## figures/by_contrast/<contrast>/GO_BP/*.png
 
@@ -499,9 +511,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -509,7 +524,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_BP.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_BP.rds}` |
 
 ## figures/by_contrast/<contrast>/GO_MF/*.png
 
@@ -535,9 +550,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -545,7 +563,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_MF.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_MF.rds}` |
 
 ## figures/by_contrast/<contrast>/GO_CC/*.png
 
@@ -571,9 +589,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -581,7 +602,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_CC.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_GO_CC.rds}` |
 
 ## figures/by_contrast/<contrast>/TF_Targets/*.png
 
@@ -607,9 +628,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -617,7 +641,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_TF_Targets.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_TF_Targets.rds}` |
 
 ## figures/by_contrast/<contrast>/TransportDB/*.png
 
@@ -643,9 +667,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -653,7 +680,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_TransportDB.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_TransportDB.rds}` |
 
 ## figures/by_contrast/<contrast>/MitoPathways/*.png
 
@@ -679,9 +706,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -689,7 +719,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_MitoPathways.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_MitoPathways.rds}` |
 
 ## figures/by_contrast/<contrast>/MitoXplorer/*.png
 
@@ -715,9 +745,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -725,7 +758,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_MitoXplorer.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_MitoXplorer.rds}` |
 
 ## figures/by_contrast/<contrast>/HSR_lens/*.png
 
@@ -752,9 +785,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -762,7 +798,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_HSR_lens.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_HSR_lens.rds}` |
 
 ## figures/by_contrast/<contrast>/TCR_activation/*.png
 
@@ -789,9 +825,12 @@ NES descending. running_sum: a three-panel enrichment curve per set
 (top = running enrichment score with the leading-edge peak; middle =
 gene-hit ticks at each member's rank; bottom = the ranked
 t-statistic), ES y-range pinned to [-1.0,1.0] so curves stay
-comparable across databases. NES > 0 = enriched in the contrast
-numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C
-or cGAS-KO). A set's enrichment is not evidence that the program its
+comparable across databases, and x a gene's position in the ranking
+as a FRACTION of its length rather than a raw rank, because ranked
+universes differ in length between compartments; the axis title
+carries this one's size. NES > 0 = enriched in the contrast numerator
+(39 °C or WT); NES < 0 = enriched in the denominator (37 °C or
+cGAS-KO). A set's enrichment is not evidence that the program its
 name invokes is present; composition would have to be established
 separately. Claim tier: L3. Sample-to-condition mapping confirmed
 against the owner's sample sheet (2026-07-22): 20 of 20 libraries
@@ -799,7 +838,7 @@ concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_TCR_activation.rds}` |
+| `02_analysis/scripts/12_gsea_viz.R` | `gsea_dotplot / gsea_dotplot_facet / gsea_barplot / gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_custom_TCR_activation.rds}` |
 
 ## README overview
 
@@ -841,7 +880,7 @@ L7 (mechanism) in a figure title.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/12_gsea_viz.R` | `save_overview / save_figure` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
+| `02_analysis/scripts/12_gsea_viz.R` | `save_overview / save_figure` | `thresholds.gsea_fdr=0.05; figures.top_pathways=20; figures.running_sum_top=5; figures.running_sum_ylim=[-1.0,1.0]; running_sum_x=rank/n_ranked; figures.nes_cap=3.2; colors.diverging` | `03_results/master/master_gsea_table.csv` |
 
 ## figures/_overview/gsea_pooled_overview_WT_heat.png
 
@@ -994,19 +1033,21 @@ the top 5 sets per cell by |NES|. Its enrichment locates where these
 171 genes sit in one ranking, and the gene content of the set is a
 separate question from the name the set carries.
 
-**How to read:** Three stacked panels sharing one x axis: the rank of every gene in
-the WT_heat ranked list, most 39 °C-shifted on the left, most 37
-°C-shifted on the right. Top panel: the running enrichment score,
-which steps up at each gene belonging to the set and decays between
-them. Its peak is the enrichment score, and the set members left of
-the peak are the leading edge. The y range is pinned to [-1, 1] so
-the curve stays comparable to every other running-sum figure in this
-GSEA sweep. Middle panel: one tick per set member at that member's
-rank, over a band showing where the ranking crosses zero. Bottom
-panel: the ranked t-statistic, which shows how much signal each rank
-carries. The legend carries the set name, its genes present in the
-ranked universe, its NES and its adjusted p. NES > 0 = enriched in
-the contrast numerator (39 °C or WT). NES < 0 = enriched in the
+**How to read:** Three stacked panels sharing one x axis: each gene's position in the
+WT_heat ranked list as a FRACTION of its length, most 39 °C-shifted
+at 0, most 37 °C-shifted at 1, because ranked universes differ in
+length between compartments; the axis title carries this one's size.
+Top panel: the running enrichment score, which steps up at each gene
+belonging to the set and decays between them. Its peak is the
+enrichment score, and the set members left of the peak are the
+leading edge. The y range is pinned to [-1, 1] so the curve stays
+comparable to every other running-sum figure in this GSEA sweep.
+Middle panel: one tick per set member at that member's rank, over a
+band showing where the ranking crosses zero. Bottom panel: the ranked
+t-statistic, which shows how much signal each rank carries. The
+legend carries the set name, its genes present in the ranked
+universe, its NES and its adjusted p. NES > 0 = enriched in the
+contrast numerator (39 °C or WT). NES < 0 = enriched in the
 denominator (37 °C or cGAS-KO). This set is 6th by |NES| and 4th by
 adjusted p in its cell, so the general running-sum panels of this
 GSEA sweep, which draw the top 5 per cell by |NES|, leave it out by
@@ -1027,7 +1068,7 @@ label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `gsea_running_sum_plot` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}` |
 
 ## figures/_overview/hypoxia_routes_by_contrast.png
 
@@ -1052,44 +1093,47 @@ panel reports these four curves and ranks nothing.
 
 **How to read:** One facet per contrast, and within each facet four overlaid
 running-enrichment curves, one per gene set, keyed by colour in the
-shared legend below the panels. The x axis is the rank of every gene
-in THAT contrast's ranked list, most numerator-shifted on the left,
-most denominator-shifted on the right, so the facets share an axis
-length and each carries its own ordering. A curve steps up at each
-gene belonging to its set and decays between them: an early high peak
-means the members are packed at the numerator end, and a curve near
-zero means they are spread through the list. The y range is pinned to
-[-1, 1] so every curve stays comparable to every other running-sum
-figure in this GSEA sweep. Inside each facet the NES and adjusted p
-for that contrast are printed in each set's own colour, in the
-legend's own top-to-bottom order, keyed by database name because each
-of the four sets comes from a different database. The member ticks
-and the ranked-metric panel are left off to keep four curves per
-facet legible; the companion figure hypoxia_running_sum_wt_heat.png
-draws all three panels for one set. NES > 0 = enriched in the
-contrast numerator (39 °C or WT). NES < 0 = enriched in the
-denominator (37 °C or cGAS-KO). The Interaction facet is the
-cGAS-dependence read-out: a positive significant Interaction NES is
-consistent with cGAS-dependent induction, and a non-significant one
-means no detectable cGAS-dependence at n=5. SELECTION RULE: these 4
-sets were chosen BY NAME, one per database, with no input from their
-adjusted p or |NES|. The general per-database and pooled panels of
-this GSEA sweep pin no set by name, and no pin from this figure is
-carried back into them. So this is a named-set read-out and says
-nothing about how these four rank among the thousands of sets they
-came from. Read the fourth curve as carefully as the other three:
-three of these hypoxia-named sets carry a positive NES in both heat
-contrasts and the Reactome set carries a negative one, so shared
-wording in two set names leaves shared behaviour an open question. A
-set's enrichment is not evidence that the program its name invokes is
-present; composition would have to be established separately. The
-four names overlap in wording while their gene content differs, which
-is why each is drawn on its own curve. Claim tier: L3 (DE and
-enrichment statistics). Sample-to-condition mapping confirmed against
-the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant
-with the label-blind marker call.
+shared legend below the panels. The x axis is each gene's position in
+THAT contrast's ranked list as a FRACTION of its length, most
+numerator-shifted at 0, most denominator-shifted at 1, so the facets
+share an axis and each carries its own ordering; a fraction rather
+than a rank because ranked universes differ in length between
+compartments, and the axis title carries these rankings' size. A
+curve steps up at each gene belonging to its set and decays between
+them: an early high peak means the members are packed at the
+numerator end, and a curve near zero means they are spread through
+the list. The y range is pinned to [-1, 1] so every curve stays
+comparable to every other running-sum figure in this GSEA sweep.
+Inside each facet the NES and adjusted p for that contrast are
+printed in each set's own colour, in the legend's own top-to-bottom
+order, keyed by database name because each of the four sets comes
+from a different database. The member ticks and the ranked-metric
+panel are left off to keep four curves per facet legible; the
+companion figure hypoxia_running_sum_wt_heat.png draws all three
+panels for one set. NES > 0 = enriched in the contrast numerator (39
+°C or WT). NES < 0 = enriched in the denominator (37 °C or cGAS-KO).
+The Interaction facet is the cGAS-dependence read-out: a positive
+significant Interaction NES is consistent with cGAS-dependent
+induction, and a non-significant one means no detectable
+cGAS-dependence at n=5. SELECTION RULE: these 4 sets were chosen BY
+NAME, one per database, with no input from their adjusted p or |NES|.
+The general per-database and pooled panels of this GSEA sweep pin no
+set by name, and no pin from this figure is carried back into them.
+So this is a named-set read-out and says nothing about how these four
+rank among the thousands of sets they came from. Read the fourth
+curve as carefully as the other three: three of these hypoxia-named
+sets carry a positive NES in both heat contrasts and the Reactome set
+carries a negative one, so shared wording in two set names leaves
+shared behaviour an open question. A set's enrichment is not evidence
+that the program its name invokes is present; composition would have
+to be established separately. The four names overlap in wording while
+their gene content differs, which is why each is drawn on its own
+curve. Claim tier: L3 (DE and enrichment statistics).
+Sample-to-condition mapping confirmed against the owner's sample
+sheet (2026-07-22): 20 of 20 libraries concordant with the
+label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `geom_line / facet_wrap` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `geom_line / facet_wrap` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
 

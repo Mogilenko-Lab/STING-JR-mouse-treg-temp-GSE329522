@@ -149,13 +149,43 @@ save_overview <- function(plot, stage, name, table, finding, script, fn, config_
 ##    desync-prone path). The composer applies project_theme first, then re-asserts
 ##    the per-panel chrome, so alignment + tick/label suppression hold by construction.
 ##    Per-panel aspect.ratio is never touched (it would break width alignment).
+##
+##    `n_ranked` puts RANK FRACTION on x: raw rank is not comparable across ranked
+##    universes of different length, and the human compartments rank fewer genes.
+##    The ticks relabel in place, so the drawn geometry is untouched, and the axis
+##    title carries the universe size the fraction hides. Patchwork branches only.
 ## ---------------------------------------------------------------------------
-style_series <- function(plot, ylim = NULL, config = NULL) {
+
+## The x-axis title for a fractional-rank axis. ONE phrasing for every running sum here.
+## It states the direction convention, because a normalised axis carries no gene names to
+## anchor it, and the universe size, because the fraction hides it. It says "universe"
+## rather than "genes ranked": the panel legend already spends that phrase on the SET size,
+## and the two differ by two orders of magnitude.
+rank_fraction_lab <- function(n_ranked, of = NULL)
+  sprintf("Rank fraction%s (0 = most up; %s-gene universe)",
+          if (is.null(of)) "" else paste0(" in ", of),
+          paste(format(n_ranked, big.mark = ",", trim = TRUE), collapse = "/"))
+
+style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) stop("style_series() needs ggplot2.")
   cfg  <- config %||% FIG_CFG
   ylim <- as.numeric(unlist(ylim %||% (cfg$figures$running_sum_ylim %||% c(-1, 1))))
   stopifnot(length(ylim) == 2, all(is.finite(ylim)))
   ph <- as.numeric(unlist(cfg$figures$running_sum_heights %||% c(2.4, 0.7, 0.9)))
+
+  ## Relabel the shared x of every panel as a fraction; ticks at the same fifths the
+  ## human panels use, so the two read against each other tick for tick.
+  as_fraction <- function(p) {
+    if (is.null(n_ranked)) return(p)
+    n <- as.numeric(n_ranked)[1]
+    stopifnot(is.finite(n), n > 0)
+    at <- seq(0, 1, by = 0.2)
+    ## The 0 tick sits on rank 1, the first position the ranking has. Widening the scale
+    ## to reach rank 0 instead would nudge every drawn panel, and this is a relabel.
+    p & ggplot2::scale_x_continuous(breaks = pmax(n * at, 1), labels = format(at),
+                                    expand = c(0, 0)) &
+      ggplot2::labs(x = rank_fraction_lab(n))
+  }
 
   ## Clean toolkit interface: re-skin via the attached composer closure (no indexing).
   restyle <- attr(plot, "grs_restyle")
@@ -169,7 +199,7 @@ style_series <- function(plot, ylim = NULL, config = NULL) {
       base_theme      = project_theme(config = cfg)) # project base; chrome re-asserted on top
     ## Top-align the collected outside-right legend so it sits at the level of the
     ## top (ES) panel rather than vertically centred across all three panels.
-    return(styled & ggplot2::theme(
+    return(as_fraction(styled) & ggplot2::theme(
       legend.justification.right = "top",
       legend.justification       = "top"))
   }
@@ -191,14 +221,15 @@ style_series <- function(plot, ylim = NULL, config = NULL) {
   styled <- tryCatch(plot & project_theme(config = cfg), error = function(e) plot)
   styled <- tryCatch(styled + patchwork::plot_layout(heights = ph, guides = "collect"),
                      error = function(e) styled)
-  styled & ggplot2::theme(
+  as_fraction(styled) & ggplot2::theme(
     legend.position      = "right",
     legend.key.spacing.y = ggplot2::unit(3, "pt"),
     legend.background    = ggplot2::element_rect(fill = "white", colour = "grey90"),
     legend.key.size      = ggplot2::unit(0.8, "lines"))
 }
 ## Canonical name for the same operation (so a viz script can call either).
-style_running_sum <- function(p, ylim = NULL, config = NULL) style_series(p, ylim = ylim, config = config)
+style_running_sum <- function(p, ylim = NULL, config = NULL, n_ranked = NULL)
+  style_series(p, ylim = ylim, config = config, n_ranked = n_ranked)
 
 ## ---------------------------------------------------------------------------
 ## 5. PALETTE — colorblind-safe scales sourced from FIG_CFG$colors (semantic categories).

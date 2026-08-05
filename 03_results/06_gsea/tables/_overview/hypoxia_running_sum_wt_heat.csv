@@ -1,2 +1,2 @@
-"pathway_id","pathway_name","database","contrast","nes","pvalue","padj","set_size","leading_edge_n","panel_key"
-"HALLMARK_HYPOXIA","Hypoxia","Hallmark","WT_heat",1.90778685,3.33116152e-07,4.1639519e-06,171,56,"Hallmark"
+"pathway_id","pathway_name","database","contrast","nes","pvalue","padj","set_size","leading_edge_n","n_ranked","panel_key"
+"HALLMARK_HYPOXIA","Hypoxia","Hallmark","WT_heat",1.90778685,3.33116152e-07,4.1639519e-06,171,56,19679,"Hallmark"

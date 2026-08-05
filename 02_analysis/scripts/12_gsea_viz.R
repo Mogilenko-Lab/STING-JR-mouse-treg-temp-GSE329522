@@ -311,7 +311,7 @@ contrast_subtitle <- function(co) {
 }
 
 CFG_KV <- sprintf(
-  "thresholds.gsea_fdr=%.2g; figures.top_pathways=%d; figures.running_sum_top=%d; figures.running_sum_ylim=[%.1f,%.1f]; figures.nes_cap=%.1f; colors.diverging",
+  "thresholds.gsea_fdr=%.2g; figures.top_pathways=%d; figures.running_sum_top=%d; figures.running_sum_ylim=[%.1f,%.1f]; running_sum_x=rank/n_ranked; figures.nes_cap=%.1f; colors.diverging",
   FDR, TOPN, RSTOP, RSYLIM[1], RSYLIM[2], NESCAP)
 
 # ============================================================================
@@ -444,7 +444,9 @@ emit_cell <- function(co, db_name, src) {
     if (!is.null(p_rs)) {
       # Pin the running-ES y-range to [-1,1] (config running_sum_ylim) + inside legend so
       # the per-DB curves stay directly comparable (style_series = the ported style_running_sum).
-      p_rs <- style_series(p_rs, ylim = RSYLIM, config = FIG_CFG)
+      # x becomes rank/n_ranked, taken from this contrast's own ranked vector.
+      p_rs <- style_series(p_rs, ylim = RSYLIM, n_ranked = length(g_rs@geneList),
+                           config = FIG_CFG)
       save_figure(p_rs, STAGE, file.path(db_name, "running_sum"), contrast = co, config = FIG_CFG)
     }
   } else {
@@ -632,7 +634,7 @@ for (db_name in ALL_DBS) {
     config_kv = CFG_KV,
     input    = sprintf("03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_%s_%s.rds}", src, db_name),
     how_to_read = paste0(sprintf(
-      "SELECTION RULES, one per panel, which govern which sets appear: dotplot and facet draw the top %d sets by ADJUSTED P; barplot draws FDR-significant sets only, top %d by |NES|; running_sum draws the top %d sets by |NES|. Note that the dotplot SELECTS by adjusted p but ORDERS its y-axis by GeneRatio descending, so vertical position on the dotplot is not a significance ranking. dotplot: x = GeneRatio (leading-edge genes / set size), point size = -log10(padj), fill = NES (orange %s = positive / blue %s = negative), black outline = padj < %.2g. facet: the same dotplot split into an NES>0 and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by NES descending. running_sum: a three-panel enrichment curve per set (top = running enrichment score with the leading-edge peak; middle = gene-hit ticks at each member's rank; bottom = the ranked t-statistic), ES y-range pinned to [%.1f,%.1f] so curves stay comparable across databases. NES > 0 = enriched in the contrast numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C or cGAS-KO).",
+      "SELECTION RULES, one per panel, which govern which sets appear: dotplot and facet draw the top %d sets by ADJUSTED P; barplot draws FDR-significant sets only, top %d by |NES|; running_sum draws the top %d sets by |NES|. Note that the dotplot SELECTS by adjusted p but ORDERS its y-axis by GeneRatio descending, so vertical position on the dotplot is not a significance ranking. dotplot: x = GeneRatio (leading-edge genes / set size), point size = -log10(padj), fill = NES (orange %s = positive / blue %s = negative), black outline = padj < %.2g. facet: the same dotplot split into an NES>0 and an NES<0 panel. barplot: NES bars from zero, y-axis ordered by NES descending. running_sum: a three-panel enrichment curve per set (top = running enrichment score with the leading-edge peak; middle = gene-hit ticks at each member's rank; bottom = the ranked t-statistic), ES y-range pinned to [%.1f,%.1f] so curves stay comparable across databases, and x a gene's position in the ranking as a FRACTION of its length rather than a raw rank, because ranked universes differ in length between compartments; the axis title carries this one's size. NES > 0 = enriched in the contrast numerator (39 °C or WT); NES < 0 = enriched in the denominator (37 °C or cGAS-KO).",
       TOPN, TOPN, RSTOP, POS, NEG, FDR, RSYLIM[1], RSYLIM[2]),
       db_rank_note,
       " A set's enrichment is not evidence that the program its name invokes is present; composition would have to be established separately. Claim tier: L3. ",

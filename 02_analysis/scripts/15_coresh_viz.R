@@ -383,7 +383,9 @@ emit_coresh_cell <- function(co) {
     p_rs <- tryCatch(gsea_running_sum_plot(g_rs, gene_set_ids = top_ids, title = ttl, max_name_length = 200),
                      error = function(e) { message(sprintf("  [15] running_sum skipped (%s): %s", co, conditionMessage(e))); NULL })
     if (!is.null(p_rs)) {
-      p_rs <- style_series(p_rs, ylim = RSYLIM, config = FIG_CFG)
+      # x becomes rank/n_ranked, taken from this contrast's own ranked vector.
+      p_rs <- style_series(p_rs, ylim = RSYLIM, n_ranked = length(g_rs@geneList),
+                           config = FIG_CFG)
       save_figure(p_rs, STAGE, file.path(DB_NAME, "running_sum"), contrast = co, config = FIG_CFG, wide = TRUE)
     }
   } else {

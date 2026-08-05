@@ -102,7 +102,7 @@ FOCUS_SET      <- "HALLMARK_HYPOXIA"              # the single set in figure 1
 FOCUS_DATABASE <- "Hallmark"
 
 CFG_KV <- sprintf(
-  "thresholds.gsea_fdr=%.2g; figures.running_sum_ylim=[%.1f,%.1f]; figures.running_sum_heights; figures.running_sum_top=%d; figures.top_pathways=%d; colors.okabe_ito",
+  "thresholds.gsea_fdr=%.2g; figures.running_sum_ylim=[%.1f,%.1f]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=%d; figures.top_pathways=%d; colors.okabe_ito",
   FDR, RSYLIM[1], RSYLIM[2], RSTOP, TOPN)
 
 # ============================================================================
@@ -385,9 +385,12 @@ es_curve <- function(g, ids, thin = TRUE) {
       stop("es_curve: running-ES thinning changed a curve's range")
     thinned
   } else d
+  ## `x` is the raw rank the plotter returned; `rank_fraction` is what gets drawn, so the
+  ## curves of two rankings of different length share one axis.
   out %>% dplyr::transmute(pathway_id = as.character(Description),
                            x = x, running_score = runningScore,
-                           n_ranked = nrow(d) / length(ids))
+                           n_ranked = nrow(d) / length(ids),
+                           rank_fraction = x / n_ranked)
 }
 
 # The master rows behind BOTH figures, in draw order, with the display fields attached.
@@ -493,16 +496,17 @@ p1 <- gsea_running_sum_plot(
   max_name_length = max(nchar(f1_labs)) + 1L,
   title           = F1_TITLE)
 
-# The required post-styling step: pins the ES y-range to figures.running_sum_ylim, collects one
-# legend outside-right, keeps x ticks on the bottom panel, and applies project_theme.
-p1 <- style_series(p1, ylim = RSYLIM, config = FIG_CFG)
+# The required post-styling step: pins the ES y-range to figures.running_sum_ylim, puts rank
+# fraction on x, collects one legend outside-right, keeps x ticks on the bottom panel, and
+# applies project_theme.
+p1 <- style_series(p1, ylim = RSYLIM, n_ranked = f1_n, config = FIG_CFG)
 .text_fits(p1, CANVAS_W, title = F1_TITLE)
 
 f1_tbl <- FOCUS_ROWS %>%
   dplyr::filter(pathway_id == FOCUS_SET, contrast == "WT_heat") %>%
   dplyr::transmute(pathway_id = as.character(pathway_id), pathway_name, database,
                    contrast = as.character(contrast), nes, pvalue, padj,
-                   set_size, leading_edge_n, panel_key = tag)
+                   set_size, leading_edge_n, n_ranked = f1_n, panel_key = tag)
 
 save_overview(
   plot      = p1,
@@ -520,10 +524,12 @@ save_overview(
   config_kv = CFG_KV,
   input     = "03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_Hallmark.rds}",
   how_to_read = paste0(
-    "Three stacked panels sharing one x axis: the rank of every gene in the WT_heat ranked list, ",
-    "most 39 °C-shifted on the left, most 37 °C-shifted on the right. Top panel: the running ",
-    "enrichment score, which steps up at each gene belonging to the set and decays between them. ",
-    "Its peak is the enrichment score, and the set members left of the peak are the leading edge. ",
+    "Three stacked panels sharing one x axis: each gene's position in the WT_heat ranked list as a ",
+    "FRACTION of its length, most 39 °C-shifted at 0, most 37 °C-shifted at 1, because ranked ",
+    "universes differ in length between compartments; the axis title carries this one's size. ",
+    "Top panel: the running enrichment score, which steps up at each gene belonging to the set ",
+    "and decays between them. Its peak is the enrichment score, and the set members left of the ",
+    "peak are the leading edge. ",
     "The y range is pinned to [", RSYLIM[1], ", ", RSYLIM[2], "] so the curve stays comparable to ",
     "every other running-sum figure in this GSEA sweep. Middle panel: one tick per set member at ",
     "that member's rank, over a band showing where the ranking crosses zero. Bottom panel: the ",
@@ -557,7 +563,9 @@ es_df <- dplyr::bind_rows(es_frames) %>%
                           levels = contrast_label(FOCAL, short = TRUE)),
     set_label    = factor(unname(SET_LABEL[pathway_id]), levels = unname(SET_LABEL)))
 
-N_RANKED <- max(es_df$x)
+# Every contrast's own ranked-universe size, so the axis states what the fraction hides. One
+# value per distinct length, and the three contrasts here rank the same genes.
+N_RANKED <- sort(unique(es_df$n_ranked))
 
 # Per-facet statistics block. A shared legend carries one label per set, so the per-contrast
 # NES and adjusted p are drawn inside each facet in the set's own colour, in the legend's
@@ -571,7 +579,7 @@ stat_rows <- FOCUS_ROWS %>%
                           levels = unname(SET_LABEL)),
     row          = as.integer(pathway_id),
     label        = sprintf("%s   NES %+.2f,  FDR %s", tag, nes, fmt_p(padj, digits = 1)),
-    x            = 0.03 * N_RANKED,
+    x            = 0.03,
     y            = RSYLIM[1] * (0.42 + 0.155 * (row - 1L)))
 
 es_lo <- min(es_df$running_score)
@@ -583,7 +591,7 @@ if (min(stat_rows$y) < RSYLIM[1] || max(stat_rows$y) > es_lo)
 F2_TITLE <- "Running enrichment of four hypoxia-named sets by contrast"
 F2_SUB   <- SIGN_NOTE   # the sign convention, and nothing else; the rest is in the caption
 
-p2 <- ggplot(es_df, aes(x = x, y = running_score, colour = set_label)) +
+p2 <- ggplot(es_df, aes(x = rank_fraction, y = running_score, colour = set_label)) +
   geom_line(linewidth = LINEW) +
   geom_text(data = stat_rows,
             aes(x = x, y = y, label = label, colour = set_label),
@@ -591,27 +599,33 @@ p2 <- ggplot(es_df, aes(x = x, y = running_score, colour = set_label)) +
             show.legend = FALSE, inherit.aes = FALSE) +
   scale_colour_manual(values = unname(SET_COLOR[PICKS$pathway_id]), name = NULL,
                       drop = FALSE) +
-  scale_x_continuous(expand = c(0, 0), labels = scales::comma) +
+  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2), expand = c(0, 0)) +
   coord_cartesian(ylim = RSYLIM) +
   facet_wrap(~ contrast_lab, nrow = 1) +
   labs(
     title    = F2_TITLE,
     subtitle = F2_SUB,
-    x        = sprintf("Rank in each contrast's ordered %s-statistic (%s genes)",
-                       RANK_METRIC, format(N_RANKED, big.mark = ",")),
+    x        = rank_fraction_lab(
+      N_RANKED, of = sprintf("each contrast's ordered %s-statistic", RANK_METRIC)),
     y        = "Running enrichment score") +
   project_theme(config = FIG_CFG) +
   ggplot2::theme(legend.position = "bottom",
                  legend.direction = "horizontal",
-                 panel.spacing = ggplot2::unit(0.9, "lines")) +
+                 # Wide enough a gutter that one facet's 1.0 tick clears the next facet's 0.0.
+                 panel.spacing = ggplot2::unit(1.8, "lines")) +
   ggplot2::guides(colour = ggplot2::guide_legend(ncol = 2, byrow = TRUE))
 
 .text_fits(p2, CANVAS_W_WIDE, title = F2_TITLE, subtitle = F2_SUB)
 
+# Each contrast's ranked-universe size, so the axis title's count is readable from the table.
+f2_n <- es_df %>% dplyr::distinct(contrast, n_ranked)
+
 f2_tbl <- FOCUS_ROWS %>%
   dplyr::transmute(pathway_id = as.character(pathway_id), pathway_name, database,
                    contrast = as.character(contrast), nes, pvalue, padj,
-                   set_size, leading_edge_n, panel_key = tag)
+                   set_size, leading_edge_n,
+                   n_ranked = f2_n$n_ranked[match(as.character(contrast), f2_n$contrast)],
+                   panel_key = tag)
 
 # The per-contrast sentence, built from the drawn numbers so the caption holds to the figure.
 f2_sig <- FOCUS_ROWS %>% dplyr::filter(padj < FDR)
@@ -637,11 +651,13 @@ save_overview(
   input     = "03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}",
   how_to_read = paste0(
     "One facet per contrast, and within each facet four overlaid running-enrichment curves, one ",
-    "per gene set, keyed by colour in the shared legend below the panels. The x axis is the rank ",
-    "of every gene in THAT contrast's ranked list, most numerator-shifted on the left, most ",
-    "denominator-shifted on the right, so the facets share an axis length and each carries its own ",
-    "ordering. A curve steps up at each gene belonging to its set and decays between them: an ",
-    "early high peak means the members are packed at the numerator end, and a curve near zero ",
+    "per gene set, keyed by colour in the shared legend below the panels. The x axis is each gene's ",
+    "position in THAT contrast's ranked list as a FRACTION of its length, most numerator-shifted at ",
+    "0, most denominator-shifted at 1, so the facets share an axis and each carries its own ",
+    "ordering; a fraction rather than a rank because ranked universes differ in length between ",
+    "compartments, and the axis title carries these rankings' size. A curve steps up at each gene ",
+    "belonging to its set and decays between them: an early high peak means the members are packed ",
+    "at the numerator end, and a curve near zero ",
     "means they are spread through the list. The y range is pinned to [",
     RSYLIM[1], ", ", RSYLIM[2], "] so every curve stays comparable to every other running-sum ",
     "figure in this GSEA sweep. Inside each facet the NES and adjusted p for that contrast are ",
