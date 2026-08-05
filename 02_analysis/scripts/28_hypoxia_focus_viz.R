@@ -11,7 +11,7 @@
 ##                                 too, so the two panels read against each other row for
 ##                                 row. A gseaResult carries one ranked list, so the three
 ##                                 panels are composed here from three objects.
-##   hypoxia_routes_by_contrast    Four hypoxia-named gene sets, one per database, drawn as
+##   hypoxia_routes_by_contrast    Five hypoxia-named gene sets over four databases, drawn as
 ##                                 running-ES curves faceted by the three focal contrasts
 ##                                 WT_heat / KO_heat / Interaction.
 ##
@@ -27,10 +27,15 @@
 ## statistics alone, so a figure that names its sets owes that provenance line in every
 ## caption it writes, which is what BY_NAME_NOTE and BY_NAME_NOTE_ONE below carry.
 ##
-## The fourth set earns its curve. REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and
-## non-significant in all three contrasts, and is drawn at the same weight with its own
-## colour key, because whether two sets that share a word in their names behave alike is
-## something the panel shows rather than assumes.
+## Every set earns its curve, including the ones that say nothing.
+## REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and non-significant in all three
+## contrasts, and is drawn at the same weight with its own colour key, because whether two sets
+## that share a word in their names behave alike is something the panel shows rather than
+## assumes. GO BP contributes a nested pair for the same reason in the other direction:
+## GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS is the cell-intrinsic subset of
+## GOBP_RESPONSE_TO_OXYGEN_LEVELS, so drawing both asks whether the parent's signal survives
+## when the organism-level branches are dropped. Nesting means the two are not independent
+## evidence, which every caption here states.
 ##
 ## Run from the compartment root:
 ##   Rscript 02_analysis/scripts/28_hypoxia_focus_viz.R
@@ -85,21 +90,36 @@ LINEW  <- FIG_CFG$figures$line_width %||% 1.0
 
 OI     <- FIG_CFG$colors$okabe_ito %||% list()
 
-# One colour per drawn set, from the config's colourblind-safe palette. Four separated hues,
+# One colour per drawn set, from the config's colourblind-safe palette. Five separated hues,
 # so the null-running Reactome curve reads as clearly as the rest.
 SET_COLOR <- c(
   HALLMARK_HYPOXIA                                   = OI$vermillion    %||% "#D55E00",
   GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY = OI$blue          %||% "#0072B2",
   GOBP_RESPONSE_TO_OXYGEN_LEVELS                     = OI$bluish_green  %||% "#009E73",
+  # The nested cell-autonomous subset takes black: it is the only entry in the palette that
+  # is maximally separated from all four hues already in use, where a second green or a
+  # second blue would read as a shading of one of them.
+  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS            = OI$black         %||% "#000000",
   REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA              = OI$reddish_purple %||% "#CC79A7")
 
-# The four sets, selected by name, one per database, in legend order. `tag` is the in-panel
-# short key, and the database name alone identifies a set here, since each comes from its own.
+# The five sets, selected by name, in legend order. `tag` is the in-panel short key.
+#
+# Four databases, five sets: GO BP contributes a NESTED PAIR on purpose. GO:0071453 cellular
+# response to oxygen levels is a descendant of GO:0070482 response to oxygen levels, and every
+# one of the child's 93 genes sits inside the parent's 194, so the two curves are not
+# independent evidence and the caption says so. The pair is here because it asks the
+# cell-autonomy question directly: the parent pools organism-level response-to-hypoxia
+# branches with the cell-intrinsic ones, the child keeps only the latter, and whether the two
+# behave alike is the thing the panel shows rather than assumes. They are drawn adjacent so
+# the pair reads as a pair.
 PICKS <- tibble::tribble(
   ~pathway_id,                                          ~database,   ~tag,
   "HALLMARK_HYPOXIA",                                   "Hallmark",  "Hallmark",
   "GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY", "GO_MF",     "GO MF",
-  "GOBP_RESPONSE_TO_OXYGEN_LEVELS",                     "GO_BP",     "GO BP",
+  # "all" / "cell" rather than a bare "GO BP" and a long qualifier: the pair of tags carries the
+  # nesting into the in-panel key, and the qualified form overran the facet's width.
+  "GOBP_RESPONSE_TO_OXYGEN_LEVELS",                     "GO_BP",     "GO BP all",
+  "GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS",            "GO_BP",     "GO BP cell",
   "REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA",              "Reactome",  "Reactome")
 
 FOCAL <- c("WT_heat", "KO_heat", "Interaction")   # the three contrasts in both figures
@@ -108,7 +128,7 @@ FOCUS_DATABASE <- "Hallmark"
 
 # One colour per contrast for figure 1, three separated hues from the config's
 # colourblind-safe palette. Figure 1 draws one set in three contrasts, so colour there keys
-# the contrast; figure 2 draws four sets per contrast, so colour there keys the set.
+# the contrast; figure 2 draws five sets per contrast, so colour there keys the set.
 CONTRAST_COLOR <- c(
   WT_heat     = OI$vermillion    %||% "#D55E00",
   KO_heat     = OI$blue          %||% "#0072B2",
@@ -121,6 +141,10 @@ RSHEIGHTS <- as.numeric(unlist(FIG_CFG$figures$running_sum_heights %||% c(2.4, 0
 # geometry and one scale.
 F1_W <- 11.0
 F1_H <- 8.5
+
+# Figure 2 keeps the wide canvas its three facets need, and grows in height to carry the tick
+# rows and the metric panel that bring it to the same three-panel idiom as figure 1.
+F2_H <- 9.5
 
 # Stride for the drawn ranked-metric curve in figure 1's bottom panel. The ranked vector is
 # sorted by construction, so the curve is monotone and every 25th rank plus both endpoints
@@ -179,7 +203,7 @@ GS_MANIFEST <- {
 # 3. gseaResult rehydration (the toolkit-plotter input)
 # ============================================================================
 # The contract of 12_gsea_viz.R's as_gsearesult(contrast, database), widened from one whole
-# database to an explicit (pathway_id, database) pick list, since the four sets here live in
+# database to an explicit (pathway_id, database) pick list, since the five sets here live in
 # four databases while one gseaResult carries a single @geneSets list. @result is filled
 # verbatim from master_gsea_table.csv, so the figures carry the master's own NES and padj with
 # no engine drift. @geneList is the ranked vector from the cached DE topTable, @geneSets the
@@ -449,7 +473,7 @@ N_FOCUS_DB_SETS <- dplyr::n_distinct(
 BY_NAME_NOTE <- paste0(
   "These ", nrow(PICKS), " sets were chosen by name, one per database. Their adjusted p and ",
   "|NES| played no part in the choice, and the sweep's general panels select on those ",
-  "statistics alone. This is a named-set read-out; where these four rank among the thousands ",
+  "statistics alone. This is a named-set read-out; where these five rank among the thousands ",
   "of sets they came from is a separate question.")
 
 BY_NAME_NOTE_ONE <- paste0(
@@ -460,8 +484,12 @@ BY_NAME_NOTE_ONE <- paste0(
 
 COMPOSITION_NOTE <- paste0(
   "An enrichment locates a set's gene content in a ranking. Establishing that the program the ",
-  "set's name invokes is present takes a separate composition test. The four names overlap in ",
-  "wording while their gene content differs, which is why each has its own curve.")
+  "set's name invokes is present takes a separate composition test. The five names overlap in ",
+  "wording while their gene content differs, which is why each has its own curve. Two of them ",
+  "are NESTED rather than independent: every gene of GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS ",
+  "sits inside GOBP_RESPONSE_TO_OXYGEN_LEVELS, the child being the cell-intrinsic part of the ",
+  "parent, so agreement between those two curves is partly built in and only their DIFFERENCE ",
+  "carries information.")
 
 COMPOSITION_NOTE_ONE <- paste0(
   "An enrichment locates a set's gene content in a ranking. Establishing that the program the ",
@@ -659,26 +687,68 @@ save_overview(
   config    = FIG_CFG)
 
 # ============================================================================
-# 6. Figure 2: four hypoxia-named sets, running ES faceted by contrast
+# 6. Figure 2: five hypoxia-named sets, running ES faceted by contrast
 # ============================================================================
 # A gseaResult carries one ranked list, so three objects are built, one per contrast, and
-# their running-ES geometry is pooled into a single frame that facets by contrast.
+# their geometry is pooled into frames that facet by contrast.
+#
+# Three frames, one per panel row, so this figure carries the same three panels every other
+# running sum in the project does rather than the enrichment curves alone:
+#   es_df   the running-ES polylines, five sets per contrast
+#   hit_df  the rank each set member occupies, which the tick rows draw
+#   met_df  the ranked statistic, one curve per contrast
 
-es_frames <- list()
+es_frames <- list(); hit_frames <- list(); met_frames <- list(); f2_g <- list()
 for (co in FOCAL) {
   g   <- as_gsearesult(co, PICKS)
+  f2_g[[co]] <- g
   ids <- as.character(PICKS$pathway_id)
   cur <- es_curve(g, ids)
   es_frames[[co]] <- cur %>% dplyr::mutate(contrast = co)
+
+  rk <- g@geneList
+  if (is.unsorted(rev(rk)))
+    stop("figure 2: the ranked vector for '", co, "' is not sorted descending; ",
+         "rank positions and the drawn metric would disagree.")
+  n <- length(rk)
+
+  # Hit ranks from the ranked vector itself, so a tick row and its curve cannot disagree
+  # about which genes are in the set.
+  hit_frames[[co]] <- dplyr::bind_rows(lapply(ids, function(id) {
+    h <- sort(match(g@geneSets[[id]], names(rk)))
+    data.frame(contrast = co, pathway_id = id, rank_fraction = h[!is.na(h)] / n)
+  }))
+
+  # One metric curve per contrast, not per set: the five sets share the contrast's ranking.
+  # Sorted by construction, so the F1_METRIC_EVERY stride plus both endpoints redraws it.
+  keep <- sort(unique(c(1L, n, seq(1L, n, by = F1_METRIC_EVERY))))
+  met_frames[[co]] <- data.frame(contrast = co, rank_fraction = keep / n,
+                                 metric = as.numeric(rk[keep]))
+
   message(sprintf("[28] figure 2 / %s: %d curve vertices retained from %d ranked positions x %d sets",
                   co, nrow(cur), cur$n_ranked[1], length(ids)))
 }
 
-es_df <- dplyr::bind_rows(es_frames) %>%
-  dplyr::mutate(
-    contrast_lab = factor(contrast_label(contrast, short = TRUE),
-                          levels = contrast_label(FOCAL, short = TRUE)),
-    set_label    = factor(unname(SET_LABEL[pathway_id]), levels = unname(SET_LABEL)))
+# One factor recipe for all three frames, so the facet columns and the set colours line up
+# row to row without each panel restating the levels.
+f2_fac <- function(d) dplyr::mutate(
+  d,
+  contrast_lab = factor(contrast_label(.data$contrast, short = TRUE),
+                        levels = contrast_label(FOCAL, short = TRUE)),
+  set_label    = if ("pathway_id" %in% names(d))
+                   factor(unname(SET_LABEL[as.character(.data$pathway_id)]),
+                          levels = unname(SET_LABEL)) else NA)
+
+es_df  <- f2_fac(dplyr::bind_rows(es_frames))
+hit_df <- f2_fac(dplyr::bind_rows(hit_frames))
+met_df <- f2_fac(dplyr::bind_rows(met_frames))
+
+# The tick rows read top-down in PICKS order, matching the legend, so a set's row and its
+# legend key are found in the same place. y increases upward, hence the reversal.
+hit_df$row <- length(SET_LABEL) - as.integer(hit_df$set_label) + 1L
+# Row labels are the short in-panel keys, not the wrapped legend names: the legend spells
+# those out once, and five wrapped set names would crowd the ticks they label.
+F2_ROWLAB <- PICKS$tag
 
 # Every contrast's own ranked-universe size, so the axis states what the fraction hides. One
 # value per distinct length, and the three contrasts here rank the same genes.
@@ -686,8 +756,16 @@ N_RANKED <- sort(unique(es_df$n_ranked))
 
 # Per-facet statistics block. A shared legend carries one label per set, so the per-contrast
 # NES and adjusted p are drawn inside each facet in the set's own colour, in the legend's
-# top-to-bottom order, keyed by database name. They sit in the lower band of the panel, which
-# the ES range of all twelve curves stays clear of.
+# top-to-bottom order, keyed by the short set tag. They sit in the lower band of the panel,
+# which the ES range of every drawn curve stays clear of.
+#
+# The block's rows are spaced to FIT nrow(PICKS) between two fixed fractions of the pinned y
+# range rather than at a constant step, so adding a set re-spaces the block instead of pushing
+# its last row off the bottom of the panel.
+F2_STAT_TOP  <- 0.42
+F2_STAT_BOT  <- 0.95
+F2_STAT_STEP <- (F2_STAT_BOT - F2_STAT_TOP) / max(nrow(PICKS) - 1L, 1L)
+
 stat_rows <- FOCUS_ROWS %>%
   dplyr::mutate(
     contrast_lab = factor(contrast_label(as.character(contrast), short = TRUE),
@@ -697,7 +775,7 @@ stat_rows <- FOCUS_ROWS %>%
     row          = as.integer(pathway_id),
     label        = sprintf("%s   NES %+.2f,  FDR %s", tag, nes, fmt_p(padj, digits = 1)),
     x            = 0.03,
-    y            = RSYLIM[1] * (0.42 + 0.155 * (row - 1L)))
+    y            = RSYLIM[1] * (F2_STAT_TOP + F2_STAT_STEP * (row - 1L)))
 
 es_lo <- min(es_df$running_score)
 if (min(stat_rows$y) < RSYLIM[1] || max(stat_rows$y) > es_lo)
@@ -705,34 +783,83 @@ if (min(stat_rows$y) < RSYLIM[1] || max(stat_rows$y) > es_lo)
                   min(stat_rows$y), max(stat_rows$y), es_lo))
 
 # Held in variables so the strings that are drawn are the strings that get measured.
-F2_TITLE <- "Running enrichment of four hypoxia-named sets by contrast"
+F2_TITLE <- "Running enrichment of five hypoxia-named sets by contrast"
 F2_SUB   <- SIGN_NOTE   # the sign convention, and nothing else; the rest is in the caption
 
-p2 <- ggplot(es_df, aes(x = rank_fraction, y = running_score, colour = set_label)) +
+# Three faceted rows rather than a 3 x 3 grid of single panels: each row keeps ONE facet
+# specification over the same three contrasts, so patchwork aligns the columns and the facet
+# strip is drawn once, at the top.
+#
+# project_theme() is applied INSIDE each row, ahead of that row's own chrome, never through the
+# trailing `&`. It is a COMPLETE theme, so a `&` at the end of the chain would reset the blanked
+# x text and strip text each row sets and silently undo the layout. Only additive pieces — the
+# facet, the shared x scale, the set palette, a partial theme — travel on `&`.
+F2_GUTTER <- ggplot2::unit(1.8, "lines")   # one facet's 1.0 tick clears the next facet's 0.0
+f2_chrome <- function() ggplot2::theme(panel.spacing = F2_GUTTER)
+
+# The set palette, declared once and attached PER ROW rather than through the trailing `&`.
+# Two rows map colour, and anything colour-related applied with `&` gives BOTH a guide, so the
+# collected legend comes back twice — once with a line key and once with a tick key. That holds
+# for guides() as much as for the scale: a plot-level guides() call overrides a scale's own
+# guide = "none". So the curves' row carries the scale AND the guide spec, and the tick row
+# takes the same palette with the guide switched off both ways.
+f2_scale <- function(guide) scale_colour_manual(
+  values = unname(SET_COLOR[PICKS$pathway_id]), name = NULL, drop = FALSE, guide = guide)
+
+# --- row 1: the running enrichment curves, with the per-facet statistics block --------------
+f2_p_es <- ggplot(es_df, aes(x = rank_fraction, y = running_score, colour = set_label)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
   geom_line(linewidth = LINEW) +
   geom_text(data = stat_rows,
             aes(x = x, y = y, label = label, colour = set_label),
             hjust = 0, vjust = 0.5, size = LBLSZ, fontface = "bold",
             show.legend = FALSE, inherit.aes = FALSE) +
-  scale_colour_manual(values = unname(SET_COLOR[PICKS$pathway_id]), name = NULL,
-                      drop = FALSE) +
-  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2), expand = c(0, 0)) +
   coord_cartesian(ylim = RSYLIM) +
-  facet_wrap(~ contrast_lab, nrow = 1) +
-  labs(
-    title    = F2_TITLE,
-    subtitle = F2_SUB,
-    x        = rank_fraction_lab(
-      N_RANKED, of = sprintf("each contrast's ordered %s-statistic", RANK_METRIC)),
-    y        = "Running enrichment score") +
-  project_theme(config = FIG_CFG) +
-  ggplot2::theme(legend.position = "bottom",
-                 legend.direction = "horizontal",
-                 # Wide enough a gutter that one facet's 1.0 tick clears the next facet's 0.0.
-                 panel.spacing = ggplot2::unit(1.8, "lines")) +
-  ggplot2::guides(colour = ggplot2::guide_legend(ncol = 2, byrow = TRUE))
+  f2_scale("legend") +
+  ggplot2::guides(colour = ggplot2::guide_legend(ncol = 2, byrow = TRUE)) +
+  labs(title = F2_TITLE, subtitle = F2_SUB, x = NULL, y = "Running enrichment score") +
+  project_theme(config = FIG_CFG) + f2_chrome() +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
-.text_fits(p2, CANVAS_W_WIDE, title = F2_TITLE, subtitle = F2_SUB)
+# --- row 2: one named tick row per set, inside each contrast's facet ------------------------
+# Thin ticks: five rows inside a facet a third of the canvas wide is well over three times the tick
+# density of a full-width running sum, and the two largest sets fill their row at 0.4pt.
+f2_p_rug <- ggplot(hit_df, aes(x = rank_fraction, colour = set_label)) +
+  geom_linerange(aes(ymin = row - 0.92, ymax = row - 0.08), linewidth = 0.2) +
+  scale_y_continuous(breaks = seq_along(F2_ROWLAB) - 0.5, labels = rev(F2_ROWLAB),
+                     limits = c(0, length(F2_ROWLAB)), expand = c(0, 0)) +
+  f2_scale("none") +
+  ggplot2::guides(colour = "none") +
+  labs(x = NULL, y = NULL) +
+  project_theme(config = FIG_CFG) + f2_chrome() +
+  theme(panel.grid = element_blank(), axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(), axis.title.y = element_blank(),
+        strip.text = element_blank())
+
+# --- row 3: the ranked statistic each curve above was computed on ---------------------------
+# One curve per facet and no colour mapping: the five sets in a facet share this ranking, so
+# colouring it by set would imply five rankings where there is one.
+f2_p_met <- ggplot(met_df, aes(x = rank_fraction, y = metric)) +
+  geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
+  geom_line(linewidth = LINEW * 0.7, colour = "grey40") +
+  labs(y = metric_axis_lab(FIG_CFG),
+       x = rank_fraction_lab(
+         N_RANKED, of = sprintf("each contrast's ordered %s-statistic", RANK_METRIC))) +
+  project_theme(config = FIG_CFG) + f2_chrome() +
+  theme(strip.text = element_blank())
+
+p2 <- (f2_p_es / f2_p_rug / f2_p_met) +
+  patchwork::plot_layout(heights = RSHEIGHTS, guides = "collect") &
+  facet_wrap(~ contrast_lab, nrow = 1) &
+  scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2), expand = c(0, 0))
+
+# The collected guide is placed by the PATCHWORK's theme, not by the rows'. Setting it on the
+# rows leaves it at the default right, which takes a third of the canvas off the facets and
+# clips the in-panel statistics block, so it is set here.
+p2 <- p2 + patchwork::plot_annotation(
+  theme = ggplot2::theme(legend.position = "bottom", legend.direction = "horizontal"))
+
+.text_fits(p2, CANVAS_W_WIDE, title = F2_TITLE, subtitle = F2_SUB, canvas_h = F2_H)
 
 # Each contrast's ranked-universe size, so the axis title's count is readable from the table.
 f2_n <- es_df %>% dplyr::distinct(contrast, n_ranked)
@@ -753,42 +880,77 @@ f2_line <- function(co) {
                 collapse = ", "))
 }
 
+# The nested pair, verified against the gene sets as drawn rather than asserted from GO. If a
+# reference build ever breaks the containment, the caption's "every one of its genes" would
+# become false silently, so it is a stop rather than a warning.
+F2_PARENT <- "GOBP_RESPONSE_TO_OXYGEN_LEVELS"
+F2_CHILD  <- "GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS"
+f2_nest_child  <- length(f2_g[["WT_heat"]]@geneSets[[F2_CHILD]])
+f2_nest_parent <- length(f2_g[["WT_heat"]]@geneSets[[F2_PARENT]])
+f2_nest_shared <- length(intersect(f2_g[["WT_heat"]]@geneSets[[F2_CHILD]],
+                                   f2_g[["WT_heat"]]@geneSets[[F2_PARENT]]))
+if (f2_nest_shared != f2_nest_child)
+  stop("figure 2: ", F2_CHILD, " is not contained in ", F2_PARENT, " in this ranked universe (",
+       f2_nest_shared, " of ", f2_nest_child, " shared); the nesting statement in the caption ",
+       "would be false.")
+
+# How many sets move the same way in BOTH per-genotype heat contrasts, counted rather than
+# asserted, so adding a set cannot leave the sentence behind.
+f2_both <- FOCUS_ROWS %>%
+  dplyr::filter(contrast %in% c("WT_heat", "KO_heat")) %>%
+  dplyr::group_by(tag) %>%
+  dplyr::summarise(both = all(padj < FDR & nes > 0), .groups = "drop")
+f2_child_row <- function(co) FOCUS_ROWS %>%
+  dplyr::filter(pathway_id == F2_CHILD, contrast == co)
+
 save_overview(
   plot      = p2,
   stage     = STAGE,
   name      = "hypoxia_routes_by_contrast",
   table     = f2_tbl,
   finding   = sprintf(
-    "Running-enrichment curves for four hypoxia-named gene sets, one per database, across the three focal contrasts. %s. %s. %s. Three of the four sets carry a positive NES and reach FDR < %.2g in both per-genotype heat contrasts, and the fourth, REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no significance in any of the three; %d of the 12 (set x contrast) cells reach FDR < %.2g. Every Interaction NES is non-significant, which reads as no detectable cGAS-dependence at n=5; the 1-df interaction term is the least-powered contrast in this design. All four sets were chosen by name, so the panel reports these four curves and leaves ranking to the general panels.",
+    "Running-enrichment curves for five hypoxia-named gene sets over four databases, across the three focal contrasts. %s. %s. %s. %d of the %d sets carry a positive NES and reach FDR < %.2g in both per-genotype heat contrasts; %d of the %d (set x contrast) cells reach FDR < %.2g. REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA carries a negative NES and no significance in any of the three, so shared wording between set names is a weak guide to shared behaviour. The two GO BP sets are NESTED, not independent: all %d genes of GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS present in this ranking sit inside the %d of GOBP_RESPONSE_TO_OXYGEN_LEVELS, the child being the cell-intrinsic part of a parent that also pools organism-level response-to-hypoxia branches. The parent clears FDR in both heat contrasts while the child clears it in WT (adjusted p %s) and not in cGAS-KO (adjusted p %s), so the cell-intrinsic half is the weaker half and the parent's signal is not simply the cell-intrinsic one. Only the DIFFERENCE between those two curves is informative; their agreement is partly built in. Every Interaction NES is non-significant, which reads as no detectable cGAS-dependence at n=5; the 1-df interaction term is the least-powered contrast in this design. All five sets were chosen by name, so the panel reports these five curves and leaves ranking to the general panels.",
     f2_line("WT_heat"), f2_line("KO_heat"), f2_line("Interaction"),
-    FDR, nrow(f2_sig), FDR),
+    sum(f2_both$both), nrow(PICKS), FDR,
+    nrow(f2_sig), nrow(PICKS) * length(FOCAL), FDR,
+    f2_nest_child, f2_nest_parent,
+    fmt_p(f2_child_row("WT_heat")$padj), fmt_p(f2_child_row("KO_heat")$padj)),
   script    = SCRIPT,
-  fn        = "geom_line / facet_wrap",
+  fn        = "top-level (f2_p_es / f2_p_rug / f2_p_met)",
   config_kv = CFG_KV,
   input     = "03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}",
   how_to_read = paste0(
-    "One facet per contrast, and inside each facet four overlaid running-enrichment curves, one ",
-    "per gene set, keyed by colour in the shared legend below the panels. X is each gene's position ",
-    "in that facet's own ranked list as a fraction of its length, most numerator-shifted at 0 and ",
-    "most denominator-shifted at 1, so the facets share an axis while each keeps its own ordering. ",
-    "The fraction carries across ranked universes of different length, and the axis title carries ",
-    "these rankings' size.",
-    "\n\nA curve steps up at each gene belonging to its set and decays between them, so an early ",
-    "high peak places the members at the numerator end and a curve near zero spreads them through ",
-    "the list. The y range is pinned to [", RSYLIM[1], ", ", RSYLIM[2], "] so every curve here ",
-    "compares with every other running sum in this GSEA sweep. Inside each facet the NES and ",
-    "adjusted p for that contrast are printed in each set's own colour, in the legend's ",
-    "top-to-bottom order and keyed by database name, each of the four sets coming from a different ",
-    "database. Four curves per facet stay legible with the member ticks and the ranked-metric ",
-    "panel left off; the companion three-panel figure draws them for one set. ", SIGN_NOTE,
+    "Three stacked panel rows over one facet per contrast, in the same running-sum proportions ",
+    "every other panel of this sweep uses. X is each gene's position in that facet's own ranked ",
+    "list as a fraction of its length, most numerator-shifted at 0 and most denominator-shifted ",
+    "at 1, so the facets share an axis while each keeps its own ordering. The fraction carries ",
+    "across ranked universes of different length, and the axis title carries these rankings' size.",
+    "\n\nTop row: five overlaid running-enrichment curves per facet, one per gene set, keyed by ",
+    "colour in the shared legend below. A curve steps up at each gene belonging to its set and ",
+    "decays between them, so an early high peak places the members at the numerator end and a ",
+    "curve near zero spreads them through the list. The y range is pinned to [", RSYLIM[1], ", ",
+    RSYLIM[2], "] so every curve here compares with every other running sum in this GSEA sweep. ",
+    "Inside each facet the NES and adjusted p for that contrast are printed in each set's own ",
+    "colour, in the legend's top-to-bottom order and keyed by the short set tag. Four databases ",
+    "supply the five sets, so the tag names the set rather than its source: GO BP supplies two, ",
+    "the second of them the nested cell-intrinsic subset of the first. Middle row: one tick per ",
+    "set member at that member's rank, in its own labelled row per set, so where a contrast ",
+    "places a set's genes can be read row against row and set against set. Bottom row: the ",
+    "ranked ", RANK_METRIC, "-statistic each curve above was computed on, one grey curve per ",
+    "facet because the five sets in a facet share that one ranking; it is drawn at every ",
+    F1_METRIC_EVERY,
+    "th rank plus both endpoints, which redraws a sorted vector exactly at this size. ", SIGN_NOTE,
     "\n\nThe Interaction facet is the cGAS-dependence read-out. A positive significant Interaction ",
     "NES is consistent with cGAS-dependent induction; a non-significant one reads as no detectable ",
     "cGAS-dependence at n=5. ", BY_NAME_NOTE,
-    "\n\nRead the fourth curve as closely as the other three. Three of these hypoxia-named sets ",
-    "carry a positive NES in both heat contrasts and the Reactome set carries a negative one, so ",
-    "shared wording in two set names leaves shared behaviour an open question. ",
+    "\n\nRead the flat curves as closely as the moving ones, and read the nested pair as a pair. ",
+    "Three of these hypoxia-named sets carry a positive NES in both heat contrasts while the ",
+    "Reactome set carries a negative one, so shared wording in two set names leaves shared ",
+    "behaviour an open question. The GO BP pair asks the reverse question, whether a set's ",
+    "cell-intrinsic subset behaves like the whole: the black curve is contained in the green one ",
+    "gene for gene, so the two agreeing says little and the two parting says something. ",
     COMPOSITION_NOTE, " ", TIER_NOTE),
-  config    = FIG_CFG, wide = TRUE)
+  config    = FIG_CFG, width = CANVAS_W_WIDE, height = F2_H)
 
 # ============================================================================
 # 7. Final asserts

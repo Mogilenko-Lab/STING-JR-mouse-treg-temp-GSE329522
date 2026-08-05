@@ -1144,71 +1144,99 @@ gsea_pooled_overview_Interaction.png.
 
 ## figures/_overview/hypoxia_routes_by_contrast.png
 
-Running-enrichment curves for four hypoxia-named gene sets, one per
-database, across the three focal contrasts. WT: heat (39 vs 37 °C):
+Running-enrichment curves for five hypoxia-named gene sets over four
+databases, across the three focal contrasts. WT: heat (39 vs 37 °C):
 Hallmark NES +1.92 (padj 5.32e-06), GO MF NES +1.75 (padj 0.0374), GO
-BP NES +1.73 (padj 5.96e-04), Reactome NES -0.91 (padj 0.723).
-cGAS-KO: heat (39 vs 37 °C): Hallmark NES +1.96 (padj 3.01e-06), GO
-MF NES +1.77 (padj 0.04), GO BP NES +1.56 (padj 0.00991), Reactome
-NES -0.92 (padj 0.708). Heat × genotype interaction (cGAS-dependence
-of the heat response): Hallmark NES -1.27 (padj 0.171), GO MF NES
-+0.67 (padj 0.987), GO BP NES +1.34 (padj 0.306), Reactome NES -0.78
-(padj 0.937). Three of the four sets carry a positive NES and reach
-FDR < 0.05 in both per-genotype heat contrasts, and the fourth,
-REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA, carries a negative NES and no
-significance in any of the three; 6 of the 12 (set x contrast) cells
-reach FDR < 0.05. Every Interaction NES is non-significant, which
-reads as no detectable cGAS-dependence at n=5; the 1-df interaction
-term is the least-powered contrast in this design. All four sets were
-chosen by name, so the panel reports these four curves and leaves
-ranking to the general panels.
+BP all NES +1.73 (padj 5.96e-04), GO BP cell NES +1.58 (padj 0.0234),
+Reactome NES -0.91 (padj 0.723). cGAS-KO: heat (39 vs 37 °C):
+Hallmark NES +1.96 (padj 3.01e-06), GO MF NES +1.77 (padj 0.04), GO
+BP all NES +1.56 (padj 0.00991), GO BP cell NES +1.38 (padj 0.119),
+Reactome NES -0.92 (padj 0.708). Heat × genotype interaction
+(cGAS-dependence of the heat response): Hallmark NES -1.27 (padj
+0.171), GO MF NES +0.67 (padj 0.987), GO BP all NES +1.34 (padj
+0.306), GO BP cell NES +1.07 (padj 0.8), Reactome NES -0.78 (padj
+0.937). 3 of the 5 sets carry a positive NES and reach FDR < 0.05 in
+both per-genotype heat contrasts; 7 of the 15 (set x contrast) cells
+reach FDR < 0.05. REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA carries a
+negative NES and no significance in any of the three, so shared
+wording between set names is a weak guide to shared behaviour. The
+two GO BP sets are NESTED, not independent: all 86 genes of
+GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS present in this ranking sit
+inside the 172 of GOBP_RESPONSE_TO_OXYGEN_LEVELS, the child being the
+cell-intrinsic part of a parent that also pools organism-level
+response-to-hypoxia branches. The parent clears FDR in both heat
+contrasts while the child clears it in WT (adjusted p 0.0234) and not
+in cGAS-KO (adjusted p 0.119), so the cell-intrinsic half is the
+weaker half and the parent's signal is not simply the cell-intrinsic
+one. Only the DIFFERENCE between those two curves is informative;
+their agreement is partly built in. Every Interaction NES is
+non-significant, which reads as no detectable cGAS-dependence at n=5;
+the 1-df interaction term is the least-powered contrast in this
+design. All five sets were chosen by name, so the panel reports these
+five curves and leaves ranking to the general panels.
 
-**How to read:** One facet per contrast, and inside each facet four overlaid
-running-enrichment curves, one per gene set, keyed by colour in the
-shared legend below the panels. X is each gene's position in that
-facet's own ranked list as a fraction of its length, most
-numerator-shifted at 0 and most denominator-shifted at 1, so the
-facets share an axis while each keeps its own ordering. The fraction
-carries across ranked universes of different length, and the axis
-title carries these rankings' size.
+**How to read:** Three stacked panel rows over one facet per contrast, in the same
+running-sum proportions every other panel of this sweep uses. X is
+each gene's position in that facet's own ranked list as a fraction of
+its length, most numerator-shifted at 0 and most denominator-shifted
+at 1, so the facets share an axis while each keeps its own ordering.
+The fraction carries across ranked universes of different length, and
+the axis title carries these rankings' size.
 
-A curve steps up at each gene belonging to its set and decays between
-them, so an early high peak places the members at the numerator end
-and a curve near zero spreads them through the list. The y range is
-pinned to [-1, 1] so every curve here compares with every other
-running sum in this GSEA sweep. Inside each facet the NES and
-adjusted p for that contrast are printed in each set's own colour, in
-the legend's top-to-bottom order and keyed by database name, each of
-the four sets coming from a different database. Four curves per facet
-stay legible with the member ticks and the ranked-metric panel left
-off; the companion three-panel figure draws them for one set. NES > 0
-= enriched in the contrast numerator (39 °C or WT). NES < 0 =
+Top row: five overlaid running-enrichment curves per facet, one per
+gene set, keyed by colour in the shared legend below. A curve steps
+up at each gene belonging to its set and decays between them, so an
+early high peak places the members at the numerator end and a curve
+near zero spreads them through the list. The y range is pinned to
+[-1, 1] so every curve here compares with every other running sum in
+this GSEA sweep. Inside each facet the NES and adjusted p for that
+contrast are printed in each set's own colour, in the legend's
+top-to-bottom order and keyed by the short set tag. Four databases
+supply the five sets, so the tag names the set rather than its
+source: GO BP supplies two, the second of them the nested
+cell-intrinsic subset of the first. Middle row: one tick per set
+member at that member's rank, in its own labelled row per set, so
+where a contrast places a set's genes can be read row against row and
+set against set. Bottom row: the ranked t-statistic each curve above
+was computed on, one grey curve per facet because the five sets in a
+facet share that one ranking; it is drawn at every 25th rank plus
+both endpoints, which redraws a sorted vector exactly at this size.
+NES > 0 = enriched in the contrast numerator (39 °C or WT). NES < 0 =
 enriched in the denominator (37 °C or cGAS-KO).
 
 The Interaction facet is the cGAS-dependence read-out. A positive
 significant Interaction NES is consistent with cGAS-dependent
 induction; a non-significant one reads as no detectable
-cGAS-dependence at n=5. These 4 sets were chosen by name, one per
+cGAS-dependence at n=5. These 5 sets were chosen by name, one per
 database. Their adjusted p and |NES| played no part in the choice,
 and the sweep's general panels select on those statistics alone. This
-is a named-set read-out; where these four rank among the thousands of
+is a named-set read-out; where these five rank among the thousands of
 sets they came from is a separate question.
 
-Read the fourth curve as closely as the other three. Three of these
-hypoxia-named sets carry a positive NES in both heat contrasts and
-the Reactome set carries a negative one, so shared wording in two set
-names leaves shared behaviour an open question. An enrichment locates
-a set's gene content in a ranking. Establishing that the program the
-set's name invokes is present takes a separate composition test. The
-four names overlap in wording while their gene content differs, which
-is why each has its own curve. Claim tier: L3 (DE and enrichment
-statistics). Sample-to-condition mapping confirmed against the
-owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
-the label-blind marker call.
+Read the flat curves as closely as the moving ones, and read the
+nested pair as a pair. Three of these hypoxia-named sets carry a
+positive NES in both heat contrasts while the Reactome set carries a
+negative one, so shared wording in two set names leaves shared
+behaviour an open question. The GO BP pair asks the reverse question,
+whether a set's cell-intrinsic subset behaves like the whole: the
+black curve is contained in the green one gene for gene, so the two
+agreeing says little and the two parting says something. An
+enrichment locates a set's gene content in a ranking. Establishing
+that the program the set's name invokes is present takes a separate
+composition test. The five names overlap in wording while their gene
+content differs, which is why each has its own curve. Two of them are
+NESTED rather than independent: every gene of
+GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS sits inside
+GOBP_RESPONSE_TO_OXYGEN_LEVELS, the child being the cell-intrinsic
+part of the parent, so agreement between those two curves is partly
+built in and only their DIFFERENCE carries information. Claim tier:
+L3 (DE and enrichment statistics). Sample-to-condition mapping
+confirmed against the owner's sample sheet (2026-07-22): 20 of 20
+libraries concordant with the label-blind marker call.
 
 | Script | Function | Config | Input |
 |---|---|---|---|
-| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `geom_line / facet_wrap` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
+| `02_analysis/scripts/28_hypoxia_focus_viz.R` | `top-level (f2_p_es / f2_p_rug / f2_p_met)` | `thresholds.gsea_fdr=0.05; figures.running_sum_ylim=[-1.0,1.0]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=5; figures.top_pathways=20; colors.okabe_ito` | `03_results/master/master_gsea_table.csv + 03_results/objects/{02_de_results.rds, geneset_msigdb_{Hallmark,GO_MF,GO_BP,Reactome}.rds}` |
 
 ## figures/_overview/runsum_HALLMARK_HYPOXIA.png
 
