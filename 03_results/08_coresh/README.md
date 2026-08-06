@@ -1,122 +1,93 @@
-# CoReSh compendium ranking + derived-set GSEA
+# 08_coresh — Where else these gene programs co-move
 
-This folder asks a specific question about the GSE329522 iTreg signatures: **where else,
-across the public mouse transcriptome, do these same gene programs co-move?** CoReSh
-(co-regulation search) sweeps each project signature across a compendium of ~85 mouse GEO
-datasets and scores how strongly the signature's genes co-vary within each one (a
-PCA-inspired `pctVar`). The top-ranked public datasets are then turned into data-driven
-gene sets and run through the same GSEA machinery as every curated collection, so a reader
-can place them side by side with GO / Hallmark / KEGG / Reactome.
+The gene-set sweep asks whether curated programs enrich in this contrast. This stage asks a
+different question of the same signatures: **across the public mouse transcriptome, in which
+datasets do these genes co-vary?** CoReSh sweeps each query across a compendium of roughly 85
+public mouse GEO datasets and scores how tightly the query's genes move together within each one
+(`pctVar`, a principal-component-inspired co-regulation score). The top-ranked datasets are then
+projected back into gene-level loadings to give data-driven modules, which run through the same
+enrichment machinery every curated collection does.
 
-Sample mapping for the mouse data is owner-confirmed (GSE329522, 2×2 genotype × temperature
-iTreg), so nothing here carries a provisional-label caveat.
+Four queries seed the search, taken from the signature-derivation step: `WT_heat_up` and
+`Interaction_up`, each at both stringency gates (`fdr_logfc`, `fdr_only`). The fourteen modules
+they produce are named `CORESH_<query>_<GSE>` and are unique to this analysis — all fourteen ids
+are disjoint from every curated collection id in the master table, which is why they live here
+rather than in the standard sweep.
 
-## What was queried
-
-Four project signatures seed the search, exported from the signature-derivation step:
-
-- **`WT_heat_up`** — genes up in wild-type iTregs at 39 °C vs 37 °C (a generic thermal
-  program), at two stringencies (`fdr_logfc`, `fdr_only`).
-- **`Interaction_up`** — genes whose 39-vs-37 °C induction is greater in wild-type than in
-  cGAS-KO (the cGAS-dependent, genotype×temperature term), at the same two stringencies.
-
-## Why the results live here and not with the GSEA databases
-
-The sets scored in this folder (`database = CoReSh_derived`) are **data-driven
-co-regulation modules** mined from public datasets, named `CORESH_<query>_<GSE>`. They exist
-in no curated collection, so they are unique to this analysis — verified programmatically:
-all 14 derived-set ids are disjoint from every GSEA-collection id in the master table. That
-is why they populate this folder rather than the standard GSEA sweep.
-
-## What the recovered datasets actually are
-
-Because the compendium stores only variance structure (accession + platform, no titles),
-each recovered dataset's identity was researched separately and frozen in
+**What the recovered datasets are.** The compendium stores variance structure and accessions,
+with no titles, so each recovered dataset's identity was researched separately and frozen in
 `tables/_overview/coresh_dataset_annotation.{csv,json}` — title, organism, tissue, the
-perturbation compared, and neutral context flags (interferon / viral / cGAS-STING /
-thermal), each with a source URL and PubMed id. Figure labels carry this identity, so a
-point reads as `GSE89069 · viral infection · embryonic brain`, not a bare accession. The
-`WT_heat_up` query surfaced a broad stress / metabolic / developmental / tumor mix; the
-`Interaction_up` query surfaced viral-infection and nucleic-acid-sensing datasets. The
-annotation is descriptive only and never feeds the enrichment statistics.
+perturbation compared, neutral context flags for interferon, viral, cGAS-STING and thermal
+biology, each with a source URL and a PubMed id. Figure labels carry that identity, so a point
+reads `GSE89069 · viral infection · embryonic brain`. The `WT_heat_up` query surfaced a broad
+stress, metabolic, developmental and tumour mix; the `Interaction_up` query surfaced
+viral-infection and nucleic-acid-sensing datasets. The annotation is descriptive and enters no
+statistic.
+
+A derived module is a co-regulation neighbourhood mined from one public dataset's variance
+structure. It is named for how it was made.
+
+**Access.** The search step reads the ~20 GB mmu CoReSh compendium (syn66227307), mounted
+read-only from the shared reference cache.
 
 ---
 
-## figures/_overview/coresh_pctvar_overview.png
+## Figures
 
-Top public mouse GEO datasets co-regulating each project signature
-query, ranked by CoReSh pctVar.
+### `figures/_overview/coresh_pctvar_overview.png`
 
-**How to read:** Each bar = one public GEO dataset. Bar length = pctVar (% of that
-dataset's variance explained by the query), a PCA-inspired
-co-regulation score (higher = stronger co-regulation); label = GSE,
-mapped query size k, rank. Facets separate the project signature
-queries. Claim tier: L3-DE (compendium co-regulation score). pctVar
->= 0 (variance fraction, unsigned).
+**Which public datasets carry each query's co-regulation.**
+Horizontal bars, one per public GEO dataset, faceted by query. x, `pctVar`, the share of that
+dataset's variance the query genes jointly explain — a co-regulation score, unsigned and always
+positive, higher meaning tighter co-movement. The row label gives the accession, the mapped
+query size and the within-query rank. `pctVar` is normalised by how many query genes the
+platform measures, so it compares within a query.
+*Source* `tables/coresh_ranked.csv` · `02_analysis/scripts/15_coresh_viz.R`.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/15_coresh_viz.R` | `create_pctvar_overview` | `coresh.top_n_hits=5; figures.top_pathways=20; thresholds.gsea_fdr=0.05` | `03_results/objects/coresh_ranked.rds` |
+### `figures/_overview/coresh_nes_dotplot.png`
 
-## figures/_overview/coresh_nes_dotplot.png
+**The derived modules scored back across all seven contrasts.**
+One circle per module × contrast. Rows are the fourteen derived sets, labelled with the
+recovered dataset's researched identity (accession · context · tissue) and grouped into
+left-side facet bands by the query that seeded them; within a band, rows order by median NES.
+Columns are the seven contrasts. Fill gives NES, orange positive toward the numerator and blue
+negative, clamped to ±3.5; size gives −log10(adjusted p); a black outline marks FDR < 0.05.
+*Source* `../master/master_gsea_table.csv` rows where `database = CoReSh_derived` ·
+`02_analysis/scripts/15_coresh_viz.R`.
 
-Cross-contrast enrichment of CoReSh-derived co-regulation sets (NES
-fill, -log10(padj) size, FDR outline); rows grouped by seeding query
-origin; labels carry each recovered dataset's identity.
+### `figures/by_contrast/<contrast>/CoReSh_derived/` — the four-panel battery
 
-**How to read:** Each circle = one CoReSh-derived gene set (row) in one contrast
-(column). Row label = the recovered public GEO dataset (GSE · context
-· tissue, from the dataset annotation). Fill = NES: orange positive
-(up in numerator), blue negative; clamped at ±3.5. Size =
--log10(padj). Black outline = FDR < 0.05. Rows are grouped into
-left-side facet bands by the project signature query that seeded each
-set; within a band, sets are ordered by median NES (highest at top).
-Claim tier: L3-DE (fgsea, BH-FDR).
+Every contrast gets the same four panels the curated databases get in
+[`../06_gsea/`](../06_gsea/), so the derived sets read at parity with them. Each panel is a
+`.pdf` and `.png` pair built from a `gseaResult` reconstructed viz-side: NES and adjusted p come
+verbatim from `master_gsea_table.csv`, the ranked list is the contrast's moderated-t vector, and
+the running score is recomputed deterministically, so a curve and its tabulated NES agree.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/15_coresh_viz.R` | `create_nes_dotplot` | `figures.top_pathways=20; figures.nes_cap=3.5; thresholds.gsea_fdr=0.05` | `03_results/master/master_gsea_table.csv rows database=CoReSh_derived` |
+- **`dotplot.png`** — x, GeneRatio (leading-edge fraction); size, −log10(adjusted p); fill, NES;
+  black outline, FDR < 0.05.
+- **`facet.png`** — the same dotplot split into an NES > 0 block and an NES < 0 block.
+- **`barplot.png`** — NES bars for the FDR-significant sets, top twenty by |NES|.
+- **`running_sum.png`** — three stacked panels for the top five by |NES|: the running enrichment
+  score with y pinned to [−1, 1], one tick row per set at each member's rank, and the ranked
+  moderated t beneath.
 
-## figures/by_contrast/&lt;contrast&gt;/CoReSh_derived/ — the four-panel battery
+Row and legend labels carry the recovered dataset's identity. NES > 0 places the module's genes
+toward the contrast numerator; on the interaction, positive means stronger induction in
+wild-type.
+*Source* `tables/by_contrast/<contrast>/coresh_gsea.csv` ·
+`02_analysis/scripts/15_coresh_viz.R`.
 
-For each of the seven contrasts, the `CoReSh_derived` sets get the same four panels every
-curated database gets in the standard GSEA sweep, so CoReSh reads at parity with them. Each
-panel is a vector PDF + raster PNG built from a `gseaResult` reconstructed viz-side: NES and
-padj are taken verbatim from `master_gsea_table.csv`, the ranked list is the contrast's
-limma-trend t-statistic vector, and the running score is computed deterministically (no
-permutation re-run), so the curves never disagree with the tabulated NES.
-
-- **`dotplot.png`** — every derived set, x = GeneRatio (leading-edge fraction), point size =
-  −log10(q), fill = NES (orange up / blue down), black outline = FDR < 0.05.
-- **`facet.png`** — the same dotplot split into Up (NES > 0) and Down (NES < 0) panels.
-- **`barplot.png`** — NES bars for the FDR-significant sets only, top 20 by |NES|.
-- **`running_sum.png`** — a real three-panel GSEA enrichment plot for the top 5 sets by
-  |NES|: running enrichment score (top), gene-hit ticks at each set member's rank (middle,
-  one colour per set), and the ranked t-statistic (bottom); ES y-range pinned to [−1, 1] so
-  curves stay comparable across contrasts.
-
-**How to read:** Row / legend label = the recovered public GEO dataset
-(`GSE · context · tissue`). NES > 0 = the set is enriched among genes up in the contrast's
-numerator; NES < 0 = enriched among the down side. Sign convention follows the contrast
-(e.g. for `Interaction`, positive = stronger induction in wild-type than in cGAS-KO). Claim
-tier: L3-DE (fgsea multilevel, BH-FDR). Per-contrast source table:
-`tables/by_contrast/<contrast>/coresh_gsea.csv`.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/15_coresh_viz.R` | `emit_coresh_cell` → `gsea_dotplot` / `gsea_dotplot_facet` / `gsea_barplot` / `gsea_running_sum_plot` | `figures.top_pathways=20; figures.nes_cap=3.5; figures.running_sum_top=5; thresholds.gsea_fdr=0.05` | `master_gsea_table.csv` (database=CoReSh_derived) + `02_de_results.rds` (ranks) + `coresh_derived_sets.rds` (sets) |
+---
 
 ## Tables
 
-| Table | What it is |
+| File | What it holds |
 |---|---|
-| `tables/coresh_ranked.csv` | Full compendium sweep: every query × every GEO dataset with pctVar, size, rank. |
-| `tables/coresh_provenance.csv` | The top-ranked datasets that were turned into derived gene sets (query → GSE → rank/pctVar). |
-| `tables/_overview/coresh_dataset_annotation.csv` | What each seeded dataset is (identity + context flags + PubMed / URL). Frozen research evidence: `…annotation.json`. Built by `08b_coresh_annotate.R`. |
-| `tables/_overview/coresh_gsea_all.csv` | All `CoReSh_derived` GSEA rows across contrasts (NES, padj, leading edge). |
-| `tables/_overview/coresh_gsea_summary.csv` | Per-contrast counts of significant derived sets and the top set. |
-| `tables/by_contrast/<contrast>/coresh_gsea.csv` | Per-contrast derived-set GSEA (padj-ordered) — the source table for that contrast's battery. |
-
-**Access note.** This analysis requires the ~20 GB mmu CoReSh compendium (syn66227307),
-mounted read-only from the shared reference cache, before the search step can run.
-
+| `tables/coresh_ranked.csv` | The full compendium sweep: every query × every GEO dataset with `pctVar`, matched query size and within-query rank. |
+| `tables/coresh_provenance.csv` | The top-ranked datasets that became modules — query, accession, rank, `pctVar`. |
+| `tables/_overview/coresh_dataset_annotation.csv` | What each seeded dataset is: title, organism, tissue, perturbation, context flags, source URL and PubMed id. The frozen research evidence sits beside it in `…annotation.json`; both are built by `08b_coresh_annotate.R`. |
+| `tables/_overview/coresh_gsea_all.csv` | Every `CoReSh_derived` enrichment row across contrasts, with NES, adjusted p and leading edge. |
+| `tables/_overview/coresh_gsea_summary.csv` | Per contrast, how many derived sets reach significance and which one leads. |
+| `tables/_overview/coresh_pctvar_overview.csv` | The plotted bars of the ranking panel. |
+| `tables/_overview/coresh_nes_dotplot.csv` | The plotted points of the module dot plot, with the dataset annotation joined on. |
+| `tables/by_contrast/<contrast>/coresh_gsea.csv` | Per-contrast derived-set enrichment, ordered by adjusted p — the source of that contrast's battery. |

@@ -1,53 +1,66 @@
-# 10_signature: artifact captions
+# 10_signature — Choosing the gate, and sizing the candidate signatures
 
-## figures/_overview/signature_sizes.png
+The differential expression is done; this stage turns it into named gene lists. Four contrasts
+are carried as candidates — `WT_heat`, `Temp_main`, `Geno_at_39` and `Interaction` — each split
+into an up set and a down set at two stringency gates: FDR alone (adjusted p < 0.05), and FDR
+plus |log2FC| ≥ 1.
 
-Per-contrast up/down projection-set sizes in mouse symbols, at both
-gates; the FDR+|logFC| gate is markedly more stringent than FDR-only.
+Three panels support the gate decision. The first sizes every candidate set at both gates. The
+second asks whether the candidates are distinct programs or restatements of one another. The
+third previews how much of each set survives the mouse-to-human ortholog step, so a signature
+that would be decimated by mapping is visible before it is frozen.
 
-**How to read:** Grouped bars per contrast; orange = up (higher in the numerator / 39
-C), blue = down. TOP facet = FDR-only gate (adj.P.Val < 0.05), BOTTOM
-= FDR + |log2FC| >= 1 (stringent). Numbers above bars = genes in that
-set (mouse symbols, pre-ortholog). Use this to pick the gate before
-the signatures are frozen: FDR+logFC can decimate small contrasts.
-Claim tier: L3 (DE statistics), n=5/group. Sample-to-condition
-mapping confirmed against the owner's sample sheet (2026-07-22): 20
-of 20 libraries concordant with the label-blind marker call.
+Everything here is in mouse symbols. The frozen human sets are re-mapped from the approved lists
+by `18_projection_export.R`, and [`../11_projection/`](../11_projection/) reports that run.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/17_signature_derive_viz.R` | `ggplot(geom_col)` | `thresholds.de_fdr=0.05; thresholds.de_logfc=1; gsea.rank_metric=t; colors.diverging` | `03_results/10_signature/tables/_overview/signature_sizes.csv` |
+---
 
-## figures/_overview/updown_overlap.png
+## Figures
 
-Off-diagonal Jaccard shows how distinct the candidate signatures
-(WT_heat / Temp_main / Geno_at_39 / Interaction) are.
+### `figures/_overview/signature_sizes.png`
 
-**How to read:** Symmetric heatmap; each tile = Jaccard overlap of two contrasts' UP
-sets (left facet) or DOWN sets (right facet), gate = fdr_logfc.
-Darker = more shared genes; diagonal = 1 (self). Off-diagonal near 0
-means the signatures are distinct programs (good — comparators add
-information). The source table carries BOTH gates. Claim tier: L3.
+**Set size at both gates, per contrast and direction.**
+Grouped bars. x, contrast; y, genes in the set, printed above each bar. Orange gives the up set
+(higher in the numerator, 39 °C) and blue the down set. The top facet is the FDR-only gate and
+the bottom facet is FDR plus |log2FC| ≥ 1. The stringent gate is markedly the smaller of the
+two, and the difference is largest for the thin contrasts, which is the reason to look before
+freezing.
+*Source* `tables/_overview/signature_sizes.csv` · `02_analysis/scripts/17_signature_derive_viz.R`.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/17_signature_derive_viz.R` | `ggplot(geom_tile)` | `gate=fdr_logfc; colors.diverging.down` | `03_results/10_signature/tables/_overview/updown_overlap.csv` |
+### `figures/_overview/updown_overlap.png`
 
-## figures/_overview/ortholog_coverage_preview.png
+**How much the candidate signatures share.**
+Symmetric heatmap, two facets. Each tile gives the Jaccard overlap of two contrasts' up sets
+(left facet) or down sets (right facet) at the `fdr_logfc` gate; darker means more shared genes
+and the diagonal is 1 by construction. Off-diagonal values near zero mark distinct programs, so
+carrying several candidates adds information rather than repeating it. The source table carries
+both gates.
+*Source* `tables/_overview/updown_overlap.csv` · `02_analysis/scripts/17_signature_derive_viz.R`.
 
-Dry-run mouse->human coverage of each contrast's up+down set; a large
-'unmapped' fraction flags mapping-loss risk before the freeze.
+### `figures/_overview/ortholog_coverage_preview.png`
 
-**How to read:** Stacked bars = fraction of a contrast's significant mouse genes
-(up+down) that map 1:1 to a human ortholog (green),
-one-mouse->many-human (orange), or have no human ortholog (grey,
-dropped downstream). TOP facet = FDR-only, BOTTOM = FDR+logFC. This
-is an offline babelgene PREVIEW for judging mapping loss. The frozen
-human sets are re-mapped from the approved gene lists by
-18_projection_export.R, and that run is what
-03_results/11_projection/ reports. Claim tier: L3.
+**How much of each set would survive the crossing into human.**
+Stacked bars, filled to 1. x, contrast; y, the fraction of that contrast's significant mouse
+genes (up and down together) by mapping fate: green, one-to-one to a human ortholog; orange, one
+mouse to several human; grey, no human ortholog and therefore dropped. The top facet is the
+FDR-only gate and the bottom facet FDR plus |log2FC|.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/17_signature_derive_viz.R` | `ggplot(geom_col, position=fill)` | `decisions.projection.ortholog_ambiguity.min_support; babelgene(offline)` | `03_results/10_signature/tables/_overview/ortholog_coverage_preview.csv` |
+This is an offline babelgene preview for judging mapping loss ahead of the freeze. The frozen
+human sets come from the export run, and [`../11_projection/`](../11_projection/) reports that
+one.
+*Source* `tables/_overview/ortholog_coverage_preview.csv` ·
+`02_analysis/scripts/17_signature_derive_viz.R`.
 
+---
+
+## Tables
+
+| File | What it holds | How to read it |
+|---|---|---|
+| `tables/_overview/signature_sizes.csv` | One row per contrast × direction × gate, with the gene count. | `gate` takes `fdr_only` or `fdr_logfc`. The `WT_heat` × up × `fdr_logfc` row is 213, which is the arm that becomes `WT_heat_up`. |
+| `tables/_overview/updown_overlap.csv` | Pairwise Jaccard between contrasts, per direction and per gate. | Carries both gates; the figure draws `fdr_logfc`. Read the off-diagonal. |
+| `tables/_overview/ortholog_coverage_preview.csv` | Per contrast and gate, the counts behind the three mapping fates. | An offline preview at `min_support = 3`. The authoritative per-gene fate lives in [`../11_projection/`](../11_projection/). |
+
+The frozen sets themselves are written by the export step into
+[`../human_projection/signatures/`](../human_projection/), and the mouse-side set objects are
+cached at `../objects/17_signature_sets.rds`.

@@ -1,168 +1,76 @@
-# 09_gatom: artifact captions
+# 09_gatom — The metabolic subnetwork each contrast recruits
 
-## figures/by_contrast/WT_heat/module_graph_kegg.png
+GATOM searches an atom-transition graph of KEGG metabolism for the maximally-regulated connected
+subnetwork: the set of enzymatic reactions whose genes carry the strongest coherent signal in a
+contrast, joined into one graph. It runs on four contrasts — `WT_heat`, `KO_heat`, `Interaction`
+and `Temp_main` — with gene scores from the limma differential expression and no metabolomics
+input, so node size is uniform and every score on the graph is transcriptional.
 
-WT: heat (39 vs 37 °C) (kegg): GATOM SGMWCS metabolic module — nodes
-are metabolites/atoms; edges are enzymatic reactions colored by gene
-log2FC (orange = up-regulated at 39°C, blue = down-regulated; no
-metabolomics data supplied so node size is uniform). Module V=7 E=6
-w=47.01. This is an expression-only GATOM run (k.met=NULL). Claim
-tier L3 (enrichment statistics; mechanism is interpretive text only).
-Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x
-temperature)
+Module sizes are small and they separate by contrast. `Temp_main` returns 6 nodes over 5 edges
+at weight 48.32, `WT_heat` 7 over 6 at 47.01, `KO_heat` 18 over 17 at 44.83; the interaction
+returns an empty module. Only the KEGG reaction network was available for this run
+(`met.combined.db.rds` is absent from `00_data/references/gatom/`), so the combined KEGG+Rhea
+network contributes no bar to any panel.
 
-**How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
-enzymatic reactions; gene symbol labels on edges. Edge color: orange
-= up-regulated enzyme (log2FC > 0), blue = down-regulated. Edge width
-(when available): -log10(raw p-value) from GATOM BUM scoring. Sign
-convention: positive log2FC = higher in numerator of the contrast.
-The direction cue (subtitle) reflects the mean signed log2FC of
-module edges. Top-20 most connected nodes are labeled to reduce
-overplotting. Claim tier L3: the module is a statistically optimal
-connected subgraph, NOT a direct measurement of metabolic flux.
+A module is a statistically optimal connected subgraph of an atom-transition network. It records
+where differential-expression signal concentrates in metabolic space; metabolic flux is
+untested.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `build_module_ggraph` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds` |
+---
 
-## figures/by_contrast/KO_heat/module_graph_kegg.png
+## Figures
 
-cGAS-KO: heat (39 vs 37 °C) (kegg): GATOM SGMWCS metabolic module —
-nodes are metabolites/atoms; edges are enzymatic reactions colored by
-gene log2FC (orange = up-regulated at 39°C, blue = down-regulated; no
-metabolomics data supplied so node size is uniform). Module V=18 E=17
-w=44.83. This is an expression-only GATOM run (k.met=NULL). Claim
-tier L3 (enrichment statistics; mechanism is interpretive text only).
-Sample mapping owner-confirmed (GSE329522 iTreg 2x2 genotype x
-temperature)
+### `figures/by_contrast/<contrast>/module_graph_kegg.png` — four panels
 
-**How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
-enzymatic reactions; gene symbol labels on edges. Edge color: orange
-= up-regulated enzyme (log2FC > 0), blue = down-regulated. Edge width
-(when available): -log10(raw p-value) from GATOM BUM scoring. Sign
-convention: positive log2FC = higher in numerator of the contrast.
-The direction cue (subtitle) reflects the mean signed log2FC of
-module edges. Top-20 most connected nodes are labeled to reduce
-overplotting. Claim tier L3: the module is a statistically optimal
-connected subgraph, NOT a direct measurement of metabolic flux.
+**The recruited subnetwork drawn as a graph.**
+Nodes are metabolites and atoms, at uniform size because no metabolomics data entered the run.
+Edges are enzymatic reactions, labelled with the gene symbol encoding the enzyme. Edge colour
+gives the gene's log2 fold change — orange where the enzyme rises in the contrast numerator,
+blue where it falls — and edge width, where available, gives −log10 of the raw p-value from
+GATOM's own scoring. The twenty most connected nodes carry labels. The subtitle reports the
+module's node and edge count, its solution weight, and the mean signed log2 fold change across
+its edges.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `build_module_ggraph` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_KO_heat.rds` |
+Module sizes: `WT_heat` V=7 E=6 w=47.01, `KO_heat` V=18 E=17 w=44.83, `Temp_main` V=6 E=5
+w=48.32, `Interaction` empty.
+*Source* `../objects/10_gatom_<contrast>.rds` · `02_analysis/scripts/14_gatom_viz.R`.
 
-## figures/by_contrast/Interaction/module_graph_kegg.png
+### `figures/_overview/module_sizes.png`
 
-Heat × genotype interaction (cGAS-dependence of the heat response)
-(kegg): GATOM SGMWCS metabolic module — nodes are metabolites/atoms;
-edges are enzymatic reactions colored by gene log2FC (orange =
-up-regulated at 39°C, blue = down-regulated; no metabolomics data
-supplied so node size is uniform). Module V=n/a E=n/a w=n/a. This is
-an expression-only GATOM run (k.met=NULL). Claim tier L3 (enrichment
-statistics; mechanism is interpretive text only). Sample mapping
-owner-confirmed (GSE329522 iTreg 2x2 genotype x temperature)
+**How large a subnetwork each contrast recruits.**
+Horizontal bars, one per contrast × network. x, number of reaction edges in the module. Blue
+marks the KEGG reaction network, the only network in this run. An absent contrast is one whose
+module came back empty.
+*Source* `tables/_overview/module_sizes.csv` · `02_analysis/scripts/14_gatom_viz.R`.
 
-**How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
-enzymatic reactions; gene symbol labels on edges. Edge color: orange
-= up-regulated enzyme (log2FC > 0), blue = down-regulated. Edge width
-(when available): -log10(raw p-value) from GATOM BUM scoring. Sign
-convention: positive log2FC = higher in numerator of the contrast.
-The direction cue (subtitle) reflects the mean signed log2FC of
-module edges. Top-20 most connected nodes are labeled to reduce
-overplotting. Claim tier L3: the module is a statistically optimal
-connected subgraph, NOT a direct measurement of metabolic flux.
+### `figures/_overview/module_weights.png`
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `build_module_ggraph` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_Interaction.rds` |
+**The optimisation score behind each module.**
+Bars, one per contrast × network. y, the solver's objective value, which combines module size
+with the magnitude of its node and edge scores. A higher weight means more or larger enzyme
+signal concentrated inside one connected subnetwork.
+*Source* `tables/_overview/module_weights.csv` · `02_analysis/scripts/14_gatom_viz.R`.
 
-## figures/by_contrast/Temp_main/module_graph_kegg.png
+### `figures/_overview/module_summary.png`
 
-Heat main effect (pooled genotypes) (kegg): GATOM SGMWCS metabolic
-module — nodes are metabolites/atoms; edges are enzymatic reactions
-colored by gene log2FC (orange = up-regulated at 39°C, blue =
-down-regulated; no metabolomics data supplied so node size is
-uniform). Module V=6 E=5 w=48.32. This is an expression-only GATOM
-run (k.met=NULL). Claim tier L3 (enrichment statistics; mechanism is
-interpretive text only). Sample mapping owner-confirmed (GSE329522
-iTreg 2x2 genotype x temperature)
+**Size and direction of every module on one canvas.**
+Two stacked panels sharing the contrast axis. Top, bar height gives the module's reaction-edge
+count. Bottom, dot position gives the mean log2 fold change across the module's enzyme edges, so
+a dot above the dashed zero line marks a net up-regulated subnetwork in the contrast numerator.
+Blue marks the KEGG network.
+*Source* `tables/_overview/module_summary.csv` · `02_analysis/scripts/14_gatom_viz.R`.
 
-**How to read:** Nodes = metabolites/atoms (uniform size — no metabolomics). Edges =
-enzymatic reactions; gene symbol labels on edges. Edge color: orange
-= up-regulated enzyme (log2FC > 0), blue = down-regulated. Edge width
-(when available): -log10(raw p-value) from GATOM BUM scoring. Sign
-convention: positive log2FC = higher in numerator of the contrast.
-The direction cue (subtitle) reflects the mean signed log2FC of
-module edges. Top-20 most connected nodes are labeled to reduce
-overplotting. Claim tier L3: the module is a statistically optimal
-connected subgraph, NOT a direct measurement of metabolic flux.
+---
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `build_module_ggraph` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_Temp_main.rds` |
+## Tables
 
-## figures/_overview/module_sizes.png
+| File | What it holds |
+|---|---|
+| `tables/by_contrast/<contrast>/gatom_modules.csv` | The module for that contrast, edge by edge: reaction, gene symbol, log2 fold change, p-value and the node pair it joins. |
+| `tables/_overview/module_sizes.csv` | One row per contrast × network with the node and edge counts. |
+| `tables/_overview/module_weights.csv` | The same keys with the solver objective value. |
+| `tables/_overview/module_summary.csv` | Size joined to the mean signed log2 fold change per module — the source of the two-panel summary. |
 
-GATOM metabolic module size (reaction edges) per contrast × network:
-contrasts with the most connected metabolic sub-networks have the
-highest edge count; WT_heat and Temp_main are expected to show the
-largest modules (the 39 °C contrast recruits glycolytic +
-mitochondrial enzymes). Claim tier L3.
-
-**How to read:** Horizontal bar = one (contrast × network) combination; longer bar =
-bigger module. Length = number of reaction edges (enzyme-encoded
-enzymatic steps) in the SGMWCS module. Blue bars = KEGG reaction
-network (the only network in this run). The Combined KEGG+Rhea
-network is unavailable (met.combined.db.rds absent in
-00_data/references/gatom/), so 10_gatom_modules.R degraded to
-KEGG-only — there is no orange (combined) bar by design. An absent
-contrast means its module was empty (GATOM returned 0 edges). Claim
-tier L3: module size reflects DE signal density in the atom-graph,
-not metabolic flux.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `module_sizes_bar` | `colors.diverging; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds; 03_results/objects/10_gatom_KO_heat.rds; 03_results/objects/10_gatom_Interaction.rds; 03_results/objects/10_gatom_Temp_main.rds` |
-
-## figures/_overview/module_weights.png
-
-GATOM MWCS solution weight per contrast × network: the objective
-score of the SGMWCS problem integrates both module size and edge/node
-score magnitudes; contrasts with strong uniform DE in metabolic
-enzymes produce the highest weights. Claim tier L3.
-
-**How to read:** Each bar = one (contrast × network) combination. Height = SGMWCS
-objective value (dimensionless; from mwcsr::solve_mwcsp). A higher
-weight indicates more/larger-magnitude enzyme DE signals concentrated
-in a connected metabolic sub-network. Claim tier L3: does not imply
-metabolic flux or enzyme activity directly.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `module_weights_bar` | `colors.diverging; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds; 03_results/objects/10_gatom_KO_heat.rds; 03_results/objects/10_gatom_Interaction.rds; 03_results/objects/10_gatom_Temp_main.rds` |
-
-## figures/_overview/module_summary.png
-
-Cross-contrast GATOM module summary: top panel shows module size
-(reaction edges) per contrast × network; bottom panel shows mean
-module enzyme log2FC (pseudo-NES), indicating whether the recruited
-metabolic sub-network is net up- or down-regulated. Corroborates the
-MitoCarta-anchored Complex-I / metabolic-pseudohypoxia mechanism at
-the enrichment-statistics tier (L3). Sample mapping owner-confirmed
-(GSE329522 iTreg 2x2 genotype x temperature)
-
-**How to read:** Top panel: bar height = number of enzymatic reaction edges in the
-SGMWCS module. Bottom panel: dot position = mean log2FC across all
-enzyme-edges in the module. Blue = KEGG-only network (the only
-network in this run; Combined KEGG+Rhea was unavailable —
-met.combined.db.rds absent). Positive pseudo-NES (above dashed line)
-= net up-regulation of module enzymes in the contrast numerator. Sign
-convention: positive log2FC = higher in numerator (e.g. 39°C arm for
-heat contrasts). Claim tier L3: module statistics, not metabolic flux
-measurement. Sample-to-condition mapping confirmed against the
-owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
-the label-blind marker call.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/14_gatom_viz.R` | `module_summary_panel` | `colors.diverging; figures.top_n=20; thresholds.gatom_k_gene=50` | `03_results/objects/10_gatom_WT_heat.rds; 03_results/objects/10_gatom_KO_heat.rds; 03_results/objects/10_gatom_Interaction.rds; 03_results/objects/10_gatom_Temp_main.rds` |
-
+The three-row roll-up of these modules is carried in
+[`../master/master_gatom_modules.csv`](../master/) under `database = GATOM_KEGG`, in the shared
+schema, so they join the enrichment and activity tables.
