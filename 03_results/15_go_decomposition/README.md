@@ -2,10 +2,10 @@
 
 The curated decompositions ask how much of an arm falls inside a hand-picked panel of programs.
 A panel that already contains hypoxia can answer whether hypoxia is in the arm, and two thirds
-of the arm falls in no panel member. This stage asks the ontology instead: over the whole GO
-Biological Process space, and separately the whole Molecular Function space, which terms does
-each arm's gene content organise into? The candidate space is fixed by GO rather than by whoever
-is asking.
+of the arm falls in no panel member. This stage puts the question to the ontology: over the
+whole GO Biological Process space, and separately the whole Molecular Function space, which
+terms does each arm's gene content organise into? GO fixes the candidate space, so the answer
+stands independent of whoever is asking.
 
 **This describes the biology the arm's gene content organises into.** It is a different
 measurement from composition, and its own count-level null is why. Over-representation gives a
@@ -45,8 +45,9 @@ ontology hands to three of every five well-annotated gene sets of this size.
 
 ## The proteostasis probe
 
-Nineteen terms a heat-shock reading would predict were looked up by id, plus a name sweep over
-the enriched list. Fifteen entered the hypergeometric and two cleared the adjusted-p cutoff:
+Nineteen terms a heat-shock reading would predict were looked up by id, and a name sweep over
+the enriched list ran beside them. Fifteen entered the hypergeometric and two cleared the
+adjusted-p cutoff:
 `GO:0031649 heat generation` (IL1A, PTGS2, TNFSF11) and `GO:0001659 temperature homeostasis`
 (EGR1, GATM, IGF2BP2, IL1A, KDM6B, NPR3, PTGS2, TNFSF11, p_matched 0.103). Both are
 organism-level thermoregulation terms and inflammatory mediators carry them. Every chaperone,
@@ -66,8 +67,8 @@ sit on the same row.
 ## Two evidence variants, and a mouse-space replicate
 
 `with_iea` is primary because it is the canonical one-line `clusterProfiler` path, and the
-study-depth confound that motivates dropping IEA is handled by the depth-matched null rather than
-by an evidence filter. The two variants share 182 of the 384 `with_iea` BP terms (Jaccard 0.43)
+depth-matched null already handles the study-depth confound that motivates dropping IEA.
+The two variants share 182 of the 384 `with_iea` BP terms (Jaccard 0.43)
 and 4 of their top 10, so the evidence filter moves the headline list. The same question asked in
 mouse space before the ortholog map returns 456 BP terms sharing 313 with the human-space 384
 (Jaccard 0.59).
@@ -95,9 +96,9 @@ reproduces.
 Blocks are an average-linkage cut of the Wang similarity matrix at height 0.7. The largest is
 blood vessel morphogenesis: 56 terms over 81 arm genes, with 61% of its terms under
 `p_matched` 0.05. Across all blocks the union of covered genes is 160. The shaded row spanning
-both panels is the response-to-hypoxia block — 3 terms over 12 arm genes (ADAM8, AK4, EGR1,
+both panels is the response-to-hypoxia block: 3 terms over 12 arm genes (ADAM8, AK4, EGR1,
 FOSL2, HK2, HSPG2, INHBA, LTA, NPPC, NR4A2, PAK1, PTGS2), best adjusted p 0.0118, and 0% of its
-terms under the depth-matched cut — shaded so a reader can find it among the 36.
+terms under the depth-matched cut. The shading is there so a reader can find it among the 36.
 
 A gene can sit in several blocks, so the gene counts do not sum to the arm.
 *Source* `tables/_overview/wtheatup_term_blocks.csv` ·
@@ -126,8 +127,8 @@ One row per probe term, split by ontology. Left panel: the dot gives the raw hyp
 a −log10 axis, with a dashed rule at p 0.05. Grey marks a term tested and above the adjusted-p
 cutoff, vermillion tested and below it, and a blue cross at zero a term the test never saw.
 Right panel: the arm genes each tested term holds, so a term clearing the cutoff reads by its
-gene content; for an untested term it gives the reason — above the 500-gene cap, below the
-10-gene floor, or holding no arm gene.
+gene content. For an untested term that panel gives the reason — above the 500-gene cap, below
+the 10-gene floor, or holding no arm gene.
 
 Fifteen of the nineteen probe terms entered and two cleared the cutoff: heat generation (3
 genes: IL1A, PTGS2, TNFSF11; `p_matched` 0.011) and temperature homeostasis (8 genes;
@@ -184,7 +185,8 @@ cheap to enrich. A term wants both small.
 The four `_overview/` figure sources — `wtheatup_term_blocks.csv`,
 `wtheatup_null_recurrence.csv`, `wtheatup_proteostasis_probe.csv` and
 `arms_coverage_ladder.csv` — carry exactly the rows their panel draws. In the block table
-`n_genes` is a union across the block's terms and the column does not sum to the arm; in the
+`n_genes` is a union across the block's terms, so blocks share genes and the column totals 974
+across its 36 rows against the arm's 202. In the
 recurrence table `rank` 1 is the strongest hypergeometric result, and
 `frac_matched_reaching_q` is the column to scan down the first twenty rows before quoting any of
 them.

@@ -10,8 +10,8 @@ human symbols. A binary gene set takes the union both ways: several mouse genes 
 symbol shrinks the set, one mouse gene across several human symbols grows it.
 
 The three up arms arrive as: `WT_heat_up` 202 of 213, `KO_heat_up` 221 of 239, `Interaction_up`
-7 of 9 (`tables/_overview/conversion_ledger.csv`). Every human denominator in this project is the
-carried set rather than the mouse set.
+7 of 9 (`tables/_overview/conversion_ledger.csv`). Every human denominator in this project is
+the carried human set — 202 for `WT_heat_up` — and the 213 belongs to mouse space.
 
 **A gene lost at the seam is a vocabulary result until proven a biological one.** babelgene keys
 on current MGI symbols and this matrix was quantified against GENCODE vM25, so a symbol whose
@@ -43,7 +43,7 @@ orthology source knew the symbol and had no human counterpart; purple, the sourc
 the symbol at all.
 
 Grey and purple were one segment until this run, which reported a vocabulary loss as a
-biological one; purple is the honest half of that bucket. A red asterisk marks a contrast losing
+biological one. Purple is the honest half of that bucket. A red asterisk marks a contrast losing
 more than half its genes.
 *Source* `tables/_overview/mapping_loss.csv` · `02_analysis/scripts/18_projection_export_viz.R`.
 
@@ -97,12 +97,12 @@ that their name had changed. Thirty-one pairs were withheld by a guard and two b
 `matrix_symbol` is the name the data carries, `current_symbol` what `org.Mm.eg.db` calls the
 same Entrez id today, `resolution` what happened. `accepted` means the symbol resolved to exactly
 one Entrez id, the current symbol is that id's own official symbol and no other gene's, no second
-candidate claimed it, and it is not already a row here.
+candidate claimed it, and the resolution is new to this ledger.
 
 `rejected_current_symbol_already_in_vocabulary` is the guard that matters most quietly:
 normalising there would give one gene two rows and let the many-mouse-to-one-human rule replace
-an existing gene's ranked metric. `flagged_for_review` is withheld by decision rather than by a
-guard — `Ndufb1-ps`, because handing a pseudogene-named row the real gene's ortholog judges the
+an existing gene's ranked metric. `flagged_for_review` is withheld by decision, with the guard
+passed: `Ndufb1-ps`, because handing a pseudogene-named row the real gene's ortholog judges the
 vM25 annotation, and `H2aw`, because histone renaming is many-to-many.
 
 `mapped_after_normalisation` splits the two outcomes an accepted pair can have. TRUE is a
