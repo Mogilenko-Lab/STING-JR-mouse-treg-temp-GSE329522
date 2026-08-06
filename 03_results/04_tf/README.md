@@ -14,17 +14,17 @@ every artifact here is annotation tier for that reason.
 Two threads run through the directory.
 
 **The two arms are asymmetric.** On the interaction contrast the interferon members carry
-significance — Irf3 +5.93 (adjusted p 1.0e-06), Stat2 +5.85 (1.1e-06), Stat1 +5.30 (1.9e-05) —
-while the HIF axis is flat (Hif1a −0.19 at 0.97, Epas1 −0.86 at 0.91), so the interferon arm is
-cGAS-dependent and the HIF arm has no detectable cGAS-dependence at n = 5
+significance: Irf3 +5.93 (adjusted p 1.0e-06), Stat2 +5.85 (1.1e-06), Stat1 +5.30 (1.9e-05).
+The HIF axis is flat there, Hif1a −0.19 at 0.97 and Epas1 −0.86 at 0.91. So the interferon arm
+is cGAS-dependent and the HIF arm has no detectable cGAS-dependence at n = 5
 (`tables/fig3a_tf_interaction_axes_data.csv`).
 
 **Hif1a's high rank is a property of the method and the network.** On `WT_heat` its rank runs
 #1 of 263 under DoRothEA-ULM, #12 of 658 under CollecTRI-ULM, #142 of 658 under CollecTRI-MLM
 and #8 of 658 under the consensus (`tables/fig3c_hif1a_rank_cascade_data.csv`). Three
-measurements explain that traverse and bound what the score can support: the CollecTRI regulon
-is 2.7× larger and dilutes a tighter DoRothEA one; 92% of its 353 targets are shared with a mean
-of 22 other factors, which the multivariate fit redistributes; and 91.8% of the signed
+measurements explain that traverse and bound what the score can support. The CollecTRI regulon
+is 2.7× larger and dilutes a tighter DoRothEA one. 92% of its 353 targets are shared with a mean
+of 22 other factors, which the multivariate fit redistributes. And 91.8% of the signed
 contribution comes from 340 members that generic stress and remodelling genes dominate, while
 the four genes diagnostic of canonical HIF1α output — Pdk1, Bnip3, Bnip3l, Car9 — are all
 repressed, summing to −8.46 (`tables/fig3g_target_decomposition_summary.csv`).
@@ -63,7 +63,7 @@ x, the four method-and-network configurations in reading order; y, Hif1a's rank 
 factors, inverted so rank #1 sits at the top. Point colour gives the score. Labels carry
 rank/total and the score behind it. Reading left to right: DoRothEA-ULM #1 of 263 (6.09),
 CollecTRI-ULM #12 of 658 (5.11), CollecTRI-MLM #142 of 658 (1.13), CollecTRI-consensus #8 of 658
-(2.89). A signal stable across estimator and network would hold its rank; this one traverses 141
+(2.89). A signal stable across estimator and network would hold its rank. This one traverses 141
 places. Its interaction score stays flat in all four.
 *Source* `tables/_overview/fig3c_hif1a_rank_cascade.csv`.
 
@@ -74,8 +74,9 @@ Box and jitter of per-target `WT_heat` moderated t by regulon membership. x, mem
 (DoRothEA-only n = 30, shared n = 101, CollecTRI-only n = 252); y, moderated t. The
 CollecTRI-only box straddles zero — high |t| with mixed sign, median signed t ≈ 0.3 — so those
 252 targets add magnitude and little net direction, which drags the weighted mean down.
-DoRothEA's 353-versus-131 smaller regulon concentrates the high-t heat targets and produces the
-#1 rank; CollecTRI's fuller one gives #12. The rank is a property of the library.
+DoRothEA's smaller regulon, 131 targets against CollecTRI's 353, concentrates the high-t heat
+targets and produces the #1 rank. CollecTRI's fuller one gives #12. The rank is a property of
+the library.
 *Source* `tables/_overview/fig3d_regulon_swap.csv`, with per-network summaries in
 `tables/fig3d_regulon_swap_summary.csv`.
 
@@ -83,8 +84,8 @@ DoRothEA's 353-versus-131 smaller regulon concentrates the high-t heat targets a
 
 **Nearly every Hif1a target belongs to many regulons at once.**
 Histogram over Hif1a's 353 CollecTRI targets. x, how many other CollecTRI factors also regulate
-that target; y, target count. The dashed orange rule marks the mean, 22.23; the median is 11 and
-92.07% of targets carry at least one other claimant. A multivariate fit distributes shared
+that target; y, target count. The dashed orange rule marks the mean, 22.23. The median is 11,
+and 92.07% of targets carry at least one other claimant. A multivariate fit distributes shared
 movement across competing regulons, which takes the score from 5.11 at rank #12 to 1.13 at rank
 #142 on the same network and the same data.
 *Source* `tables/_overview/fig3e_mlm_collinearity.csv`, with the two-bar collapse in
@@ -99,10 +100,10 @@ heat-shock and stress highlight, orange for shared/glycolytic, teal for the repr
 core, grey for the rest. The six largest contributors are labelled (Timp1 +24.92, Sdc1 +22.89,
 Cdkn1a +12.33, Serpine1 +11.21, Eno2 +11.00, Hspa1a +10.81), as are the curated-class members.
 
-Across the regulon: the 340 "other" targets sum to +351.43, which is 91.8% of the signed total;
-the nine shared/glycolytic members (Hk2, Vegfa, Egln3, Slc2a1, Aldoa, Pgk1, Ldha, Eno1, Pkm) sum
-to +39.81; the four-member hypoxic core sums to −8.46 with all four repressed. Vegfa, Slc2a1 and
-Egln3 are shared targets rather than HIF-diagnostic ones.
+Across the regulon, the 340 "other" targets sum to +351.43, which is 91.8% of the signed total.
+The nine shared/glycolytic members (Hk2, Vegfa, Egln3, Slc2a1, Aldoa, Pgk1, Ldha, Eno1, Pkm) sum
+to +39.81. The four-member hypoxic core sums to −8.46 with all four repressed. Vegfa, Slc2a1 and
+Egln3 count as shared targets, and the genes that diagnose HIF1α are the four in that core.
 *Source* `tables/_overview/fig3g_target_decomposition.csv`, plus
 `tables/fig3g_target_decomposition_summary.csv` for the class provenance split and
 `tables/fig3g_target_landscape_labels.csv` for the labelled subset.
@@ -112,15 +113,15 @@ Egln3 are shared targets rather than HIF-diagnostic ones.
 **The genes that diagnose HIF1α move against the score.**
 Horizontal lollipop, one row per gene, faceted by curated module in the order heat-shock/stress,
 shared angio/glucose, autoregulatory feedback, HIF1α-selective hypoxic core. x, signed
-contribution on the same axis `fig3g` uses; a grey rule marks zero, so points right of it are
+contribution on the same axis `fig3g` uses. A grey rule marks zero, so points right of it are
 genes the contrast raises. Each facet strip carries its module's gene count and summed
 contribution.
 
 The seven heat-shock members (Timp1, Sdc1, Spp1, Cdkn1a, Serpine1, Eno2, Hspa1a) all rise and
 sum to +108.54. The shared angiogenic/glycolytic pair (Vegfa, Slc2a1) reaches +15.93 and the
 autoregulatory member (Egln3) +6.81. Pdk1, Bnip3, Bnip3l and Car9 are canonical HIF1α-**induced**
-targets and all four sit left of zero, summing to −8.46, on the contrast where the factor scores
-positive. The four curated modules hold 14 of 353 members and 9.3% of the contribution magnitude,
+targets, and on the contrast where the factor scores positive all four sit left of zero, summing
+to −8.46. The four curated modules hold 14 of 353 members and 9.3% of the contribution magnitude,
 so the partition is a reading aid over a tenth of the score.
 
 `fig3g` and `fig3l` decompose the same regulon at two grains: `fig3l` carves the seven heat-shock
@@ -134,13 +135,13 @@ in `tables/fig3l_module_summary.csv`.
 
 **A promiscuous regulon scores high when a few large targets pile to one side.**
 Two panels on one shared x axis: aligned signed contribution, `sign(mor) × t_gene`. Each jittered
-point is one regulon member; purple marks the seven heat-shock contaminants, orange the
+point is one regulon member. Purple marks the seven heat-shock contaminants, orange the
 HIF-specific members, grey the rest. A grey diamond with a dashed rule sits at the regulon's
 weighted centre, which is the score.
 
-Panel A is Hif1a — 353 members, centre +1.08 — and its rightward pile-up. Panel B is Stat2 — 32
-members, centre −0.62 — a small specific regulon whose targets spread across both sides. The
-scoring mechanic is drawn once here so the landscape panels read.
+Panel A is Hif1a, 353 members with a centre at +1.08, and it shows the rightward pile-up. Panel
+B is Stat2, 32 members with a centre at −0.62, a small specific regulon whose targets spread
+across both sides. The scoring mechanic is drawn once here so the landscape panels read.
 *Source* `tables/_overview/fig3m_ulm_mechanic.csv`, per gene in
 `tables/fig3m_ulm_mechanic_data.csv` (353 Hif1a + 32 Stat2 rows), aggregates in
 `tables/fig3m_ulm_mechanic_summary.csv`.
@@ -154,9 +155,9 @@ orange for HIF, blue for IFN, grey for other; an asterisk marks BH-adjusted p < 
 `Temp_main` Hsf1 reaches +3.20 (p 0.015) beside Hif1a +5.14 (2.0e-05) and Epas1 +4.17 (8.9e-04),
 and it holds in both genotypes separately (`WT_heat` +2.83 at p 0.034, `KO_heat` +3.48 at 0.008).
 
-The reading is co-elevation. Hif1a's regulon overlaps Hsf1's thinly — 24 to 32 shared targets,
-7–12% of the signed contribution — and of the named heat-shock drivers only Hspa1a, Cdkn1a and
-Serpine1 are shared, while Timp1, Sdc1, Spp1 and Eno2 are Hif1a-only. Hsf1's cGAS-by-heat
+The reading is co-elevation. Hif1a's regulon overlaps Hsf1's thinly, 24 to 32 shared targets
+carrying 7–12% of the signed contribution. Of the named heat-shock drivers, Hspa1a, Cdkn1a and
+Serpine1 are the shared ones, and Timp1, Sdc1, Spp1 and Eno2 are Hif1a-only. Hsf1's cGAS-by-heat
 interaction reaches raw p 0.022 and adjusted p 0.515, so it carries no cGAS-dependence.
 *Source* `tables/_overview/fig3n_heat_main_regulators.csv`.
 
@@ -168,8 +169,8 @@ Three panels making one point: on the heat-main contrast this design nominates n
 below a dashed break. x, heat-main univariate score; y, factor. Colour gives the curated family
 (heat-shock purple, AP-1/immediate-early red, NF-κB blue, HIF orange) and a dark ring marks
 Hif1a. Hif1a sits #9 of 658 at 5.14 inside a band running Jun 6.06, Egr1 5.54, Fos 5.46, Sp1
-5.29, Stat5a 5.27, Rela 5.25, Ncoa1 5.25, Hoxd3 5.20, then Nfkb1 5.12 and Jund 5.10 — about 0.9
-score units across ranks #1 to #12, all near p 1e-07. Hsf1 sits #50 at 3.20.
+5.29, Stat5a 5.27, Rela 5.25, Ncoa1 5.25, Hoxd3 5.20, then Nfkb1 5.12 and Jund 5.10. That band
+spans about 0.9 score units across ranks #1 to #12, all near p 1e-07. Hsf1 sits #50 at 3.20.
 *Source* `tables/_overview/fig3p_heatmain_ranking.csv`.
 
 **`fig3q_coregulators` — shared ownership.** Horizontal bars, top fifteen sharers. x, the

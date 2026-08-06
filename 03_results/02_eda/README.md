@@ -1,13 +1,13 @@
 # 02_eda — How much of the variance each design factor carries
 
-Two panels place the twenty libraries in the space of their own variance. The question is a
-sizing question: the 2×2 design has two factors, and this stage says how much of the
-transcriptome each one moves.
+Two panels place the twenty libraries in the space of their own variance. The question is one of
+size: the 2×2 design has two factors, and this stage says how much of the transcriptome each one
+moves.
 
 The answer is asymmetric. PC1 carries 57.3% of the variance and tracks temperature almost
 exactly (R² 0.98 against temperature, 0.00 against genotype). Genotype sits on PC2 at 4.4%,
-within about a point of PC3. Both factors are recoverable from expression, and they are
-recoverable to very different degrees.
+within about a point of PC3. Both factors are recoverable from expression, to very different
+degrees.
 
 The stage computes no statistics. It renders the decomposition behind the mapping check in
 [`../01_qc/`](../01_qc/) and gives the variance budget every later contrast is read against.
@@ -26,8 +26,8 @@ PC1 separates the two temperatures cleanly and genotype separates along the much
 so the 2×2 reads on the plane with one factor dominant.
 
 The gene universe is 19,657 symbols, every delivered symbol carrying variance across the twenty
-libraries. The differential-expression figures report 19,679 because a principal-component
-decomposition drops the 22 genes that are constant across all libraries; the two universes are
+libraries. The differential-expression figures report 19,679, because a principal-component
+decomposition drops the 22 genes that hold constant across all libraries. The two universes are
 otherwise identical. Restricting to the 2,000 most variable genes gives the same leading axis
 (|r| 0.99995) at 78.9%, so the percentage is a property of the gene universe.
 *Source* `tables/fig1c_pca_data.csv` · `02_analysis/scripts/01_mapping_qc_viz.R`.

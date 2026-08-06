@@ -1,7 +1,7 @@
 # master — The accumulator tables
 
-Cross-stage tables that gather one row per result from the individual stages. A stage computes;
-these files collect. Read them for every effect in one place rather than opening each stage.
+Cross-stage tables that gather one row per result from the individual stages. A stage computes,
+and these files collect. Read them for every effect in one place.
 
 Twelve files in three groups. **Differential expression** (`master_de_genes.csv`,
 `master_de_table.csv`, `universe_frame.csv`, `atlas_gene_universe.txt`) is per gene.
@@ -19,7 +19,7 @@ cGAS-dependence). Positive statistics point to the numerator — 39 °C, or wild
 **Symbol vocabulary.** Every gene symbol here is frozen to the build the counts were quantified
 against, GRCm38 + GENCODE vM25. Reference gene sets ship current symbols, so
 `00_symbol_alias_map.R` resolves reference symbols into this vocabulary before matching and
-`04_gsea_set_prep.R` applies the map. Match a symbol from an outside source through that map;
+`04_gsea_set_prep.R` applies the map. Match a symbol from an outside source through that map.
 [`../objects/README.md`](../objects/) carries the ledger of what it recovered.
 
 ---
@@ -55,7 +55,7 @@ digits and differ in bytes. Read `master_de_genes.csv`.
 The wide form: `<contrast>_logFC`, `<contrast>_t`, `<contrast>_padj`, `<contrast>_sig` and
 `<contrast>_direction` for each of the seven, on one row per gene. Use it to ask whether a gene
 moves in two contrasts at once without self-joining the long table. `detected`, `in_universe` and
-`expressed` mark the gene's standing in the ranked universe; all 19,679 rows carry all three,
+`expressed` mark the gene's standing in the ranked universe. All 19,679 rows carry all three,
 which makes this frame the compartment's background list.
 
 ### `atlas_gene_universe.txt`
@@ -107,7 +107,7 @@ the regulon's genes present in the ranked universe.
 `database` separates the two networks and their coverage differs. `CollecTRI` is the primary run
 — 4,606 rows, 658 factors across all seven contrasts. `DoRothEA_ABC` is the comparator network
 held for the method comparison in `03b_decoupler_method_comparison.R` and scored on `WT_heat`
-alone — 263 rows, 263 factors. A factor therefore appears twice in `WT_heat` with two scores;
+alone — 263 rows, 263 factors. A factor therefore appears twice in `WT_heat` with two scores, so
 filter on one network before ranking.
 
 ### `master_progeny_activities.csv`
@@ -139,7 +139,7 @@ The shared schema with two columns added: `entity_type` names which table a row 
 (33,600 `Pathway`, 4,606 `TF`, 98 `PROGENy`, 3 `GATOM`) and `genes_full_set` carries the set's
 membership intersected with `atlas_gene_universe.txt`. Row counts run below the source tables
 because a row with no members inside the universe cannot be embedded. This is the pathway
-explorer's input; read the source tables for analysis.
+explorer's input. Read the source tables for analysis.
 
 ### `explorer_universe.csv`
 
@@ -153,8 +153,8 @@ what the explorer's Jaccard neighbour graph and gene-set UMAP are fitted on: 5,3
 ### `explorer_manifest.json`
 
 The provenance record for the explorer bundle. `produced_by`, `produced_at` and `git_commit` say
-which run built it; `atlas_file`, `atlas_sha256` and `atlas_size` pin the gene universe it was
-built against; `namespace` is `mouse_symbol_GRCm39` and `genes_full_set_basis` is
+which run built it. `atlas_file`, `atlas_sha256` and `atlas_size` pin the gene universe it was
+built against. `namespace` is `mouse_symbol_GRCm39` and `genes_full_set_basis` is
 `atlas_intersected`, so a reader knows the membership lists were cut to the universe. `n_rows`,
 `contrasts` and `entity_types` restate the bundle's shape. Check `atlas_sha256` against
 `atlas_gene_universe.txt` before trusting a stale bundle.

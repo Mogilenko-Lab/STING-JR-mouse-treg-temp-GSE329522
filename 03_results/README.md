@@ -5,11 +5,11 @@ This is the experimental anchor of the project. Induced regulatory T cells were 
 2×2 design (GSE329522). Everything downstream of this compartment consumes what these twenty
 libraries produce.
 
-The arc runs in one direction. Confirm the sample-to-condition mapping from expression alone,
-fit the seven contrasts the design supports, read those rankings against thirteen gene-set
-databases and two regulatory networks, then freeze the genes that rise at 39 °C into named
-signatures and convert them to human symbols. The last third of the tree turns back on those
-signatures and asks what they are made of.
+The arc runs in one direction. First, confirm the sample-to-condition mapping from expression
+alone. Then fit the seven contrasts the design supports and read those rankings against thirteen
+gene-set databases and two regulatory networks. Then freeze the genes that rise at 39 °C into
+named signatures and convert them to human symbols. The last third of the tree turns back on
+those signatures and asks what they are made of.
 
 ## The reading order
 
@@ -51,9 +51,9 @@ there, all of them in one direction. A gene failing that test has **no detectabl
 cGAS-dependence at n = 5**, which is the phrasing every artifact in this tree uses.
 
 The interferon and hypoxia arms behave differently under it, and that asymmetry is the mouse
-result. The two Hallmark interferon-response sets carry the interaction (+3.14 and +2.83,
-adjusted p 2.7e-24 and 5.0e-22), while HALLMARK_HYPOXIA rises in both heat arms and stays flat
-in the interaction (+1.91 and +1.95 against −1.27 at adjusted p 0.17) — all four read from
+result. The two Hallmark interferon-response sets carry the interaction, at +3.14 and +2.83
+with adjusted p 2.7e-24 and 5.0e-22. HALLMARK_HYPOXIA rises in both heat arms, +1.91 and +1.95,
+and stays flat in the interaction at −1.27, adjusted p 0.17. All four read from
 [`master/master_gsea_table.csv`](master/).
 
 ## The frozen signatures
@@ -74,9 +74,9 @@ response is larger in wild-type. Orange draws positive and blue draws negative t
 **Naming.** A signature is named for how it was derived. `WT_heat_up` is the set of genes
 higher at 39 °C than at 37 °C in wild-type cells, and that description is checkable against
 [`03_de/tables/by_contrast/WT_heat/volcano.csv`](03_de/tables/by_contrast/). A gene set
-enriching locates its gene content in a ranking; establishing that the program the set is named
-for is present is a separate measurement, and [`15_go_decomposition/`](15_go_decomposition/)
-and [`16_arm_composition/`](16_arm_composition/) are where it is made.
+enriching locates its gene content in a ranking. Establishing that the program the set is named
+for is present is a separate measurement, made in
+[`15_go_decomposition/`](15_go_decomposition/) and [`16_arm_composition/`](16_arm_composition/).
 
 ## Layout
 

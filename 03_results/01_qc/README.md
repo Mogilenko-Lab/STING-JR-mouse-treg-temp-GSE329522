@@ -6,7 +6,7 @@ advance: the heat-shock genes report temperature, and `Cgas` reports genotype. T
 label-blind, from expression alone, and then compared with the assignment under test.
 
 All twenty libraries agree. The heat-shock thermometer separates the two temperature halves by
-+1.12 log2CPM, `Cgas` sits above the knockout in wild-type within both halves, and the
++1.12 log2CPM, and `Cgas` sits higher in wild-type than in knockout inside both halves. The
 resulting per-library call matches the owner's sample sheet on 20 of 20 libraries
 (`tables/mapping_verdict.csv`).
 

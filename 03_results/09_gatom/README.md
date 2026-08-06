@@ -7,13 +7,13 @@ and `Temp_main` — with gene scores from the limma differential expression and 
 input, so node size is uniform and every score on the graph is transcriptional.
 
 Module sizes are small and they separate by contrast. `Temp_main` returns 6 nodes over 5 edges
-at weight 48.32, `WT_heat` 7 over 6 at 47.01, `KO_heat` 18 over 17 at 44.83; the interaction
+at weight 48.32, `WT_heat` 7 over 6 at 47.01, and `KO_heat` 18 over 17 at 44.83. The interaction
 returns an empty module. Only the KEGG reaction network was available for this run
 (`met.combined.db.rds` is absent from `00_data/references/gatom/`), so the combined KEGG+Rhea
 network contributes no bar to any panel.
 
 A module is a statistically optimal connected subgraph of an atom-transition network. It records
-where differential-expression signal concentrates in metabolic space; metabolic flux is
+where differential-expression signal concentrates in metabolic space. Metabolic flux is
 untested.
 
 ---

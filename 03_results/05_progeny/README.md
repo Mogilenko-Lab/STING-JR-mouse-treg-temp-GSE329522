@@ -1,10 +1,10 @@
 # 05_progeny — Signalling footprints across the seven contrasts
 
 PROGENy infers the activity of fourteen signalling pathways from the expression of their
-footprint genes, with continuous weights and no gene-set list. It fails differently from the
-gene-set sweep in [`../06_gsea/`](../06_gsea/), which is why both are run on the same rankings.
-CollecTRI transcription-factor activity is carried alongside on the same panels so the two
-inference layers read together.
+footprint genes, with continuous weights and no gene-set list. Its failure modes differ from
+those of the gene-set sweep in [`../06_gsea/`](../06_gsea/), which is why both are run on the
+same rankings. CollecTRI transcription-factor activity is carried alongside on the same panels
+so the two inference layers read together.
 
 The result mirrors the two-arms asymmetry the differential expression shows. Hypoxia and
 glycolysis rise in both heat arms and stay flat on the interaction, so those footprints carry
@@ -16,7 +16,7 @@ positive on the interaction, which is the cGAS-dependent arm.
 and, for the four headline contrasts, a per-contrast bar pair.
 
 Both inference layers score activity with a linear model over target expression. A footprint
-score describes how a pathway's target genes behave; pathway activity itself is untested.
+score describes how a pathway's target genes behave. Pathway activity itself is untested.
 
 ---
 
@@ -27,9 +27,9 @@ score describes how a pathway's target genes behave; pathway activity itself is 
 **Fourteen pathways across all seven contrasts, on one tile grid.**
 Rows, PROGENy pathways in hierarchical-clustering order; columns, contrasts in design order.
 Fill gives the multivariate-model score, orange where the pathway is activated in the contrast
-numerator and blue in the denominator, clamped to ±2.5. An asterisk marks raw p < 0.05; with
+numerator and blue in the denominator, clamped to ±2.5. An asterisk marks raw p < 0.05, and with
 fourteen pathways no multiple-testing correction is applied. Hypoxia and glycolysis light both
-heat columns and go flat in the interaction column; JAK-STAT, NF-κB and TNFα stay lit there.
+heat columns and go flat in the interaction column. JAK-STAT, NF-κB and TNFα stay lit there.
 *Source* `tables/_overview/progeny_heatmap.csv` · `02_analysis/scripts/13_activity_viz.R`.
 
 ### `figures/_overview/progeny_interaction_split.png`
@@ -47,21 +47,21 @@ interaction bounds cGAS-dependence at n = 5 and leaves independence untested.
 **CollecTRI factor activity on the same grid.**
 Rows, factors significant in at least two contrasts plus the watchlist, in clustering order;
 columns, contrasts. Fill gives the univariate score clamped to ±2.5, orange toward the
-numerator and blue toward the denominator; an asterisk marks BH-adjusted p < 0.05. The left-edge
+numerator and blue toward the denominator. An asterisk marks BH-adjusted p < 0.05. The left-edge
 strip gives the axis: orange for HIF (Hif1a, Epas1), blue for IFN/NF-κB, grey for other. The
-IFN/IRF/STAT factors cluster as the block that is positive on the interaction; the HIF-axis rows
-stay above threshold there.
+IFN/IRF/STAT factors cluster as the block that is positive on the interaction, and the HIF-axis
+rows stay above threshold there.
 *Source* `tables/_overview/tf_heatmap.csv` · `02_analysis/scripts/13_activity_viz.R`.
 
 ### `figures/_overview/progeny_tf_combined.png`
 
 **Both inference layers on one canvas, for the three headline contrasts.**
-Row facets separate PROGENy (top) from CollecTRI (bottom); column facets are the three headline
-contrasts. Lollipop colour gives the axis, orange for HIF and blue for IFN/NF-κB, and shape
-separates the layers, diamond for a pathway and circle for a factor. Rightward is activation in
-the numerator condition. An asterisk marks p < 0.05, raw for PROGENy and BH-adjusted for the
-factors. The Hypoxia diamond and the Hif1a circle both sit near zero in the interaction column,
-while JAK-STAT, Stat1 and Irf3 stay positive there.
+Row facets separate PROGENy (top) from CollecTRI (bottom), and column facets are the three
+headline contrasts. Lollipop colour gives the axis, orange for HIF and blue for IFN/NF-κB, and
+shape separates the layers, diamond for a pathway and circle for a factor. Rightward is
+activation in the numerator condition. An asterisk marks p < 0.05, raw for PROGENy and
+BH-adjusted for the factors. The Hypoxia diamond and the Hif1a circle both sit near zero in the
+interaction column, while JAK-STAT, Stat1 and Irf3 stay positive there.
 *Source* `tables/_overview/progeny_tf_combined.csv` · `02_analysis/scripts/13_activity_viz.R`.
 
 ### `figures/by_contrast/<contrast>/{progeny,tf}_barplot.png`

@@ -1,8 +1,8 @@
 # interactive — Browser views over the same tables
 
-Standalone HTML dashboards built from [`../master/`](../master/). They add exploration rather
-than statistics: every number a dashboard shows is a number in a committed table, and each view
-names the table it reads. Open `index.html` to reach all of them.
+Standalone HTML dashboards built from [`../master/`](../master/). They exist for exploration:
+every number a dashboard shows is a number in a committed table, and each view names the table
+it reads. Open `index.html` to reach all of them.
 
 Eleven files: one landing page, seven per-contrast pathway explorers, one bump-chart dashboard
 with its companion CSV, one reference embedding, and one badge lookup.
@@ -48,15 +48,15 @@ columns, on a blue-white-orange diverging scale capped at |NES| 3.5.
 left and knockout right. x, temperature, with ticks at 37 °C and 39 °C alone; y, enrichment score
 labelled "NES (slope from 37 °C reference)". Each pathway is a straight line from (37 °C, 0) to
 (39 °C, that genotype's heat-contrast NES), so a positive slope marks a pathway raised at 39 °C.
-Comparing a pathway's slope between panels is the read: steep in wild-type and flat in the
-knockout, with a significant interaction, marks a cGAS-dependent heat response; matched slopes
+Comparing a pathway's slope between panels is the read. Steep in wild-type and flat in the
+knockout, with a significant interaction, marks a cGAS-dependent heat response. Matched slopes
 mark no detectable cGAS-dependence at n = 5.
 
-**The 37 °C anchor sits at zero by construction.** This view plots one heat contrast per genotype
-rather than absolute per-temperature activity, so every line shares an origin whatever its true
-37 °C baseline. It is a slope chart. The rank toggle is hidden here because rank at the reference
-is undefined, and a true absolute trajectory would take per-group single-sample scores, which
-this dataset has no run of.
+**The 37 °C anchor sits at zero by construction.** This view plots one heat contrast per
+genotype, so every line shares an origin whatever its true 37 °C baseline. It is a slope chart.
+The rank toggle is hidden here because rank at the reference is undefined. An absolute
+per-temperature trajectory would take per-group single-sample scores, which this dataset has no
+run of.
 
 *Built by* `02_analysis/scripts/bump_dashboard.py::DashboardPipeline.run()` *from*
 `../master/master_gsea_table.csv`.

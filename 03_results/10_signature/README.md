@@ -1,9 +1,9 @@
 # 10_signature — Choosing the gate, and sizing the candidate signatures
 
-The differential expression is done; this stage turns it into named gene lists. Four contrasts
-are carried as candidates — `WT_heat`, `Temp_main`, `Geno_at_39` and `Interaction` — each split
-into an up set and a down set at two stringency gates: FDR alone (adjusted p < 0.05), and FDR
-plus |log2FC| ≥ 1.
+The differential expression is done, and this stage turns it into named gene lists. Four
+contrasts are carried as candidates — `WT_heat`, `Temp_main`, `Geno_at_39` and `Interaction` —
+each split into an up set and a down set at two stringency gates: FDR alone (adjusted p < 0.05),
+and FDR plus |log2FC| ≥ 1.
 
 Three panels support the gate decision. The first sizes every candidate set at both gates. The
 second asks whether the candidates are distinct programs or restatements of one another. The
@@ -31,10 +31,9 @@ freezing.
 
 **How much the candidate signatures share.**
 Symmetric heatmap, two facets. Each tile gives the Jaccard overlap of two contrasts' up sets
-(left facet) or down sets (right facet) at the `fdr_logfc` gate; darker means more shared genes
+(left facet) or down sets (right facet) at the `fdr_logfc` gate. Darker means more shared genes,
 and the diagonal is 1 by construction. Off-diagonal values near zero mark distinct programs, so
-carrying several candidates adds information rather than repeating it. The source table carries
-both gates.
+each candidate carried forward adds information of its own. The source table carries both gates.
 *Source* `tables/_overview/updown_overlap.csv` · `02_analysis/scripts/17_signature_derive_viz.R`.
 
 ### `figures/_overview/ortholog_coverage_preview.png`

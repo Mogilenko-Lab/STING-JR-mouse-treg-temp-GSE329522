@@ -1,9 +1,8 @@
 # objects — Recomputable state, and the three tables that travel with it
 
-This directory holds checkpoints rather than deliverables, so the `.rds` and `.h5ad` files here
-stay untracked and regenerate from the scripts that wrote them. Three CSVs are tracked, because
-they are accounting rather than state and a reader has to be able to check them without
-re-running anything.
+This directory holds checkpoints, so the `.rds` and `.h5ad` files here stay untracked and
+regenerate from the scripts that wrote them. Three CSVs are tracked, because they are
+accounting: a reader has to be able to check them without re-running anything.
 
 ## What the checkpoints hold
 
@@ -45,8 +44,8 @@ n_unique_set_genes == n_matched + n_matched_via_alias + n_alias_flagged_for_revi
                       n_below_detection + n_absent_from_reference
 ```
 
-- `n_matched` — exact string match. This is the pre-fix number and it holds still; every set's
-  copy is asserted against a fresh recount on each run.
+- `n_matched` — exact string match. This is the pre-fix number and it holds still, with every
+  set's copy asserted against a fresh recount on each run.
 - `n_matched_via_alias` — resolved through
   `00_data/references/symbol_alias/symbol_alias_map.csv` with the ownership guard passed. This
   is what the fix recovered.
@@ -56,20 +55,18 @@ n_unique_set_genes == n_matched + n_matched_via_alias + n_alias_flagged_for_revi
   membership.
 - `n_alias_flagged_for_review` — the guard would accept it and a human declined. Two pairs:
   `Ndufb1→Ndufb1-ps`, because handing a curated NDUFB1 set member to a pseudogene-named row
-  judges the vM25 annotation rather than the nomenclature, and `H2ac25→H2aw`, because histone
-  cluster renaming is many-to-many and the one-to-one condition passing there is close to
-  accidental.
+  passes judgment on the vM25 annotation itself, and `H2ac25→H2aw`, because histone cluster
+  renaming is many-to-many and the one-to-one condition passing there is close to accidental.
 - `n_expression_filtered` — **structurally 0 here.** The delivered CPM table's 19,679 unique
   `gene_name` values are exactly the 19,679 modelled symbols, and the duplicate-symbol collapse
-  at `01_mapping_qc.R` drops Ensembl ids rather than symbols. One vocabulary layer means no
-  expression filter to attribute a loss to. The column is kept so the schema matches the human
-  compartment's.
+  at `01_mapping_qc.R` drops Ensembl ids while keeping every symbol. One vocabulary layer means
+  no expression filter to attribute a loss to. The column is kept so the schema matches the
+  human compartment's.
 - `n_below_detection` — outside the delivered quantification. This is the terminal bucket.
 - `n_absent_from_reference` — **always 0, with `reference_vocabulary_available = FALSE`.** It
-  would take the GENCODE vM25 feature list, and the collaborators delivered a CPM table rather
-  than a quantification against a tracked GTF. Separating "outside the annotation" from "in the
-  annotation and undetected" is the one statement this compartment leaves unmade, so it is
-  reported as unavailable.
+  would take the GENCODE vM25 feature list, and what the collaborators delivered is a CPM table.
+  Separating "outside the annotation" from "in the annotation and undetected" is the one
+  statement this compartment leaves unmade, so it is reported as unavailable.
 
 There is deliberately no recovery fraction and no pass/fail floor. A floor on `n_matched` would
 reward exactly the conflation these columns exist to undo.

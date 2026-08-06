@@ -27,9 +27,9 @@ cell, blue its low cell, pale a flat gene — on a scale running to ±1.5. Dot s
 CPM. Colour and size are independent channels, so an abundant flat gene draws large and pale.
 
 Rows run by the arm's own source-contrast moderated t, rank 1 at the top, and each strip prints
-the on-screen count. The cap is fifteen genes per arm, so a strip reading 15 of 213 is a cap
-rather than a set size. The interaction panels' blue column is cGAS-knockout at 39 °C.
-`Interaction_up` and `Interaction_up_fdrOnly` are one 1-df contrast at two gates.
+the on-screen count. The cap is fifteen genes per arm, so a strip reading 15 of 213 gives the
+cap and the arm's full size together. The interaction panels' blue column is cGAS-knockout at
+39 °C. `Interaction_up` and `Interaction_up_fdrOnly` are one 1-df contrast at two gates.
 *Source* `tables/_overview/signature_dotplot.csv` ·
 `02_analysis/scripts/23_signature_expression_viz.R`.
 
@@ -55,10 +55,11 @@ Every member of all four up arms in each of the four design cells. Long format, 
 `n_samples` is 5 everywhere. `mean_logcpm` and `sd_logcpm` are the mean and sample standard
 deviation over those five libraries and `se_logcpm` is `sd/sqrt(n)`.
 
-`z_across_groups` z-scores a gene's **four cell means** against each other rather than its
-samples, so "which cell is this gene's high cell" reads the same for an abundant and a scarce
-gene. It is bounded at ±1.5, and a gene flat across all four cells reports 0. One gene can appear
-under several signatures, so `signature` is part of the key.
+`z_across_groups` z-scores a gene's **four cell means** against each other, with the five
+libraries inside a cell already collapsed into that mean, so "which cell is this gene's high
+cell" reads the same for an abundant and a scarce gene. It is bounded at ±1.5, and a gene flat
+across all four cells reports 0. One gene can appear under several signatures, so `signature` is
+part of the key.
 
 ### `tables/signature_gene_stats.csv`
 
@@ -74,7 +75,7 @@ top-N cut is deterministic.
 `mapped_to_human` is FALSE where the gene has no ortholog in the frozen applied map, and
 `human_symbol` lists all orthologs, semicolon-separated. `mapping_type` is the gene's edge class
 over the **whole** applied map, so `many2one` means its ortholog is shared with another mouse
-gene somewhere in the map rather than inside this signature.
+gene somewhere in the map, and that partner can sit outside this signature.
 
 ### `tables/signature_expression_summary.csv`
 

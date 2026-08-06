@@ -10,19 +10,20 @@ enrichment machinery every curated collection does.
 
 Four queries seed the search, taken from the signature-derivation step: `WT_heat_up` and
 `Interaction_up`, each at both stringency gates (`fdr_logfc`, `fdr_only`). The fourteen modules
-they produce are named `CORESH_<query>_<GSE>` and are unique to this analysis — all fourteen ids
-are disjoint from every curated collection id in the master table, which is why they live here
-rather than in the standard sweep.
+they produce are named `CORESH_<query>_<GSE>` and are unique to this analysis. All fourteen ids
+are disjoint from every curated collection id in the master table, which is why they get a
+directory of their own here.
 
 **What the recovered datasets are.** The compendium stores variance structure and accessions,
-with no titles, so each recovered dataset's identity was researched separately and frozen in
-`tables/_overview/coresh_dataset_annotation.{csv,json}` — title, organism, tissue, the
-perturbation compared, neutral context flags for interferon, viral, cGAS-STING and thermal
-biology, each with a source URL and a PubMed id. Figure labels carry that identity, so a point
-reads `GSE89069 · viral infection · embryonic brain`. The `WT_heat_up` query surfaced a broad
-stress, metabolic, developmental and tumour mix; the `Interaction_up` query surfaced
-viral-infection and nucleic-acid-sensing datasets. The annotation is descriptive and enters no
-statistic.
+with no titles. Each recovered dataset's identity was therefore researched separately and frozen
+in `tables/_overview/coresh_dataset_annotation.{csv,json}`: title, organism, tissue, the
+perturbation compared, and neutral context flags for interferon, viral, cGAS-STING and thermal
+biology, each with a source URL and a PubMed id.
+
+Figure labels carry that identity, so a point reads `GSE89069 · viral infection · embryonic
+brain`. The `WT_heat_up` query surfaced a broad stress, metabolic, developmental and tumour mix.
+The `Interaction_up` query surfaced viral-infection and nucleic-acid-sensing datasets. The
+annotation is descriptive and enters no statistic.
 
 A derived module is a co-regulation neighbourhood mined from one public dataset's variance
 structure. It is named for how it was made.
@@ -72,7 +73,7 @@ the running score is recomputed deterministically, so a curve and its tabulated 
   moderated t beneath.
 
 Row and legend labels carry the recovered dataset's identity. NES > 0 places the module's genes
-toward the contrast numerator; on the interaction, positive means stronger induction in
+toward the contrast numerator. On the interaction, positive means stronger induction in
 wild-type.
 *Source* `tables/by_contrast/<contrast>/coresh_gsea.csv` ·
 `02_analysis/scripts/15_coresh_viz.R`.

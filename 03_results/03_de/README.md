@@ -2,17 +2,18 @@
 
 This stage fits the model and reads out the seven contrasts the 2×2 design supports. The input
 is the delivered CPM deposit, so the engine is limma-trend on log2(CPM+0.5) under `~0 + group`
-with `trend=TRUE` and `robust=TRUE`, five libraries per group, 19,679 genes tested in every
-contrast. All seven contrasts are assembled from `analysis_config.yaml:design.contrasts` through
-`makeContrasts`.
+with `trend=TRUE` and `robust=TRUE`. Five libraries enter each group and 19,679 genes are tested
+in every contrast. All seven contrasts are assembled from `analysis_config.yaml:design.contrasts`
+through `makeContrasts`.
 
 Two results carry forward. **Heat dominates.** Warming changes 8,723 genes in wild-type and
-8,901 in cGAS-knockout cells at FDR 0.05, and the two genotypes warm in step — over the 10,418
+8,901 in cGAS-knockout cells at FDR 0.05, and the two genotypes warm in step. Over the 10,418
 heat-responsive genes the knockout response is 0.99× the wild-type response at r = 0.95
 (`tables/_overview/cgas_dependence_stats.csv`). **The cGAS-dependent arm is small and
 one-sided.** Twenty-three genes clear FDR 0.05 on the interaction, all twenty-three in the same
-direction, and every one of them sits below the identity line in
-`figures/_overview/heat_response_wt_vs_ko.png` — a weaker heat response once cGAS is gone.
+direction. Every one of them sits below the identity line in
+`figures/_overview/heat_response_wt_vs_ko.png`, which is a weaker heat response once cGAS is
+gone.
 
 The interaction is a one-degree-of-freedom term at n = 5 and is the least-powered contrast here.
 A gene failing it has **no detectable cGAS-dependence at n = 5**, and 23 is a floor.
@@ -89,15 +90,15 @@ cGAS-knockout, on equal scales so the dashed identity line runs at 45°. The dot
 log2 unit either side of it.
 
 Glyphs run pale to dark. Pale points carry no detectable genotype difference at n = 5.
-Vermillion circles fall with heat in both genotypes and fall further without cGAS; black
+Vermillion circles fall with heat in both genotypes and fall further without cGAS. Black
 triangles rise with heat in wild-type and fall without cGAS. All 23 genes clearing adjusted p
 0.05 on the interaction sit **below** the identity line and none above it, so the cGAS-dependent
 arm is one-sided. Fourteen keep their direction in both genotypes and nine flip sign. Nine also
-clear |log2FC| ≥ 1 and carry bold labels; four of those nine are triangles.
+clear |log2FC| ≥ 1 and carry bold labels, four of them triangles.
 
 The frozen `../human_projection/` contract exports this arm at both gates — the nine at
 `fdr_logfc` and all 23 at `fdr_only` — which is the sensitivity a 1-df term at n = 5 needs.
-Read the one-sidedness as a statement about the highlighted arm; the pale cloud straddles the
+Read the one-sidedness as a statement about the highlighted arm. The pale cloud straddles the
 identity line in both directions.
 *Source* `tables/_overview/heat_response_wt_vs_ko.csv` · `02_analysis/scripts/02b_cgas_dependence_geometry_viz.R`.
 
@@ -112,7 +113,7 @@ ordered by adjusted p then descending |logFC|. Columns: `gene_symbol`, `ensembl`
 `AveExpr` (average log2 CPM), `t` (moderated), `P.Value`, `adj.P.Val`, `contrast`. The two files
 in a directory carry the same statistics and differ in which columns their panel draws.
 
-The volcano gate is adjusted p < 0.05 **and** |logFC| ≥ 1; the MD colouring uses adjusted p
+The volcano gate is adjusted p < 0.05 **and** |logFC| ≥ 1. The MD colouring uses adjusted p
 alone. FDR-only counts are `Temp_main` 11,153, `Geno_at_39` 64, `Geno_main` 60, `Interaction`
 23, `Geno_at_37` 5.
 

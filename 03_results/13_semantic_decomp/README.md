@@ -1,12 +1,12 @@
 # 13_semantic_decomp — What the 39 °C set looks like to the ontology
 
 [`../12_hsr_decomp/`](../12_hsr_decomp/) asked how much of `WT_heat_up` falls inside curated
-lenses. That is a membership question and its answer is 22 of 213 in, the rest out. This stage
-asks what the same 213 genes look like to the Gene Ontology itself, using semantic similarity
-over the Biological Process graph. Nothing here reads expression, so no grouping it produces can
+lenses. That is a membership question, and its answer is 22 of the 213. This stage asks what the
+same 213 genes look like to the Gene Ontology itself, using semantic similarity over the
+Biological Process graph. Nothing here reads expression, so no grouping it produces can
 have come from an enrichment.
 
-The published figure takes the graded question membership cannot ask: for a gene no lens
+The published figure takes the graded question membership cannot ask. For a gene no lens
 contains, how close does its annotation sit to that lens, measured against background genes
 annotated to a similar number of terms? `TCR_activation` has a real penumbra — 23 of 153
 scorable genes above the 95th percentile against 7.7 by chance. `HSR_core` has 11 against the
@@ -15,7 +15,7 @@ as closely as chance does.
 
 A third lens, `Lombardi2022_HIF`, is scored by the stage and left off the figure. It is scorable
 on 72 genes where the other two reach 153, so putting it on the same axis would invite a
-comparison across two denominators; its 4 against a chance count of 3.6 is thin either way. It
+comparison across two denominators. Its 4 against a chance count of 3.6 is thin either way. It
 stays in `lens_proximity_per_gene.csv` and `semantic_lens_coverage_loss.csv`, where the
 denominator travels with it. The set is the Lombardi 2022 conserved HIF signature, a pan-cancer
 consensus derived under hypoxia in cancer cells, used here as a proximity lens over GO
@@ -58,21 +58,21 @@ Process all 66,947 edges land on that one weight.
 GOSemSim 2.39.2 normalises the spellings before the match, and this stage runs on 2.39.2 from
 the project-local R library described in `02_analysis/config/env/r_library.md`.
 
-The stage takes the measurement rather than the version string. It recovers the `is_a` weight at
-run time from a term whose only parent is an `is_a` edge to the BP root, and stops if the answer
-misses 0.8. `semantic_provenance.csv` records what it measured as `wang_isa_weight_measured`:
-0.801 here, against 0.703 under 2.36.0.
+The stage establishes the weight by measurement. It recovers the `is_a` weight at run time from
+a term whose only parent is an `is_a` edge to the BP root, and stops if the answer misses 0.8.
+`semantic_provenance.csv` records what it measured as `wang_isa_weight_measured`: 0.801 here,
+against 0.703 under 2.36.0.
 
 Every similarity on this page runs about 10% above its 2.36.0 value, because `is_a` carries most
 of the graph. The two builds' full 196 × 196 matrices correlate at Pearson 0.994 (Spearman
 0.992) with 19,034 of 19,110 pairs moving, so every comparison ranks the same way at higher
-absolute values. Every count in the proximity figure came out the same under both builds;
+absolute values. Every count in the proximity figure came out the same under both builds, and
 `semantic_engine_validation.csv` carries every published number side by side.
 
 Reproducing this is cheap after the first run. `20_semantic_decomposition.R` caches the term
 similarity matrix under `03_results/_scratch/`, keyed on the term set, measure, ontology, GO.db
-version and GOSemSim version, and the filename carries the GOSemSim version so the two builds
-can be compared without evicting each other.
+version and GOSemSim version. The filename carries the GOSemSim version, so the two builds can
+be compared without evicting each other.
 
 ---
 
@@ -110,6 +110,6 @@ All eight are written by `20_semantic_decomposition.R`, except `semantic_engine_
 | `semantic_scale_summary.csv` | The query's mean similarity against each null, as z and as a permutation p, plus the median terms per gene for all three. | The p is over 20 draws and floors at 1/21 = 0.048, so it resolves a small effect no further. The uniform-null row sizes the annotation-depth confound. |
 | `lens_proximity_per_gene.csv` | One row per (gene, lens) for all 196 annotated query genes: similarity to the nearest other lens member, its percentile against a uniform and a depth-matched background, the depth band, and whether it was counted. | `counted` is FALSE when the band held under 20 background genes or already reached the ceiling at its own 95th percentile. Only counted rows enter the excess. `is_lens_member` rows are the positive control. |
 | `query_per_gene_coherence.csv` | Each query gene's mean similarity to the rest of the set, with its term count. | Sorted descending. Read alongside `n_terms`: a gene annotated to more terms sits closer to everything. |
-| `semantic_provenance.csv` | Package versions, ontology, measure, combiner, evidence filter, seed, and every set size the run used. | `GOSemSim` records which build produced the numbers here, and `wang_isa_weight_measured` records what the run measured rather than what the version claims. |
+| `semantic_provenance.csv` | Package versions, ontology, measure, combiner, evidence filter, seed, and every set size the run used. | `GOSemSim` records which build produced the numbers here, and `wang_isa_weight_measured` carries the weight the run measured for itself. |
 | `semantic_engine_validation.csv` | Every number this stage publishes under GOSemSim 2.36.0 and 2.39.2 side by side, plus probe comparisons on 4,000 GO BP term pairs, 780 `WT_heat_up` gene pairs, and the full 196 × 196 matrix. | `old_value` / `new_value` are the two builds and `changed` is TRUE beyond 1e-9. Rows whose `reading` says so hold one between-build statistic and repeat it in both columns, so `delta` is 0 there by construction. |
 | `_overview/wtheatup_lens_proximity.csv` | Per-lens summary of the figure, for the two lenses it draws: members in the set, genes scorable, genes above the depth-matched 95th percentile, the chance count, and the saturated-band exclusions. | `n_above_p95` against `n_expected_by_chance` is the whole read — `TCR_activation` 23 against 7.7, `HSR_core` 11 against 7.7. `Lombardi2022_HIF` is scored by the stage and absent here; it sits in `lens_proximity_per_gene.csv`. |

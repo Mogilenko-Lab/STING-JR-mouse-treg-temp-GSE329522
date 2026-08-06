@@ -9,7 +9,7 @@ This directory holds the third attempt, and it is the one that answers the parti
 Sets come from five frozen MSigDB collections — Hallmark, GO BP, GO MF, KEGG, Reactome. A set
 enters selection only when a depth-matched random gene set reaches its adjusted p in under 5% of
 2,000 replicates, and it is dropped again when that significance recurs in more than 25% of them.
-Redundant sets are pruned on the arm genes they share rather than on general set similarity.
+Pruning for redundancy takes the arm genes two sets share as its criterion.
 
 ## Two accountings, both reported
 
@@ -19,21 +19,21 @@ comparable, and where they disagree that disagreement is the result.
 
 `HALLMARK_TNFA_SIGNALING_VIA_NFKB` takes 0.044 of `WT_heat_up` fractional and 0.136
 winner-take-all, and under `winner_take_all` it ties exactly with `GOMF_CYTOKINE_ACTIVITY`, both
-on 27 genes. The two accountings put different categories at the head of the composition, and the
-winner-take-all head is a tie between two collections of very different size, so both readings
-are drawn on every face and neither is called primary.
+on 27 genes. So the two accountings put different categories at the head of the composition, and
+the winner-take-all head is a tie between two collections of very different size. Both readings
+are drawn on every face, and both are reported at equal standing.
 
 ## Which set takes a shared gene, and by what rule
 
 Under `winner_take_all` a gene held by several selected sets goes to one of them. The ordering is
 `enriched`, then `p_matched`, then the raw hypergeometric p-value, then fold enrichment, and it
 is recorded in `composition_provenance.csv`. The raw p is the comparable quantity across
-collections; an adjusted p is computed inside each collection's own family, and those families
+collections. An adjusted p is computed inside each collection's own family, and those families
 run from 50 sets in Hallmark to 4,449 in GO BP. `p_matched` reaches its permutation floor for 30
 of the 40 sets selected for `WT_heat_up`, so the key after it settles most assignments, which is
-why the rule is stated rather than left implicit.
+why the rule is spelled out here in full.
 
-## The anchored variant is anchored
+## What the anchored variant pins
 
 `hypoxia_anchored` pins a configured list of hypoxia sets into the selection whether or not they
 reached significance. It sits beside the `unpinned` variant on every figure. For `WT_heat_up`
@@ -43,8 +43,8 @@ purple wherever they appear, and their share is a gene count.
 ## How much of `WT_heat_up` carries a hypoxia annotation
 
 Recorded in `composition_hypoxia_sources.csv`. Three sets hold hypoxia-annotated arm genes: 18,
-11 and 4. Those three counts are un-addable — their union is 26 genes, 13.1% of the 199, and
-Hallmark and GO BP share only 3 of them at a Jaccard of 0.115. Only `HALLMARK_HYPOXIA` reached
+11 and 4. The three counts overlap, so their union is what stands: 26 genes, 13.1% of the 199,
+with Hallmark and GO BP sharing 3 of them at a Jaccard of 0.115. Only `HALLMARK_HYPOXIA` reached
 significance. GO MF and KEGG carry no hypoxia set at all, and a fourth pinned GO BP set has 7
 background genes against a 10-gene floor, so those three cells record an absence of opportunity.
 
@@ -82,12 +82,12 @@ the two. The pair of numbers on the right repeats each row as fractional / winne
 fill gives the source collection. Rows order by the larger of the two shares.
 
 Under `unpinned`, 74 of 202 `WT_heat_up` genes sit in no selected set. The largest named category
-under `fractional` is `HALLMARK_TNFA_SIGNALING_VIA_NFKB` at 0.042, and the same set takes 0.134
-under `winner_take_all`, where it ties exactly with `GOMF_CYTOKINE_ACTIVITY` — 27 genes each, two
+under `fractional` is `HALLMARK_TNFA_SIGNALING_VIA_NFKB` at 0.042. The same set takes 0.134 under
+`winner_take_all`, where it ties exactly with `GOMF_CYTOKINE_ACTIVITY` — 27 genes each, two
 collections of very different size — so that accounting names no single leading pathway.
 `KO_heat_up` leaves 100 of 221 unclaimed and `Interaction_fdrOnly_up` 1 of 19.
 
-Only the ten largest sets per arm are drawn by name; the roll-up row states how many further sets
+Only the ten largest sets per arm are drawn by name. The roll-up row states how many further sets
 it holds and carries their summed share, so drawn rows plus roll-up plus residue total 1.0. Every
 rolled-up set is named in `composition_shares.csv`.
 *Source* `tables/_overview/arm_composition.csv` ·
@@ -100,7 +100,7 @@ Every row is drawn twice: a hollow grey circle for `unpinned` and a filled purpl
 `hypoxia_anchored`, joined by a grey segment. The monospaced text on the right of each row gives
 that column's pair as `unpinned → anchored` on the first line and the set's status in that arm on
 the second, printed purple wherever that status reads `not enriched, NA`. A purple row is a set
-that entered because the configuration named it, was measured, and stayed above the bar; its
+that entered because the configuration named it, was measured, and stayed above the bar. Its
 share is a gene count.
 
 Panel A runs to 3% and panel B to 100%, because the pinned shares and the residue differ by more
@@ -123,7 +123,7 @@ sits at zero under both variants.
 ## Tables
 
 Every table sits in `tables/_overview/`. The ten `composition_*.csv` are written by
-`26_arm_composition.R`; the two named after a figure are that figure's same-stem sibling and are
+`26_arm_composition.R`. The two named after a figure are that figure's same-stem sibling and are
 written by `27_arm_composition_viz.R`. Several `composition_*.csv` carry readings this directory
 draws in no panel, and each is cited by name where its numbers are quoted above.
 

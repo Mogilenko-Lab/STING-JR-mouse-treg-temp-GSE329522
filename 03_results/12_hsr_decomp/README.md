@@ -4,14 +4,14 @@
 are, by direct membership against two curated lenses: a heat-shock core and a TCR /
 immediate-early activation panel. **198 of the 213 fall in neither.**
 
-That answer raises a second question, and the stage answers it in the same directory. Is the
-heat-shock response absent from the 39 °C response? No — warming induces the curated `HSR_core`
-in both genotypes (`WT_heat` NES +2.049 at adjusted p 1.9e-05; `KO_heat` +2.065 at 3.4e-05).
+That answer raises a second question, and the stage answers it in the same directory. The
+heat-shock response is present at 39 °C: warming induces the curated `HSR_core` in both
+genotypes (`WT_heat` NES +2.049 at adjusted p 1.9e-05, `KO_heat` +2.065 at 3.4e-05).
 
-The third question resolves the two. **The gate thresholds effect size, not pathway.**
-`WT_heat_up` genes sit at median rank percentile 1.4% with median t 10.80; `HSR_core` genes sit
-at 24.4% with median t 2.05; the deepest gene the gate admitted sits at 10.21%. The heat-shock
-response moved moderately and the gate kept only extreme movers.
+The third question resolves the two. **The gate thresholds effect size.** `WT_heat_up` genes sit
+at median rank percentile 1.4% with median t 10.80. `HSR_core` genes sit at 24.4% with median t
+2.05, and the deepest gene the gate admitted sits at 10.21%. The heat-shock response moved
+moderately, and the gate kept only extreme movers.
 
 The last panel is the handoff. The mouse gate output is 213 genes, the human set the disease
 compartments receive is 202, and 17 of that 202 are present in every one of the eighteen human
@@ -19,7 +19,7 @@ ranked lists that consume it.
 
 **A standing distinction this whole stage rests on.** A lens enriching in a ranking and a lens
 being contained in a thresholded set are two different measurements. Membership here is counted
-over the whole arm; classifying leading-edge genes and re-testing those subsets would test genes
+over the whole arm. Classifying leading-edge genes and re-testing those subsets would test genes
 selected because they enriched.
 
 **The ceiling on the reading.** `HSR_core` is a curated proteotoxic-stress reference and covers
@@ -32,7 +32,7 @@ supports the response interpretation and leaves human fever untouched.
 **A third lens on the euler panels.** `Lombardi2022_HIF` is the Lombardi 2022 conserved HIF
 signature, re-derived from that paper's supplement and mapped to 100 mouse symbols. It enters
 here as a membership lens over gene symbols and is scored as a gene-set database by no stage in
-these results; a pan-cancer consensus derived under hypoxia in cancer cells is the wrong
+these results. A pan-cancer consensus derived under hypoxia in cancer cells is the wrong
 reference for a 39 °C in-vitro iTreg contrast. It meets `WT_heat_up` at 7 of 213 genes, 3.3%.
 [`../06_gsea/README.md`](../06_gsea/) records where it was removed from and why.
 
@@ -82,7 +82,7 @@ rank-percentile axis, with 0% the most-up end. The shaded band is the empirical 
 
 `HSR_core` genes centre at 24.4% with median t 2.05, roughly 2.4-fold deeper than the gate's
 deepest admission. The gate's own output centres at 1.4% with median t 10.80. Only 213 of the
-2,010 genes inside the band passed, because the gate also required log2FC ≥ 1; the deepest gene
+2,010 genes inside the band passed, because the gate also required log2FC ≥ 1. The deepest gene
 it admitted is `Cpne6` at t 4.55, log2FC 1.03. The `WT_heat_up` row is left-shifted by
 construction and is labelled as the gate's output.
 *Source* `tables/_overview/hsr_rank_position_panel.csv` ·
@@ -107,10 +107,10 @@ EGR1 EGR2 EGR3 IER3 IL2 LTA NR4A1 NR4A2 NR4A3`). `HSR_core` is assembled paralog
 Reactome and GO under a one-to-many map, so it is 47 mouse against 56 human, and its
 `Hspa1a`/`Hspa1b` pair collapses to one human symbol.
 
-The bottom half spans the fewest to the most of the 202 present in any single ranked list of
-each compartment, with the list count and length range printed; the dashed rule at 17 marks the
-genes present in all of them. Recovery is a property of the analysis that produced each ranked
-list, and the shallowest compartment sets the 17.
+The bottom half gives, per compartment, the span from the fewest to the most of the 202 present
+in any single ranked list, with the list count and length range printed. The dashed rule at 17
+marks the genes present in all of them. Recovery is a property of the analysis that produced
+each ranked list, and the shallowest compartment sets the 17.
 
 The human count read 199 until the ortholog step stopped reporting a vocabulary loss as a
 biological one. Three genes of this arm arrive now (`DYNLT2B`, `FHIP1A`, `GARIN3`, from
@@ -120,8 +120,9 @@ biological one. Three genes of this arm arrive now (`DYNLT2B`, `FHIP1A`, `GARIN3
 
 ### The three membership views
 
-All three read one table, `tables/hsr_lens_membership.csv`, so they cannot disagree about a
-count — only about how a count is drawn.
+All three `hsr_lens_membership_*` views read one table, `tables/hsr_lens_membership.csv`, so
+they cannot disagree about a count — only about how a count is drawn. The provenance euler
+alongside them asks where the `Interaction` arm originates.
 
 **`hsr_lens_membership_euler.png`** — area-proportional. `WT_heat_up` (213) against `HSR_core`
 (47), `TCR_activation` (66) and `Lombardi2022_HIF` (100). Overlaps with the arm are 3, 12 and 7;
@@ -160,7 +161,7 @@ stays readable past three sets, where circle layouts stop being drawable.
 | `hsr_decomp_rank_concordance.csv` | Where each set sits in the full `WT_heat` signed-t ranking. | `median_rank_pct = 0` is the most-up end. A Wilcoxon diagnostic is carried; the rank-position panel displays none of it. |
 | `hsr_decomp_conditional.csv` | Each lens's NES after the other lens is purged from the ranking. | `delta_nes = nes_cond − nes_uncond`, about +0.005, which supports treating the two as separate lenses for this audit. |
 | `hsr_lens_membership.csv` | The shared source of all three membership panels: seven mouse region counts, the external human `WT_heat_up` / `HSR_core` overlap, and the conditional NES deltas. | The seven rows partition the union of the three sets. `human_wt_hsr_intersect` is carried when the external table is present and well formed. |
-| `source_hash_manifest.csv` · `source_reads_observed.csv` | The pinned sibling artifacts the bridge census may read, and what it actually read. | `status = read` means the file existed, matched its pinned SHA-256, and was consumed. The census read 19 artifacts and every present file matched. A standalone clone records missing optional sources rather than failing. |
+| `source_hash_manifest.csv` · `source_reads_observed.csv` | The pinned sibling artifacts the bridge census may read, and what it actually read. | `status = read` means the file existed, matched its pinned SHA-256, and was consumed. The census read 19 artifacts and every present file matched. A standalone clone records the missing optional sources and carries on. |
 
 ### `tables/_overview/`
 
@@ -169,8 +170,10 @@ labels over denominator 213. `lens_nes_by_contrast.csv` carries the NES values w
 `n_effective` and the printed size/FDR string. `hsr_rank_position_panel.csv` carries every
 plotted gene position plus the gate-span guard — `gate_pass_n` must be 213 and
 `gate_deepest_gene` must be `Cpne6` at rank 2,010, which is what proves the plotted gate and the
-frozen set are the same object. `gate_projection_bridge.csv` reconciles the two set sizes,
-carries each side's lens membership, and records the downstream recovery census; read `block`
-first to select the funnel, the lens rows or the per-compartment brackets. The four
-`hsr_lens_membership_*` and `hsr_lens_provenance_euler` tables carry the fitted areas, their
+frozen set are the same object.
+
+`gate_projection_bridge.csv` reconciles the two set sizes, carries each side's lens membership,
+and records the downstream recovery census. Read its `block` column first to select the funnel,
+the lens rows or the per-compartment brackets. The four membership tables — the
+`hsr_lens_membership_*` set plus `hsr_lens_provenance_euler` — carry the fitted areas, their
 residuals and the unassigned remainder for each drawing.

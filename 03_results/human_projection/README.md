@@ -6,7 +6,7 @@ manifest recording every size and every loss. A human compartment scores against
 recomputes nothing.
 
 It is a reshape and an ortholog map of the finished differential expression. The biology is in
-[`../03_de/`](../03_de/); the mapping arithmetic is reported in
+[`../03_de/`](../03_de/), and the mapping arithmetic is reported in
 [`../11_projection/`](../11_projection/).
 
 **Gate.** `fdr_logfc` — adjusted p < 0.05 and |log2FC| ≥ 1 — for every binary set, with the
@@ -22,9 +22,11 @@ from the original query outranks one recovered by symbol normalisation.
 **Symbol normalisation.** babelgene keys on current MGI symbols and this matrix was quantified
 against GENCODE vM25, so 2,341 of its 19,679 symbols are no longer current. Those babelgene could
 not key are re-asked under their current symbol through `org.Mm.eg.db` 3.22.0 and the edges
-mapped back; `mouse_symbol` always stays the symbol the data carries. 144 genes arrived that way,
-each previously counted as having no human ortholog. The recovery is strictly additive — 155
-edges added, none removed — and every candidate, accepted or withheld, is a row in
+mapped back. `mouse_symbol` always stays the symbol the data carries.
+
+144 genes arrived that way, each previously counted as having no human ortholog. The recovery is
+strictly additive — 155 edges added, none removed — and every candidate, accepted or withheld,
+is a row in
 [`../11_projection/tables/_overview/query_normalisation_ledger.csv`](../11_projection/tables/_overview/).
 
 ---
@@ -41,7 +43,7 @@ between: `n_dropped_no_ortholog` (the source knew the symbol and returned no hum
 `n_query_symbol_normalised` (genes that arrived only after normalisation). `n_many_mapped` counts
 mouse paralogs collapsing onto one human symbol. `file` is the path relative to this directory.
 
-The eleven rows at a glance:
+Those eleven rows condense into four lines:
 
 | Contrast | Role | Gate | Up | Down | Ranked |
 |---|---|---|---|---|---|
@@ -71,7 +73,7 @@ own tables needs no translation.
 
 The full provenance record: the git SHA and build timestamp, the thresholds, the ortholog source
 and its collision policy in prose, and the per-contrast export notes. Read it when auditing how a
-file was made; read `manifest.csv` when checking what is in one.
+file was made. Read `manifest.csv` when checking what is in one.
 
 ---
 

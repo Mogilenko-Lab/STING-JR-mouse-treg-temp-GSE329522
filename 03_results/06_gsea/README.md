@@ -19,7 +19,7 @@ Read off `../master/master_gsea_table.csv`, so each of these is checkable:
 
 - **The two interferon-response sets are negative in both heat contrasts and positive on the
   interaction.** INTERFERON_ALPHA_RESPONSE reaches −1.90 (adjusted p 1.7e-04) in `WT_heat` and
-  −2.52 (8.0e-12) in `KO_heat`, against +3.14 (2.7e-24) on the interaction; the gamma set runs
+  −2.52 (8.0e-12) in `KO_heat`, against +3.14 (2.7e-24) on the interaction. The gamma set runs
   −1.77, −2.20, +2.83 (5.0e-22). The interaction is positive because the decrease runs deeper in
   the knockout.
 - **Hypoxia, glycolysis and mTORC1 are positive and significant in both heat contrasts.**
@@ -36,7 +36,7 @@ named for is present is a separate measurement, made in
 
 ## Conventions
 
-**Sign.** NES > 0 places the set toward the contrast numerator (39 °C, or wild-type); NES < 0
+**Sign.** NES > 0 places the set toward the contrast numerator (39 °C, or wild-type), NES < 0
 toward the denominator. On the interaction, positive means the enrichment runs stronger in
 wild-type.
 
@@ -44,11 +44,11 @@ wild-type.
 marks adjusted p < 0.05.
 
 **Parameters.** Ranking metric is the limma moderated t. Set-size window 15–500 genes. FDR is
-Benjamini-Hochberg within a database; `06b_gsea_pooled_padj.R` supplies the pooled alternative
-where a cross-database comparison is wanted.
+Benjamini-Hochberg within a database, and `06b_gsea_pooled_padj.R` supplies the pooled
+alternative where a cross-database comparison is wanted.
 
 **Two ranking metrics govern every absence.** The dotplot and facet panels select their top 20
-by adjusted p; the barplot and running-sum panels select by |NES|. Worked example from the
+by adjusted p, and the barplot and running-sum panels select by |NES|. Worked example from the
 master table: in the `WT_heat` × Hallmark cell, HALLMARK_HYPOXIA is 6th by |NES| (+1.908) and
 4th by adjusted p (4.16e-06), so it falls outside the running sum's top five and sits inside the
 dotplot's top twenty. HALLMARK_ANGIOGENESIS runs the other way, 2nd by NES and 10th by adjusted
@@ -119,13 +119,13 @@ Two-block tile heatmap. Rows are the Hallmark sets whose name matches the block'
 block `INTERFERON|INNATE_IMMUNE|INFLAMMATORY|TNF|IL6|IL2|ALLOGRAFT` (7 sets), bottom block
 `HYPOXIA|GLYCOLYSIS|MTORC1|OXIDATIVE_PHOSPHORYLATION` (4 sets). Columns are `WT_heat`,
 `KO_heat`, `Interaction`, `Temp_main`. Fill gives NES squished to ±3.2, orange toward the
-numerator and blue toward the denominator; a star marks adjusted p < 0.05. Rows within a block
+numerator and blue toward the denominator. A star marks adjusted p < 0.05. Rows within a block
 order by NES. Each block draws its top twelve by max |NES|, and both blocks fall under that cap,
 so every matching Hallmark set is on the panel.
 
 The interaction column is the read: the interferon rows light up positive and ringed while the
 hypoxia and metabolic rows stay lit in both heat columns and go flat there. The blocks group set
-names by pattern; which regulator drives either block is the question
+names by pattern. Which regulator drives either block is the question
 [`../04_tf/`](../04_tf/) takes up.
 *Source* `../master/master_gsea_table.csv` · `02_analysis/scripts/12_gsea_viz.R`.
 
@@ -142,9 +142,9 @@ counted over the whole database.
 
 `WT_heat` carries 860 significant sets per-database and 865 pooled (46 lost, 51 gained).
 `Interaction` carries 192 and 164 (32 lost, 4 gained). A facet reading (0/23) marks a real null
-and keeps its place, so the panel reports every database rather than the ones that came out
-positive. `gsea_pooled_overview.png` sets the two contrasts abreast on one canvas at double
-width, sharing one legend; for reading a single contrast, prefer its own panel.
+and keeps its place, so the panel reports every database, including the ones that came back
+empty. `gsea_pooled_overview.png` sets the two contrasts abreast on one canvas at double width,
+sharing one legend. For reading a single contrast, prefer its own panel.
 
 Pooled adjusted p is a comparability device across databases. It is a calibrated error rate
 where the sets are independent, and GO terms and pathway sets share genes.
@@ -157,7 +157,7 @@ where the sets are independent, and GO terms and pathway sets share genes.
 Three stacked rows, one facet per contrast. x, each gene's position in that facet's own ranked
 list as a fraction of its length, most numerator-shifted at 0. Top row, five overlaid running
 curves keyed by colour **and** dash pattern so the panel holds under any form of colour
-blindness and in mono; y pinned to [−1, 1]. Middle row, one tick per member at its rank in a
+blindness and in mono, with y pinned to [−1, 1]. Middle row, one tick per member at its rank in a
 labelled row per set. Bottom row, the ranked moderated t as one grey filled area per facet.
 NES and adjusted p print inside each facet in the set's own colour.
 
@@ -167,14 +167,14 @@ and clears none (adjusted p 0.72, 0.71, 0.94), so shared wording between two set
 shared behaviour an open question.
 
 **The two GO BP curves nest.** All 86 genes of `GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS` present
-in the ranking sit inside the 172 of `GOBP_RESPONSE_TO_OXYGEN_LEVELS`; the child is the
-cell-intrinsic part and the parent also pools organism-level branches. Their agreement is partly
+in the ranking sit inside the 172 of `GOBP_RESPONSE_TO_OXYGEN_LEVELS`. The child is the
+cell-intrinsic part, and the parent also pools organism-level branches. Their agreement is partly
 built in and their difference is the informative part. The parent clears FDR in both heat
 contrasts (5.96e-04 and 9.91e-03) and the child clears it in wild-type alone (0.0234 against
 0.119), so the cell-intrinsic half is the weaker half. Every interaction NES here stays above
 threshold, which is the bound a 1-df term gives at n = 5.
 
-The five sets were chosen by name; their statistics played no part in the choice, and the
+The five sets were chosen by name, with their statistics playing no part in the choice. The
 general panels of the sweep select on those statistics alone.
 *Source* `tables/_overview/hypoxia_routes_by_contrast.csv` ·
 `02_analysis/scripts/28_hypoxia_focus_viz.R`.
@@ -218,13 +218,13 @@ general running-sum panels leave it out and this panel draws it by name.
 `Lombardi2022_HIF` was scored here and has been withdrawn. It is a pan-cancer consensus derived
 under hypoxia in cancer cells, which makes it the wrong reference for a 39 °C in-vitro contrast
 in iTregs, and it meets `WT_heat_up` at 7 of that arm's 213 genes, 3.3%. Hypoxia in this stage
-is read off the curated versioned collections instead, and
+is read off the curated versioned collections, and
 `figures/_overview/hypoxia_routes_by_contrast.png` is the panel that does it. The set survives
 as a **membership lens over gene symbols** in [`../12_hsr_decomp/`](../12_hsr_decomp/) and
 [`../13_semantic_decomp/`](../13_semantic_decomp/), where it is read for overlap and scored as a
 gene-set database by neither.
 
-A related caution the same episode produced: a bespoke sixteen-gene HIF list circulated as a
+The same episode produced a related caution. A bespoke sixteen-gene HIF list circulated as a
 hypoxia reference, and its content is roughly 92% heat-shock and glycolytic while its
 hypoxia-diagnostic core (Pdk1, Bnip3, Bnip3l, Car9) is repressed. Every gene-set size on a
 figure in this stage is read at run time from the master table, so a size printed on a canvas is

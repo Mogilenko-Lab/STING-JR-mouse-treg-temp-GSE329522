@@ -20,11 +20,12 @@ would take a separate test, and [`../04_tf/`](../04_tf/) is where that test is m
 
 ### `figures/_overview/two_arms_panel.png`
 
-**The interferon arm carries the interaction; the HIF and glycolysis arm carries both heat arms
+**The interferon arm carries the interaction. The HIF and glycolysis arm carries both heat arms
 and goes flat there.**
 Two stacked tracks: the interferon/ISG arm above, the HIF/glycolysis arm below. Rows within a
-track are method-features — GSEA gene sets, PROGENy pathways, CollecTRI factors, differential-
-expression marker genes, GATOM modules where present — ordered by their interaction score.
+track are method-features — GSEA gene sets, PROGENy pathways, CollecTRI factors,
+differential-expression marker genes, GATOM modules where present — ordered by their
+interaction score.
 Columns are the four headline contrasts: wild-type heat, cGAS-knockout heat, interaction,
 temperature main effect. Tile fill gives the signed score, orange toward the numerator condition
 and blue away from it, clamped to ±3.2, with the score printed in the tile. A black ring marks
@@ -43,9 +44,9 @@ HIF and glycolysis track stays lit in both heat columns and goes unringed there.
 The full cross-arm evidence table, one row per (arm, method, feature, contrast). Assembled by
 `16_synthesis.R` from the four master tables under [`../master/`](../master/).
 
-`arm` takes `IFN_ISG`, `HIF_glycolysis` or `heatshock_context` (HSF1, which is carried as
-context rather than as a cGAS arm), with `arm_label` and `arm_hypothesis` naming what each
-grouping was assembled to test. `method` names the source arm — `GSEA:<db>`, `PROGENy`,
+`arm` takes `IFN_ISG`, `HIF_glycolysis` or `heatshock_context` (HSF1, carried as context
+alongside the two cGAS arms), with `arm_label` and `arm_hypothesis` naming what each grouping
+was assembled to test. `method` names the source arm — `GSEA:<db>`, `PROGENy`,
 `TF:CollecTRI`, `DE:limma-trend`, `GATOM` — and `feature` the gene set, pathway, factor or gene.
 `score` is that method's own signed statistic: a normalised enrichment score, a linear-model
 activity score, a moderated t, or a GATOM pseudo-NES. `padj` drives `significant` at the
@@ -59,5 +60,5 @@ the pattern across them.
 The panel's same-stem source: one row per tile, carrying every column needed to audit it.
 `arm`, `arm_track` (the facet label drawn), `method`, `feature`, `feature_kind`, `contrast`,
 `score` (raw and unclamped), `pvalue`, `padj`, `direction` and `significant`. Rows order by arm,
-method, feature, contrast. The figure clamps `score` for display; this file carries the value the
-method returned.
+method, feature, contrast. The figure clamps `score` for display, and this file carries the
+value the method returned.
