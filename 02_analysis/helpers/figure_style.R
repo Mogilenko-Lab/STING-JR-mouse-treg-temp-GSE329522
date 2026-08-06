@@ -92,10 +92,10 @@ contrast_label <- function(co, short = FALSE) {
 ##     Read from design.sample_mapping in the project config. No viz script may
 ##     hard-code the mapping status: the 2026-07-22 owner sample sheet flipped it
 ##     INFERRED -> CONFIRMED, and figures regenerated after that date kept printing
-##     the old hedge because the string lived in nine scripts instead of one key.
+##     the old hedge because the string lived in nine scripts, ahead of the one key.
 ##
 ##     config.R defines the same four accessors off the same config key, for the
-##     compute scripts that source it instead of this shim. Definitions are guarded
+##     compute scripts that source it in place of this shim. Definitions are guarded
 ##     by exists() so whichever loads first wins; both read design$sample_mapping,
 ##     so the two cannot disagree on a value. Use sample_mapping_stamp() for a
 ##     figure canvas (short) and sample_mapping_caption() for a README (names the
@@ -143,7 +143,7 @@ if (!exists("provisional_caption", mode = "function")) {
 ##
 ##     Deliberately OPT-IN — call it from a viz script next to its labs(), do not
 ##     wire it into save_figure(). A silent global guard would begin failing
-##     renders across every stage at once, which is a migration, not a fix.
+##     renders across every stage at once, which makes it a migration.
 ##
 ##     Usage:
 ##       fits_canvas(my_title,    FIG_CFG$figures$title_size,    "bold",  W, "title")

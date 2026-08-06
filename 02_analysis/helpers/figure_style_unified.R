@@ -4,17 +4,18 @@
 ## up into SciAgent-toolkit. Sources the existing shim (toolkit path/caption/table helpers
 ## + FIG_CFG + contrast_label) and then SHADOWS the styling + export functions:
 ##
-##   * project_theme()  — ONE legible theme (no print/screen variant), palette-aware.
-##   * save_figure()    — ONE themed plot -> <name>.pdf AND <name>.png (same geometry,
-##                        no .print/.screen suffix). cairo_pdf for Unicode glyphs.
-##   * save_overview()  — same, plus sibling table + README caption (caption -> <name>.png).
-##   * style_series()   — patchwork-CORRECT running-sum normalizer (uses `&`, not `+`),
-##                        fixed ES y-range + inside legend; the running-sum headline fix.
+##   * project_theme()  — ONE legible theme covering both media, palette-aware.
+##   * save_figure()    — ONE themed plot -> <name>.pdf AND <name>.png at the same geometry,
+##                        with a bare stem. cairo_pdf for Unicode glyphs.
+##   * save_overview()  — the same, plus a sibling table + README caption (caption -> <name>.png).
+##   * style_series()   — patchwork-correct running-sum normalizer, applying `&` so the theme
+##                        reaches every subplot; fixed ES y-range + inside legend. The
+##                        running-sum headline fix.
 ##
-## SOURCED BY figure_style.R (at its end), AFTER the toolkit lib + FIG_CFG + contrast_label
-## are already in scope. Viz scripts source figure_style.R (the project entry point); they do
-## NOT source this file directly. These definitions SHADOW the toolkit lib's project_theme /
-## save_figure / save_overview / style_series with the unified single-variant, dual-format style.
+## SOURCED BY figure_style.R at its end, once the toolkit lib + FIG_CFG + contrast_label are in
+## scope. Viz scripts source figure_style.R, which is the project entry point. These definitions
+## SHADOW the toolkit lib's project_theme / save_figure / save_overview / style_series with the
+## unified single-variant, dual-format style.
 
 `%||%` <- function(a, b) if (is.null(a) || length(a) == 0) b else a
 
@@ -162,14 +163,14 @@ save_overview <- function(plot, stage, name, table, finding, script, fn, config_
 ##    the plotter adds under a lone trace's ticks is dropped, since it bins the same
 ##    metric the bottom panel plots at full resolution. Both are applied to the
 ##    composed figure by ROLE — the rug is found by its lineranges and the metric
-##    panel by its label, never by position — so the plotter's subplot order can
+##    panel by its label — so the plotter's subplot order can
 ##    change without silently retargeting the edit.
 ## ---------------------------------------------------------------------------
 
 ## The x-axis title for a fractional-rank axis. ONE phrasing for every running sum here.
 ## It states the direction convention, because a normalised axis carries no gene names to
 ## anchor it, and the universe size, because the fraction hides it. It says "universe"
-## rather than "genes ranked": the panel legend already spends that phrase on the SET size,
+## over "genes ranked": the panel legend already spends that phrase on the SET size,
 ## and the two differ by two orders of magnitude.
 rank_fraction_lab <- function(n_ranked, of = NULL)
   sprintf("Rank fraction%s (0 = most up; %s-gene universe)",
@@ -179,7 +180,7 @@ rank_fraction_lab <- function(n_ranked, of = NULL)
 ## The bottom panel of a running sum plots the statistic the ranking was built on. Naming the
 ## axis for that statistic is what lets a panel here be read against the matching panel in the
 ## human compartments, which label the same axis the same way. The plotter's own label names
-## the slot rather than the number in it.
+## the slot, over the number in it.
 metric_axis_lab <- function(config = NULL)
   as.character((config %||% FIG_CFG)$figures$metric_axis_label %||% "Moderated t")
 
@@ -278,7 +279,7 @@ style_series <- function(plot, ylim = NULL, config = NULL, n_ranked = NULL,
     styled <- .rs_name_panels(styled, metric_lab = metric_lab,
                               trace_labels = trace_labels, trace_colors = trace_colors)
     ## Top-align the collected outside-right legend so it sits at the level of the
-    ## top (ES) panel rather than vertically centred across all three panels.
+    ## top (ES) panel, over vertically centred across all three panels.
     return(as_fraction(styled) & ggplot2::theme(
       legend.justification.right = "top",
       legend.justification       = "top"))

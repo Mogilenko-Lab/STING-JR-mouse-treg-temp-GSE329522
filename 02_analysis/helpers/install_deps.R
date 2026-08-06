@@ -13,9 +13,9 @@
 ## org.Mm.eg.db) plus the GATOM-viz network renderers and the set-membership
 ## renderers used by the stage 12_hsr_decomp viz (eulerr / ggvenn / ComplexUpset).
 ##
-## Idempotent by construction: every package is probed with requireNamespace()
-## first, nothing already loadable is touched, and the run ends with an explicit
-## INSTALLED / SKIPPED / FAILED ledger so a re-run is self-documenting.
+## Idempotent by construction: every package is probed with requireNamespace() first,
+## anything already loadable is left alone, and the run ends with an explicit
+## INSTALLED / SKIPPED / FAILED ledger, making a re-run self-documenting.
 
 suppressPackageStartupMessages(library(BiocManager))
 

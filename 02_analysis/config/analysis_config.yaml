@@ -95,7 +95,7 @@ design:
   # in 02_de_results.rds and every master CSV; these labels NEVER re-key the data.
   # `_short` variants (with an embedded newline) are for compact axis ticks.
   # House framing: the Interaction is LABELLED by what it TESTS (cGAS-dependence of
-  # the heat response), not by a result — never read a label as a claim; floor at L3.
+  # the heat response) — read every label as a description; floor at L3.
   contrast_labels:
     WT_heat:     "WT: heat (39 vs 37 °C)"
     KO_heat:     "cGAS-KO: heat (39 vs 37 °C)"
@@ -174,7 +174,7 @@ semantic:
   # GOSemSim through 2.36.0 keys that table on "is_a"/"part_of" and matches it against
   # the packaged `gotbl`, which spells them "isa"/"part of", so all 66,947 BP edges take
   # the 0.7 "other" weight and the measure loses the distinction it is made of.
-  # `expect_isa_weight` is asserted BEHAVIOURALLY at run time, not read off the version
+  # `expect_isa_weight` is asserted BEHAVIOURALLY at run time, downstream of the version
   # string: for a BP term whose only gotbl parent is an is_a edge to the BP root, Wang
   # similarity to that root is (1+w)/(2+w), so the run recovers w and stops if it is not
   # this value. The recovered number is written to semantic_provenance.csv, so the table
@@ -208,14 +208,14 @@ semantic:
 # Benjamini-Hochberg family computed by 06b_gsea_pooled_padj.R is unchanged and
 # still spans every database listed under `databases:` below.
 #
-# `exclude_databases` drops a database from the PANEL, never from the pooled
+# `exclude_databases` drops a database from the PANEL and keeps it in the pooled
 # family, the GSEA sweep, or the results tables. It is currently empty.
 #
 # The Lombardi2022_HIF database used to be listed here, and it has since been
-# removed from this stage entirely rather than only from the panel: the set is no
+# removed from this stage entirely, panel and family alike: the set is no
 # longer built by 04_gsea_set_prep.R or scored by 06_gsea_custom_run.R, and its
 # rows and figures are gone from 03_results/06_gsea/ and from the master tables.
-# The reason is fit, not behaviour. It is a pan-cancer consensus derived under
+# The reason is fit. It is a pan-cancer consensus derived under
 # hypoxia in cancer cells, which is the wrong reference for a 39 °C in-vitro
 # contrast in iTregs, and it meets WT_heat_up at 7 of that arm's 213 genes
 # (3.3%; see mouse_anchor/03_results/12_hsr_decomp/README.md). Hypoxia in this
@@ -239,7 +239,7 @@ gsea_pooled_overview:
   exclude_databases:           # dropped from the PANEL only (see note above)
   label_wrap: 38               # wrap column for set names on the y axis (never truncate)
   facet_ncol: 2                # 2 columns keeps long set names legible at width_wide
-  # Inches per set row. 0.36 rather than 0.30 because set names wrap to two lines in
+  # Inches per set row. 0.36, over 0.30, because set names wrap to two lines in
   # the long-named families (WikiPathways, Reactome, GO_CC) and at 0.30 four
   # consecutive two-line labels run into each other.
   facet_row_height: 0.36
@@ -259,7 +259,7 @@ coresh:
   # Query matrix = project signatures from the mouse-native signature-set object.
   query_signatures:
     object: 03_results/objects/17_signature_sets.rds
-    # `origin` is the biological family label for the figure color strip (config, not row order).
+    # `origin` is the biological family label for the figure color strip, read from config.
     sets:
       - { contrast: WT_heat,     direction: up, gate: fdr_logfc, origin: "WT_heat_up (generic thermal)" }        # 213
       - { contrast: WT_heat,     direction: up, gate: fdr_only,  origin: "WT_heat_up (generic thermal)" }        # ~4207, broad
@@ -269,7 +269,7 @@ coresh:
 # =============================================================================
 # SIGNATURE-GENE EXPRESSION READBACK (stage 14_signature_expression)
 # =============================================================================
-# UP ARMS ONLY, and that is a scope decision rather than an omission. The bench
+# UP ARMS ONLY, recorded here as a scope decision. The bench
 # question this stage serves — "show me the genes that go UP with heat and whether
 # cGAS matters" — is asked of the induced arm; the down arms carry a separate
 # interpretive burden (in the human compartment the down arm's direction does not
@@ -281,11 +281,11 @@ coresh:
 # gate leaves the interaction arm at 9 genes: too thin to read a pattern from. It is
 # the SAME 1-df contrast at the looser gate (adj.P.Val only, |logFC| gate off), it is
 # flagged as such in every table row and facet label, and it is a sensitivity read —
-# never a second, larger interaction signature.
+# one contrast read at two gates.
 #
 # `top_n_genes` caps the plotted rows per facet only; both tables carry every member.
 # It is 15, not 25, for a legibility reason that is worth writing down. The figure lays the
-# four arms out 2x2 rather than 4-across, because the canvas WIDTH is what gets normalised
+# four arms out 2x2, over 4-across, because the canvas WIDTH is what gets normalised
 # when a reader views the PNG at notebook width (~1150 px): 4 panels side by side force a
 # 17-inch canvas, at which the gene labels render around 9 px and stop being readable, while
 # 2 columns fit the project default 8.5-inch width and render them near 19 px. That fixes the
@@ -311,10 +311,10 @@ signature_expression:
   projection_manifest: "03_results/human_projection/manifest.csv" # frozen ledger, cross-checked
   top_n_genes: 15                       # plotted rows per signature facet (tables are complete)
   facet_ncol: 2                         # 2x2 layout — keeps the canvas at the default 8.5in width
-  # ggplot point-size range for mean log2 CPM. The FLOOR is 1.8 rather than 1.2 because the
+  # ggplot point-size range for mean log2 CPM. The FLOOR is 1.8, over 1.2, because the
   # scarcest plotted genes are the interaction-arm ISGs, and at notebook display width a 1.2
   # dot is a few pixels — the reader would lose exactly the points the panel exists to show.
-  # The CEILING is 6.5 rather than 7.0 so the largest dots in the two abundant heat panels
+  # The CEILING is 6.5, under 7.0, so the largest dots in the two abundant heat panels
   # keep visible air between adjacent gene rows.
   dot_size_range: [1.8, 6.5]
 
@@ -391,7 +391,7 @@ go_decomposition:
   # collapses every BP parent edge to a uniform 0.7 Wang weight because GO.db spells the
   # relationships "isa"/"part of" while getSV keys on "is_a"/"part_of"; 2.39.2 normalises
   # them first. Any simplify() or pairwise_termsim() call inherits that, so this stage
-  # stops rather than fall back to the system build.
+  # stops, leaving the system build unused.
   sim_measure: "Wang"
   simplify_cutoff: 0.7
   simplify_by: "p.adjust"
@@ -399,7 +399,7 @@ go_decomposition:
   cluster_height: 0.7         # cut the (1 - Wang) dendrogram here for the block assignment
 
   # --- annotation-depth-matched permutation null -------------------------------
-  # n_null is 2000, not the 20 stage 13 could afford: a hit count and a share both scale
+  # n_null is 2000, where stage 13 could afford 20: a hit count and a share both scale
   # with n, so the p-value floor of a small null (1/21) is not usable for either. The set
   # arithmetic is a sparse matrix product, so 2000 costs seconds.
   seed: 20260730
@@ -407,7 +407,7 @@ go_decomposition:
   null_ontologies: ["BP"]     # the null is computed for the primary ontology only
   # Depth = the number of ontology terms the gene carries in the SAME propagated map the
   # test uses, so the band is the gene's actual number of chances to be a hit. Band edges
-  # are background quantiles rather than the fixed counts stage 13 used on the direct
+  # are background quantiles, where stage 13 used fixed counts on the direct
   # (unpropagated) map, because the propagated distribution is an order of magnitude
   # wider (background median 52 terms per gene, WT_heat_up median 100).
   depth_band_quantiles: [0.2, 0.4, 0.55, 0.7, 0.8, 0.875, 0.94, 0.98]
@@ -417,7 +417,7 @@ go_decomposition:
   # with the GO term whose NAME a reader would take to mean the same thing. The point of
   # the pairing is that the two disagree about which genes they claim, so the pair is
   # reported as three counts (GO only / shared / lens only) and three gene lists. A GO id
-  # that is absent from the installed GO.db is reported as an absent row, not skipped.
+  # that is absent from the installed GO.db is reported as an absent row.
   curated_lenses:
     - { name: "HALLMARK_HYPOXIA",                 go_id: "GO:0001666",
         file: "../human_treg_arthritis/00_data/references/msigdb_hallmark/HALLMARK_HYPOXIA.txt" }
@@ -468,7 +468,7 @@ go_decomposition:
 
   # --- mouse-space replicate (secondary) ----------------------------------------
   # The same question asked before the ortholog map, so a term that appears only in human
-  # space can be attributed to the projection rather than to the biology. Secondary by
+  # space can be attributed to the projection. Secondary by
   # construction: the human-space run is the one the arms are defined in.
   mouse_replicate:
     signature_object: "03_results/objects/17_signature_sets.rds"
@@ -569,7 +569,7 @@ figures:
   metric_axis_label: "Moderated t"
   volcano_label_top: 10
   z_clamp: 2.5
-  # Symmetric limit for diverging NES fills. Kept fixed rather than per-contrast so one
+  # Symmetric limit for diverging NES fills. Kept fixed across contrasts so one
   # colour means one NES in every panel, and set tight to the observed range across the
   # pooled family (max |NES| = 3.145) so the colourbar does not advertise end-colours no
   # point attains. scales::squish still guards anything beyond it.
@@ -602,14 +602,14 @@ figures:
 
 symbol_alias:
   # The committed asset. Regenerable by 02_analysis/scripts/00_symbol_alias_map.R, so it is
-  # negated out of the 00_data/references/* ignore rule rather than left untracked —
+  # negated out of the 00_data/references/* ignore rule, so they are tracked —
   # regenerating it must produce a reviewable diff.
   map_path: "00_data/references/symbol_alias/symbol_alias_map.csv"
   provenance_path: "00_data/references/symbol_alias/symbol_alias_provenance.csv"
 
   # The vocabulary reference symbols are resolved INTO: the modelled DE universe, which in
   # this project is also every symbol the delivered CPM table carries (19,679 either way —
-  # the duplicate-symbol collapse at 01_mapping_qc.R drops Ensembl ids, never symbols).
+  # the duplicate-symbol collapse at 01_mapping_qc.R drops Ensembl ids and keeps every symbol).
   # There is consequently exactly ONE vocabulary layer here, so n_expression_filtered is
   # structurally 0 and absence means "not in the delivered quantification".
   matrix_vocabulary: "03_results/objects/gene_universe.txt"
@@ -660,13 +660,13 @@ databases:
     # second lens held orthogonal to the empirical WT_heat_up. Two terms: HSR_core (47 mouse,
     # cleaned cytosolic HSF1/chaperone core) and HSR_sensitivity (170 mouse, full union).
     # Built by 00d + 00e (msigdbr v2026.1.Hs, taxonomy-refined). Honest ceiling: proteotoxic-
-    # stress-general, not fever-specific — only the 37/39 contrast measures thermal-ness.
+    # stress-general — the 37/39 contrast is what measures thermal-ness.
     - name: "HSR_lens"
       path: "00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds"
     # Tight TCR/IEG T-cell-activation lens — the "activation pole" of the three-lens
     # decomposition (66 mouse; TCR-proximal + costim-early + immediate-early TFs + activation
     # effectors), disjoint from the HSR core by construction. Built by 00f (agy web-researched
-    # panel + curator refinement). Overlap of WT_heat_up with this = activation, not thermal.
+    # panel + curator refinement). Overlap of WT_heat_up with this = activation.
     - name: "TCR_activation"
       path: "00_data/references/gene_sets/tcr_activation_lens/tcr_activation_mouse.rds"
 
@@ -854,8 +854,8 @@ decisions:
     # Interaction is 1 df / thin at fdr_logfc; carry its fdr_only variant alongside so the
     # human side can score both the 7-gene core and the ~23-gene gate-sensitivity set.
     #
-    # Gate asymmetry is BY DESIGN, not a smell. Interaction and KO_heat are the two arms of
-    # the same specificity test, not competitors. Interaction rides the looser fdr_only gate
+    # Gate asymmetry is BY DESIGN. Interaction and KO_heat are the two arms of the same
+    # specificity test. Interaction rides the looser fdr_only gate
     # because it is the underpowered POSITIVE candidate — a 1-df interaction term is inherently
     # low-power and needs the sensitivity read to avoid a false null. KO_heat rides the
     # stringent combo fdr_logfc gate (the top-level `gate:` above) with NO secondary gate
@@ -889,8 +889,8 @@ decisions:
 # asking, and it leaves 132 of 199 genes unclaimed.
 #
 # This stage keeps the partition property and drops the hand-picked panel. Sets come from
-# five frozen MSigDB collections; selection is by depth-matched permutation rather than by
-# adjusted p; redundant sets are pruned on how much of the ARM they share, not on set
+# five frozen MSigDB collections; selection is by depth-matched permutation, over adjusted p;
+# redundant sets are pruned on how much of the ARM they share, over set
 # similarity in general; and attribution is reported two ways so a reader can see whether
 # the composition is determined at all.
 arm_composition:
@@ -901,7 +901,7 @@ arm_composition:
   background_from: "go_decomposition"
 
   # The frozen collections the HUMAN compartment's sweep already used, consumed as an
-  # object rather than rebuilt from msigdbr here. Rebuilding would risk the mouse-side
+  # object, read as published. Rebuilding from msigdbr here would risk the mouse-side
   # "HALLMARK_HYPOXIA" and the human-side one meaning different things if msigdbr data
   # drifted between runs; sharing the frozen object makes the two sides comparable set
   # for set. The content hash is recorded in provenance and a change to it is visible.
@@ -929,7 +929,7 @@ arm_composition:
   max_null_recurrence: 0.25
   # Redundancy prune. Two sets that claim nearly the same ARM genes cannot both carry a
   # share, so the less significant one is dropped. Overlap is measured on the arm's hit
-  # genes rather than on the whole sets, because hit overlap is what double counts in the
+  # genes, over the whole sets, because hit overlap is what double counts in the
   # bar; whole-set Jaccard is recorded alongside for audit.
   prune_hit_jaccard: 0.5
   top_n_per_collection: 10
@@ -942,16 +942,16 @@ arm_composition:
   accountings: ["fractional", "winner_take_all"]
 
   # --- the hypoxia-anchored variant -------------------------------------------
-  # Reported BESIDE the unbiased variant, never instead of it. History: an earlier
+  # Reported BESIDE the unbiased variant, which stays the primary. History: an earlier
   # revision of the pooled GSEA overview force-included the Hallmark hypoxia and
   # interferon sets regardless of rank, which made that panel argue for a conclusion, and
   # the pin was removed. Pinning here is legitimate only because the anchored panel is
   # labelled as anchored and the unbiased panel is published next to it.
   #
-  # Named explicitly rather than matched by pattern: a regex on "HIF" also catches
+  # Named explicitly, over matched by pattern: a regex on "HIF" also catches
   # GOBP_VIRAL_TRANSLATIONAL_FRAMESHIFTING, which is how a pin becomes a silent error.
   # Two of the five collections carry no hypoxia set at all, and the stage reports that
-  # as an absence of opportunity rather than as a zero share.
+  # as an absence of opportunity, distinct from a zero share.
   hypoxia_anchor:
     Hallmark:  ["HALLMARK_HYPOXIA"]
     Reactome:  ["REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA"]

@@ -1,53 +1,50 @@
 ## ortholog_utils.R — mouse→human ortholog mapping helper (babelgene, pinned/offline)
 ## ===========================================================================
-## PROJECT HELPER, NOT A SKILL. Ortholog mapping has no skill in the active
-## base + pathway-signature catalog, so the mapping policy lives here as functions
-## (per the phase-0 scaffold rule: encode the collision policy in a helper, never
-## inline it in the numbered scripts). The REVERSE of 00b_curate_lombardi_hif.R,
-## which maps human→mouse (babelgene::orthologs(..., human = TRUE)); this file maps
-## mouse→human (human = FALSE) with the SAME pinned, offline babelgene package — no
-## new dependency, no network. Downstream: 18_projection_export.R freezes the human
-## contract with these functions; 17_signature_derive.R uses ortholog_coverage() for
-## a display-only dry-run preview.
+## PROJECT HELPER, NOT A SKILL. Ortholog mapping has no skill in the active base +
+## pathway-signature catalog, so the mapping policy lives here as functions, per the
+## phase-0 scaffold rule that a collision policy belongs in a helper. This is the REVERSE
+## of 00b_curate_lombardi_hif.R, which maps human→mouse
+## (babelgene::orthologs(..., human = TRUE)); this file maps mouse→human (human = FALSE)
+## with the SAME pinned, offline babelgene package, adding no dependency and no network.
+## Downstream: 18_projection_export.R freezes the human contract with these functions, and
+## 17_signature_derive.R uses ortholog_coverage() for a display-only dry-run preview.
 ##
-## COMPUTE ONLY — no plotting, no file writes (the babelgene call is its only effect).
+## COMPUTE ONLY — the babelgene call is its only effect.
 ## Sourced AFTER 02_analysis/config/config.R (needs `%||%`; defensively self-defines).
 ##
-## babelgene::orthologs(genes, species = "mouse", human = FALSE) returns per-EDGE rows
-##   with columns: symbol (mouse), ensembl (mouse), human_symbol, ... (see the raw
-##   frame). One mouse gene may yield several rows (one→many human); several mouse
-##   genes may share one human_symbol (many→one human). `min_support` is babelgene's
-##   orthology-source vote floor (default 3); recorded in provenance.
+## babelgene::orthologs(genes, species = "mouse", human = FALSE) returns per-EDGE rows with
+##   columns: symbol (mouse), ensembl (mouse), human_symbol, ... (see the raw frame). One
+##   mouse gene may yield several rows (one→many human); several mouse genes may share one
+##   human_symbol (many→one human). `min_support` is babelgene's orthology-source vote floor
+##   (default 3), recorded in provenance.
 ##
 ## COLLISION POLICY (defaults; overridable via analysis_config.yaml::decisions.projection):
-##   one mouse → many human : binary up/down sets take the UNION of human orthologs;
-##                            the ranked list assigns the mouse metric to EACH human
-##                            ortholog (map_ranked_list expands the edge).
-##   many mouse → one human : the ranked list keeps the entry with MAX |metric| per
-##                            human symbol (the more extreme rank, never averaged);
+##   one mouse → many human : binary up/down sets take the UNION of human orthologs; the
+##                            ranked list assigns the mouse metric to EACH human ortholog
+##                            (map_ranked_list expands the edge).
+##   many mouse → one human : the ranked list keeps the entry with MAX |metric| per human
+##                            symbol, the more extreme rank, carried through unaveraged;
 ##                            binary sets dedupe by union.
-##   no human ortholog      : dropped and logged (every dropped gene auditable, the
-##                            00b audit-log precedent).
-##   stale query symbol     : normalised to the current MGI symbol via org.Mm.eg.db
-##                            BEFORE babelgene sees it, then mapped back to the symbol
-##                            the data carries (see normalise_mouse_query below).
-## Signs/directions are preserved end to end: sets are split by DE direction upstream;
-## the ranked metric (signed limma t) is carried through unchanged onto each human gene.
+##   no human ortholog      : dropped and logged, every dropped gene auditable, following
+##                            the 00b audit-log precedent.
+##   stale query symbol     : normalised to the current MGI symbol via org.Mm.eg.db BEFORE
+##                            babelgene sees it, then mapped back to the symbol the data
+##                            carries (see normalise_mouse_query below).
+## Signs and directions are preserved end to end: sets are split by DE direction upstream,
+## and the ranked metric (signed limma t) carries through unchanged onto each human gene.
 ##
-## WHY THE QUERY SIDE NEEDS NORMALISING AT ALL. babelgene 22.9 keys on CURRENT MGI
-## symbols. This matrix was quantified against GRCm38 + GENCODE vM25, so 2,341 of its
-## 19,679 symbols are no longer current. babelgene simply does not know those keys, they
-## are absent from the returned edge table, and every caller detects them by set
-## difference against the input — which is to say they were counted as
-## `n_dropped_no_ortholog` and rendered in SIGNATURES.md as "no human ortholog: dropped".
-## That label was wrong for 146 of the 6,510: they are one-to-one stale aliases whose
-## current MGI symbol babelgene maps perfectly well, i.e. a VOCABULARY loss wearing an
+## WHY THE QUERY SIDE NEEDS NORMALISING. babelgene 22.9 keys on CURRENT MGI symbols. This
+## matrix was quantified against GRCm38 + GENCODE vM25, so 2,341 of its 19,679 symbols have
+## moved on. babelgene does not know those keys, they are absent from the returned edge
+## table, and every caller detects them by set difference against the input — which counted
+## them as `n_dropped_no_ortholog` and rendered them in SIGNATURES.md as "no human ortholog:
+## dropped". That label was wrong for 146 of the 6,510: they are one-to-one stale aliases
+## whose current MGI symbol babelgene maps perfectly well, a VOCABULARY loss wearing an
 ## ORTHOLOGY label. Ddx58 is the one to remember — RIG-I, a cytosolic nucleic-acid sensor,
-## significantly down at 39 °C in WT and at logFC -1.28 in KO_heat, and it was missing
-## from the human projection background entirely because its current symbol is Rigi.
-## Which stale symbols babelgene happens to know is idiosyncratic (Atp5a1, Atp5b, Gars,
-## Kars, Nrd1 all map; Wars, Ddx58, Skp1a, Ero1l, Mpp5 do not), so it is measured here and
-## never assumed.
+## significantly down at 39 °C in WT and at logFC -1.28 in KO_heat, absent from the human
+## projection background because its current symbol is Rigi. Which stale symbols babelgene
+## happens to know is idiosyncratic (Atp5a1, Atp5b, Gars, Kars, Nrd1 all map; Wars, Ddx58,
+## Skp1a, Ero1l, Mpp5 do not), so it is measured here on every run.
 ## ===========================================================================
 
 if (!exists("%||%")) {
@@ -64,7 +61,7 @@ default_ortholog_policy <- function() {
     one_mouse_to_many_human = "union",     # binary sets: union; ranked: metric to each human
     many_mouse_to_one_human = "max_abs_t", # ranked: keep max|metric| per human; binary: union
     no_human_ortholog       = "drop",      # dropped + logged (auditable)
-    # The query-side vocabulary policy, DECLARED rather than implied: a matrix symbol
+    # The query-side vocabulary policy, DECLARED here: a matrix symbol
     # babelgene could not key AND that is no longer a current MGI symbol is re-asked under
     # its current symbol via org.Mm.eg.db, subject to the one-to-one + ownership guards in
     # normalise_mouse_query(). Set to "none" to reproduce the pre-fix behaviour exactly.
@@ -77,7 +74,7 @@ default_ortholog_policy <- function() {
     # recovery would REPLACE the canonical metric for 5 human symbols — MYEF2 -1.06 -> +3.82
     # and NSMCE3 +1.42 -> -1.70 are sign flips, sourced from a pseudogene row. That is a
     # change to the frozen contract with no coverage benefit, and the point of the recovery
-    # is to restore genes that were lost, not to re-arbitrate genes that were not. So the
+    # is to restore genes that were lost, leaving mapped genes as they are. So the
     # primary query wins, the recovered edge is still PUBLISHED in ortholog_map.tsv (the
     # many->one collision is real and was previously invisible), and the ranked lists are
     # strictly additive: 142 human symbols gained, 0 values changed.
@@ -108,7 +105,7 @@ default_ortholog_policy <- function() {
 ##      left exactly as it was, and only the symbols it could not key are re-asked. The
 ##      map may then only ever grow, which is asserted by the caller.
 ##
-##      Guards, every one of which produces a counted row rather than a silent drop:
+##      Guards, every one of which produces a counted row:
 ##        stale               a symbol that is already a current official MGI symbol needs
 ##                            no normalisation and is not a candidate. This is also the
 ##                            prefilter that makes the ownership question well-posed.
@@ -126,10 +123,10 @@ default_ortholog_policy <- function() {
 ##                            silently merge them under the many-mouse->one-human rule and
 ##                            could change an existing gene's ranked metric.
 ##                            rejected_current_symbol_already_in_vocabulary.
-##        flagged_for_review  pairs withheld by human decision, not by the guard.
+##        flagged_for_review  pairs withheld by human decision, upstream of the guard.
 ##
 ##      @param mouse_symbols the CANDIDATES to normalise (the symbols the primary query
-##                     failed to key), not the whole matrix.
+##                     failed to key), a subset of the matrix.
 ##      @param vocabulary every symbol the matrix carries, for the occupancy guard. Defaults
 ##                     to `mouse_symbols`, which is only correct when they are the same set.
 ##      @return list(query = character  the symbols to re-ask babelgene (accepted pairs

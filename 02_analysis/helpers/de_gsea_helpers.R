@@ -1,27 +1,27 @@
-## de_gsea_helpers.R — STING-cGAS-GSE329522 DE/GSEA COMPUTE toolbox (NO plotting)
+## de_gsea_helpers.R — STING-cGAS-GSE329522 DE/GSEA COMPUTE toolbox (no plotting)
 ## ===========================================================================
-## The keystone compute helper for the standard bulk-RNA-seq sweep. Every new
-## arm (GSEA / CoReSh / PROGENy / GATOM) sources this AFTER the project config:
+## The keystone compute helper for the standard bulk-RNA-seq sweep. Every new arm (GSEA /
+## CoReSh / PROGENy / GATOM) sources this AFTER the project config:
 ##
 ##   source("02_analysis/config/config.R")        # PROJECT_ROOT, YAML_CONFIG, stage_dir, DIR_*, etc.
 ##   source("02_analysis/helpers/de_gsea_helpers.R")
 ##
-## Ported from 14839-DM-cGAS/02_analysis/helpers/de_gsea_helpers.R and adapted to
-## STING's config API + existing compute idiom (03_decoupler_tf.R: load_or_compute +
-## schema-validated master table + tidy CSVs; rank metric = the limma-trend t-statistic).
+## Ported from 14839-DM-cGAS/02_analysis/helpers/de_gsea_helpers.R and adapted to STING's
+## config API + existing compute idiom (03_decoupler_tf.R: load_or_compute + schema-validated
+## master table + tidy CSVs; rank metric = the limma-trend t-statistic).
 ##
-## SCOPE — COMPUTE ONLY. No ggplot/ggsave, no DE re-fitting, no TMM/voom. The DE is
-## already done (02_de_limma_trend.R → 03_results/objects/02_de_results.rds); we only
-## consume its topTables and rank on the existing `t`. Captions/figures live in the
-## figure-style viz shim (02_analysis/helpers/figure-style/figure_helpers.R), NOT here.
+## SCOPE — COMPUTE ONLY. The DE is already done (02_de_limma_trend.R →
+## 03_results/objects/02_de_results.rds), so this file consumes its topTables and ranks on
+## the existing `t`. Captions and figures live in the figure-style viz shim
+## (02_analysis/helpers/figure-style/figure_helpers.R).
 ##
-## CONFIG KEYS READ (all via the project config.R accessors / YAML_CONFIG — never hardcoded):
+## CONFIG KEYS READ (all via the project config.R accessors / YAML_CONFIG):
 ##   thresholds.gsea_min_size  -> GSEA_MIN_SIZE   (15)        min gene-set size
 ##   thresholds.gsea_max_size  -> GSEA_MAX_SIZE   (500)       max gene-set size
 ##   thresholds.gsea_seed      -> GSEA_SEED       (123)       fgsea RNG seed (reproducibility)
 ##   thresholds.gsea_nperm     -> GSEA_NPERM      (100000)    permutations (fgsea simple path only)
-##   thresholds.gsea_fdr       -> GSEA_FDR_CUTOFF (0.05)      display FDR (callers, not run)
-##   RANK_METRIC               -> "t"             (config.R constant; NEVER logFC)
+##   thresholds.gsea_fdr       -> GSEA_FDR_CUTOFF (0.05)      display FDR (callers apply it)
+##   RANK_METRIC               -> "t"             (config.R constant)
 ##   design.contrasts          -> YAML_CONFIG$design$contrasts (per-contrast `name`)
 ##   databases.msigdb          -> 8 collections (category + subcategory + name)
 ##   databases.custom          -> custom DBs (name + path RDS, already mouse symbols)
@@ -29,20 +29,19 @@
 ##   paths.objects / paths.master / project.species  (via DIR_OBJECTS / DIR_MASTER / SPECIES)
 ##
 ## COMPOSES WITH config.R — this file requires the project config to have been sourced
-## already. It uses config.R's accessors/constants (PROJECT_ROOT, YAML_CONFIG, DIR_OBJECTS,
-## DIR_MASTER, SPECIES, GSEA_MIN_SIZE/MAX_SIZE/SEED/NPERM, RANK_METRIC, the `%||%` op).
-## It deliberately re-defines `load_or_compute` with a path-keyed signature (see note at
-## that function) so the new sweep arms get an RDS cache keyed on an explicit cache_path,
-## matching the 14839 idiom and the per-arm checkpoint pattern; the config.R variant
+## first. It uses config.R's accessors and constants (PROJECT_ROOT, YAML_CONFIG,
+## DIR_OBJECTS, DIR_MASTER, SPECIES, GSEA_MIN_SIZE/MAX_SIZE/SEED/NPERM, RANK_METRIC, the
+## `%||%` op). It re-defines `load_or_compute` with a path-keyed signature (see the note at
+## that function), giving the new sweep arms an RDS cache keyed on an explicit cache_path,
+## matching the 14839 idiom and the per-arm checkpoint pattern. The config.R variant
 ## (basename-under-DIR_OBJECTS) keeps working for the legacy 00–03 scripts that call it
 ## before this file is sourced.
 ##
-## LAZY-DEPS DESIGN — heavy enrichment packages (fgsea, msigdbr, decoupleR) are NOT
-## attached at source() time. Every function that needs one calls requireNamespace()
-## and stops with an actionable install hint only when actually invoked. This lets the
-## file source() cleanly in any container (e.g. a doc/lint pass) without those installed.
-## Light tidyverse deps (dplyr/tibble/readr) ARE required up front — they are part of
-## the project's base stack (config.R::load_packages) and every compute script needs them.
+## LAZY-DEPS DESIGN — heavy enrichment packages (fgsea, msigdbr, decoupleR) stay unattached
+## at source() time. Every function needing one calls requireNamespace() and stops with an
+## actionable install hint at the point of use, so this file sources cleanly in any
+## container, including a doc or lint pass. Light tidyverse deps (dplyr/tibble/readr) are
+## required up front as part of the project's base stack (config.R::load_packages).
 ## ===========================================================================
 
 suppressPackageStartupMessages({
@@ -63,7 +62,7 @@ if (!exists("%||%")) {
 ## ---------------------------------------------------------------------------
 ## (0) GSEA parameter accessors — read straight from config.R constants when present,
 ##     else fall back to YAML_CONFIG$thresholds with the documented defaults. Centralised
-##     so callers never re-read thresholds (AGENTS.md rule 1: config, not hardcoding).
+##     so callers read thresholds once (AGENTS.md rule 1: config over hardcoding).
 ## ---------------------------------------------------------------------------
 .gsea_min_size <- function() if (exists("GSEA_MIN_SIZE")) GSEA_MIN_SIZE else (YAML_CONFIG$thresholds$gsea_min_size %||% 15L)
 .gsea_max_size <- function() if (exists("GSEA_MAX_SIZE")) GSEA_MAX_SIZE else (YAML_CONFIG$thresholds$gsea_max_size %||% 500L)
@@ -74,7 +73,7 @@ if (!exists("%||%")) {
 ## ---------------------------------------------------------------------------
 ## (1) load_or_compute(cache_path, compute_fn, force = FALSE) — RDS cache keyed on PATH.
 ##     Matches STING's existing load_or_compute SEMANTICS (cache-or-compute-and-save into
-##     03_results/objects/) but keyed on an explicit cache_path rather than a bare
+##     03_results/objects/) and keyed on an explicit cache_path, over a bare
 ##     basename, mirroring the 14839 per-arm checkpoint idiom. A bare filename (no dir)
 ##     is resolved under DIR_OBJECTS so callers can pass either "gsea_msigdb_WT_heat.rds"
 ##     or an absolute/relative path. Idempotent + provenance-friendly: a cache hit logs and
@@ -155,7 +154,7 @@ load_de_results <- function(path = NULL) {
 ## (3) build_ranked_vector(topTable, metric = "t") — the GSEA ranking input.
 ##     Returns a named numeric vector (gene SYMBOL -> metric), de-duplicated and sorted
 ##     DECREASING. Names come from rownames (the Symbol contract); ties on duplicate symbols
-##     keep the larger-|metric| representative (the more extreme rank, never silently
+##     keep the larger-|metric| representative (the more extreme rank, carried through
 ##     averaged). NA metrics, empty/NA names dropped. Infinities dropped (fgsea rejects them).
 ##     Fallback ladder (if `metric` absent): t -> stat -> sign(logFC)*-log10(P.Value).
 ## ---------------------------------------------------------------------------
@@ -421,7 +420,7 @@ round_numeric_cols <- function(df, sig = 9L) {
 ##           bind_rows the new df, round to 9 sig figs (byte-stable), write.
 ##      Re-running an arm therefore replaces exactly its own rows and produces no byte-diff.
 ##      master_path may be a bare filename (resolved under 03_results/master/) or a full path.
-##      The schema is read from YAML_CONFIG$schemas$master_gsea_table (config, not hardcoded).
+##      The schema is read from YAML_CONFIG$schemas$master_gsea_table (config-driven).
 ## ---------------------------------------------------------------------------
 append_master_table <- function(df, master_path, key_col = "database") {
   ## enforce lowercase nes BEFORE schema validation (explorer/master contract)

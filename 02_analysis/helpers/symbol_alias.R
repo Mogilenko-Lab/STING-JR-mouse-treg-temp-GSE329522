@@ -2,37 +2,35 @@
 # symbol_alias.R — resolve a reference set's MGI symbols into this matrix's vocabulary.
 # =============================================================================
 # PROJECT HELPER, NOT A SKILL. The compartments of this super-repo are separate git
-# submodules with separate remotes and neither may import from the other, so this file is
-# a deliberate sibling of human_treg_arthritis/02_analysis/helpers/symbol_alias.R rather
-# than a shared module. Same interface, same guard, different annotation database.
+# submodules with separate remotes and neither imports from the other, so this file is a
+# deliberate sibling of human_treg_arthritis/02_analysis/helpers/symbol_alias.R. Same
+# interface, same guard, different annotation database.
 #
-# The defect this exists for. The collaborators' delivered CPM table was quantified
-# against GRCm38 + GENCODE vM25, so this compartment's count matrix is frozen to that
-# build's MGI vintage. 2,341 of the 19,679 modelled symbols are no longer current
-# official MGI symbols, and they cluster: the whole ATP-synthase block arrives as
-# Atp5a1 Atp5b Atp5c1 Atp5d Atp5e Atp5g1..g3 Atp5h Atp5j Atp5j2 Atp5k Atp5l Atp5o Atpif1
-# while MitoCarta 3.0 ships Atp5f1a..Atp5po. Every match in this compartment is an exact
-# string match, so those 15 rows leave MITOPATHWAYS_OXPHOS.Complex_V silently: the set
-# matched 7 of its 22 genes, fell under gsea_min_size = 15, and was therefore absent from
-# master_gsea_table.csv entirely — no contrast, no row, no NES. For a compartment whose
-# stated mechanism is mitochondrial/metabolic at 39 °C, that is not a rounding error.
+# The defect this exists for. The collaborators' delivered CPM table was quantified against
+# GRCm38 + GENCODE vM25, so this compartment's count matrix is frozen to that build's MGI
+# vintage. 2,341 of the 19,679 modelled symbols have since moved off the official MGI list,
+# and they cluster: the whole ATP-synthase block arrives as Atp5a1 Atp5b Atp5c1 Atp5d Atp5e
+# Atp5g1..g3 Atp5h Atp5j Atp5j2 Atp5k Atp5l Atp5o Atpif1 while MitoCarta 3.0 ships
+# Atp5f1a..Atp5po. Every match in this compartment is an exact string match, so those 15
+# rows leave MITOPATHWAYS_OXPHOS.Complex_V silently: the set matched 7 of its 22 genes, fell
+# under gsea_min_size = 15, and was therefore absent from master_gsea_table.csv — no
+# contrast, no row, no NES. For a compartment whose stated mechanism is
+# mitochondrial/metabolic at 39 °C, that matters.
 #
-# The direction of resolution. The reference symbol is NEWER and the matrix symbol is
-# OLDER, so a reference symbol is resolved DOWN into the vocabulary the data carries.
-# The OPPOSITE traversal — a stale matrix symbol lifted UP to current, which is what
-# babelgene needs on its query side — means something different under the one-to-one
-# safety condition and lives in ortholog_utils.R::normalise_mouse_query(). Do not try to
-# make one function do both.
+# The direction of resolution. The reference symbol is NEWER and the matrix symbol is OLDER,
+# so a reference symbol is resolved DOWN into the vocabulary the data carries. The OPPOSITE
+# traversal — a stale matrix symbol lifted UP to current, which is what babelgene needs on
+# its query side — means something different under the one-to-one safety condition and lives
+# in ortholog_utils.R::normalise_mouse_query(). Keep the two functions separate.
 #
 # The hazard that shapes the guard. Retired symbols were often reassigned as the official
-# symbol of a DIFFERENT gene, so accepting a pair blindly attaches one gene's expression
-# to another gene's set membership. A candidate that is the official symbol of any other
-# Entrez id is therefore rejected, counted, and published beside the accepted pairs.
+# symbol of a DIFFERENT gene, so accepting a pair blindly attaches one gene's expression to
+# another gene's set membership. A candidate that is the official symbol of any other Entrez
+# id is therefore rejected, counted, and published beside the accepted pairs.
 #
-# Alias resolution is a correctness fix and never a way to grow a set. Nothing is accepted
-# that does not survive the ownership guard, and the reporting contract is a ledger with a
-# bucket per cause — matched, matched-via-alias, expression-filtered, below-detection —
-# never a pass/fail recovery floor.
+# Alias resolution is a correctness fix. Acceptance requires surviving the ownership guard,
+# and the reporting contract is a ledger with a bucket per cause — matched,
+# matched-via-alias, expression-filtered, below-detection.
 #
 # Provides:
 #   build_alias_map(reference_symbols, matrix_vocabulary, db, flagged_pairs)
@@ -115,7 +113,7 @@ build_alias_map <- function(reference_symbols, matrix_vocabulary,
   # keytype, so every call is prefiltered against the live keyspace and returns early when
   # nothing survives. With a whole collection's ~700 unmatched symbols this never fires;
   # on a single small gene set it does, and a set whose only unmatched member is already a
-  # legacy name would take the ownership guard down rather than report a clean zero.
+  # legacy name would take the ownership guard down, where a clean zero is the right answer.
   symbol_keys <- AnnotationDbi::keys(db, keytype = "SYMBOL")
   sel <- function(keys, keytype, columns) {
     keys <- unique(keys[!is.na(keys) & nzchar(keys)])
@@ -140,7 +138,7 @@ build_alias_map <- function(reference_symbols, matrix_vocabulary,
   al <- al[al$ALIAS %in% matrix_vocabulary, , drop = FALSE]
   if (!nrow(al)) return(finish(empty))
   # Two aliases of one gene present in the vocabulary leaves no unique target, so the pair
-  # is withheld with both names recorded rather than silently returned as NA.
+  # is withheld with both names recorded, leaving no silent NA.
   cand <- al %>% group_by(.data$ENTREZID) %>%
     summarise(matrix_symbol = paste(sort(unique(.data$ALIAS)), collapse = "/"),
               n_aliases_in_vocabulary = n_distinct(.data$ALIAS), .groups = "drop")
@@ -167,7 +165,7 @@ build_alias_map <- function(reference_symbols, matrix_vocabulary,
     taken[is.na(taken)] <- FALSE
   }
   hits$resolution <- ifelse(taken, "rejected_symbol_belongs_to_another_gene", "accepted")
-  # Pairs a human has to decide on are withheld here rather than downstream, so the
+  # Pairs a human has to decide on are withheld at this point, so the
   # exclusion travels with the map and is visible in every consumer's ledger.
   flagged <- paste0(hits$reference_symbol, "->", hits$matrix_symbol) %in% flagged_pairs
   hits$resolution[flagged & hits$resolution == "accepted"] <- "flagged_for_review"
@@ -203,18 +201,18 @@ accepted_pairs <- function(alias_map) {
 #'   Why BOTH spellings are kept, which took a measurement to settle. An accepted reference
 #'   symbol is absent from the vocabulary by construction, so keeping it matches nothing and
 #'   is inert for fgsea — the published `set_size` comes from fgsea's post-intersection
-#'   `size`, never from the nominal length. The tempting alternative, substituting, keeps the
+#'   `size`, computed post-intersection. The tempting alternative, substituting, keeps the
 #'   nominal size equal to the curated size and reads cleaner. It is also a REGRESSION:
 #'   04_gsea_set_prep.R's filter_by_size() runs on the nominal length, and 12 sets across
 #'   Reactome/GO_BP/GO_MF/GO_CC carry BOTH vintages of one gene (the MHC class Ib,
 #'   β2-microglobulin and TAP-binding families above all), so substitution shrinks them by
 #'   one, they fall under gsea_min_size, and the fix DROPS 12 sets that were previously
 #'   tested. Keeping both spellings makes the nominal size monotone — it can only grow — so
-#'   the size filter can only ever admit a set, never lose one. Sets that gained a genuinely
+#'   the size filter can only ever admit a set. Sets that gained a genuinely
 #'   inflated nominal size are still filtered on the true matched size by fgsea itself, and
 #'   `n_alias_collapsed` in the ledger names every set where the two vintages met.
 #'
-#'   For the same reason the input vector is APPENDED to rather than re-`unique()`d. Some
+#'   For the same reason the input vector is APPENDED to, over re-`unique()`d. Some
 #'   msigdbr sets ship one symbol twice under one gs_name, and both filter_by_size() here and
 #'   05_gsea_msigdb_run.R's defensive re-filter count the raw length — so de-duplicating
 #'   quietly shrinks those 12 sets by one, pushes them under gsea_min_size, and costs the
@@ -240,7 +238,7 @@ resolve_sets <- function(sets, matrix_vocabulary, alias_map, replace = FALSE) {
     if (length(hit)) {
       applied[[nm]] <<- tibble(gene_set = nm, reference_symbol = hit, matrix_symbol = tgt)
       # Two reference symbols landing on one matrix symbol merges two set members into one
-      # measurement. It is reported, never silently merged.
+      # measurement. It is reported and kept separate.
       dup_tgt <- unique(tgt[duplicated(tgt)])
       if (length(dup_tgt))
         many_to_one[[nm]] <<- tibble(
@@ -254,7 +252,7 @@ resolve_sets <- function(sets, matrix_vocabulary, alias_map, replace = FALSE) {
     # A set that does not grow by the number of pairs applied already carried the matrix
     # symbol under its other vintage, or two pairs collapsed onto one target. Under
     # replace = TRUE the reference spelling is also removed, so the yardstick is the count
-    # of MATCHING members, not the raw length.
+    # of MATCHING members, post-intersection.
     gained <- length(intersect(res, matrix_vocabulary)) -
       length(intersect(g, matrix_vocabulary))
     if (length(hit) && gained != length(hit))
@@ -276,13 +274,13 @@ resolve_sets <- function(sets, matrix_vocabulary, alias_map, replace = FALSE) {
 #' defect, so each unmatched gene lands in exactly one bucket and the buckets close against
 #' the set's size. The vocabulary layers in this compartment, and what each one states:
 #'   reference_vocabulary  the GENCODE vM25 feature list. NOT persisted in this
-#'                         compartment — the collaborators delivered a CPM table, not a
+#'                         compartment — the collaborators delivered a CPM table in place of a
 #'                         quantification against a tracked GTF — so it is normally
 #'                         absent, `reference_vocabulary_available` is FALSE, and
-#'                         n_absent_from_reference stays 0 rather than being fabricated.
+#'                         n_absent_from_reference stays 0.
 #'   matrix_vocabulary     the delivered CPM table's gene_name column, i.e. every symbol
 #'                         the experiment actually quantified. Below it is a DETECTION
-#'                         statement about this experiment, not a vocabulary one.
+#'                         statement about this experiment.
 #'   ranked_vocabulary     the modelled DE universe (gene_universe.txt), post
 #'                         duplicate-symbol collapse and constant-row drop. Below it is a
 #'                         statement about what the model could test.
@@ -321,7 +319,7 @@ symbol_ledger <- function(sets, alias_map, ranked_vocabulary, matrix_vocabulary,
     rest <- setdiff(rest, ambig)
     # The remaining buckets are read off the symbol the DATA would carry, so a retired
     # reference name whose matrix twin was dropped before modelling is reported as
-    # expression-filtered rather than as never detected. Bucketing on the reference name
+    # expression-filtered, a different cause from never detected. Bucketing on the reference name
     # there would put a power statement in a detection bucket.
     eff <- ifelse(rest %in% names(pairs), unname(pairs[rest]), rest)
     expr_filtered <- rest[eff %in% matrix_vocabulary]
@@ -343,7 +341,7 @@ symbol_ledger <- function(sets, alias_map, ranked_vocabulary, matrix_vocabulary,
       n_below_detection = length(below),
       n_absent_from_reference = length(absent_ref),
       # The true resolved size, de-duplicated. Two things collapse here and both are
-      # reported rather than absorbed: a set carrying both vintages of one gene, and
+      # reported as its own count: a set carrying both vintages of one gene, and
       # several reference paralogs whose current names all resolve onto one matrix row.
       # Either way the set grows by fewer genes than pairs applied, and
       # `n_alias_collapsed` is that shortfall.
@@ -362,7 +360,7 @@ symbol_ledger <- function(sets, alias_map, ranked_vocabulary, matrix_vocabulary,
   }))
 }
 
-#' Hard closure check on a ledger, asserted in-script rather than trusted in review.
+#' Hard closure check on a ledger, asserted in-script on every run.
 assert_ledger_closes <- function(ledger, label = "symbol ledger") {
   s <- with(ledger, n_matched + n_matched_via_alias + n_alias_flagged_for_review +
               n_alias_rejected_ambiguous + n_expression_filtered + n_below_detection +

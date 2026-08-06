@@ -2,16 +2,16 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2: genotype x temperature)
 # Species: Mus musculus
 #
-# Stage-based layout (NOT the flat .ref layout):
+# Stage-based layout, superseding the flat .ref layout:
 #   03_results/<stage_id>/{figures,tables}/   -- per-stage deliverables
 #   03_results/objects/                       -- reusable state (.rds checkpoints)
 #   03_results/master/                        -- cross-stage accumulator tables
 #   03_results/interactive/                   -- standalone HTML dashboards
 #   03_results/_scratch/                      -- throwaway artifacts
 #
-# Sourcing this file is intentionally side-effect-light: it reads the YAML and
-# defines constants/helpers but does NOT library() heavy packages or create
-# directories. Scripts call load_packages() and stage_dir() explicitly.
+# Sourcing this file is side-effect-light: it reads the YAML and defines constants and
+# helpers. Scripts call load_packages() and stage_dir() explicitly to attach heavy packages
+# and create directories.
 
 # ============================================================================
 # NULL-COALESCE
@@ -84,7 +84,7 @@ stage_dir <- function(id, kind = c("figures", "tables")) {
 }
 
 # ============================================================================
-# PROJECT-LOCAL R LIBRARY (opt-in, never automatic)
+# PROJECT-LOCAL R LIBRARY (opt-in)
 # ============================================================================
 
 DIR_R_LIBRARY <- file.path(PROJECT_ROOT,
@@ -290,7 +290,7 @@ KEY_PROGENY <- c("Hypoxia", "JAK-STAT", "NFkB", "TNFa")
 # All four accessors below read design$sample_mapping in analysis_config.yaml.
 # No script may hard-code the mapping status: the 2026-07-22 owner sample sheet
 # flipped it INFERRED -> CONFIRMED, and figures regenerated after that date kept
-# printing the old hedge because the string lived in nine scripts instead of one
+# printing the old hedge because the string lived in nine scripts, ahead of one
 # key. Read the key and the wording follows the evidence automatically.
 
 .SAMPLE_MAPPING <- YAML_CONFIG$design$sample_mapping %||% list()
@@ -307,7 +307,7 @@ sample_mapping_confirmed <- function() {
 }
 
 #' SHORT sample-provenance stamp for a figure canvas (subtitle/caption).
-#' Long detail belongs in the README caption, not on the PNG.
+#' Long detail belongs in the README caption.
 #' @return Single character string.
 sample_mapping_stamp <- function() {
   if (sample_mapping_confirmed()) {
@@ -337,7 +337,7 @@ provisional_caption <- function() {
 }
 
 # ============================================================================
-# CHECKPOINT CACHING  (writes into DIR_OBJECTS, NOT a flat checkpoints dir)
+# CHECKPOINT CACHING  (writes into DIR_OBJECTS)
 # ============================================================================
 
 #' Load a cached checkpoint or compute and save it.
@@ -365,7 +365,7 @@ load_or_compute <- function(checkpoint_file, compute_fn, force = FALSE, desc = "
 # PACKAGE LOADER (called explicitly by scripts; not at source time)
 # ============================================================================
 
-#' Attach the analysis package stack. Call from scripts, not config.R.
+#' Attach the analysis package stack. Call from scripts; config.R stays side-effect-light.
 #' @param extra Optional character vector of additional packages to attach.
 load_packages <- function(extra = character(0)) {
   pkgs <- unique(c("limma", "edgeR", "ggplot2", "dplyr", "yaml", extra))
