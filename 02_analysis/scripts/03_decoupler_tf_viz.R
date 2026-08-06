@@ -139,7 +139,7 @@ fig3b_df$contrast <- factor(fig3b_df$contrast,
                             levels = c("WT_heat", "KO_heat", "Temp_main", "Interaction"))
 fig3b_df$axis     <- factor(fig3b_df$axis, levels = c("HIF", "IFN", "other"))
 fig3b_df$key_tf   <- as.logical(fig3b_df$key_tf)
-# Order within each facet by score, carried on a row key rather than through tidytext.
+# Order within each facet by score, carried on a row key.
 fig3b_df <- fig3b_df[order(fig3b_df$contrast, fig3b_df$score), ]
 fig3b_df$row_key <- factor(seq_len(nrow(fig3b_df)),
                            levels = seq_len(nrow(fig3b_df)),
@@ -385,7 +385,7 @@ save_overview(
 # FIG 3g: where Hif1a's WT_heat score comes from, over all 353 regulon members
 # =============================================================================
 # What this regulon reads out is a heat-induced glycolytic and stress program that
-# partially overlaps HIF targets, so every label here names the class rather than "the HIF
+# partially overlaps HIF targets, so every label here names the class in place of "the HIF
 # program".
 fig3g_df  <- rd("fig3g_target_decomposition_data.csv")
 fig3g_sum <- rd("fig3g_target_decomposition_summary.csv")

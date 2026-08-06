@@ -1,87 +1,79 @@
 # 18_projection_export.R — COMPUTE
 # =============================================================================
-# Human projection export (stage 11_projection) — FREEZE the mouse→human signature
-# contract that every human compartment (Phases 1–4) reads.
+# Freeze the mouse→human signature contract that every human compartment reads
+# (stage 11_projection).
 #
-# Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
-# Stage:   11_projection   (script 18)
+# Project: GSE329522 STING/cGAS hyperthermia iTreg (2x2 genotype x temperature)
 #
-# ROLE: COMPUTE ONLY. No new statistics. It ORTHOLOG-MAPS the mouse-symbol sets that
-#   17_signature_derive.R froze (17_signature_sets.rds) into human HGNC symbols using
-#   the pinned/offline babelgene (via ortholog_utils.R) and writes the published,
-#   byte-stable contract under 03_results/human_projection/. There is NO ggplot/ggsave
-#   here; figures live in 18_projection_export_viz.R.
+# ROLE: COMPUTE ONLY. Ortholog-maps the mouse-symbol sets frozen by
+#   17_signature_derive.R into human HGNC symbols through the pinned offline
+#   babelgene (ortholog_utils.R), and writes the byte-stable contract under
+#   03_results/human_projection/. Figures live in 18_projection_export_viz.R.
 #
-# CONTRAST ARITHMETIC & ROLES (why three heat contrasts, what each is for):
-#   The three exported heat contrasts are LINEARLY DEPENDENT by construction —
-#     WT_heat     = the full thermal response in cGAS-competent cells  (role: primary)
-#     Interaction = WT_heat - KO_heat = the cGAS-DEPENDENT slice        (ISG/STING candidate)
-#     KO_heat     = WT_heat - Interaction = the cGAS-INDEPENDENT thermal comparator
-#   so WT_heat = KO_heat + Interaction, and any two of the three determine the third.
-#   KO_heat is still materialized as its own scored contrast because it plays a role the
-#   other two cannot: at the cross-dataset integration layer it is the NEGATIVE /
-#   specificity control scored against the SAVI STING gain-of-function reference — if it
-#   overlaps SAVI much as WT_heat does, the heat<->SAVI overlap is STING-INDEPENDENT
-#   (IFN-like), which keeps the human read correlative. Inside a single human disease
-#   dataset the story is intentionally TWO threads only (WT_heat + Interaction); KO_heat is
-#   not scored there because KO = WT - Interaction is already implied by the other two.
-#   Gate asymmetry (see analysis_config.yaml::decisions.projection) is by design: Interaction
-#   also rides the looser fdr_only secondary gate as the underpowered 1-df POSITIVE candidate;
-#   KO_heat stays on the stringent fdr_logfc gate alone as the well-powered NEGATIVE control.
+# THE THREE HEAT CONTRASTS, AND WHAT EACH IS FOR
+#   They are linearly dependent by construction:
+#     WT_heat     the full thermal response in cGAS-competent cells   (primary)
+#     Interaction WT_heat - KO_heat, the cGAS-dependent slice         (ISG/STING candidate)
+#     KO_heat     WT_heat - Interaction, the cGAS-independent comparator
+#   so WT_heat = KO_heat + Interaction, and any two determine the third. KO_heat
+#   ships as its own scored contrast to serve as the specificity control at the
+#   integration layer: an overlap with a STING gain-of-function reference as large
+#   as WT_heat's marks that overlap STING-independent and IFN-like, which keeps the
+#   human read correlative. A single human dataset carries two threads (WT_heat +
+#   Interaction), since KO = WT - Interaction follows from them.
 #
-# ┏━ BREAKPOINT-10 GATE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ This script REFUSES TO RUN until the human signs off on the signature          ┃
-# ┃ definitions. It stops unless analysis_config.yaml::decisions.projection.status ┃
-# ┃ == "APPROVED". The freeze is downstream-load-bearing (Phases 1–4 depend on     ┃
-# ┃ these exact paths/columns), so it must not happen before the review notebook   ┃
-# ┃ (notebooks/17_signature_review/) is signed off. See phase-00 §BREAKPOINT 10.   ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+#   Gate asymmetry (analysis_config.yaml::decisions.projection) is by design.
+#   Interaction also rides the looser fdr_only gate as the underpowered 1-df
+#   positive candidate. KO_heat stays on the stringent fdr_logfc gate alone as the
+#   well-powered negative control.
+#
+# GATE (BREAKPOINT 10). This script halts unless
+#   analysis_config.yaml::decisions.projection.status == "APPROVED". The freeze is
+#   downstream-load-bearing — the human compartments read these exact paths and
+#   columns — so it waits on sign-off of notebooks/17_signature_review/.
 #
 # Inputs:
-#   03_results/objects/17_signature_sets.rds          (mouse-symbol sets + ranked lists)
-#   analysis_config.yaml::decisions.projection.*       (the human's BREAKPOINT-10 choices)
+#   03_results/objects/17_signature_sets.rds       (mouse-symbol sets + ranked lists)
+#   analysis_config.yaml::decisions.projection.*   (the approved choices)
 #
-# Collision policy (from decisions.projection.ortholog_ambiguity; ortholog_utils encodes it):
-#   one mouse → many human : binary sets UNION; ranked list assigns the mouse t to EACH human.
-#   many mouse → one human : ranked keeps MAX |t| per human, except that a primary-query
-#     edge outranks a recovered one (see below); binary dedupe by union.
-#   no human ortholog      : dropped and logged (auditable).
+# Collision policy (decisions.projection.ortholog_ambiguity; encoded in ortholog_utils):
+#   one mouse → many human : binary sets union; ranked list assigns the mouse t to each human.
+#   many mouse → one human : ranked keeps max |t| per human, with a primary-query edge
+#     outranking a recovered one; binary dedupe by union.
+#   no human ortholog      : dropped and logged.
 #   stale query symbol     : re-asked under its current MGI symbol, then mapped back.
 #
-# WHY "no human ortholog" USED TO BE THE WRONG LABEL. babelgene keys on CURRENT MGI symbols.
-# This matrix was quantified against GRCm38 + GENCODE vM25, so 2,341 of its 19,679 symbols
-# are no longer current, babelgene cannot key them, they were absent from ortholog_map.tsv,
-# and this script counted them as n_dropped_no_ortholog and SIGNATURES.md rendered that as
-# "no human ortholog: dropped". For 146 of the 6,510 that was a vocabulary loss wearing an
-# orthology label. Ddx58 is the one to remember: RIG-I, a cytosolic nucleic-acid sensor,
-# significantly down at 39 °C in WT and at logFC −1.28 in KO_heat, missing from the human
-# projection entirely because its current symbol is Rigi. build_ortholog_map() now re-asks
-# those symbols under their current names and the ledger splits the bucket three ways:
-#   n_query_symbol_normalised     recovered — mapped only because it was re-asked
-#   n_dropped_stale_query_symbol  still unmapped AND not a current MGI symbol; we could not
-#                                 key it, which is a VOCABULARY statement
-#   n_dropped_no_ortholog         still unmapped AND a current MGI symbol; babelgene knows
-#                                 the key and returns nothing, which is an ORTHOLOGY statement
-# The recovery is strictly additive by construction: 0 edges lost, 0 pre-existing human
-# symbols change their ranked t (policy recovered_edge_precedence = "primary_query_wins"),
-# and both are asserted below rather than trusted.
-#   Interaction (1 df, underpowered): if its post-mapping human set is trivially small
-#     (< trivial_min_genes) and drop_interaction_if_trivial, it is DEMOTED from the export
-#     and flagged in SIGNATURES.md rather than shipped hollow.
+# WHY THE DROP BUCKET SPLITS THREE WAYS. babelgene keys on current MGI symbols. This
+# matrix was quantified against GRCm38 + GENCODE vM25, so 2,341 of its 19,679 symbols
+# have moved on, and babelgene returns nothing for them. That was reported as "no human
+# ortholog"; for 146 of 6,510 edges it was a vocabulary loss wearing an orthology label.
+# Ddx58 is the one to remember: RIG-I, a cytosolic nucleic-acid sensor, significantly down
+# at 39 °C in WT and at logFC −1.28 in KO_heat, absent from the projection because its
+# current symbol is Rigi. build_ortholog_map() re-asks those symbols under their current
+# names, and the ledger reports:
+#   n_query_symbol_normalised     recovered by the re-ask
+#   n_dropped_stale_query_symbol  unmapped and no longer a current MGI symbol — a VOCABULARY fact
+#   n_dropped_no_ortholog         unmapped and still current — an ORTHOLOGY fact
+# The recovery is strictly additive: 0 edges lost, 0 pre-existing human symbols change
+# their ranked t (policy recovered_edge_precedence = "primary_query_wins"). Both are
+# asserted below.
 #
-# Outputs — the FROZEN CONTRACT (stable API; Phases 1–4 read these paths verbatim):
-#   03_results/human_projection/SIGNATURES.md                         (human-readable provenance)
-#   03_results/human_projection/manifest.csv                          (machine index: 1 row / (contrast,direction))
-#   03_results/human_projection/ortholog_map.tsv                      (the applied map)
+#   Interaction (1 df, underpowered): a post-mapping human set under trivial_min_genes is
+#   demoted from the export under drop_interaction_if_trivial and flagged in SIGNATURES.md.
+#
+# Outputs — THE FROZEN CONTRACT (stable API; the human compartments read these paths verbatim):
+#   03_results/human_projection/SIGNATURES.md    (human-readable provenance)
+#   03_results/human_projection/manifest.csv     (machine index: 1 row / (contrast,direction))
+#   03_results/human_projection/ortholog_map.tsv (the applied map)
 #   03_results/human_projection/signatures/<contrast>/<contrast>_up.txt|_down.txt|_ranked.rnk
-#   + stage tables for the viz sibling (one row per (contrast, gate, direction) — EVERY
-#     gate the manifest ships, primary and secondary alike, so the two stay in lockstep):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss}.csv
 #   03_results/11_projection/tables/_overview/projection_overlap_ledger.csv
+#   The stage tables carry one row per (contrast, gate, direction) covering every gate the
+#   manifest ships, primary and secondary alike, so the two stay in lockstep.
 #
-# IDEMPOTENT + BYTE-STABLE: pure read->map->round->write. Re-running yields identical bytes.
+# IDEMPOTENT + BYTE-STABLE: read → map → round → write. Re-running yields identical bytes.
 #
-# Run from project root (only after sign-off):
+# Run from project root, after sign-off:
 #   Rscript 02_analysis/scripts/18_projection_export.R
 # =============================================================================
 
@@ -200,7 +192,7 @@ print(as.data.frame(qledger %>%
   row.names = FALSE)
 
 # The recovery may only ADD. A lost edge or a changed metric would mean the map was rewritten
-# rather than extended, which is the failure mode the two-pass design exists to prevent.
+# in place of extended, which is the failure mode the two-pass design exists to prevent.
 prev_map_path <- file.path(DIR_RESULTS, "human_projection", "ortholog_map.tsv")
 if (file.exists(prev_map_path)) {
   prev <- readr::read_tsv(prev_map_path, show_col_types = FALSE, progress = FALSE)
@@ -394,9 +386,9 @@ tbl_dir <- stage_dir(STAGE, "tables")
 ov_dir  <- file.path(tbl_dir, YAML_CONFIG$figures$overview_dir %||% "_overview")
 dir.create(ov_dir, recursive = TRUE, showWarnings = FALSE)
 
-# One row per (contrast, gate, direction) the manifest ships — every gate, not just the
+# One row per (contrast, gate, direction) the manifest ships — every gate, primary and
 # primary one, so the stage tables stay in lockstep with manifest.csv and the viz sibling
-# can render the gate dimension instead of silently dropping the secondary-gate rows.
+# can render the gate dimension and keep the secondary-gate rows.
 human_sizes <- manifest %>%
   dplyr::filter(direction %in% c("up", "down")) %>%
   dplyr::transmute(contrast, role, direction, gate, n_human)
@@ -408,7 +400,7 @@ readr::write_csv(round_numeric_cols(mapping_loss), file.path(ov_dir, "mapping_lo
 
 # The query-normalisation ledger, published at the same granularity the decision was made:
 # one row per candidate matrix symbol. This is the artifact that makes the split auditable —
-# without it "146 recovered" is a claim rather than a record.
+# without it "146 recovered" is a claim in place of a record.
 readr::write_csv(
   qledger %>% dplyr::transmute(
     .data$matrix_symbol, .data$current_symbol, .data$entrez_id, .data$resolution,
@@ -419,7 +411,7 @@ readr::write_csv(
     dplyr::arrange(.data$resolution, .data$matrix_symbol),
   file.path(ov_dir, "query_normalisation_ledger.csv"))
 
-# Closure, asserted rather than reviewed: every mouse gene is mapped, mapped-many, dropped
+# Closure, asserted in-script: every mouse gene is mapped, mapped-many, dropped
 # for a real orthology reason, or dropped because we could not key its symbol. There is no
 # fifth outcome, and the two drop classes may never be folded back together.
 closure <- mapping_loss %>%
@@ -430,7 +422,7 @@ if (any(closure$check != closure$n_mouse))
        "dropped_no_ortholog + dropped_stale_query_symbol for ",
        sum(closure$check != closure$n_mouse), " row(s).")
 
-# Panel 1D source table: count from the frozen text files just written, not from
+# Panel 1D source table: count from the frozen text files just written, downstream of
 # in-memory pre-write vectors. This keeps the plotted ledger tied to the public
 # human_projection contract byte-for-byte.
 read_signature_genes <- function(co, direction, gate) {

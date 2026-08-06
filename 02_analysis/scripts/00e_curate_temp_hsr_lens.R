@@ -12,26 +12,25 @@
 # Dependencies: 02_analysis/config/config.R
 #
 # ===========================================================================================
-# METHOD & RATIONALE (decisions are auditable, not arbitrary)
+# METHOD & RATIONALE
 # ===========================================================================================
 #   (A) CLEANED CYTOSOLIC CORE
 #       The scored downstream lens is the frozen taxonomy rows where cytosolic_core == TRUE
 #       (categories {hsf1_core_hsr, co_chaperone}). npc_transport / upr_er / thermosensory /
-#       generic_stress are bleed or separate-axis and are excluded from the scored core.
+#       generic_stress are bleed or a separate axis, and stay outside the scored core.
 #
 #   (B) SENSITIVITY TIER
-#       The sensitivity tier is the full 176-gene union, carried for robustness only.
+#       The sensitivity tier is the full 176-gene union, carried for robustness.
 #
 #   (C) FROZEN INPUTS ONLY; MOUSE VIA THE AUTHORITATIVE ORTHOLOG MAP
-#       No MSigDB re-pull is performed. Mouse symbols are joined from
-#       temp_hsr_ortholog_map.csv (msigdbr species="Mus musculus" native conversion, 1:many,
-#       paralog-complete: HSPA1A/HSPA1B -> Hspa1a/Hspa1b, GML -> Gml/Gml2). A human gene may
-#       map to >1 mouse symbol, so mouse set sizes are counts of UNIQUE mouse symbols, not of
-#       human rows.
+#       Mouse symbols are joined from temp_hsr_ortholog_map.csv (msigdbr
+#       species="Mus musculus" native conversion, 1:many, paralog-complete: HSPA1A/HSPA1B ->
+#       Hspa1a/Hspa1b, GML -> Gml/Gml2), with no MSigDB re-pull. A human gene may map to >1
+#       mouse symbol, so mouse set sizes count UNIQUE mouse symbols.
 #
 #   (D) HONEST CEILING
-#       Even the cleaned cytosolic core is proteotoxic-stress-general, not fever-specific;
-#       only the mouse 37/39 contrast can measure thermal-ness.
+#       The cleaned cytosolic core is proteotoxic-stress-general. The mouse 37/39 contrast is
+#       what measures thermal-ness here.
 #
 #   DETERMINISM: no RNG is used; all symbols are sorted before writing.
 # ===========================================================================================

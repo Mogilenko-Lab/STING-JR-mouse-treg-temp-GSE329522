@@ -9,14 +9,14 @@
 #   03_results/objects/net_progeny_mouse.rds          (Phase 4 pathway net; source/target/weight)
 #   03_results/objects/networks_prep_log.txt          (provenance + coverage audit)
 #
-# WHY LOCAL (not decoupleR::get_collectri / get_progeny):
-#   decoupleR 2.16.0 + OmnipathR 3.18.4 (latest Bioconductor-release versions) cannot fetch CollecTRI
-#   or PROGENy: OmnipathR's web wrapper falls back to a static table whose loader errors
+# WHY LOCAL, in place of decoupleR::get_collectri / get_progeny:
+#   decoupleR 2.16.0 + OmnipathR 3.18.4 (the latest Bioconductor-release versions) fail to fetch
+#   CollecTRI or PROGENy. OmnipathR's web wrapper falls back to a static table whose loader errors
 #   ("argument is of length zero"; OmnipathR::collectri() dies on an internal ncbi_tax_id join).
-#   omnipathdb.org is reachable (HTTP 200), so this is a package-version bug, not a network outage,
-#   and there is no newer release to upgrade into. We therefore build the SAME networks from their
-#   authoritative primary sources and pin them as RDS. This is more reproducible (no live-API
-#   dependency) and provenance-transparent. Re-point Phases 3/4 to these cached RDS.
+#   omnipathdb.org answers HTTP 200, which makes this a package-version bug with no newer release
+#   to upgrade into. This script therefore builds the SAME networks from their authoritative
+#   primary sources and pins them as RDS, which is reproducible offline and
+#   provenance-transparent. Phases 3/4 read these cached RDS.
 
 source("02_analysis/config/config.R")
 suppressPackageStartupMessages({ library(dplyr); library(tidyr); library(babelgene) })

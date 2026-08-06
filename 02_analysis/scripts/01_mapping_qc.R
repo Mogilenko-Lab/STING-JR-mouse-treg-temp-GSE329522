@@ -5,8 +5,8 @@
 # Phase:        1 (SCIENCE GATE -- go/no-go on the inferred sample mapping)
 # Inputs:       00_data/processed/GSE329522_normalized_counts_CPM_iTreg.csv
 #               03_results/objects/sample_metadata.rds  (Phase 0)
-# Outputs:      03_results/objects/01_eda.rds  (cpm_mat, logcpm_mat, collapse
-#                 record, aligned metadata, cgas_symbol, + derived plot objects)
+# Outputs:      03_results/objects/01_eda.rds  (cpm_mat, logcpm_mat, collapse record,
+#                 aligned metadata, cgas_symbol, + derived plot objects)
 #               03_results/01_qc/tables/mapping_verdict.csv
 #               03_results/01_qc/README.md  (verdict paragraph)
 #               -- PLOT-READY TIDY TABLES (consumed by 01_mapping_qc_viz.R) --
@@ -17,18 +17,16 @@
 #               03_results/01_qc/tables/fig1d_scramble_data.csv
 # Dependencies: config.R; dplyr, tidyr (via load_packages)
 #
-# NORMALIZE-THEN-VISUALIZE: this script does ALL computation and emits tidy,
-# plot-ready tables. It contains NO ggplot/ggsave. The companion viz script
-# 01_mapping_qc_viz.R reads these tables and renders the 4 figures, doing zero
-# statistics.
+# NORMALIZE-THEN-VISUALIZE: this script does all computation and emits tidy, plot-ready
+# tables. The companion viz script 01_mapping_qc_viz.R reads them and renders the 4 figures.
 #
 # Decisions made here once for the whole project:
-#   * NA CPM cells are treated as 0 for matrix building (a missing CPM in a
-#     normalized-counts deposit means "not detected"; 0 is the correct fill for
-#     log2(CPM+0.5) and for variance/PCA). Reported to console.
-#   * Duplicate gene_name -> collapse to the SINGLE row with the MAX MEAN-CPM
-#     across the 20 samples (standard "most-expressed isoform wins"). The winning
-#     Ensembl id per collapsed symbol is recorded.
+#   * NA CPM cells are treated as 0 for matrix building. A missing CPM in a
+#     normalized-counts deposit means "not detected", and 0 is the correct fill for
+#     log2(CPM+0.5) and for variance/PCA. Reported to console.
+#   * Duplicate gene_name -> collapse to the SINGLE row with the MAX MEAN-CPM across the 20
+#     samples, the standard "most-expressed isoform wins". The winning Ensembl id per
+#     collapsed symbol is recorded.
 # =============================================================================
 
 source("02_analysis/config/config.R")
@@ -212,7 +210,7 @@ message(sprintf("[PCA] %d genes entered (%d dropped for zero variance across all
 
 # Correspondence check: a top-2000-variable-gene PCA finds the same leading axis,
 # at a much larger apparent % var. Carried as figure provenance so the caption can
-# state the number instead of asserting the equivalence.
+# state the number and leave the equivalence to the reader.
 top2000    <- names(sort(gene_var, decreasing = TRUE))[seq_len(min(2000, n_genes))]
 pca_top    <- prcomp(t(logcpm_mat[top2000, ]), center = TRUE, scale. = FALSE)
 pv_top     <- pca_top$sdev^2 / sum(pca_top$sdev^2) * 100
@@ -237,7 +235,7 @@ fig1c_data$group    <- as.character(fig1c_data$group)
 
 # Small variance-explained table: (PC, pct_var). The gene count that entered the
 # PCA and the top-2000 correspondence are carried as label columns on every row so
-# the viz title and caption read them instead of hardcoding them.
+# the viz title and caption read them from here.
 fig1c_varexp <- data.frame(
   PC = paste0("PC", seq_along(percentVar)),
   pct_var = percentVar,
@@ -338,7 +336,7 @@ message("\n==================  G) MAPPING VERDICT  ==================")
 
 # Data-driven predicted temp: thermometer score (mean log2CPM of thermo markers).
 # Threshold = midpoint between the two thermometer clusters (k-means, k=2) so it
-# is fully data-driven, not the inferred label.
+# is fully data-driven.
 thermo_score <- colMeans(logcpm_mat[thermo_present, meta$library_id, drop = FALSE])
 km_t <- kmeans(matrix(thermo_score, ncol = 1), centers = 2, nstart = 25)
 hot_cluster <- which.max(km_t$centers[, 1])

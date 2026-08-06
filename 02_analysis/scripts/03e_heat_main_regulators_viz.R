@@ -3,11 +3,10 @@
 # 03e_heat_main_regulators_viz.R - PHASE 3 (stage 04_tf) VIZ: fig3n, the HSF1 gap
 # =============================================================================
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2: genotype x temperature)
-# Role:    VISUALIZE half of the split. Reads ONLY the tidy table emitted by
-#          03e_heat_main_regulators.R and renders the single-claim fig3n
-#          lollipop. Performs NO statistics (no run_ulm/p.adjust/...); only
-#          cosmetic factor ordering + plotting of already-computed columns.
-#          Runs STANDALONE after compute.
+# Role:    VISUALIZE half of the split. Reads the tidy table emitted by
+#          03e_heat_main_regulators.R and renders the single-claim fig3n lollipop, applying
+#          cosmetic factor ordering to already-computed columns. Runs STANDALONE after
+#          compute.
 #
 # Input  (03_results/04_tf/tables/):  fig3n_heat_main_regulators_data.csv
 # Outputs (figure-style contract, dual variants):
@@ -15,16 +14,15 @@
 #   03_results/04_tf/tables/_overview/fig3n_heat_main_regulators.csv
 #   03_results/04_tf/README.md caption (via save_overview)
 #
-# CLAIM (fig3n): On the heat-MAIN contrasts, Hsf1 is significantly CO-ELEVATED
-#   (Temp_main 3.20, padj 0.015) alongside the HIF axis (Hif1a +5.14 / Epas1
-#   +4.17). Hsf1 moves WITH the HIF axis on every heat contrast yet was not
-#   foregrounded earlier in this analysis. Hsf1 is colored heat-shock purple
-#   (HEAT_AXIS_COLORS) to connect visually to the regulon contaminant in the
-#   fig3g/fig3l arc.
-#   Guardrail: co-elevation + prior neglect ONLY -- Hsf1 is NOT claimed to cause
-#   or outrank HIF, and the equal-weight lollipop crowns NO single master TF.
-#   Axis IS the decoupleR-ULM score, the SAME estimator as fig3a/fig3c -- it is
-#   cross-quotable with them; do NOT add any GSEA-NES / different-estimator caveat.
+# CLAIM (fig3n): on the heat-MAIN contrasts, Hsf1 is significantly CO-ELEVATED (Temp_main
+#   3.20, padj 0.015) alongside the HIF axis (Hif1a +5.14 / Epas1 +4.17). Hsf1 moves WITH
+#   the HIF axis on every heat contrast, and earlier stages of this analysis left it in the
+#   background. Hsf1 is colored heat-shock purple (HEAT_AXIS_COLORS) to connect visually to
+#   the regulon contaminant in the fig3g/fig3l arc.
+#   Guardrail: the claim is co-elevation plus prior neglect. Causation over HIF and any
+#   ranking above it are separate claims, and the equal-weight lollipop leaves every TF
+#   uncrowned. The axis IS the decoupleR-ULM score, the same estimator as fig3a/fig3c, so
+#   the three are cross-quotable and need no estimator caveat.
 #
 # Dependencies: config.R (palettes/labels); figure_style.R (theme+save); ggplot2, dplyr
 # =============================================================================

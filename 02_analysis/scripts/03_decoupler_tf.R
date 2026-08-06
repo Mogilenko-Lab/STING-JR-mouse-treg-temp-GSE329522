@@ -4,19 +4,17 @@
 #                     HIF1a cross-method rank-cascade forensics
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:    COMPUTE half of the "normalize-then-visualize" split. Does ALL
-#          statistics, writes the forensics checkpoint, the master accumulator,
-#          and ONE plot-ready tidy CSV per downstream figure into
-#          stage_dir("04_tf","tables"). Contains NO ggplot()/ggsave() and NO
-#          plotting whatsoever -- figures live in 03_decoupler_tf_viz.R, which
-#          recomputes NOTHING and reads only the tidy tables emitted here.
+# Role:    COMPUTE half of the "normalize-then-visualize" split. Runs all statistics and
+#          writes the forensics checkpoint, the master accumulator, and one plot-ready tidy
+#          CSV per downstream figure into stage_dir("04_tf","tables"). Figures live in
+#          03_decoupler_tf_viz.R, which reads only the tidy tables emitted here.
 #
 # Inputs:
 #   - 03_results/objects/02_de_results.rds          (7 contrasts; t-stat per gene)
 #   - 03_results/objects/net_collectri_mouse.rds    (primary TF net; source/target/mor)
 #   - 03_results/objects/net_dorothea_mouse_ABC.rds (DoRothEA A/B/C; the net Phylo used)
 #   - 00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds
-#       ($Lombardi2022_HIF = mouse HIF consensus; length read at RUNTIME, never hardcoded)
+#       ($Lombardi2022_HIF = mouse HIF consensus; length read at RUNTIME)
 #
 # Outputs:
 #   - 03_results/objects/03_tf_collectri.rds        (CollecTRI ULM, all 7 contrasts, BH)
@@ -27,11 +25,11 @@
 #   - 03_results/master/master_tf_activities.csv    (13-col; CollecTRI all + DoRothEA WT_heat)
 #   - 03_results/04_tf/tables/fig3*_*_data.csv       (one tidy CSV per downstream figure)
 #
-# Method: t-statistic input (NEVER logFC); run_ulm(.mor="mor", minsize=5);
-#         BH within contrast. consensus via decouple(...consensus_score=TRUE).
+# Method: t-statistic input, per gsea.rank_metric; run_ulm(.mor="mor", minsize=5); BH within
+#         contrast; consensus via decouple(...consensus_score=TRUE).
 #
-# NETWORK NOTE: decoupleR::get_collectri()/get_progeny() are BROKEN here (OmnipathR
-#   fallback errors). We load the CACHED nets built by 00c_prepare_networks.R.
+# NETWORK NOTE: decoupleR::get_collectri()/get_progeny() fail here (OmnipathR fallback
+#   errors), so this stage loads the CACHED nets built by 00c_prepare_networks.R.
 #
 # Dependencies: decoupleR, dplyr, tidyr, readr, tibble, purrr
 # =============================================================================
@@ -474,7 +472,7 @@ ct_set_size <- net_ct %>% filter(target %in% universe) %>%
 # COLUMN-NAME CAVEAT (do NOT misread): the master table reuses the legacy
 # GSEA-style schema (column names nes/pvalue/core_enrichment) as a shared
 # accumulator format, but the value written to `nes` here is the decoupleR ULM
-# `score` -- NOT a GSEA normalized enrichment score. fig3n (03e_heat_main_regulators.R)
+# `score` -- the decoupleR ULM score. fig3n (03e_heat_main_regulators.R)
 # runs the SAME run_ulm(.mor="mor", minsize=5) call, so its scores are byte-identical
 # to this `nes` column and ARE axis-comparable to fig3a/fig3c. The `nes` name is a
 # misnomer kept for master-schema compatibility; treat it as the ULM score everywhere.

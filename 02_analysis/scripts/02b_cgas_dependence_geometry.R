@@ -1,44 +1,42 @@
 #!/usr/bin/env Rscript
 # 02b_cgas_dependence_geometry.R -- COMPUTE
 # =============================================================================
-# One wide per-gene table for reading the 39 C heat response of WT against the
-# 39 C heat response of cGAS-KO iTregs, plus the handful of scalars the two
-# panels print in-panel (stage 03_de).
+# One wide per-gene table for reading the 39 C heat response of WT against the 39 C heat
+# response of cGAS-KO iTregs, plus the handful of scalars the two panels print in-panel
+# (stage 03_de).
 #
 # Why this table exists
 #   The three heat contrasts are linearly dependent by construction:
 #     WT_heat = KO_heat + Interaction, and Temp_main is their shared average.
-#   A reader with no linear-model vocabulary can see that relation as GEOMETRY
-#   if the contrasts sit side by side per gene: plot WT_heat against KO_heat and
-#   the interaction becomes distance from the identity line. That needs the
-#   contrasts joined on a stable per-gene key, which is what this script does.
-#   No DE model is re-fit and no threshold is re-chosen.
+#   A reader with no linear-model vocabulary can see that relation as GEOMETRY when the
+#   contrasts sit side by side per gene: plot WT_heat against KO_heat and the interaction
+#   becomes distance from the identity line. That needs the contrasts joined on a stable
+#   per-gene key, which is what this script builds. The DE model and the thresholds stay
+#   as fitted upstream.
 #
 # Inputs (frozen; read only)
 #   03_results/objects/02_de_results.rds       (7 limma-trend topTables)
-#     The per-contrast tables/by_contrast/<c>/md.csv files carry the SAME numbers
-#     in CSV form; the checkpoint is read instead so there is one parse and one
-#     rounding step rather than seven.
+#     The per-contrast tables/by_contrast/<c>/md.csv files carry the SAME numbers in CSV
+#     form. Reading the checkpoint gives one parse and one rounding step in place of seven.
 #
 # Outputs
 #   03_results/03_de/tables/_overview/cgas_dependence_wide.csv    (per gene)
 #   03_results/03_de/tables/_overview/cgas_dependence_stats.csv   (scalars)
 #
 # Method
-#   Join the four heat-relevant contrasts on `ensembl` (never on gene_symbol --
-#   symbols are neither unique nor stable). Significance is the FDR-ONLY gate
-#   (adj.P.Val < thresholds.de_fdr, no fold-change cut-off), matching
-#   tables/_overview/de_counts_summary.csv; the frozen human-projection export
-#   applies a stricter |logFC| gate and therefore reports far fewer genes.
-#   Correlations, the WT-on-KO regression slope, the label ranking, and the
-#   panel axis limits are ALL computed here so the viz sibling only draws.
+#   Join the four heat-relevant contrasts on `ensembl`, which is unique and stable where
+#   gene_symbol is neither. Significance is the FDR-ONLY gate (adj.P.Val <
+#   thresholds.de_fdr, no fold-change cut-off), matching
+#   tables/_overview/de_counts_summary.csv. The frozen human-projection export applies a
+#   stricter |logFC| gate and reports far fewer genes. Correlations, the WT-on-KO
+#   regression slope, the label ranking and the panel axis limits are ALL computed here, so
+#   the viz sibling only draws.
 #
 # Honest ceiling
-#   The interaction is a 1 df term at n=5/group -- the least-powered contrast in
-#   the design. A gene that fails it has NO DETECTABLE cGAS-dependence at n=5,
-#   which is not the same claim as cGAS-independence. Its 23 significant genes
-#   are a floor on the cGAS-dependent arm, not a measurement of its full size.
-#   Claim tier: L3 (association).
+#   The interaction is a 1 df term at n=5/group, the least-powered contrast in the design.
+#   A gene that fails it has NO DETECTABLE cGAS-dependence at n=5, and cGAS-independence
+#   remains a separate claim. Its 23 significant genes are a floor on the cGAS-dependent
+#   arm. Claim tier: L3 (association).
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/02b_cgas_dependence_geometry.R
@@ -137,7 +135,7 @@ wide <- wide %>%
     # Responds to 39 C in at least one genotype -- the denominator for "how much of
     # the heat response carries a detectable cGAS-dependence".
     heat_responsive = .data[[paste0("sig_", CO_WT)]] | .data[[paste0("sig_", CO_KO)]],
-    # The 1 df cGAS-dependence test. Named for what it TESTS, never for a result.
+    # The 1 df cGAS-dependence test. Named for what it TESTS.
     cgas_dependent  = .data[[paste0("sig_", CO_INT)]],
     # Signed distance from the identity line in the WT-vs-KO panel IS the interaction
     # effect (WT_heat - KO_heat = Interaction), materialized so the panel's geometric
@@ -146,7 +144,7 @@ wide <- wide %>%
     # Direction of the heat response in each genotype, and whether it REVERSES: heat
     # moves the gene up in WT and down once cGAS is gone. This is the plainest reading
     # of a cGAS-dependent gene for a reader with no contrast vocabulary, so it is
-    # materialized per gene rather than inferred from a plot region. Individual
+    # materialized per gene, independent of any plot region. Individual
     # per-genotype directions are not required to be significant on their own -- the
     # test that gates the arm is the genotype comparison (cgas_dependent).
     up_with_heat_in_wt   = .data[[paste0("logFC_", CO_WT)]] > 0,
@@ -170,7 +168,7 @@ wide <- wide %>%
     )
   )
 
-# Plot-ready three-way class, so the viz maps a column instead of re-deriving a rule.
+# Plot-ready three-way class, so the viz maps a column.
 wide <- wide %>%
   dplyr::mutate(arm_class = dplyr::case_when(
     !cgas_dependent                        ~ "no_detectable_difference",
@@ -205,8 +203,8 @@ wide <- wide %>% dplyr::arrange(.data[[paste0("adjP_", CO_INT)]])
 #     (built by 04_gsea_set_prep.R from a pinned msigdbr) and report the
 #     UNASSIGNED remainder. Hallmark is human-derived and ortholog-mapped, so
 #     mouse-specific paralogs are absent from it by construction -- that is a
-#     curation gap in the reference, not evidence against a gene's identity, and
-#     the remainder must be read with that in mind rather than as a negative.
+#     curation gap in the reference, which leaves each gene's identity open, and
+#     the remainder must be read with that in mind.
 # -----------------------------------------------------------------------------
 hallmark_path <- file.path(DIR_OBJECTS, "geneset_msigdb_Hallmark.rds")
 IFN_TERMS <- c("HALLMARK_INTERFERON_ALPHA_RESPONSE", "HALLMARK_INTERFERON_GAMMA_RESPONSE")
@@ -244,7 +242,7 @@ lim_share <- sym_lim(x_sh)
 lim_inter <- sym_lim(y_in)
 
 # The panel's geometric claim -- distance from the identity line IS the interaction
-# effect -- is an arithmetic identity in a balanced 2x2. Assert it rather than assume it.
+# effect -- is an arithmetic identity in a balanced 2x2. Assert it on every run.
 ident_resid <- max(abs(wide$wt_minus_ko - y_in), na.rm = TRUE)
 if (!(ident_resid < 1e-6))
   stop("[02b] WT_heat - KO_heat != Interaction (max residual ", ident_resid,
@@ -262,7 +260,7 @@ cnt <- vapply(CONTRASTS, count_of, numeric(3))
 # Every scalar carries the SUBSET it was measured on, because the agreement between
 # the two genotypes has to be reported on the genes that actually respond to heat --
 # an all-genes correlation could be carried by the null mass sitting at the origin.
-# Both scopes are emitted so the comparison is auditable rather than asserted.
+# Both scopes are emitted, which makes the comparison auditable.
 arm <- wide[wide$cgas_dependent, , drop = FALSE]
 hr <- wide[wide$heat_responsive, , drop = FALSE]
 hr_x <- hr[[paste0("logFC_", CO_WT)]]
@@ -408,7 +406,7 @@ stats_tbl <- dplyr::bind_rows(
 # -----------------------------------------------------------------------------
 # 4b. Provenance check: does the stringent gate reproduce the FROZEN set?
 #     17_signature_sets.rds is written later in the pipeline, so this is a check
-#     when present and a message when not -- never a gate on this script running.
+#     when present and a message when absent, leaving this script free to run.
 # -----------------------------------------------------------------------------
 sig_path <- file.path(DIR_OBJECTS, "17_signature_sets.rds")
 if (file.exists(sig_path)) {

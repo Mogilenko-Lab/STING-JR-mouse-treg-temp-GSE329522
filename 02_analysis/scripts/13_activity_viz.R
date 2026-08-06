@@ -5,19 +5,19 @@
 # Stage: 05_progeny
 # Project: GSE329522 STING/cGAS Hyperthermia (2x2 genotype x temperature)
 #
-# Role: VIZ ONLY - reads checkpoint objects + master CSVs; never re-runs
-#       decoupleR; no DE re-fit; no statistics; no network fetch.
+# Role: VIZ ONLY - reads checkpoint objects + master CSVs. decoupleR, DE and the network
+#       fetch all belong to the compute scripts.
 #
 # Key scientific claim (the headline panel):
-#   Hypoxia (PROGENy) rises in BOTH WT_heat and KO_heat but is FLAT in the
-#   Interaction contrast => NO DETECTABLE cGAS-dependence at n=5
-#   (n=5/group; not proven independence).
-#   JAK-STAT (PROGENy) and the IFN/IRF/STAT TFs are positive in WT_heat,
-#   reduced in KO_heat, and positive in the Interaction => cGAS-DEPENDENT.
-#   This orthogonal pathway-footprint view corroborates the two-arms split
-#   without relying on any TF regulon.
+#   Hypoxia (PROGENy) rises in BOTH WT_heat and KO_heat and stays FLAT in the Interaction
+#   contrast => NO DETECTABLE cGAS-dependence at n=5. At n=5/group, independence remains a
+#   separate claim.
+#   JAK-STAT (PROGENy) and the IFN/IRF/STAT TFs are positive in WT_heat, reduced in KO_heat,
+#   and positive in the Interaction => cGAS-DEPENDENT.
+#   This orthogonal pathway-footprint view corroborates the two-arms split while resting on
+#   no TF regulon.
 #
-# Inputs (read-only; never written):
+# Inputs (read-only):
 #   03_results/objects/09_progeny_activity.rds    (raw decoupleR MLM)
 #   03_results/master/master_progeny_activities.csv
 #   03_results/objects/03_tf_collectri.rds         (raw decoupleR ULM + BH)
@@ -262,7 +262,7 @@ if (TF_AVAILABLE) {
 # project_theme(variant=v)` per variant, and `grob + <ggplot theme>` evaluates
 # to NULL (no error) -> ggsave(NULL) writes a blank 853-B PDF / a non-heatmap
 # PNG. A ggplot object survives `+ project_theme`, so the dual-variant +
-# font-floor + cairo machinery works unchanged. Hence geom_tile, not pheatmap.
+# font-floor + cairo machinery works unchanged. Hence geom_tile.
 #
 # Row order: clustered via explicit hclust(dist(mat)) so the biological grouping
 # (IFN block, HIF rows) reads the same as the pheatmap version gave. Columns stay
@@ -938,7 +938,7 @@ if (TF_AVAILABLE && length(CO_TF_HEADLINE) >= 1) {
 }
 
 # =============================================================================
-# 10. BIOLOGY SANITY CHECKS (console only; findings, not crashes)
+# 10. BIOLOGY SANITY CHECKS (console only; reported as findings)
 # =============================================================================
 
 message("[13_activity_viz] --- Biology sanity checks ---")
@@ -1001,7 +1001,7 @@ if (!file.exists(readme_path)) {
 
 n_fig <- length(list.files(file.path("03_results", STAGE, "figures"),
                             pattern = "\\.(pdf|png)$", recursive = TRUE))
-## adjacency is per figure STEM, not per file: each stem emits both a
+## adjacency is per figure STEM: each stem emits both a
 ## .pdf and a .png, but a single same-stem .csv, so compare unique stems
 ## (strip the extension) against the CSV count.
 n_ov  <- length(unique(sub("\\.(pdf|png)$", "",

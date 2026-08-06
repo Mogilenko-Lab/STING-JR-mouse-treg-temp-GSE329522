@@ -59,7 +59,7 @@ prox2 <- prox %>%
                   !.data$counted        ~ "too sparsely annotated to score",
                   .data$is_lens_member  ~ "in the lens",
                   TRUE                  ~ "not in the lens"))
-# The counts go in the axis labels rather than as in-panel text: three blocks centred
+# The counts go in the axis labels, over in-panel text: three blocks centred
 # on three categories collide as soon as any of them is wider than the category slot.
 axis_lab <- setNames(
   sprintf("%s\n%d of the set are in it\n%d of %d scored sit above the 95th\npercentile, against %.1f by chance\n%d too sparsely annotated to score",

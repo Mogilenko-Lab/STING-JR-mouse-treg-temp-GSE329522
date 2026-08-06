@@ -8,22 +8,22 @@
 # Outputs:
 #   00_data/references/gene_sets/lombardi2022_hif_consensus_human.rds  (human consensus, protein-coding)
 #   00_data/references/gene_sets/lombardi2022_hif_consensus_mouse.rds  (mouse orthologs; the bulk asset)
-#   00_data/references/gene_sets/lombardi2022_hif_curation_log.csv     (full per-gene audit trail)
+#   00_data/references/gene_sets/lombardi2022_hif_curation_log.csv     (per-gene audit trail)
 #   00_data/references/gene_sets/tables/lombardi_recurrence_data.csv   (tidy, plot-ready: per gene)
 #   00_data/references/gene_sets/tables/lombardi_recurrence_null.csv   (tidy null curve, per recurrence level)
 # Dependencies: 02_analysis/config/config.R; readxl; babelgene (offline human->mouse orthology)
 #
 # ===========================================================================================
-# WHY THIS SCRIPT WAS REWRITTEN (the bug it fixes)
+# WHAT THIS REPLACED
 # ===========================================================================================
-#   The previous 00b HARDCODED a 48-gene "Lombardi consensus" vector. That list is provably NOT
-#   the published consensus: it is verbatim the single `TCGA-ACC` sheet of mmc2.xlsx (that one
-#   cancer type happens to have exactly 48 rows). The TRUE published signature is the set of genes
-#   that RECUR across the 32 TCGA per-cancer-type sheets ("a conserved gene signature"). This
-#   script reconstructs that conserved set from the supplement, end to end, with a statistical
-#   justification for the recurrence threshold and a full audit log.
+#   The previous 00b hardcoded a 48-gene "Lombardi consensus" vector taken verbatim from the
+#   single `TCGA-ACC` sheet of mmc2.xlsx, which happens to hold exactly 48 rows. The published
+#   signature is the set of genes RECURRING across the 32 TCGA per-cancer-type sheets ("a
+#   conserved gene signature"). This script reconstructs that conserved set from the supplement
+#   end to end, with a statistical justification for the recurrence threshold and a full audit
+#   log.
 #
-# SOURCE (do not edit without re-checking the paper):
+# SOURCE (re-check the paper before editing):
 #   Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR.
 #   "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved
 #    gene signature." Cell Reports 2022; 41(7):111652. doi:10.1016/j.celrep.2022.111652
@@ -32,46 +32,46 @@
 #   "genes positively correlating with the HIF-metagene". Per-sheet sizes vary 5..49,763 rows.
 #
 # ===========================================================================================
-# METHOD & RATIONALE (decisions are auditable, not arbitrary)
+# METHOD & RATIONALE
 # ===========================================================================================
 #   (A) PER-DATASET HIF-MEMBERSHIP RULE
 #       Rule = BH-FDR(pvalue) < 0.05  AND  correlation > 0  AND  rank <= CAP (top-CAP by
 #       descending correlation), CAP = 200.
-#       - Significance (BH<0.05, positive corr) is the primary, principled criterion.
-#       - WHY THE CAP: significance ALONE is pathological here because the sheets differ in size
-#         by 4 orders of magnitude. A 49,763-row sheet (TCGA-BRCA) calls ~6,700 genes "FDR-sig",
-#         while TCGA-CHOL has only 5 rows total. Counting recurrence off raw FDR membership would
-#         let a handful of huge cohorts dominate and would conflate "deeply sequenced cohort" with
-#         "conserved HIF gene". The top-CAP cap gives every cancer type an EQUAL vote of at most
-#         CAP genes (its strongest-correlating HIF members), so recurrence measures conservation
-#         across cancer types, not cohort size. CAP=200 sits near the per-sheet "real-signal"
-#         depth (median FDR-membership ~ a few hundred) and is the cap used for the reported set;
-#         the conclusion (canonical glycolysis/HIF core at the top) is robust to CAP in 200..1000.
-#       - Small sheets (e.g. CHOL=5) simply contribute their <=5 members; documented, not special-cased.
+#       - Significance (BH<0.05, positive corr) is the primary criterion.
+#       - WHY THE CAP: the sheets differ in size by 4 orders of magnitude, so significance alone
+#         is pathological here. A 49,763-row sheet (TCGA-BRCA) calls ~6,700 genes FDR-significant
+#         while TCGA-CHOL holds 5 rows in total. Counting recurrence off raw FDR membership lets a
+#         handful of huge cohorts dominate and conflates "deeply sequenced cohort" with
+#         "conserved HIF gene". The cap gives every cancer type an EQUAL vote of at most CAP genes,
+#         its strongest-correlating HIF members, so recurrence measures conservation across cancer
+#         types. CAP=200 sits near the per-sheet real-signal depth (median FDR membership a few
+#         hundred), and the conclusion — canonical glycolysis/HIF core at the top — holds for CAP
+#         in 200..1000.
+#       - Small sheets (CHOL=5) contribute their <=5 members, logged as such.
 #
 #   (B) SHARED UNIVERSE
-#       No gene appears in ALL 32 sheets (intersection is empty: each cohort reports a different
-#       gene complement). The shared universe U is therefore the UNION of genes appearing in any
-#       sheet (|U| ~ 54k). Per-dataset null inclusion probability p_d = |members_d| / |U|.
+#       Each cohort reports a different gene complement, so the 32-way intersection is empty. The
+#       shared universe U is the UNION of genes appearing in any sheet (|U| ~ 54k). Per-dataset
+#       null inclusion probability p_d = |members_d| / |U|.
 #
-#   (C) CONSENSUS THRESHOLD VIA AN ANALYTIC NULL (no permutation needed; fully deterministic)
-#       Under H0 each dataset d independently "includes" a given gene with prob p_d. A gene's
-#       recurrence count across the 32 datasets is then Poisson-binomial(p_1..p_32). We compute
-#       the exact upper-tail P(X >= observed_recurrence) by direct Bernoulli convolution of the
-#       pmf (stable, dependency-free), per gene, then BH-correct across all |U| genes.
-#       KEEP rule (alpha): null_padj < ALPHA_BONF, ALPHA_BONF = 0.05/|U|. Because U~54k genes are
-#       tested, a genome-wide-significance-style (Bonferroni-scaled) alpha is the honest control;
-#       a plain 0.05 would admit genes recurring in only ~3/32 cohorts (statistically non-random,
-#       but not "conserved"). This yields a conserved set on the order of ~100 genes BEFORE biotype
-#       filtering; the protein-coding, ortholog-mapped, in-dataset bulk asset is smaller (tens).
+#   (C) CONSENSUS THRESHOLD VIA AN ANALYTIC NULL (deterministic; no permutation)
+#       Under H0 each dataset d independently includes a given gene with probability p_d, so a
+#       gene's recurrence count across the 32 datasets is Poisson-binomial(p_1..p_32). The exact
+#       upper tail P(X >= observed_recurrence) comes from direct Bernoulli convolution of the pmf
+#       (stable, dependency-free), per gene, BH-corrected across all |U| genes.
+#       KEEP rule: null_padj < ALPHA_BONF, ALPHA_BONF = 0.05/|U|. With U~54k genes tested, a
+#       genome-wide-significance-style alpha is the honest control; a plain 0.05 admits genes
+#       recurring in ~3/32 cohorts, which is non-random and short of conserved. This yields a
+#       conserved set on the order of ~100 genes before biotype filtering. The protein-coding,
+#       ortholog-mapped, in-dataset bulk asset is smaller, in the tens.
 #
 #   (D) HUMAN->MOUSE ORTHOLOGY: babelgene::orthologs(species="mouse", human=TRUE), 1:1 best per
-#       human gene (same pattern as the prior 00b). (E) VALIDATE mouse symbols against this
+#       human gene (the pattern the prior 00b used). (E) VALIDATE mouse symbols against this
 #       dataset's gene_name column (FILE_CPM). Biotype drops (lncRNA host genes / antisense /
-#       microRNA / processed pseudogenes / clone-based Ensembl-Havana IDs) by symbol convention,
-#       each logged with a reason, applied BEFORE orthology mapping.
+#       microRNA / processed pseudogenes / clone-based Ensembl-Havana IDs) go by symbol
+#       convention, each logged with a reason, applied BEFORE orthology mapping.
 #
-#   DETERMINISM: the null is analytic (no RNG). A seed constant is recorded for provenance only.
+#   DETERMINISM: the null is analytic and uses no RNG. A seed constant is recorded for provenance.
 # ===========================================================================================
 
 source("02_analysis/config/config.R")

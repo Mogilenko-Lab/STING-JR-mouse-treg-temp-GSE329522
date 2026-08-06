@@ -3,14 +3,15 @@
 # 02_de_limma_trend.R  --  Phase 2 COMPUTE: limma-trend 2x2 DE (statistics only)
 # =============================================================================
 # Phase:    2 (stage 03_de)
-# Role:     COMPUTE half of the "normalize-then-visualize" split. Does ALL
-#           statistics and emits checkpoints + plot-ready tidy tables. Contains
-#           NO ggplot()/ggsave(); figures live in 02_de_limma_trend_viz.R.
+# Role:     COMPUTE half of the "normalize-then-visualize" split. Runs all statistics and
+#           emits checkpoints + plot-ready tidy tables. Figures live in
+#           02_de_limma_trend_viz.R.
 #
 # Inputs:   03_results/objects/01_eda.rds  (cpm_mat, logcpm_mat = log2(CPM+0.5),
 #                                           metadata aligned 021..040, collapse_record)
 #           02_analysis/config/analysis_config.yaml  (design.contrasts, 7 contrasts)
 #           00_data/processed/GSE329522_normalized_counts_CPM_iTreg.csv (ensembl map)
+#
 # Contrasts (7, built generically from config:design.contrasts via makeContrasts):
 #   WT_heat    = WT_39 - WT_37          heat response in the cGAS-competent genotype
 #   KO_heat    = cGASKO_39 - cGASKO_37 heat response with cGAS removed
@@ -32,13 +33,12 @@
 #           03_results/03_de/tables/fig2_marker_means.csv       (plot-ready, tidy)
 #
 # METHOD NOTE (CRITICAL):
-#   The deposit is CPM (pre-normalized), NOT raw counts -> voom CANNOT be run
-#   faithfully (no mean-variance trend from library sizes). We therefore use
-#   limma-trend on log2(CPM+0.5):
+#   The deposit is CPM (pre-normalized), so voom has no library sizes to fit a
+#   mean-variance trend from. This stage therefore uses limma-trend on log2(CPM+0.5):
 #       design <- model.matrix(~0 + group)
 #       fit    <- lmFit(logcpm_mat, design)
 #       fit2   <- eBayes(contrasts.fit(fit, cmat), trend = TRUE, robust = TRUE)
-#   trend=TRUE  -> intensity-dependent prior variance (replaces voom weights)
+#   trend=TRUE  -> intensity-dependent prior variance, which takes the place of voom weights
 #   robust=TRUE -> robust empirical-Bayes hyperparameter estimation.
 #   This is the recommended method for pre-normalized log-expression matrices
 #   (Law et al. 2014; limma User's Guide sec. on "limma-trend").

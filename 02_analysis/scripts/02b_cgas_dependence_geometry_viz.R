@@ -1,55 +1,53 @@
 #!/usr/bin/env Rscript
 # 02b_cgas_dependence_geometry_viz.R -- VIZ
 # =============================================================================
-# One panel that carries the cGAS-dependence argument to a reader who has never
-# seen a linear-model contrast (stage 03_de).
+# One panel carrying the cGAS-dependence argument to a reader who has never seen a
+# linear-model contrast (stage 03_de).
 #
 # The argument
-#   Warming iTregs to 39 C changes thousands of genes, and it changes almost the
-#   same genes by almost the same amount whether or not cGAS is present. A small,
-#   one-sided arm behaves differently: 23 genes respond more strongly to heat in
-#   WT than in cGAS-KO, none the other way round.
+#   Warming iTregs to 39 C changes thousands of genes, and it changes almost the same
+#   genes by almost the same amount in both genotypes. A small one-sided arm behaves
+#   differently: 23 genes respond more strongly to heat in WT than in cGAS-KO, none the
+#   other way round.
 #
-#   The panel puts the WT heat response on x and the cGAS-KO heat response on y.
-#   Both axes are the SAME familiar quantity measured in two genotypes, so no
-#   modelling vocabulary is needed: a gene on the diagonal responded to heat the
-#   same way in both, and distance from the diagonal is exactly how much removing
-#   cGAS changed its response (asserted as an identity by the compute sibling).
+#   The panel puts the WT heat response on x and the cGAS-KO heat response on y. Both axes
+#   carry the same familiar quantity measured in two genotypes, so the picture reads
+#   without modelling vocabulary: a gene on the diagonal responded to heat the same way in
+#   both, and distance from the diagonal is how much removing cGAS changed its response
+#   (asserted as an identity by the compute sibling).
 #
-# Why there is no second, rotated panel
-#   A companion panel used to plot Temp_main (x) against Interaction (y). Because
-#   Temp_main = 1/2(WT_heat + KO_heat) and Interaction = WT_heat - KO_heat, that
-#   view is a 45-degree ROTATION of this one, not a second measurement, and its
-#   two headline numbers are artifacts of the rotation rather than results:
-#   cov(x,y) = 1/2(var(WT_heat) - var(KO_heat)), so its r = -0.08 is fixed by the
-#   two genotypes having near-equal response variance -- the same fact this panel
-#   reports as slope 0.99 / r = 0.95 -- and "the shared axis carries the larger
-#   effects" restates that a cloud hugging the identity line spreads further along
-#   it than across it. Reporting either as independent threads over-read the
-#   geometry, so the rotated view was dropped rather than re-captioned.
+# Why this is the only panel
+#   A companion panel plotted Temp_main (x) against Interaction (y). Since
+#   Temp_main = 1/2(WT_heat + KO_heat) and Interaction = WT_heat - KO_heat, that view is a
+#   45-degree ROTATION of this one, and its two headline numbers restate the rotation:
+#   cov(x,y) = 1/2(var(WT_heat) - var(KO_heat)), so its r = -0.08 follows from the two
+#   genotypes having near-equal response variance — the same fact this panel reports as
+#   slope 0.99 / r = 0.95 — and "the shared axis carries the larger effects" restates that
+#   a cloud hugging the identity line spreads further along it than across it. Reading
+#   either as an independent thread over-reads the geometry, so the rotated view was
+#   dropped.
 #
 # Encoding (value first, hue second, shape third)
-#   The three classes are ordered by LIGHTNESS so they survive a greyscale print
-#   and deuteranopia/protanopia: pale grey cloud -> vermillion -> near-black, each
-#   with its own glyph (small dot -> ringed circle -> ringed triangle). Hue only
-#   reinforces a separation the value ladder already carries.
+#   The three classes are ordered by LIGHTNESS so they survive a greyscale print and
+#   deuteranopia/protanopia: pale grey cloud -> vermillion -> near-black, each with its own
+#   glyph (small dot -> ringed circle -> ringed triangle). Hue reinforces a separation the
+#   value ladder already carries.
 #
-# The stringent gate is drawn as GEOMETRY, not as a fourth colour
-#   Two subsets of the arm both number nine and are NOT the same genes: the
-#   |logFC| >= de_logfc set, and the set that reverses sign without cGAS. They
-#   share four members. Drawing the gate as dotted lines parallel to the identity
-#   line makes membership exact and readable off the page: highlighted glyph
-#   beyond the line = gate, triangle = reverses, so beyond+triangle = both.
-#   The gate is NOT "the genes that travel to human". The frozen
-#   03_results/human_projection/ contract exports this arm at BOTH gates -- the
-#   nine at fdr_logfc and all 23 at fdr_only, the sensitivity read a 1 df term at
-#   n=5 needs -- so the canvas states the geometry and leaves the export to the
-#   README and to human_projection/manifest.csv.
+# The stringent gate is drawn as GEOMETRY
+#   Two subsets of the arm both number nine and hold different genes: the |logFC| >=
+#   de_logfc set, and the set that reverses sign without cGAS. They share four members.
+#   Drawing the gate as dotted lines parallel to the identity line makes membership exact
+#   and readable off the page: highlighted glyph beyond the line = gate, triangle =
+#   reverses, beyond + triangle = both.
 #
-# Role: DRAWS ONLY. Every number on these panels -- correlations, regression
-#   slope, counts, class membership, the gate offset, axis limits, which genes get
-#   labelled -- is read from the tables emitted by 02b_cgas_dependence_geometry.R.
-#   No statistic, join, threshold or count is computed here.
+#   The gate marks geometry, and the export is wider. The frozen
+#   03_results/human_projection/ contract ships this arm at BOTH gates — the nine at
+#   fdr_logfc and all 23 at fdr_only, the sensitivity read a 1 df term at n=5 needs — and
+#   the README and human_projection/manifest.csv carry that.
+#
+# Role: DRAWS ONLY. Every number on these panels — correlations, regression slope, counts,
+#   class membership, the gate offset, axis limits, which genes get labelled — is read
+#   from the tables emitted by 02b_cgas_dependence_geometry.R.
 #
 # Inputs (read only)
 #   03_results/03_de/tables/_overview/cgas_dependence_wide.csv
@@ -61,22 +59,23 @@
 #   03_results/03_de/README.md (captions, idempotent)
 #
 # Honest framing
-#   The interaction is LABELLED by what it tests -- cGAS-dependence of the heat
-#   response -- never by a result, and its claim floors at L3. It is a 1 df term
-#   at n=5/group, the least-powered contrast in the design, so its 23 genes are a
-#   FLOOR on the cGAS-dependent arm. A gene on the diagonal has no detectable
-#   cGAS-dependence at n=5, which is not a claim of cGAS-independence. The arm is
-#   also one-sided (23 up, 0 down); nothing here may be drawn symmetrically.
-#   One-sidedness is a property of the SIGNIFICANT arm ONLY. The pale cloud
-#   straddles the diagonal in both directions -- 9,541 of the 19,679 genes have a
-#   nominally weaker heat response in WT, and one of them (the pseudogene
-#   Spcs2-ps, adj.P = 1) clears the gate offset on that side. So every "none the
-#   other way" sentence, on the canvas or in a caption, must name the arm it is
-#   scoped to; unscoped, it is false and the picture contradicts it.
-#   The reader-facing prose lives in the README caption sections, not on the canvas.
+#   The interaction is LABELLED by what it tests — cGAS-dependence of the heat response —
+#   and its claim floors at L3. It is a 1 df term at n=5/group, the least-powered contrast
+#   in the design, so its 23 genes are a FLOOR on the cGAS-dependent arm. A gene on the
+#   diagonal has no detectable cGAS-dependence at n=5, which leaves cGAS-independence an
+#   open question. The arm is also one-sided (23 up, 0 down), so every panel stays
+#   asymmetric.
+#
+#   One-sidedness is a property of the SIGNIFICANT arm alone. The pale cloud straddles the
+#   diagonal in both directions — 9,541 of the 19,679 genes have a nominally weaker heat
+#   response in WT, and one of them (the pseudogene Spcs2-ps, adj.P = 1) clears the gate
+#   offset on that side. Every "none the other way" sentence, on the canvas or in a
+#   caption, must name the arm it is scoped to; unscoped, the picture contradicts it.
+#
+#   The reader-facing prose lives in the README caption sections.
 #
 # Dependencies: ggplot2, dplyr, readr, ggrepel
-# Run from project root (after the compute sibling):
+# Run from project root, after the compute sibling:
 #   Rscript 02_analysis/scripts/02b_cgas_dependence_geometry_viz.R
 # =============================================================================
 
@@ -106,7 +105,7 @@ PT      <- as.numeric(FIG_CFG$figures$point_size %||% 2.4)
 SEED    <- GSEA_SEED    # deterministic ggrepel layout, so re-runs are byte-stable
 
 ## DECLARED PALETTE — the only colour constants in this script, all from FIG_CFG$colors.
-## The three classes are ordered by VALUE, not hue, so the panel separates in pure
+## The three classes are ordered by VALUE, with hue as reinforcement, so the panel separates in pure
 ## greyscale as well as in colour. Approximate WCAG relative luminance in brackets:
 ##   VAL_LO  pale grey   [Y ~ 0.60]  the 19,656-gene cloud
 ##   VAL_MID vermillion  [Y ~ 0.22]  differs between genotypes, same direction
@@ -145,9 +144,9 @@ for (p in c(wide_path, stats_path)) {
 gw <- readr::read_csv(wide_path,  show_col_types = FALSE)
 st <- readr::read_csv(stats_path, show_col_types = FALSE)
 
-#' Look up one precomputed scalar. A row/column read, never a calculation. `subset`
+#' Look up one precomputed scalar. A row/column read. `subset`
 #' names the gene set the statistic was measured on -- agreement between the two
-#' genotypes is reported on heat-responsive genes, not on the whole universe.
+#' genotypes is reported on heat-responsive genes, a subset of the universe.
 S <- function(metric, scope, subset = "all_genes") {
   v <- st$value[st$metric == metric & st$scope == scope & st$subset == subset]
   if (length(v) != 1L)
@@ -209,7 +208,7 @@ gw_rev  <- gw %>% dplyr::filter(arm_class == "differs_and_reverses")
 # the frozen mouse->human signature carries -- and it is itself smaller than the cap,
 # so neither label source exceeds figures.volcano_label_top. Naming both subsets is
 # the point: the reader must be able to check which of the two nines a gene is in.
-# Membership is READ from in_stringent_gate / label_rank, never derived here.
+# Membership is READ from in_stringent_gate / label_rank.
 # Gene names of gate members are set BOLD. Four of the nine sit within a hundredth of
 # a log2 unit of the gate line -- a hard threshold cutting a continuum -- so the line
 # alone cannot resolve them at glyph size. Bold is exact, costs no colour and no legend
@@ -236,7 +235,7 @@ WRAP_BOX <- as.integer(round(WRAP * 0.66))   # the two corner blocks
 #' Wrap one long string for a title/subtitle.
 wrap_at <- function(txt, width = WRAP) paste(strwrap(txt, width = width), collapse = "\n")
 
-# The arm's symbols read as interferon-stimulated, which is a look, not a result. State
+# The arm's symbols read as interferon-stimulated, which is a look. State
 # the CURATED composition instead: membership of MSigDB Hallmark interferon-alpha/gamma,
 # with the unassigned remainder reported and the reason it is not a negative.
 COMPOSITION_SENTENCE <- sprintf(
@@ -251,7 +250,7 @@ box_text <- function(..., width = WRAP_BOX)
   paste(unlist(lapply(c(...), strwrap, width = width)), collapse = "\n")
 #' Guard the block against the region it was placed in. A block that outgrows its
 #' budget lands on data or runs off the canvas, which is this figure's failure mode,
-#' so it fails the run loudly instead of shipping a collision.
+#' so it fails the run loudly and keeps a collision off the canvas.
 fits <- function(txt, max_lines, max_chars, where) {
   ln <- strsplit(txt, "\n", fixed = TRUE)[[1]]
   if (length(ln) > max_lines || max(nchar(ln)) > max_chars)
@@ -263,7 +262,7 @@ fits <- function(txt, max_lines, max_chars, where) {
 # -----------------------------------------------------------------------------
 # 5. THE PANEL — the heat response in WT against the heat response in cGAS-KO
 # -----------------------------------------------------------------------------
-# The counts block is NUMBERS, not sentences: one row per quantity the geometry is built
+# The counts block is NUMBERS: one row per quantity the geometry is built
 # from, so a reader can check the picture against the arithmetic without parsing prose. It
 # carries counts ONLY. Δ and the significance cut-off are defined in the subtitle, and the
 # agreement statistics (r, slope) are left to the README caption — the dots piling onto the
@@ -300,7 +299,7 @@ p_a <- ggplot(mapping = aes(x = .data[[paste0("logFC_", CO_WT)]],
   # Identity line, then the stringent gate as two lines PARALLEL to it: the gate is
   # |WT - cGAS-KO| >= de_logfc, so it is exactly an offset of the diagonal. Both
   # offsets are drawn; nothing highlighted lies beyond the upper one, which is the
-  # one-sidedness of the arm shown rather than asserted.
+  # one-sidedness of the arm shown on the face.
   geom_abline(slope = 1, intercept = 0, linetype = "dashed", linewidth = 0.6, colour = AX) +
   geom_abline(slope = 1, intercept = c(-GATE, GATE), linetype = "dotted",
               linewidth = 0.5, colour = AX) +

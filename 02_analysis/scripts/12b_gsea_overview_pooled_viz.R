@@ -3,13 +3,12 @@
 ## FDR family computed by 06b_gsea_pooled_padj.R. One facet per displayed database,
 ## the top-N sets inside each facet, NES on x, pooled-FDR status in the glyph shape.
 ##
-## Nothing here recomputes a statistic: the pooled family, its padj_pooled column and
-## the per-database significance counts all arrive from 06b. This script selects what
-## to draw, orders it, and renders it.
+## The pooled family, its padj_pooled column and the per-database significance counts all
+## arrive from 06b. This script selects what to draw, orders it, and renders it.
 ##
 ## The facet list, the per-facet cap and the canvas geometry are read from
-## analysis_config.yaml (`gsea_pooled_overview:`) — see that block for why
-## exclude_databases drops a database from the panel while keeping it in the pooled family.
+## analysis_config.yaml (`gsea_pooled_overview:`) — see that block for how exclude_databases
+## drops a database from the panel while keeping it in the pooled family.
 ##
 ## Reads:
 ##   03_results/06_gsea/tables/_overview/gsea_pooled_overview.csv
@@ -96,7 +95,7 @@ if (length(missing_db)) {
 }
 
 #' Measure the rendered title against the canvas and warn if it will run off.
-#' Measured on the built gtable, not assumed from the character count.
+#' Measured on the built gtable.
 .title_fits <- function(p, canvas_w) {
   gt  <- ggplot2::ggplotGrob(p)
   idx <- which(gt$layout$name == "title")
@@ -152,7 +151,7 @@ make_contrast_overview_plot <- function(df_sub, contrast_name) {
 
   # Facet header carries each database's pooled-significant count over the WHOLE
   # database, so a facet whose drawn sets are all non-significant says so in its header
-  # instead of costing a facet to say nothing.
+  # keeping an empty facet off the panel.
   db_meta <- df_mod %>%
     dplyr::distinct(database, n_tests_in_db, sig_after_in_db) %>%
     dplyr::mutate(db_label = sprintf("%s (%d/%d)",
@@ -236,7 +235,7 @@ make_contrast_overview_plot <- function(df_sub, contrast_name) {
     project_theme(config = FIG_CFG, base_size = FIG_CFG$figures$base_size %||% 14) +
     theme(
       axis.text.y                 = element_text(lineheight = 0.85),
-      # Anchor the caption and the guide box to the CANVAS, not to the panel
+      # Anchor the caption and the guide box to the CANVAS, outside the panel
       # region: panel-anchored prose starts after the y-axis labels and runs
       # off the right edge on a two-column facet grid.
       plot.caption.position       = "plot",
@@ -345,7 +344,7 @@ for (co in CONTRASTS) {
 }
 
 # Combined two-panel figure: the same two panels, same selection rule, SIDE BY SIDE.
-# Side by side rather than stacked because each panel is already ~15 in tall at N sets
+# Side by side, since each panel is already ~15 in tall at N sets
 # per database across a 7-row facet grid; stacking them produced a canvas over 30 in
 # tall that no reader can take in, while placing them abreast keeps a landscape aspect
 # and lines the database blocks up row for row across the seam.

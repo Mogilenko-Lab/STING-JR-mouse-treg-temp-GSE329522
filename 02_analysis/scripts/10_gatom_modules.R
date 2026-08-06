@@ -3,36 +3,36 @@
 # 10_gatom_modules.R — COMPUTE  (stage 09_gatom)
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# GATOM atom-graph MWCS metabolic modules from the limma-trend DE signal.
-# This is the MitoCarta-corroborating mechanism arm: the Complex-I /
-# metabolic-pseudohypoxia story. GATOM finds the maximally-regulated metabolic
-# SUBNETWORK (a Signal-Generalised Maximum-Weight Connected Subgraph, SGMWCS)
-# over an atom-transition network, scoring enzyme edges by a BUM model fit to the
-# RAW p-values — NOT a permutation/enrichment test (that is the GSEA arm, 06_gsea).
+# GATOM atom-graph MWCS metabolic modules from the limma-trend DE signal. This is the
+# MitoCarta-corroborating mechanism arm: the Complex-I / metabolic-pseudohypoxia story.
+# GATOM finds the maximally-regulated metabolic SUBNETWORK (a Signal-Generalised
+# Maximum-Weight Connected Subgraph, SGMWCS) over an atom-transition network, scoring
+# enzyme edges by a BUM model fit to the RAW p-values. The permutation/enrichment arm is
+# GSEA, in 06_gsea.
 #
-# ROLE: COMPUTE half of the normalize-then-visualize split. ALL statistics +
-#   checkpoints + tidy CSV. NO ggplot()/ggsave(); figures live in the *_viz.R
-#   sibling, which recomputes NOTHING and reads only the artifacts written here.
+# ROLE: COMPUTE half of the normalize-then-visualize split. All statistics, checkpoints
+#   and tidy CSV. Figures live in the *_viz.R sibling, which reads only the artifacts
+#   written here.
 #
-# CONTRASTS (headline only, per the standard sweep): WT_heat, KO_heat,
-#   Interaction, Temp_main  (intersected with the DE checkpoint names).
+# CONTRASTS (headline only, per the standard sweep): WT_heat, KO_heat, Interaction,
+#   Temp_main, intersected with the DE checkpoint names.
 #
-# NETWORKS: kegg + combined — the two standard GATOM networks. KEGG runs with
-#   gene2reaction.extra=NULL; Combined REQUIRES the gene2reaction TSV (silent
-#   empty graph without it — see skill "Network Files" + "Input Format Gotchas").
+# NETWORKS: kegg + combined, the two standard GATOM networks. KEGG runs with
+#   gene2reaction.extra=NULL. Combined REQUIRES the gene2reaction TSV and returns a silent
+#   empty graph without it — see skill "Network Files" + "Input Format Gotchas".
 #
 # ---------------------------------------------------------------------------
-# GATOM REFERENCE OBJECTS (loaded by their ACTUAL on-disk paths under
-#   00_data/references/gatom/ — already fully downloaded; we do NOT re-fetch).
-#   Shapes assumed (per the gatom-metabolomic-predictions skill + GATOM docs):
+# GATOM REFERENCE OBJECTS, loaded by their on-disk paths under
+#   00_data/references/gatom/ (already downloaded; this script re-fetches nothing).
+#   Shapes assumed per the gatom-metabolomic-predictions skill + GATOM docs:
 #
 #   org.Mm.eg.gatom.anno.rds   list(gene/metabolite annotation maps). Passed as
 #                              `org.gatom.anno=`. Keyed by gene SYMBOL here
-#                              (our gene.de$ID is the limma gene_symbol).
+#                              (gene.de$ID is the limma gene_symbol).
 #   network.<net>.rds          GATOM network object (reactions/atoms/enzymes).
 #                              Passed as `network=`.  net in {kegg, combined}.
 #   met.<net>.db.rds           metabolite annotation DB. Passed as `met.db=` —
-#                              REQUIRED even with met.de=NULL (topology needs it).
+#                              REQUIRED even with met.de=NULL, since topology needs it.
 #   gene2reaction.<net>.mmu.eg.tsv   enzyme->reaction map for non-KEGG networks
 #                              (mouse ncbi code = "mmu"). Passed as
 #                              `gene2reaction.extra=`. REQUIRED for Combined.
@@ -42,19 +42,19 @@
 #     network.rhea.lipids.rds, met.kegg.db.rds, met.rhea.db.rds,
 #     met.lipids.db.rds, org.Mm.eg.gatom.anno.rds,
 #     gene2reaction.combined.mmu.eg.tsv, gene2reaction.rhea.mmu.eg.tsv
-#   We use the KEGG + Combined set; each required file is guarded with a clear
-#   stop() naming the missing path (no silent fallback / no fabrication).
+#   This stage uses the KEGG + Combined set. Each required file is guarded with a stop()
+#   naming the missing path.
 #
 # ---------------------------------------------------------------------------
 # INVERTED GRAPH STRUCTURE (skill "Critical: Inverted Graph Structure"):
-#   NODES = metabolites/atoms (have label, score; NO log2FC)
-#   EDGES = reactions/enzymes (have log2FC, pval, Symbol, enzyme)
+#   NODES = metabolites/atoms (carry label and score)
+#   EDGES = reactions/enzymes (carry log2FC, pval, Symbol, enzyme)
 #   => module genes come from EDGES: igraph::as_data_frame(m, "edges")$Symbol
 #
 # INPUT FORMAT (skill "Core Workflow" / "Input Format Gotchas"):
 #   gene.de = data.frame(ID=symbol, pval=RAW P.Value, log2FC=logFC,
-#                        baseMean=2^AveExpr [LINEAR]); dedup keep min-pval.
-#   pval MUST be the raw p-value (the BUM scoring needs it) — NEVER adj.P.Val.
+#                        baseMean=2^AveExpr [LINEAR]); dedup keeps min-pval.
+#   pval MUST be the raw p-value, which is what the BUM scoring fits.
 #
 # Inputs:
 #   - 03_results/objects/02_de_results.rds            (named list of topTables)
@@ -66,8 +66,8 @@
 #   - 03_results/09_gatom/tables/gatom_modules.csv    (tidy cross-contrast summary)
 #   - 03_results/master/master_gatom_modules.csv      (master_gsea_table schema)
 #
-# Dependencies (LAZY — required only when invoked): gatom, mwcsr, igraph,
-#   data.table.  Light tidyverse (dplyr/readr/tibble) via de_gsea_helpers.R.
+# Dependencies (LAZY — required only when invoked): gatom, mwcsr, igraph, data.table.
+#   Light tidyverse (dplyr/readr/tibble) via de_gsea_helpers.R.
 # =============================================================================
 
 source("02_analysis/config/config.R")             # PROJECT_ROOT, YAML_CONFIG, DIR_*, stage_dir, load_or_compute, %||%
@@ -98,7 +98,7 @@ HEADLINE_CONTRASTS <- c("WT_heat", "KO_heat", "Interaction", "Temp_main")
 # Self-healing: keep only networks whose metabolite-annotation DB (met.<net>.db.rds)
 # is actually provisioned. `combined` is dropped automatically until the owner
 # supplies met.combined.db.rds (only met.kegg/rhea/lipids ship by default), so the
-# run degrades to KEGG-only rather than stop()ing mid-bundle. Re-includes combined
+# run degrades to KEGG-only and finishes the bundle. Re-includes combined
 # the moment that file lands.
 NETWORKS <- Filter(
   function(net) file.exists(file.path(GATOM_REFS, sprintf("met.%s.db.rds", net))),

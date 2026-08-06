@@ -4,56 +4,52 @@
 # read the exported UP arms back out gene by gene, in the four design cells.
 #
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
-# Stage:   14_signature_expression   (script 22; stage id != script number, matching
-#          17/18 -> 10/11 and 20/21 -> 13)
+# Stage:   14_signature_expression   (script 22; stage id differs from script number,
+#          matching 17/18 -> 10/11 and 20/21 -> 13)
 #
-# ROLE: COMPUTE ONLY. Runs NO new statistics — no DE re-fit, no test, no enrichment,
-#   no permutation. Every p-value it reports was already computed in 02_de_limma_trend.R
-#   and every expression value is a group MEAN of the frozen 01_eda log2 CPM matrix.
-#   There is NO ggplot/ggsave here; the figure lives in the sibling
-#   23_signature_expression_viz.R, which reads only what this script writes.
+# ROLE: COMPUTE ONLY. Every p-value it reports was computed in 02_de_limma_trend.R, and
+#   every expression value is a group MEAN of the frozen 01_eda log2 CPM matrix. The
+#   figure lives in the sibling 23_signature_expression_viz.R, which reads only what this
+#   script writes.
 #
 # WHY THIS STAGE. Stages 10/11 report a signature as a COUNT: WT_heat_up is "213 mouse
-#   symbols -> 199 human". That number is the right unit for a projection contract and
-#   the wrong unit for a bench conversation. The question asked at the bench is per gene:
-#   how strongly is this gene expressed at all, in which of the four design cells is it
-#   high, and does removing cGAS change that picture. This stage produces exactly that
-#   substrate — a gene x design-cell table with group means, dispersion, and an
-#   across-group z — plus the DE statistics and ortholog fate each gene carries, so a
-#   dot plot (and its interactive twin downstream) can be drawn from tables alone.
+#   symbols -> 199 human". That is the right unit for a projection contract. The bench
+#   question is per gene: how strongly is this gene expressed at all, in which of the four
+#   design cells is it high, and does removing cGAS change that picture. This stage
+#   produces that substrate — a gene x design-cell table with group means, dispersion and
+#   an across-group z, plus the DE statistics and ortholog fate each gene carries — so a
+#   dot plot and its interactive twin can be drawn from tables alone.
 #
-# ┏━ SCOPE: UP ARMS ONLY ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-# ┃ Four signatures, all UP, all in MOUSE symbol space:                          ┃
-# ┃   WT_heat_up             (fdr_logfc)  the full thermal response, cGAS-competent┃
-# ┃   KO_heat_up             (fdr_logfc)  the same response with cGAS removed      ┃
-# ┃   Interaction_up         (fdr_logfc)  the cGAS-dependent slice, 1 df, thin     ┃
-# ┃   Interaction_up_fdrOnly (fdr_only)   the SAME contrast at the looser gate     ┃
-# ┃ The DOWN arms are deliberately absent — from the tables, the figure and the    ┃
-# ┃ README prose. This is a scope decision recorded in analysis_config.yaml        ┃
-# ┃ (signature_expression:), not an oversight: the bench question is about the     ┃
-# ┃ induced arm, and a two-headed dot plot invites reading up and down as one      ┃
-# ┃ program. Interaction_up_fdrOnly is flagged in EVERY row and facet label as a   ┃
-# ┃ gate-sensitivity read on the same 1-df contrast, never a second signature.     ┃
-# ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+# SCOPE: UP ARMS ONLY. Four signatures, all UP, all in MOUSE symbol space:
+#   WT_heat_up             (fdr_logfc)  the full thermal response, cGAS-competent
+#   KO_heat_up             (fdr_logfc)  the same response with cGAS removed
+#   Interaction_up         (fdr_logfc)  the cGAS-dependent slice, 1 df, thin
+#   Interaction_up_fdrOnly (fdr_only)   the SAME contrast at the looser gate
 #
-# Naming discipline (umbrella AGENTS.md): every signature is named by HOW IT WAS
-#   DERIVED (contrast + direction + gate), never by the mechanism it is hoped to
-#   represent. "WT_heat_up" is checkable; a name taken from a hoped-for mechanism is not.
+#   The DOWN arms sit outside this stage — out of the tables, the figure and the README
+#   prose — as a scope decision recorded in analysis_config.yaml (signature_expression:).
+#   The bench question is about the induced arm, and a two-headed dot plot invites reading
+#   up and down as one program. Interaction_up_fdrOnly is flagged in EVERY row and facet
+#   label as a gate-sensitivity read on the same 1-df contrast.
 #
-# Inputs (read-only; each existence-checked, and a missing one is REPORTED not improvised):
+# Naming discipline (umbrella AGENTS.md): every signature is named by HOW IT WAS DERIVED
+#   (contrast + direction + gate). "WT_heat_up" is checkable; a name taken from a
+#   hoped-for mechanism smuggles in the conclusion.
+#
+# Inputs (read-only; each existence-checked, and a missing one is reported):
 #   03_results/objects/01_eda.rds              $logcpm_mat (19,679 x 20) + $metadata (20 x 7)
 #   03_results/objects/17_signature_sets.rds   $sets$<contrast>$up$<gate> (mouse symbols)
 #   03_results/objects/02_de_results.rds       per-contrast limma topTables (logFC, t, adj.P.Val)
 #   03_results/master/master_de_genes.csv      the published DE master — cross-checked against
 #                                              02_de_results.rds on the signature genes; a
-#                                              disagreement is a hard stop, never reconciled.
+#                                              disagreement is a hard stop, reported as such.
 #   03_results/human_projection/ortholog_map.tsv  the APPLIED frozen mouse->human map
 #   03_results/human_projection/manifest.csv      the frozen projection ledger — every set size
 #                                              and ortholog fate is cross-checked against it.
 #
-# Params (from config; never hardcoded):
+# Params (from config):
 #   signature_expression.signatures[]  (name, source_contrast, direction, gate)
-#   signature_expression.top_n_genes   (plotted rows per facet; the full tables are complete)
+#   signature_expression.top_n_genes   (plotted rows per facet; the tables stay complete)
 #   design.samples_per_group, design.groups, thresholds.de_fdr/de_logfc, gsea.rank_metric
 #
 # Outputs (tables only):
@@ -62,8 +58,8 @@
 #   03_results/14_signature_expression/tables/signature_expression_summary.csv
 #   03_results/14_signature_expression/tables/_overview/signature_dotplot.csv
 #
-# IDEMPOTENT + BYTE-STABLE: a pure read -> group-mean -> join -> round -> write over frozen
-#   inputs. Re-running yields the same bytes (round_numeric_cols at 9 significant figures).
+# IDEMPOTENT + BYTE-STABLE: read -> group-mean -> join -> round -> write over frozen inputs.
+#   Re-running yields the same bytes (round_numeric_cols at 9 significant figures).
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/22_signature_expression.R
@@ -100,7 +96,7 @@ SIGS <- lapply(SE_CFG$signatures, function(s) list(
   gate            = as.character(s$gate)))
 if (!length(SIGS)) stop("[22] signature_expression.signatures is empty.")
 
-# UP-ARM-ONLY GUARD. The scope decision is enforced, not merely documented: if a future
+# UP-ARM-ONLY GUARD. The scope decision is enforced in code: if a future
 # edit adds a down arm to the config roster this script refuses to run rather than
 # silently widening a deliberately narrow deliverable.
 bad_dir <- vapply(SIGS, function(s) !identical(s$direction, "up"), logical(1))
@@ -139,7 +135,7 @@ message(sprintf("  top_n_genes=%d (figure only; tables carry every member)", TOP
 message("=================================================================")
 
 # ============================================================================
-# 1. GUARD every input. A missing input is REPORTED with its path, never worked around.
+# 1. GUARD every input. A missing input is REPORTED with its path and stops the run.
 # ============================================================================
 
 inputs <- c(eda = F_EDA, signature_sets = F_SETS, de_results = F_DE_RDS,
@@ -152,7 +148,7 @@ message("  [read] all 6 inputs present.")
 
 # ============================================================================
 # 2. EXPRESSION + DESIGN. The four design cells are DERIVED from metadata (genotype x
-#    temperature), never from hardcoded sample names. Group display order is
+#    temperature), read from the metadata. Group display order is
 #    genotype-major, temperature ascending, with the genotype reference level first
 #    (the order metadata itself presents), so a dot plot reads WT 37 -> WT 39 ->
 #    KO 37 -> KO 39 and the heat step within each genotype is adjacent.
@@ -225,7 +221,7 @@ dimnames(sd_mat)   <- list(rownames(expr), GROUP_LEVELS)
 # high-expressed and a low-expressed gene. A k-cell z is arithmetically bounded at
 # +/-(k-1)/sqrt(k) — with k=4 that is +/-1.5, the value the figure uses as its scale
 # limit. A gene flat across all four cells (sd ~ 0) is reported as z = 0, not NA, so a
-# flat gene reads as "no cell stands out" rather than as missing data.
+# flat gene reads as "no cell stands out", distinct from missing data.
 z_across <- function(m) {
   mu <- rowMeans(m)
   s  <- apply(m, 1L, stats::sd)
@@ -365,8 +361,8 @@ for (s in SIGS) {
          " (max abs difference in logFC/t/adj.P.Val = ", format(dmax),
          "). One of the two is stale — report this, do not pick the convenient one.")
 
-  # Gate re-assertion (a read, not a re-derivation): every member must satisfy the gate
-  # its own name advertises. This catches a stale checkpoint, not a threshold choice.
+  # Gate re-assertion, a read over the frozen sets: every member must satisfy the gate its
+  # own name advertises. This catches a stale checkpoint.
   if (!all(de_sig$adj_P_Val < DE_FDR_) || !all(de_sig$logFC > 0))
     stop("[22] a member of ", s$name, " violates its advertised gate (adj.P.Val < ",
          DE_FDR_, " and logFC > 0). The checkpoint is stale relative to the DE master.")
@@ -427,7 +423,7 @@ for (s in SIGS) {
   #   n_distinct_human_symbols = distinct HUMAN symbols the set maps onto. This is the
   #                             frozen ledger's `n_human`, and it is SMALLER whenever two
   #                             mouse genes share one human ortholog (many2one collapse).
-  # For WT_heat_up these are 201 and 199: the two-gene gap is the collapse, not a bug.
+  # For WT_heat_up these are 201 and 199: the two-gene gap is the collapse.
   n_mouse   <- length(genes)
   fate      <- stat[, c("gene_symbol", "mapped_to_human", "mapping_type", "human_symbol")]
   n_mapped  <- sum(fate$mapped_to_human)
@@ -443,7 +439,7 @@ for (s in SIGS) {
     # The frozen ledger SPLITS that total in two, and the split is not recomputable here:
     # babelgene keys on current MGI symbols while this matrix carries GENCODE vM25's older
     # vintage, so a symbol babelgene could not key at all used to be counted as having no
-    # ortholog. Those two are carried through from the manifest rather than re-derived, and
+    # ortholog. Those two are carried through from the manifest, and
     # the cross-check below is against the TOTAL, which is the quantity both sides own.
     n_dropped_unmapped_total = n_mouse - n_mapped,
     n_dropped_no_ortholog = as.integer(mrow$n_dropped_no_ortholog),
@@ -461,7 +457,7 @@ for (s in SIGS) {
   #   n_dropped_unmapped_total -> mouse genes with no edge (our n_dropped_unmapped_total)
   #   n_many_mapped            -> mouse genes mapping to MANY human (our n_one2many)
   # Plus the ledger's own closure, so a manifest whose split does not add up to its total is
-  # caught here rather than propagated into this stage's summary.
+  # caught here, upstream of this stage's summary.
   if (!identical(as.integer(mrow$n_dropped_no_ortholog) +
                    as.integer(mrow$n_dropped_stale_query_symbol),
                  as.integer(mrow$n_dropped_unmapped_total)))

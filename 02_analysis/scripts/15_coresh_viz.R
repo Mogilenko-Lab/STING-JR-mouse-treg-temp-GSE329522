@@ -6,25 +6,26 @@
 ## VIZ-ONLY. Reads objects/coresh_ranked.rds, objects/coresh_derived_sets.rds,
 ## objects/02_de_results.rds (ranked vectors), master/master_gsea_table.csv rows with
 ## database="CoReSh_derived", and 08_coresh/tables/_overview/coresh_dataset_annotation.csv
-## (dataset identity from 08b). Never re-runs coresh_batch/build_coresh_gmt/fgsea.
+## (dataset identity from 08b). coresh_batch, build_coresh_gmt and fgsea belong to 07/08.
 ##
-## GATED: the CoReSh arm requires the ~20 GB mmu Synapse compendium (syn66227307), consumed
-## read-only from the shared reference cache, before 07/08 can be run. This script GUARDS on
-## the first compute output and stops cleanly (status 0) if the arm has not been run.
+## GATED: the CoReSh arm needs the ~20 GB mmu Synapse compendium (syn66227307), consumed
+## read-only from the shared reference cache, before 07/08 can run. This script GUARDS on
+## the first compute output and stops cleanly (status 0) when the arm is unrun.
 ##
 ## Figures produced
 ## ----------------
-## _overview/ (CoReSh-specific — no analogue in the standard GSEA sweep):
+## _overview/ (CoReSh-specific; the standard GSEA sweep has no analogue):
 ##   coresh_pctvar_overview — faceted bars of top-ranked compendium datasets per query.
 ##   coresh_nes_dotplot     — CoReSh-derived set NES x contrast dotplot (query-origin strip).
 ##
-## by_contrast/<c>/CoReSh_derived/ (SAME four toolkit panels every standard database gets in
-## the 06_gsea sweep, so CoReSh reads at parity with GO/Hallmark/KEGG/... — via a gseaResult
-## reconstructed viz-side and the RNAseq-toolkit plotters):
+## by_contrast/<c>/CoReSh_derived/ (the SAME four toolkit panels every standard database gets
+## in the 06_gsea sweep, so CoReSh reads at parity with GO/Hallmark/KEGG/..., via a
+## gseaResult reconstructed viz-side and the RNAseq-toolkit plotters):
 ##   dotplot / facet / barplot / running_sum
 ##
-## Derived-set labels carry what each recovered public GEO dataset actually is (from 08b's
-## annotation), so a reader sees "GSE89069 · viral infection · embryonic brain", not a raw id.
+## Derived-set labels carry what each recovered public GEO dataset is (from 08b's
+## annotation), so a reader sees "GSE89069 · viral infection · embryonic brain" in place of
+## a raw id.
 ##
 ## Sample mapping is owner-confirmed (GSE329522 2x2 genotype x temperature); captions carry
 ## that stamp via sample_mapping_stamp().
@@ -69,7 +70,7 @@ options(stringsAsFactors = FALSE)
 format_pathway_name <- function(text, use_formatting = TRUE, strip_prefix = TRUE) as.character(text)
 
 # =============================================================================
-# 1. Parameters (config, not hardcoded)
+# 1. Parameters (read from config)
 # =============================================================================
 
 STAGE       <- "08_coresh"
@@ -147,7 +148,7 @@ if (anyDuplicated(QUERY_SPECS$query_name))
   stop("15_coresh_viz: duplicate query name(s) in coresh.query_signatures.")
 EXPECTED_QUERIES <- QUERY_SPECS$query_name
 
-## Origin label per distinct (contrast, direction) — data-driven, not row-order.
+## Origin label per distinct (contrast, direction) — data-driven, independent of row order.
 ORIGIN_SPECS <- QUERY_SPECS %>%
   distinct(contrast, direction, .keep_all = TRUE) %>%
   transmute(query_prefix = paste0("Q_sig_", contrast, "_", direction, "_"),
@@ -161,7 +162,7 @@ if (is.null(ANN)) message("[15] NOTE: dataset annotation absent (run 08b) — us
 ## Parse the trailing GSE from a derived-set id "CORESH_<query>_<GSE>".
 .gse_of <- function(sid) sub(".*_(GSE[0-9]+)$", "\\1", sid)
 
-## Build a readable, format-safe label for a derived-set id (FULL text, never truncated):
+## Build a readable, format-safe label for a derived-set id (FULL text, wrapped to fit):
 ##   "GSE89069 · viral infection · embryonic brain (E17.5)"  (context + tissue from 08b)
 ## Long labels are shown in full by wrapping to multiple lines (.wrap / plotter wrap_width),
 ## not by cutting them.
@@ -510,7 +511,7 @@ if (!file.exists(readme_fp)) {
 ## The CoReSh-derived sets are data-driven co-regulation modules; by construction they
 ## carry the "CORESH_" id prefix and database="CoReSh_derived". Assert their pathway_ids
 ## share nothing with any curated collection in the master table, so it is explicit that
-## this stage contributes UNIQUE sets (they populate 08_coresh, not the 06_gsea sweep).
+## this stage contributes UNIQUE sets (they populate 08_coresh, alongside the 06_gsea sweep).
 
 if (!is.null(MG) && !is.null(MG_CORESH) && nrow(MG_CORESH) > 0L) {
   coresh_ids <- unique(MG_CORESH$pathway_id)

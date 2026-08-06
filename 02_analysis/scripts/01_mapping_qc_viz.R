@@ -3,13 +3,11 @@
 # 01_mapping_qc_viz.R  --  PHASE 1: Sample-mapping QC figures (VISUALIZE)
 # =============================================================================
 # Phase:        1 (SCIENCE GATE -- label-blind recovery of the sample mapping)
-# Role:         VISUALIZE half of the "normalize-then-visualize" split. Reads the
-#               plot-ready tidy tables emitted by 01_mapping_qc.R and renders the
-#               figures. Performs NO statistics (no prcomp, no collapse, no
-#               thermometer/Cgas derivation) -- only cosmetic reshaping (factor
-#               ordering, faceting). Every save routes through the figure-style
-#               contract (project_theme / save_figure / write_caption): dual
-#               .print.pdf + .screen.png variants, font floors enforced.
+# Role:         VISUALIZE half of the "normalize-then-visualize" split. Reads the plot-ready
+#               tidy tables emitted by 01_mapping_qc.R and renders the figures, applying
+#               cosmetic reshaping alone (factor ordering, faceting). Every save routes
+#               through the figure-style contract (project_theme / save_figure /
+#               write_caption): dual .print.pdf + .screen.png variants, font floors enforced.
 #
 # Inputs:       03_results/01_qc/tables/fig1a_thermometer_data.csv
 #               03_results/01_qc/tables/fig1b_cgas_data.csv
@@ -23,15 +21,14 @@
 #               03_results/02_eda/figures/fig1c_pca_scree.{print.pdf,screen.png}
 #               03_results/01_qc/figures/fig1d_scramble.{print.pdf,screen.png}
 #
-# NOTE: these 4 (now 5) stems are FLAT stage-level figures (label-blind mapping
-#       QC) -- there are no DE contrasts at Phase 1, so they route through
-#       save_figure(..., variant = "both") + explicit write_caption(), NOT
-#       save_overview() (which requires contrast= or overview=). The 20-category
-#       panels (1a/1b/1d/scree) get explicit width=/height= so the print column
-#       does not crush the axis labels; geometry (width/height) is the only
-#       per-call knob -- NO raw ggsave(width=), NO inline theme() styling. Short
-#       x-tick labels (library number / PC index) keep the 20-category axes
-#       legible without an axis rotation (which save_figure would clobber).
+# NOTE: these 5 stems are FLAT stage-level figures (label-blind mapping QC). Phase 1 has no
+#       DE contrasts, so they route through save_figure(..., variant = "both") plus an
+#       explicit write_caption(); save_overview() requires contrast= or overview=. The
+#       20-category panels (1a/1b/1d/scree) get explicit width=/height= so the print column
+#       keeps the axis labels readable. Geometry (width/height) is the only per-call knob
+#       here; styling stays with the contract. Short x-tick labels (library number / PC
+#       index) keep the 20-category axes legible at the default rotation, which save_figure
+#       controls.
 #
 # Dependencies: figure_style.R (contract); config.R (stage_dir, DIVERGING_COLORS,
 #               sample_mapping_stamp, DIR_OBJECTS); ggplot2, dplyr, ggrepel, tidyr
@@ -90,7 +87,7 @@ GENO_LABELS <- c("WT" = "WT", "cGASKO" = "cGAS-KO")
 GENO_LEGEND <- "Genotype"
 TEMP_LEGEND <- "Temperature (°C)"
 
-# Sample-label provenance, READ rather than asserted. The status and its evidence
+# Sample-label provenance, READ from the config. The status and its evidence
 # live in ONE place, analysis_config.yaml:design$sample_mapping, surfaced by
 # config.R::sample_mapping_stamp() (canvas) and ::sample_mapping_caption() (README);
 # 00_data/processed/PROVENANCE.md holds the per-library table. These panels are the
@@ -129,7 +126,7 @@ pc1_cor_2000 <- fig1c_varexp$pc1_cor_vs_top2000[1]
 # plot object per variant (figure_helpers.R), which CLOBBERS any post-theme
 # axis.text override (rotation/size). So the 20-category panels are kept legible
 # by (a) a roomy explicit width= per call and (b) SHORT x-tick labels (the bare
-# library number 021..040 / the PC index 1..20), not by an axis rotation that the
+# library number 021..040 / the PC index 1..20), leaving the axis unrotated, which the
 # contract would silently drop. The deposited library ids strip to 2-3 chars and
 # sit horizontally without collision at the chosen widths.
 

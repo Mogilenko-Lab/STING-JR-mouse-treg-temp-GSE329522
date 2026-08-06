@@ -3,16 +3,16 @@
 # =============================================================================
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   09_gatom
-# Role:    VIZ-ONLY — reads per-contrast module igraphs (10_gatom_<contrast>.rds)
-#          + cross-contrast tidy summary (master/master_gatom_modules.csv).
-#          Renders figure-style-contract figures for the GATOM metabolic-module arm.
-#          PERFORMS NO STATISTICS. No gatom::makeMetabolicGraph / scoreGraph /
-#          mwcsr::solve_mwcsp; no DE re-fit; no master-table writes.
+# Role:    VIZ-ONLY — reads per-contrast module igraphs (10_gatom_<contrast>.rds) plus the
+#          cross-contrast tidy summary (master/master_gatom_modules.csv), and renders
+#          figure-style-contract figures for the GATOM metabolic-module arm. Module
+#          construction (gatom::makeMetabolicGraph / scoreGraph / mwcsr::solve_mwcsp), the
+#          DE fit and the master-table writes all belong to 10_gatom_modules.R.
 #
 # Figures produced:
 #   by_contrast/<contrast>/
-#     module_graph.*   — metabolic module igraph (ggraph; atoms/reactions colored
-#                        by enzyme log2FC; up=orange / down=blue diverging scale)
+#     module_graph.*   — metabolic module igraph (ggraph; atoms/reactions colored by enzyme
+#                        log2FC; up=orange / down=blue diverging scale)
 #   _overview/
 #     module_summary.* — module-size / score / top-metabolite panel across contrasts
 #     module_sizes.*   — bar chart: reaction edge count per contrast x network
@@ -20,13 +20,13 @@
 #
 # GUARD:
 #   * No 10_gatom_*.rds objects at all → stop() pointing to 10_gatom_modules.R.
-#   * Some contrasts have objects but are empty/failed → render present, warn absent.
-#   * A contrast with 0 edges in its module → a placeholder table + caption (no
-#     broken ggraph).
+#   * Some contrasts have objects and others are empty or failed → render present, warn absent.
+#   * A contrast with 0 edges in its module → a placeholder table + caption, keeping ggraph
+#     out of a state it cannot draw.
 #
 # Run from project root:  Rscript 02_analysis/scripts/14_gatom_viz.R
-# Dependencies: igraph, ggraph, ggrepel, patchwork, dplyr, tidyr, tibble, readr,
-#   ggplot2 (all lazy — stop() with install hint if absent when needed).
+# Dependencies: igraph, ggraph, ggrepel, patchwork, dplyr, tidyr, tibble, readr, ggplot2
+#   (all lazy — stop() with an install hint at the point of use).
 # =============================================================================
 
 ## ── 0. PROJECT CONFIG + FIGURE-STYLE CONTRACT ─────────────────────────────
@@ -360,7 +360,7 @@ make_node_edge_table <- function(res, co, net) {
 ##   One call per (contrast x network); each routed through save_overview so
 ##   the figure, its source table (node/edge list), and README caption are
 ##   written atomically. Network panels that share a contrast are written
-##   individually (one file per network) rather than patchwork-stacked, so
+##   individually (one file per network), over patchwork-stacked, so
 ##   each has its own well-typed source table.
 
 CFG_KV_GRAPH <- sprintf(

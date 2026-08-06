@@ -3,11 +3,9 @@
 # 00b_curate_lombardi_hif_viz.R  --  VIZ: Lombardi-2022 HIF signature derivation
 # =============================================================================
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg
-# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads ONLY the
-#          plot-ready tidy tables emitted by the curation COMPUTE script
-#          (00b_curate_lombardi_hif.R) and renders ONE single-claim figure.
-#          Performs NO statistics (no recurrence counting, no Poisson-binomial
-#          null, no p.adjust); it only plots already-computed columns. Runs
+# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads the plot-ready
+#          tidy tables emitted by the curation COMPUTE script (00b_curate_lombardi_hif.R)
+#          and renders one single-claim figure from already-computed columns. Runs
 #          STANDALONE after the compute script.
 #
 # Inputs (00_data/references/gene_sets/tables/):
@@ -18,10 +16,10 @@
 # Output (00_data/references/gene_sets/figures/):
 #   lombardi_recurrence.pdf
 #
-# CLAIM: documents exactly how the published Lombardi HIF signature was
-#        reconstructed -- observed cross-TCGA recurrence vs a Poisson-binomial
-#        null; the consensus genes are the conserved right tail (recurrence >= 6
-#        of 32 cancers), sitting far above the null expectation.
+# CLAIM: documents how the published Lombardi HIF signature was reconstructed — observed
+#        cross-TCGA recurrence against a Poisson-binomial null, with the consensus genes as
+#        the conserved right tail (recurrence >= 6 of 32 cancers), far above the null
+#        expectation.
 # Dependencies: config.R; ggplot2, dplyr
 # =============================================================================
 

@@ -5,20 +5,19 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   10_signature
 #
-# ROLE: VIZ ONLY. Reads the three _overview tables (and the checkpoint for labels)
-#   that 17_signature_derive.R wrote; recomputes NOTHING. Figures ONLY via the
-#   figure-style contract: project_theme(config=FIG_CFG) + save_overview() (dual
-#   pdf+png + sibling source table + README caption, atomic). No inline
-#   ggsave()/theme()/raw hex; colors come from FIG_CFG$colors.
+# ROLE: VIZ ONLY. Reads the three _overview tables, plus the checkpoint for labels, that
+#   17_signature_derive.R wrote. Figures go through the figure-style contract alone:
+#   project_theme(config=FIG_CFG) + save_overview() (dual pdf+png + sibling source table +
+#   README caption, atomic), with colors from FIG_CFG$colors.
 #
 # Figures (each _overview, each carrying its same-stem source table):
 #   _overview/signature_sizes           grouped up/down bars per contrast, faceted by gate
 #   _overview/updown_overlap            Jaccard heatmap of up- and down-sets across contrasts
 #   _overview/ortholog_coverage_preview stacked mapped_1to1 / one_to_many / unmapped bars per contrast
 #
-# These three figures are the lens for BREAKPOINT 10: they let the human judge which
-# contrasts are distinct, which gate to commit to, and whether ortholog mapping would
-# decimate a signature — BEFORE stage 18 freezes the contract.
+# These three figures are the lens for BREAKPOINT 10. They let the human judge which
+# contrasts are distinct, which gate to commit to, and how much ortholog mapping costs a
+# signature, before stage 18 freezes the contract.
 #
 # Inputs (read-only):
 #   03_results/10_signature/tables/_overview/{signature_sizes,updown_overlap,ortholog_coverage_preview}.csv

@@ -5,30 +5,28 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   07_synthesis
 #
-# ROLE: VIZ ONLY. Reads two_arms_summary.csv / 16_synthesis.rds (written by
-#   16_synthesis.R); recomputes NOTHING (no DE, no fgsea, no decoupleR). Figures
-#   ONLY via the figure-style contract: project_theme(config=FIG_CFG),
-#   save_overview() (dual print+screen + sibling table + caption). No inline
-#   ggsave()/theme()/raw hex; colors come from FIG_CFG$colors.
+# ROLE: VIZ ONLY. Reads two_arms_summary.csv / 16_synthesis.rds, written by 16_synthesis.R.
+#   Figures go through the figure-style contract alone: project_theme(config=FIG_CFG) and
+#   save_overview() (dual print+screen + sibling table + caption), with colors from
+#   FIG_CFG$colors.
 #
 # THE HEADLINE FIGURE (_overview/two_arms_panel):
 #   Two STACKED TRACKS, one per arm, read top-to-bottom:
 #     TOP    = IFN/ISG arm        (cGAS-DEPENDENT: significant + positive Interaction)
-#     BOTTOM = HIF/glycolysis arm (NO DETECTABLE cGAS-dependence: Interaction
-#                                  near-zero / NS; rises in BOTH heat arms)
+#     BOTTOM = HIF/glycolysis arm (NO DETECTABLE cGAS-dependence: Interaction near-zero
+#                                  or NS; rises in BOTH heat arms)
 #   x = the headline contrasts (WT_heat | KO_heat | Interaction | Temp_main).
-#   Within each track, GLYPH ROWS are the methods (GSEA / PROGENy / TF / DE /
-#   GATOM): one tile/point per (method-feature x contrast), colored by signed
-#   score, sized/marked by significance. The asymmetry is legible at a glance:
-#   the IFN track LIGHTS UP in the Interaction column; the HIF track goes FLAT
-#   there while staying lit in WT_heat AND KO_heat.
+#   Within each track, GLYPH ROWS are the methods (GSEA / PROGENy / TF / DE / GATOM): one
+#   tile or point per (method-feature x contrast), colored by signed score, sized and
+#   marked by significance. The asymmetry reads at a glance — the IFN track LIGHTS UP in
+#   the Interaction column, and the HIF track goes FLAT there while staying lit in WT_heat
+#   AND KO_heat.
 #
-# HOUSE CONSTRAINTS honored in EVERY caption (non-negotiable):
-#   * NEVER "cGAS-independent" -> "no detectable cGAS-dependence at n=5".
-#   * NEVER crown HIF1a/HIF2a as the driver (HIF is the arm LABEL, not a claim
-#     about a TF being #1).
-#   * Figure claims FLOOR at L3 (DE/enrichment statistics); mechanism (L7) stays
-#     in the reply memo prose, never in a figure title.
+# HOUSE CONSTRAINTS honored in EVERY caption:
+#   * Say "no detectable cGAS-dependence at n=5" in place of "cGAS-independent".
+#   * Leave HIF1a/HIF2a uncrowned. HIF is the arm LABEL here.
+#   * Figure claims FLOOR at L3 (DE/enrichment statistics). Mechanism (L7) belongs in the
+#     reply memo prose.
 #   * Sample-mapping provenance stamped on every panel, read from the config.
 #
 # Inputs (read-only):
@@ -81,7 +79,7 @@ ARM_IFN <- "IFN_ISG"
 ARM_HIF <- "HIF_glycolysis"
 
 # Pretty, line-wrapped facet labels for the two tracks. The arm NAME is a label,
-# NOT a mechanistic claim (no "HIF1a is the driver"); the cGAS framing uses the
+# The arm LABEL, kept clear of mechanism; the cGAS framing uses the
 # house wording.
 TRACK_LABELS <- c(
   IFN_ISG        = "IFN / ISG arm\n(cGAS-dependent)",
@@ -100,7 +98,7 @@ PROV_STAMP <- paste0(sample_mapping_stamp(), "; n=5/group")
 # unwrapped line anchored at the panel's left edge, so it ran past the right edge
 # of the canvas and lost its closing clause. The sentence it carries comes from
 # sample_mapping_caption() and its length changes with the config, so the wrap has
-# to be computed from the canvas rather than eyeballed once.
+# to be computed from the canvas on every run.
 PANEL_W <- 18   # canvas inches
 PANEL_H <- 16
 
@@ -140,7 +138,7 @@ if (nrow(ev) == 0L)
 
 # ============================================================================
 # 2. PREP — keep the two cGAS-dependence arms (drop the heat-shock context rows
-#    from the headline panel; they are reply-memo context, not an arm), clamp
+#    from the headline panel; they are reply-memo context), clamp
 #    the score for color, order tracks + contrasts, build a stable glyph-row key.
 # ============================================================================
 

@@ -4,24 +4,22 @@
 #   triptych (fig3p / fig3q / fig3r).
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:  VISUALIZE half of the "normalize-then-visualize" split. Reads ONLY the
-#        tidy tables emitted by 03g_nonidentifiability.R and renders three
-#        single-claim figures. Performs NO statistics (no run_ulm/run_mlm,
-#        no p.adjust/prcomp/cor, no counting); scores/counts/membership are read
-#        as-is. Runs STANDALONE after the compute script.
+# Role:  VISUALIZE half of the "normalize-then-visualize" split. Reads the tidy tables
+#        emitted by 03g_nonidentifiability.R and renders three single-claim figures.
+#        Scores, counts and membership are read as-is. Runs STANDALONE after the compute
+#        script.
 #
 # THE HONEST MESSAGE (binding framing constraints):
-#   Hif1a's high heat-MAIN "activity" is NOT identifiable. The triptych shows
-#   WHY without crowning anyone:
-#     fig3p - Hif1a is #9 in a crowd of co-elevated stress/IEG/NF-kB TFs (the
-#             gaps are tiny, p~1e-7); Hsf1 is far down at #50. NO clean winner.
-#     fig3q - 92% of Hif1a's 353 targets are shared (mean 22 other TFs each);
-#             the sharers are the network's most PROMISCUOUS regulators, none
-#             hypoxia-specific.
-#     fig3r - the same heat-driven genes populate many TFs' regulons -- so none
-#             is identifiable from this contrast alone.
-#   NEVER "Hif1a the #1/master TF" as truth; NEVER crown Jun/AP-1 or any
-#   co-regulator as the driver; NEVER crown HIF2a/Epas1. Data-driven captions.
+#   Hif1a's high heat-MAIN "activity" is unidentifiable. The triptych shows why, and leaves
+#   every candidate uncrowned:
+#     fig3p - Hif1a is #9 in a crowd of co-elevated stress/IEG/NF-kB TFs, the gaps tiny at
+#             p~1e-7, with Hsf1 far down at #50. No clean winner.
+#     fig3q - 92% of Hif1a's 353 targets are shared (mean 22 other TFs each), and the
+#             sharers are the network's most PROMISCUOUS regulators, none hypoxia-specific.
+#     fig3r - the same heat-driven genes populate many TFs' regulons, leaving all of them
+#             unidentifiable from this contrast alone.
+#   Keep "Hif1a the #1/master TF" out of the captions, leave Jun/AP-1 and every other
+#   co-regulator uncrowned, and leave HIF2a/Epas1 alone. Captions stay data-driven.
 #
 # Inputs (03_results/04_tf/tables/):
 #   - fig3p_heatmain_ranking_data.csv   (rank, tf, score, p_value, family, is_hif, is_hsf)
@@ -194,7 +192,7 @@ fig3q <- ggplot(qd, aes(x = pct_of_hif1a_set, y = tf, fill = family)) +
   scale_fill_manual(values = FAMILY_COLORS, drop = TRUE, name = "TF family/role") +
   # Headroom 1.18 -> 1.30: at 1.18 the widest value label ("48%  (171)", on the
   # top bar) ran past the panel and shipped as "48%  (171" with the closing
-  # paren cut off. The multiplier has to clear the LABEL, not the bar.
+  # paren cut off. The multiplier has to clear the LABEL, which extends past the bar.
   scale_x_continuous(limits = c(0, max(qd$pct_of_hif1a_set) * 1.30),
                      expand = expansion(mult = c(0, 0.02)),
                      labels = function(x) paste0(x, "%")) +

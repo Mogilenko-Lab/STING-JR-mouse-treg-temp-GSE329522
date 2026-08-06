@@ -1,55 +1,51 @@
 #!/usr/bin/env Rscript
 # 19_hsr_decomposition_viz.R -- VIZ
 # =============================================================================
-# Mouse set-construction figures (stage 12_hsr_decomp): what the thresholded
-# WT_heat_up set is made of, and how it hands off to the human compartments.
+# Mouse set-construction figures (stage 12_hsr_decomp): what the thresholded WT_heat_up
+# set is made of, and how it hands off to the human compartments.
 #
-# VIZ ONLY. Reads only the tables written by 19_hsr_decomposition.R; computes no
-# enrichment, overlap, rank, attribution or census statistic. Figures go to
-# 03_results/12_hsr_decomp/figures/_overview/ through the project figure-style
-# contract (save_figure), and each figure's same-stem source table sits beside it
-# under 03_results/12_hsr_decomp/tables/_overview/.
+# VIZ ONLY. Reads the tables written by 19_hsr_decomposition.R. Figures go to
+# 03_results/12_hsr_decomp/figures/_overview/ through the project figure-style contract
+# (save_figure), and each figure's same-stem source table sits beside it under
+# 03_results/12_hsr_decomp/tables/_overview/.
 #
-# Every panel says on its own face whether it is asking a question or answering
-# one, and a panel that only corroborates an answer already given says that too.
-# The four questions this stage walks, in reader order:
+# Every panel says on its own face whether it asks a question or answers one, and a panel
+# that corroborates an answer already given says that too. The four questions this stage
+# walks, in reader order:
 #
 #   wtheatup_attribution    ANSWERS  what is the thresholded set made of?
 #                                    -> 198 of 213 genes in neither curated lens.
-#   lens_nes_by_contrast    ANSWERS  so is the heat-shock response simply absent
-#                                    from the 39 °C response? -> no, it is induced
-#                                    in both genotypes.
-#   hsr_rank_position_panel ANSWERS  why is an induced response not in the set?
-#                                    -> it is a moderate mover and the gate kept
-#                                    only extreme ones.
-#   gate_projection_bridge  ANSWERS  how do the 213-gene mouse gate and the
-#                                    199-gene human set relate, and how much of
-#                                    the human set survives downstream?
+#   lens_nes_by_contrast    ANSWERS  is the heat-shock response present in the 39 °C
+#                                    response? -> yes, induced in both genotypes.
+#   hsr_rank_position_panel ANSWERS  why is an induced response outside the set?
+#                                    -> it is a moderate mover and the gate kept only
+#                                    extreme ones.
+#   gate_projection_bridge  ANSWERS  how do the 213-gene mouse gate and the 199-gene human
+#                                    set relate, and how much of the human set survives
+#                                    downstream?
 #   hsr_lens_membership_*   CORROBORATE the first answer, three ways.
 #
-# The one number this script does produce is the eulerr fit residual (stress and
-# diagError). That is a property of the DRAWING, not of the data: it measures how
-# far the fitted circle areas fall from the counts the compute script already
-# established. It is generated where the circles are generated, reported on the
-# figure, and stored in that figure's same-stem table.
+# The one number this script produces is the eulerr fit residual (stress and diagError).
+# That is a property of the DRAWING: it measures how far the fitted circle areas fall from
+# the counts the compute script established. It is generated where the circles are,
+# reported on the figure, and stored in that figure's same-stem table.
 #
-# Set-membership panels. The same seven region counts are drawn three ways so no
-# single geometry has to carry the whole claim:
+# Set-membership panels. The same seven region counts are drawn three ways, so the claim
+# rests on more than one geometry:
 #   hsr_lens_membership_euler - area-proportional (eulerr), residual printed
 #   hsr_lens_membership_venn  - conventional fixed layout, counts carry quantity
 #   hsr_lens_membership_upset - intersection bars, empty intersections shown as 0
-# All three read hsr_lens_membership.csv. Region geometry is FITTED or FIXED and
-# label anchors are SOLVED, never hand-placed: a hand-laid diagram can assert a
-# containment the counts contradict.
+# All three read hsr_lens_membership.csv. Region geometry is FITTED or FIXED and label
+# anchors are SOLVED; a hand-laid diagram can assert a containment the counts contradict.
 #
-# Legibility contract. project_theme() sets type sizes but cannot re-flow text, so
+# Legibility contract. project_theme() sets type sizes and leaves text re-flow alone, so
 # every title, subtitle and caption is wrapped here against the width the figure is
-# actually emitted at. Dense caveats live in the stage README; the face carries at
-# most one warning line.
+# emitted at. Dense caveats live in the stage README, and the face carries at most one
+# warning line.
 #
-# Honest ceiling: HSR_core is proteotoxic-stress-general, not fever-specific.
-# The 37/39 contrast is confirmatory for this experimental perturbation but does
-# not make WT_heat_up causal for fever. Use correlative language only.
+# Honest ceiling: HSR_core is proteotoxic-stress-general. The 37/39 contrast is
+# confirmatory for this experimental perturbation, and fever causality for WT_heat_up
+# remains a further claim. Keep the language correlative.
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/19_hsr_decomposition_viz.R
@@ -170,7 +166,7 @@ fill_vals <- c(
   neither = "grey70"
 )
 
-# The stacked bar IS the answer, so the title states the count rather than naming
+# The stacked bar IS the answer, so the title states the count, over naming
 # the operation. What the set is MADE OF and what the 39 °C response ENRICHES FOR
 # are two different measurements: this panel is the membership one, and its
 # subtitle says so, because a rank-enrichment property read onto a membership
@@ -184,7 +180,7 @@ fig_attr <- ggplot(attr_src, aes(x = "WT_heat_up", y = fraction, fill = attribut
             size = (FIG_CFG$figures$label_size %||% 4) * 1.15,
             fontface = "bold", colour = "grey10") +
   # The three small segments cannot hold text at any legible size, so they are
-  # called out to the right of the bar at even spacing instead of being crowded
+  # called out to the right of the bar at even spacing, which keeps them clear of
   # on top of one another.
   geom_text(data = dplyr::filter(attr_src, .data$fraction < 0.05) %>%
               dplyr::mutate(y_call = seq(0.985, 0.945, length.out = dplyr::n())),
@@ -254,7 +250,7 @@ term_fills <- c(
 )
 
 # Horizontal, so the effective set size and FDR can sit in a clean right-hand
-# column the way the JIA purge panel prints them, instead of being squeezed above
+# column the way the JIA purge panel prints them, clear of the space above
 # a vertical bar.
 W_NES <- 12.0
 NES_MAX <- max(nes_src$nes)
@@ -406,7 +402,7 @@ save_figure(fig_rank, STAGE, "hsr_rank_position_panel", overview = TRUE,
 # ---- 1. Resolve each region of hsr_lens_membership.csv to a set-membership triple.
 # The compute script names regions in prose ("WT_heat_up only", "WT_heat_up n
 # HSR_core", "shared by all three"), so read membership off the name, and take the
-# all-three row from its glyph rather than from a string that names no set.
+# all-three row from its glyph, where a string would name no set.
 regions <- data.frame(
   component = as.character(membership$component),
   n = as.integer(membership$n_mouse),
@@ -451,12 +447,12 @@ FIG_W_UPSET <- 11.0
 # coord_fixed() letterboxes the Euler and Venn panels and the caption is laid out
 # against the PANEL, so the usable caption width is narrower than the emitted
 # figure width. plot.caption.position = "plot" recovers the full width; the wrap
-# is still set to fit inside the narrowest of the three rather than tracking each.
+# is still set to fit inside the narrowest of the three, one width for all.
 CAPTION_WRAP <- 100L
 wrap_caption <- function(...) paste(strwrap(paste0(...), width = CAPTION_WRAP), collapse = "\n")
 
 # These three panels re-draw one fact that the attribution bar has already
-# answered, so each says on its face that it corroborates rather than answers.
+# answered, so each says on its face that it corroborates.
 # The dense material -- the human counterpart, the conditional-NES check, the
 # anchor-solver contract -- moved to the stage README, which is where a caveat
 # survives being shrunk into a journal column. Exactly one warning stays on the
@@ -732,7 +728,7 @@ euler_src_B <- solve_anchors_general(circles_B, regions_B, SET_ORDER_B) %>%
     euler_diag_error = diag_err_B,
     label = pretty_region(.data$component))
 
-# The remainder is a property of the set, not of one panel's lens choice, so it is
+# The remainder is a property of the set, independent of one panel's lens choice, so it is
 # taken against every curated lens either panel draws. Panel B omits TCR_activation,
 # and scoring the remainder against only its own three lenses would report 203 where
 # Panel A reports 191 for the same quantity.
@@ -862,7 +858,7 @@ fig_venn <- ggvenn::ggvenn(
 # ---- 5. PANEL C -- UpSet over the same three sets, empty intersections included.
 # ComplexUpset drops a zero-size intersection from its label layer, so the two
 # empty combinations are annotated explicitly at their own axis positions; their
-# order is read from `upset_order`, not typed in.
+# order is read from `upset_order`.
 upset_order <- regions %>% dplyr::arrange(dplyr::desc(.data$n), .data$degree, .data$component)
 upset_intersections <- lapply(seq_len(nrow(upset_order)), function(k)
   SET_ORDER[unlist(upset_order[k, SET_ORDER])])
@@ -1046,7 +1042,7 @@ bridge_headline <- sprintf(
   funnel$n_genes[funnel$step == 3][1], n_human, n_everywhere, n_human,
   n_lists_total, n_human, n_human)
 
-# Stacked, not side by side: each half carries long right-hand annotations, and
+# Stacked: each half carries long right-hand annotations, and
 # two half-width panels clip them. One column gives both the full emitted width.
 fig_bridge <- patchwork::wrap_plots(fig_funnel, fig_down, ncol = 1, heights = c(1, 0.82)) +
   patchwork::plot_annotation(

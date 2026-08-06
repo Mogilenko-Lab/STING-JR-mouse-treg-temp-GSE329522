@@ -4,11 +4,10 @@
 #   the attribution CENTREPIECE -- module-bucketed, sign-aware lollipop
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads ONLY
-#          the tidy tables emitted by 03c_hif_program_attribution.R and renders
-#          ONE single-claim figure. Performs NO statistics (no run_ulm/run_mlm,
-#          no p.adjust/prcomp/cor); contrib + module + direction are read as-is.
-#          Runs STANDALONE after the compute script.
+# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads the tidy tables
+#          emitted by 03c_hif_program_attribution.R and renders one single-claim figure.
+#          contrib, module and direction are read as-is. Runs STANDALONE after the compute
+#          script.
 #
 # Inputs (03_results/04_tf/tables/):
 #   - fig3l_hif_attribution_data.csv   (per-member module/contrib/direction)
@@ -19,26 +18,22 @@
 #   - 03_results/04_tf/deck_assets/fig3l_hif_attribution.png  (DECK_EXPORT=1;
 #       clean 300-dpi, caption-stripped only)
 #
-# Object name (HARD GUARDRAIL, design-spec sec 0): "a heat-induced glycolytic/
-#   stress program partially overlapping HIF targets" -- NEVER "the HIF
-#   program" / "HIF1a the TF". HIF2a/Epas1 never crowned.
+# Object name (HARD GUARDRAIL, design-spec sec 0): "a heat-induced glycolytic/stress program
+#   partially overlapping HIF targets". HIF2a/Epas1 stays uncrowned.
 #
-# Encoding: horizontal sign-aware lollipop, x = signed contrib, faceted by
-#   module, facets ordered heatshock_stress -> shared_angio_glucose ->
-#   autoreg_feedback -> hif1a_hypoxic_core (the negative bucket reads last).
-#   MODULE_COLORS + MODULE_LABELS from config.R (single source of truth for
-#   both the bucket colours and the bucket names, so the human counterpart of
-#   this panel reuses the same definitions instead of retyping them).
+# Encoding: horizontal sign-aware lollipop, x = signed contrib, faceted by module, facets
+#   ordered heatshock_stress -> shared_angio_glucose -> autoreg_feedback ->
+#   hif1a_hypoxic_core, so the negative bucket reads last. MODULE_COLORS + MODULE_LABELS
+#   come from config.R as the single source of truth for both the bucket colours and the
+#   bucket names, and the human counterpart of this panel reuses those definitions.
 #
-# Drawn text (2026-08-05 rebuild): the title NAMES THE PANEL and states no
-#   finding; the subtitle is two short descriptive lines; the strip labels name
-#   each bucket by its curated membership and carry that bucket's own n and sum.
-#   Every claim about what the pattern MEANS lives in the README caption, which
-#   save_overview() writes from `finding=`. No internal figure tags, no
-#   capitals-for-emphasis, no "->" as prose on the canvas. fits_canvas() below
-#   (from figure_style.R) makes a line that would overflow the canvas a hard
-#   error rather than a silently clipped PNG -- that clipping is the defect this
-#   rebuild fixes.
+# Drawn text (2026-08-05 rebuild): the title NAMES THE PANEL and leaves the finding to the
+#   caption; the subtitle is two short descriptive lines; the strip labels name each bucket
+#   by its curated membership and carry that bucket's own n and sum. Every claim about what
+#   the pattern MEANS lives in the README caption, which save_overview() writes from
+#   `finding=`. The canvas keeps clear of internal figure tags, capitals-for-emphasis and
+#   "->" as prose. fits_canvas() below (from figure_style.R) turns an overflowing line into
+#   a hard error, which is the clipping defect this rebuild fixes.
 # Dependencies: config.R; figure_style.R (fits_canvas); ggplot2, dplyr
 # =============================================================================
 
@@ -63,7 +58,7 @@ rd  <- function(f) read.csv(file.path(TBL_DIR, f), check.names = FALSE, stringsA
 #
 # What the panel is NOT allowed to say: the reading of that pattern -- which
 # module dominates, and what a negative HIF1a-selective core implies -- is a
-# finding, and findings live in the README caption (`finding=` below), not in
+# finding, and findings live in the README caption (`finding=` below), clear of
 # drawn text. The bucket names on the canvas describe curated MEMBERSHIP only.
 # =============================================================================
 dat  <- rd("fig3l_hif_attribution_data.csv")
@@ -94,7 +89,7 @@ module_labels <- vapply(curated, function(m) {
 }, character(1))
 names(module_labels) <- curated
 
-# The one number that spans facets rather than sitting inside one: the three
+# The one number that spans facets: the three
 # HIF-annotated modules (shared + feedback + hypoxic core) summed together.
 net_hif_core <- sum(mod_sum[c("shared_angio_glucose", "autoreg_feedback",
                               "hif1a_hypoxic_core")])
@@ -104,7 +99,7 @@ core_sum   <- mod_sum[["hif1a_hypoxic_core"]]
 # Reconciliation note for the caption (not the canvas): this panel carves the 7
 # heat-shock genes out of the coarser fig3g "other" lump (91.8%), leaving a
 # 339-member residual "other" (90.7%). The two adjacent figures differ by
-# construction, not by error.
+# construction.
 carve_note <- paste0(
   "The seven heat-shock genes here are carved out of the coarser 91.8% 'other' ",
   "lump in fig3g, leaving a 339-member 90.7% residual: the two figures differ ",

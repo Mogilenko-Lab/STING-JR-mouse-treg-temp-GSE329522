@@ -5,35 +5,34 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   11_projection
 #
-# ROLE: VIZ ONLY. Reads the stage tables + manifest that 18_projection_export.R
-#   wrote; recomputes NOTHING. Figures ONLY via the figure-style contract
-#   (project_theme(config=FIG_CFG) + save_overview()). No inline ggsave()/theme()/
-#   raw hex; colors from FIG_CFG$colors.
+# ROLE: VIZ ONLY. Reads the stage tables + manifest that 18_projection_export.R wrote.
+#   Figures go through the figure-style contract alone (project_theme(config=FIG_CFG) +
+#   save_overview()), with colors from FIG_CFG$colors.
 #
-# GATE-AWARE BY CONSTRUCTION. The contract exports each contrast at one or more
-#   THRESHOLD GATES (the primary gate for every contrast, plus a looser secondary
-#   gate for the thin comparators named in decisions.projection.secondary_gate_contrasts).
-#   The plotted unit is therefore the (contrast, gate) pair, ordered as manifest.csv
-#   orders it, so a contrast exported at two gates gets two bars rather than one of
-#   its two rows being silently dropped. No gate NAME is written into this script:
-#   the gate levels come from the tables/manifest, and the primary/secondary ROLE
-#   wording is read from decisions.projection.{gate,secondary_gate}.
+# GATE-AWARE BY CONSTRUCTION. The contract exports each contrast at one or more THRESHOLD
+#   GATES: the primary gate for every contrast, plus a looser secondary gate for the thin
+#   comparators named in decisions.projection.secondary_gate_contrasts. The plotted unit is
+#   therefore the (contrast, gate) pair, ordered as manifest.csv orders it, so a contrast
+#   exported at two gates gets two bars. Gate NAMES stay out of this script: the gate levels
+#   come from the tables/manifest, and the primary/secondary ROLE wording is read from
+#   decisions.projection.{gate,secondary_gate}.
 #
 # Figures (each _overview, each carrying its same-stem source table):
 #   _overview/human_signature_sizes  up/down set size per exported (contrast, gate) AFTER
-#                                     mapping (human-space counterpart of the stage-17 size bars)
-#   _overview/mapping_loss           per (contrast, gate) and direction, mouse-set size ->
-#                                     human-set size waterfall (1:1 kept / many-mapped /
-#                                     dropped-no-ortholog): the sanity check that mapping
-#                                     did not decimate the signature
+#                                     mapping, the human-space counterpart of the stage-17
+#                                     size bars
+#   _overview/mapping_loss           per (contrast, gate) and direction, a mouse-set-size ->
+#                                     human-set-size waterfall (1:1 kept / many-mapped /
+#                                     dropped-no-ortholog): the check on how much mapping
+#                                     costs the signature
 #   _overview/projection_overlap_ledger
 #                                     overlap ledger for the frozen projected human sets:
 #                                     WT/KO heat-set sharing plus both Interaction gates
 #   _overview/conversion_ledger      per frozen UP arm at the primary gate, the mouse gene
-#                                     count decomposed into carried / lost-to-paralog-collapse /
-#                                     dropped-no-ortholog. mapping_loss shows the human count
-#                                     only as a '->N' annotation, so the collapse loss has no
-#                                     segment there; this panel gives it one.
+#                                     count decomposed into carried / lost-to-paralog-collapse
+#                                     / dropped-no-ortholog. mapping_loss carries the human
+#                                     count as a '->N' annotation, so this panel is where the
+#                                     collapse loss gets its own segment.
 #
 # Inputs (read-only; produced by 18_projection_export.R and 17_signature_derive.R):
 #   03_results/11_projection/tables/_overview/{human_signature_sizes,mapping_loss,projection_overlap_ledger}.csv
@@ -43,7 +42,7 @@
 #   03_results/objects/17_signature_sets.rds              (conversion_ledger only)
 #   00_data/references/gene_sets/temp_hsr_lens/temp_hsr_mouse_lens.rds  (optional annotation)
 #
-# Run from project root (after 18_projection_export.R):
+# Run from project root, after 18_projection_export.R:
 #   Rscript 02_analysis/scripts/18_projection_export_viz.R
 # =============================================================================
 
@@ -79,7 +78,7 @@ LOSS_COLORS <- c(
 # Alarm line: flag a contrast/direction that loses > this fraction to no-ortholog drops.
 ALARM_FRAC <- 0.5
 
-# Gate ROLE wording comes from the decision block, never from a literal gate name here.
+# Gate ROLE wording comes from the decision block.
 .dcn <- FIG_CFG$decisions$projection %||% list()
 GATE_PRIMARY   <- as.character(.dcn$gate           %||% NA_character_)[1]
 GATE_SECONDARY <- as.character(.dcn$secondary_gate %||% NA_character_)[1]
@@ -434,7 +433,7 @@ BABELGENE_VER <- as.character(unique(omap$babelgene_version))[1]
 MIN_SUPPORT   <- (.dcn$ortholog_ambiguity %||% list())$min_support %||% NA
 
 # Map topology: how many partners each side of an edge has. This is what defines the
-# three arrival routes, and it is a property of the MAP, not of any one arm.
+# three arrival routes, and it is a property of the MAP.
 .named_count <- function(df, key, val) {
   d <- df %>% dplyr::group_by(.data[[key]]) %>%
     dplyr::summarise(n = dplyr::n_distinct(.data[[val]]), .groups = "drop")
@@ -511,7 +510,7 @@ led_rows <- lapply(seq_len(nrow(led_man)), function(i) {
     n_mouse_at_gate            = as.integer(r$n_mouse),
     n_human_carried            = length(human_set),
     # The collapse loss is what is left after the human genes carried and EVERY drop, so it
-    # nets against the unmapped total rather than against one of the two drop classes.
+    # nets against the unmapped total, which spans both drop classes.
     n_lost_to_collapse         = as.integer(r$n_mouse) -
                                  as.integer(r$n_dropped_unmapped_total) - length(human_set),
     n_dropped_no_ortholog      = as.integer(r$n_dropped_no_ortholog),
@@ -533,7 +532,7 @@ led_rows <- lapply(seq_len(nrow(led_man)), function(i) {
 })
 conv_ledger <- dplyr::bind_rows(led_rows)
 
-# ---- THE CROSS-CHECK. Halt on any disagreement rather than plotting either number. ----
+# ---- THE CROSS-CHECK. Halt on any disagreement. ----
 led_bad <- conv_ledger %>%
   dplyr::filter(n_human_carried != manifest_n_human |
                 n_human_carried != n_human_remapped_from_arm |
@@ -587,7 +586,7 @@ if (file.exists(HSR_LENS_PATH)) {
 }
 
 # ---- geometry: one horizontal stacked bar per arm, WT at the top ----
-# Four segments, not three. The old grey segment carried two different statements at once:
+# Four segments. The old grey segment carried two different statements at once:
 # a gene the orthology source knew and had no human counterpart for, and a gene whose symbol
 # it could not key at all because this matrix carries GENCODE vM25's older MGI vintage. The
 # second is a vocabulary result, and 146 genes of the projection background sat in it
@@ -737,12 +736,12 @@ save_overview(
 # ============================================================================
 # 5e. CAPTION the one stage table that has no figure.
 # ============================================================================
-# query_normalisation_ledger.csv is a decision record rather than a plot: one row per matrix
+# query_normalisation_ledger.csv is a decision record: one row per matrix
 # symbol babelgene could not key, with what org.Mm.eg.db proposed and whether the guards took
 # it. It gets a caption here because 18_projection_export.R is compute-only and this stage's
 # README is owned by its viz sibling. No figure is drawn from it deliberately — the numbers
 # that matter already appear as the purple segment of conversion_ledger and mapping_loss, and
-# a per-symbol table is read, not looked at.
+# a per-symbol table is read line by line.
 
 f_qnl <- file.path(OV_DIR, "query_normalisation_ledger.csv")
 if (file.exists(f_qnl)) {

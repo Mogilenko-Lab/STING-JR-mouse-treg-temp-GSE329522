@@ -1,18 +1,18 @@
 # 08b_coresh_annotate.R — COMPUTE / DATA (annotation ingest)
 ## Turn the frozen web-research evidence for the CoReSh-recovered GEO datasets into a
 ## tracked, tabular annotation table (stage 08_coresh). This is the "what are these
-## datasets actually" layer: the mmu compendium ships only gseId + gplId (variance
+## datasets actually" layer: the mmu compendium ships gseId + gplId alone (variance
 ## structure, no titles), so dataset identity is researched externally and frozen here.
 ##
-## Inputs (frozen, tracked — so the CSV is reproducible from committed files):
+## Inputs (frozen, tracked, so the CSV is reproducible from committed files):
 ##   03_results/08_coresh/tables/_overview/coresh_dataset_annotation.json
-##       — structured research evidence, one object per seeded GSE. Produced by the
-##         agy CLI (Google Antigravity / Gemini) from a fixed research prompt, then
-##         validated and frozen by the orchestrator. The prompt, raw output, and a
-##         chain-of-custody log (tool, model, command, timestamp) are kept with the
-##         project's reasoning notes; the frozen JSON here is the committed input.
+##       — structured research evidence, one object per seeded GSE. Produced by the agy CLI
+##         (Google Antigravity / Gemini) from a fixed research prompt, then validated and
+##         frozen by the orchestrator. The prompt, raw output, and a chain-of-custody log
+##         (tool, model, command, timestamp) live with the project's reasoning notes; the
+##         frozen JSON here is the committed input.
 ##   03_results/08_coresh/tables/coresh_provenance.csv
-##       — the 14 seeded GSEs (cross-check: annotation set must equal seeded set).
+##       — the 14 seeded GSEs (cross-check: the annotation set must equal the seeded set).
 ##
 ## Output (compute-only; no plots):
 ##   03_results/08_coresh/tables/_overview/coresh_dataset_annotation.csv
@@ -22,10 +22,10 @@
 ## Run from project root:
 ##   Rscript 02_analysis/scripts/08b_coresh_annotate.R
 ##
-## NOTE: annotation is descriptive metadata only — it never enters the confirmatory
-## spine and cannot change any NES/pctVar. It records what each recovered dataset is, so
-## the reader can see what public biology each query signature surfaced. The read is
-## exploratory: the context_class and boolean columns describe the datasets themselves.
+## NOTE: this annotation is descriptive metadata. It stays outside the confirmatory spine
+## and leaves every NES and pctVar untouched, recording what each recovered dataset is so a
+## reader can see what public biology each query signature surfaced. The read is
+## exploratory: context_class and the boolean columns describe the datasets themselves.
 
 # ============================================================================
 # 0. Environment (config.R FIRST — paths, %||%)

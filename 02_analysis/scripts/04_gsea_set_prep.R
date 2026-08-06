@@ -1,30 +1,29 @@
 # 04_gsea_set_prep.R — COMPUTE
-## Load + cache ALL gene-set collections for the GSEA arm (MSigDB 8 collections +
+## Load and cache every gene-set collection for the GSEA arm (MSigDB 8 collections + the
 ## custom DBs configured in databases.custom), ready for 05_gsea_msigdb_run.R and
-## 06_gsea_custom_run.R. Produces named-list .rds objects (gene symbol -> character
-## vector) in 03_results/objects/ plus a manifest CSV enumerating every available
-## collection.
+## 06_gsea_custom_run.R. Produces named-list .rds objects (gene symbol -> character vector)
+## in 03_results/objects/ plus a manifest CSV enumerating every available collection.
 ##
 ## Run from project root:
 ##   Rscript 02_analysis/scripts/04_gsea_set_prep.R
 ##
-## SYMBOL VOCABULARY. Reference collections ship CURRENT MGI symbols; this project's
-## matrix is frozen to GENCODE vM25's vintage, where 2,341 of 19,679 symbols are no longer
-## current. Every collection is therefore resolved through the committed alias map
+## SYMBOL VOCABULARY. Reference collections ship CURRENT MGI symbols; this project's matrix
+## is frozen to GENCODE vM25's vintage, where 2,341 of 19,679 symbols have since moved on.
+## Every collection is therefore resolved through the committed alias map
 ## (00_data/references/symbol_alias/symbol_alias_map.csv, built by 00_symbol_alias_map.R)
-## BEFORE the size filter — before, because resolving after it would trim
-## MITOPATHWAYS_OXPHOS.Complex_V.CV_subunits for the wrong reason. A resolved set carries
-## BOTH spellings: the accepted reference symbol is absent from this vocabulary and so
-## matches nothing, and the published set_size is fgsea's post-intersection `size` rather
-## than the nominal length, so the extra spelling is inert where it counts. Substituting
-## instead — which reads cleaner — shrinks the 12 sets that carry both vintages of one gene
-## below gsea_min_size and DROPS them, which the fix must not do (see resolve_sets).
+## BEFORE the size filter, since resolving after it trims
+## MITOPATHWAYS_OXPHOS.Complex_V.CV_subunits for the wrong reason.
 ##
-## The reporting contract is a ledger with a bucket per cause, never a pass/fail recovery
-## floor: geneset_symbol_ledger.csv carries matched / matched-via-alias / flagged /
-## rejected / absent per SET, and geneset_manifest.csv rolls the same columns up per
-## collection. `n_overlap_before_alias` is kept beside `n_matched` so the pre-fix number
-## stays legible next to the new one.
+## A resolved set carries BOTH spellings. The accepted reference symbol is absent from this
+## vocabulary and matches nothing, and the published set_size is fgsea's post-intersection
+## `size`, so the extra spelling stays inert where it counts. Substituting instead reads
+## cleaner and shrinks the 12 sets carrying both vintages of one gene below gsea_min_size,
+## dropping them — see resolve_sets.
+##
+## The reporting contract is a ledger with a bucket per cause: geneset_symbol_ledger.csv
+## carries matched / matched-via-alias / flagged / rejected / absent per SET, and
+## geneset_manifest.csv rolls the same columns up per collection. `n_overlap_before_alias`
+## sits beside `n_matched`, keeping the pre-fix number legible next to the new one.
 ##
 ## Outputs
 ## -------
@@ -42,17 +41,16 @@
 ##     load_or_compute(), load_msigdb_collection(), load_custom_geneset().
 ##   * symbol_alias.R provides resolve_sets(), symbol_ledger(), assert_ledger_closes().
 ##   * databases.msigdb is a list of {category, subcategory, name} maps.
-##   * databases.custom is a list of {name, path} maps; paths are relative to
-##     PROJECT_ROOT. Project RDS (paths starting 00_data/) are built by the 00-series
-##     curation scripts; toolkit RDS (paths under 01_modules/) are built by
-##     the RNAseq-toolkit reference-processing pipeline. If any path is absent the
-##     script warns and skips that DB — it does NOT error.
-##   * msigdbr is a lazy dependency (not sourced at the top). If missing, MSigDB
-##     collections are skipped with a clear install message.
-##   * Idempotent: load_or_compute() returns from cache on re-runs unless force = TRUE.
-##     The alias resolution happens INSIDE the cached closure, so a change to the alias map
-##     requires deleting the caches (or FORCE_GENESET_REBUILD=1) to take effect — the
-##     script says so on every run.
+##   * databases.custom is a list of {name, path} maps, relative to PROJECT_ROOT. Project
+##     RDS (paths starting 00_data/) come from the 00-series curation scripts; toolkit RDS
+##     (paths under 01_modules/) come from the RNAseq-toolkit reference-processing pipeline.
+##     An absent path warns and skips that DB.
+##   * msigdbr is a lazy dependency. When it is missing, MSigDB collections are skipped with
+##     an install message.
+##   * Idempotent: load_or_compute() returns from cache on re-runs unless force = TRUE. The
+##     alias resolution happens INSIDE the cached closure, so a change to the alias map
+##     takes effect once the caches are deleted (or FORCE_GENESET_REBUILD=1). The script
+##     says so on every run.
 
 # ============================================================================
 # 0. Environment setup
@@ -89,14 +87,14 @@ message(sprintf("[04_gsea_set_prep] species=%s  min_size=%d  max_size=%d  force=
 # ============================================================================
 ## MATRIX_VOCABULARY is gene_universe.txt, the modelled DE background. In this project it
 ## is ALSO exactly the set of symbols the delivered CPM table carries — the duplicate-symbol
-## collapse at 01_mapping_qc.R drops Ensembl ids, never symbols, so 19,679 unique gene_name
+## collapse at 01_mapping_qc.R drops Ensembl ids and keeps every symbol, so 19,679 unique gene_name
 ## values survive as 19,679 modelled symbols. There is therefore exactly ONE vocabulary
 ## layer here and n_expression_filtered is structurally 0; the column is kept so the ledger
 ## columns match the human compartment's, and the two layers are compared below so a future
-## divergence surfaces rather than hides.
+## divergence surfaces on the run.
 ##
 ## What this project CANNOT say: n_absent_from_reference. That needs the GENCODE vM25
-## feature list, and the collaborators delivered a CPM table rather than a quantification
+## feature list, and the collaborators delivered a CPM table in place of a quantification
 ## against a tracked GTF, so `reference_vocabulary_available` is FALSE and an unmatched
 ## reference gene lands in n_below_detection — "not in the delivered quantification" — which
 ## is the strongest honest statement available. It is NOT "absent from the reference".
@@ -195,12 +193,12 @@ resolve_and_filter <- function(raw, database) {
     MANY_TO_ONE[[database]] <<- res$many_to_one %>% mutate(database = database, .before = 1)
 
   # Nominal-filter membership is the OLD membership plus whatever resolution newly admits,
-  # by construction, so the fix cannot cost a set. It has to be spelled out rather than left
+  # by construction, so the fix cannot cost a set. It has to be spelled out, leaving nothing
   # to filter_by_size(): some msigdbr sets ship a symbol twice (one gs_name, two Ensembl
   # ids), filter_by_size() counts the raw length while a resolved set is de-duplicated, and
   # REACTOME_ENDOSOMAL_VACUOLAR_PATHWAY at raw length 15 / 14 distinct symbols would
   # otherwise fall out of a 15-floor for a reason that has nothing to do with aliases. The
-  # de-duplication is reported below rather than absorbed.
+  # de-duplication is reported below as its own count.
   before  <- filter_by_size(raw, min_size, max_size)
   admits  <- filter_by_size(res$sets, min_size, max_size)
   keep    <- union(names(before), names(admits))
@@ -221,7 +219,7 @@ resolve_and_filter <- function(raw, database) {
 
 ## Build a one-row manifest tibble for a single collection. The six ledger counts are the
 ## per-collection roll-up of geneset_symbol_ledger.csv, summed over the collection's UNIQUE
-## reference symbols rather than over sets, so a gene in twelve sets is counted once.
+## reference symbols, one pass over the vocabulary, so a gene in twelve sets is counted once.
 manifest_row <- function(database, type, n_sets, source, cache_path, raw = NULL) {
   base <- tibble::tibble(
     database     = as.character(database),
@@ -380,7 +378,7 @@ for (db in YAML_CONFIG$databases$custom) {
 ## the same 19,679 symbols. n_below_detection means "not in the delivered quantification",
 ## and n_absent_from_reference stays 0 with reference_vocabulary_available = FALSE because
 ## the vM25 feature list is not persisted here; that split is the one thing this compartment
-## cannot make, and it is reported as unavailable rather than guessed.
+## cannot make, and it is reported as unavailable.
 
 manifest_all <- dplyr::bind_rows(c(msigdb_manifest, custom_manifest))
 manifest_path <- file.path(DIR_OBJECTS, "geneset_manifest.csv")
@@ -388,7 +386,7 @@ readr::write_csv(manifest_all, manifest_path)
 message(sprintf("[04] manifest written -> %s  (%d collections)", manifest_path, nrow(manifest_all)))
 
 # ---- the per-SET ledger, and the applied pairs ------------------------------------------
-## Set granularity is mandatory rather than nice: every claim in this family is per-set
+## Set granularity is mandatory: every claim in this family is per-set
 ## (MITOPATHWAYS_OXPHOS.Complex_V, HSR_core, HALLMARK_UNFOLDED_PROTEIN_RESPONSE), and a
 ## per-collection roll-up cannot carry them. Every set the reference ships gets a row,
 ## including the ones the size filter drops — that is exactly where a vocabulary loss

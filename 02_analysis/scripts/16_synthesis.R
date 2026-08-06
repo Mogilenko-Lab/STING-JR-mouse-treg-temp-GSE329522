@@ -1,28 +1,26 @@
 # 16_synthesis.R — COMPUTE
 # =============================================================================
-# CAPSTONE synthesis (stage 07_synthesis) — assemble the unified, cross-arm
-# TWO-ARMS evidence table for the STING-cGAS standard sweep.
+# CAPSTONE synthesis (stage 07_synthesis) — assemble the unified, cross-arm TWO-ARMS
+# evidence table for the STING-cGAS standard sweep.
 #
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   07_synthesis
 #
-# ROLE: COMPUTE ONLY. This script runs NO new statistics — no DE re-fit, no
-#   fgsea, no decoupleR, no permutation. It only JOINS / FILTERS / SUMMARISES the
-#   masters the earlier sweep arms already produced, into one tidy cross-arm
-#   table. There is NO ggplot/ggsave here; the headline panel lives in the
-#   sibling 16_synthesis_viz.R, which reads only what this script writes.
+# ROLE: COMPUTE ONLY. Joins, filters and summarises the masters the earlier sweep arms
+#   produced into one tidy cross-arm table. The headline panel lives in the sibling
+#   16_synthesis_viz.R, which reads only what this script writes.
 #
 # THE QUESTION THIS TABLE ANSWERS (the publication-relevant payoff):
-#   Across every method in the sweep (GSEA Hallmark/Reactome, the custom DBs,
-#   PROGENy, decoupleR-TF, GATOM/CoReSh where present), is the heat response
-#   cGAS-DEPENDENT? The genotype x temperature INTERACTION contrast is the
-#   cGAS-dependence test (1 df, the lowest-powered comparison). The expectation,
-#   to be read out gene-set-wide and multi-method:
-#     * IFN/ISG arm (cGAS-DEPENDENT hypothesis): Interaction significant + positive
-#       (present in WT_heat, lost/reversed in KO_heat).
+#   Across every method in the sweep (GSEA Hallmark/Reactome, the custom DBs, PROGENy,
+#   decoupleR-TF, GATOM/CoReSh where present), is the heat response cGAS-DEPENDENT? The
+#   genotype x temperature INTERACTION contrast is the cGAS-dependence test (1 df, the
+#   lowest-powered comparison). The expectation, read out gene-set-wide and multi-method:
+#     * IFN/ISG arm (cGAS-DEPENDENT hypothesis): Interaction significant + positive,
+#       present in WT_heat, lost or reversed in KO_heat.
 #     * HIF/glycolysis arm (NO-DETECTABLE-cGAS-DEPENDENCE hypothesis): rises in BOTH
 #       WT_heat AND KO_heat, Interaction near-zero / non-significant.
-#   We frame this as an ASYMMETRY, never as "cGAS-independent" (n=5; underpowered).
+#   This reads as an ASYMMETRY. At n=5 the design is underpowered for a claim of
+#   cGAS-independence.
 #
 # Inputs (read-only MASTERS; each guarded — warn+skip if absent):
 #   03_results/master/master_gsea_table.csv          (GSEA: MSigDB collections +
@@ -37,11 +35,11 @@
 #   03_results/07_synthesis/tables/two_arms_summary.csv  (the tidy cross-arm table)
 #   03_results/objects/16_synthesis.rds                  (the assembled object)
 #
-# IDEMPOTENT + BYTE-STABLE: a pure read->join->round->write of fixed masters.
-#   Re-running yields the same bytes (round_numeric_cols, 9 sig figs).
+# IDEMPOTENT + BYTE-STABLE: read -> join -> round -> write over fixed masters. Re-running
+#   yields the same bytes (round_numeric_cols, 9 sig figs).
 #
-# Dependencies: dplyr/tibble/readr (base project stack via de_gsea_helpers.R).
-#   No heavy enrichment packages are attached (this is a join-only stage).
+# Dependencies: dplyr/tibble/readr (base project stack via de_gsea_helpers.R). This is a
+#   join-only stage, so the heavy enrichment packages stay unattached.
 # =============================================================================
 
 source("02_analysis/config/config.R")            # PROJECT_ROOT, YAML_CONFIG, DIR_*, %||%, RANK_METRIC

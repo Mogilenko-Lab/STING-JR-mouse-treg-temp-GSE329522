@@ -5,22 +5,21 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   14_signature_expression
 #
-# ROLE: VIZ ONLY. Reads the _overview source table that 22_signature_expression.R wrote
-#   and recomputes NOTHING — not a mean, not a z, not a rank, not a top-N cut. Every row
-#   plotted is a row of that CSV, which is why the CSV and the PNG can never disagree.
-#   Figures ONLY via the figure-style contract: project_theme(config = FIG_CFG) +
-#   save_overview() (dual pdf+png + sibling source table + README caption, atomic). No
-#   inline ggsave()/theme()/raw hex; colors come from FIG_CFG$colors.
+# ROLE: VIZ ONLY. Reads the _overview source table that 22_signature_expression.R wrote.
+#   Every row plotted is a row of that CSV, which keeps the CSV and the PNG in agreement.
+#   Figures go through the figure-style contract alone: project_theme(config = FIG_CFG) +
+#   save_overview() (dual pdf+png + sibling source table + README caption, atomic), with
+#   colors from FIG_CFG$colors.
 #
 # Figure (one, _overview, carrying its same-stem source table):
 #   _overview/signature_dotplot   gene x design-cell dot plot, faceted by signature.
 #                                 dot FILL = across-cell z of the group means (diverging)
 #                                 dot SIZE = group mean log2 CPM (expression level)
 #
-# This is the wet-lab readback of the exported UP arms: which member genes are actually
-# abundant, in which of the four design cells each one peaks, and whether that peak moves
-# when cGAS is removed. It is a per-gene view of sets that stages 10/11 report only as
-# counts. UP ARMS ONLY — the down arms are out of this stage's scope by design (see
+# This is the wet-lab readback of the exported UP arms: which member genes are abundant, in
+# which of the four design cells each one peaks, and whether that peak moves when cGAS is
+# removed. It is the per-gene view of sets that stages 10/11 report as counts. UP ARMS ONLY
+# — the down arms sit outside this stage's scope by design (see
 # analysis_config.yaml::signature_expression and the compute sibling's header).
 #
 # Inputs (read-only):
@@ -65,7 +64,7 @@ NEG <- FIG_CFG$colors$diverging$down    %||% "#2166AC"
 DE_FDR   <- as.numeric(FIG_CFG$thresholds$de_fdr   %||% 0.05)
 DE_LOGFC <- as.numeric(FIG_CFG$thresholds$de_logfc %||% 1.0)
 
-# GEOMETRY. The figure is laid out 2x2 rather than 4-across for a legibility reason worth
+# GEOMETRY. The figure is laid out 2x2, over 4-across, for a legibility reason worth
 # stating: what gets normalised when someone views the PNG is the canvas WIDTH, so a wide
 # canvas is a SMALL figure. Four panels side by side need ~17in; displayed at the notebook's
 # ~1150px that is 68 px/in, which puts the gene labels near 9px — unreadable. Two panel
@@ -123,7 +122,7 @@ cells <- dot %>%
 Z_BOUND <- max(abs(dot$z_bound), na.rm = TRUE)
 
 # Facet strip: what the signature IS (contrast/gate) and how much of it is on screen.
-# THREE lines, not two: the longest signature name (Interaction_up_fdrOnly) plus its gate
+# THREE lines: the longest signature name (Interaction_up_fdrOnly) plus its gate
 # on one line overruns the panel and the strip clips mid-word. The third line is load-bearing
 # too — it is where a capped arm admits it is capped ("top 15 of 213" vs "all 9 of 9"), so a
 # truncated panel can never be mistaken for a complete set.
@@ -157,7 +156,7 @@ dot_p$row_key <- factor(dot_p$row_key, levels = unique(as.character(dot_p$row_ke
 #    Dots are shape 21 (fill + thin stroke) on purpose: the diverging MID colour is
 #    near-white, so an unfilled point at z ~ 0 would disappear against the panel. The
 #    stroke keeps "expressed but flat across the four cells" visible as a pale dot
-#    rather than as missing data.
+#    distinct from missing data.
 # ============================================================================
 
 fig_dot <- ggplot(dot_p, aes(x = group, y = row_key)) +
@@ -171,7 +170,7 @@ fig_dot <- ggplot(dot_p, aes(x = group, y = row_key)) +
                        breaks = c(-1, 0, 1),
                        name = "z of the four cell means") +
   scale_size_continuous(range = DOT_RANGE, name = "mean log2 CPM") +
-  # Legend BELOW, not right: in a 2-column layout a right-hand legend would eat ~20% of the
+  # Legend BELOW: in a 2-column layout a right-hand legend would eat ~20% of the
   # 8.5in width and hand it back as narrower panels. Underneath, the panels keep the full width.
   guides(fill = guide_colourbar(order = 1, title.position = "top",
                                 barwidth = grid::unit(7, "lines"),
@@ -215,12 +214,12 @@ purge_figures(STAGE, "signature_dotplot", overview = TRUE, config = FIG_CFG)
 save_overview(
   fig_dot, STAGE, "signature_dotplot",
   table   = dot,
-  # The finding is stated over EVERY member, not the plotted top-N, and is checkable from the
+  # The finding is stated over EVERY member, past the plotted top-N, and is checkable from the
   # stage's own full table (signature_gene_group_expression.csv): 213/213 and 239/239 for the
   # heat arms, 9/9 and 23/23 for the two interaction gates. An earlier draft added "from a much
   # lower abundance base", which held on the top-25 plotted subset and does NOT hold over all
   # members (median peak log2 CPM 3.6/3.0 for the heat arms vs 1.8 for Interaction_up but 3.7
-  # for Interaction_up_fdrOnly), so that clause is gone rather than silently rescoped.
+  # for Interaction_up_fdrOnly), so that clause is gone.
   finding = paste0("Across every member, not only the plotted ones, WT_heat_up and KO_heat_up ",
                    "genes have a 39 °C cell as their high cell and a 37 °C cell as their low cell ",
                    "in BOTH genotypes, whereas cGAS-KO 39 °C is the LOW cell for all 9 ",

@@ -7,37 +7,36 @@
 # Why this stage exists
 #   Stage 12 and the human compartment's arm-decomposition both partition an up arm
 #   against a hand-picked panel of curated programs. A panel that already contains
-#   hypoxia can answer "is hypoxia in this arm?" and nothing else, and for WT_heat_up
-#   two thirds of the arm (132 of 199) falls in no panel member at all. This stage asks
-#   the ontology instead: over the WHOLE GO Biological Process space, and separately the
-#   whole Molecular Function space, which terms does each arm's gene content actually
-#   organise into? The candidate space is not curated by whoever is asking.
+#   hypoxia answers "is hypoxia in this arm?" and stops there, and for WT_heat_up two
+#   thirds of the arm (132 of 199) falls in no panel member. This stage asks the
+#   ontology: over the WHOLE GO Biological Process space, and separately the whole
+#   Molecular Function space, which terms does each arm's gene content organise into?
+#   The candidate space comes from the ontology.
 #
 #   Over-representation is new machinery in this repository. Every other enrichment here
-#   is pre-ranked GSEA; there is no enrichGO/enricher/groupGO call anywhere else in
-#   either compartment. That is a reason for the seam checks below, not a reason to
-#   trust the output more.
+#   is pre-ranked GSEA, and no enrichGO/enricher/groupGO call exists anywhere else in
+#   either compartment. That is what the seam checks below are for.
 #
 # What the background is, and why
 #   03_results/human_projection/signatures/WT_heat/WT_heat_ranked.rnk column 1, 12,986
 #   human symbols. This is the space the arms were SELECTED from, carried across the same
-#   frozen ortholog map. A generic all-genes universe would credit the arm with
-#   enrichment that is really the coverage of the mouse->human map.
+#   frozen ortholog map. A generic all-genes universe would credit the arm with enrichment
+#   that belongs to the coverage of the mouse->human map.
 #
-# The four things this stage emits that a plain enrichGO call does not
-#   1. Both IEA variants. enrichGO includes electronically inferred annotation;
-#      13_semantic_decomp deliberately drops it. Both are run, both are reported, and
-#      the primary is named in config rather than inherited from a default.
-#   2. An annotation-depth-matched permutation null, on BOTH headline quantities. The gate
+# The four things this stage emits beyond a plain enrichGO call
+#   1. Both IEA variants. enrichGO includes electronically inferred annotation and
+#      13_semantic_decomp drops it. Both are run, both are reported, and config names the
+#      primary.
+#   2. An annotation-depth-matched permutation null on BOTH headline quantities. The gate
 #      that produced these arms thresholds effect size, which preferentially admits
-#      well-studied genes; the hypergeometric conditions on set size and universe only, so
-#      it does not see this. The null counts how many terms a matched random draw takes to
-#      significance AND how many of the drawn genes land in one, because the coverage
-#      number is the one a reader takes away and it needs a comparison of its own.
+#      well-studied genes, while the hypergeometric conditions on set size and universe
+#      alone. The null counts how many terms a matched random draw takes to significance
+#      AND how many of the drawn genes land in one, since the coverage number is the one a
+#      reader takes away and needs a comparison of its own.
 #   3. A GO-term-versus-curated-lens gene-block comparison, so "GO says hypoxia" and
-#      "Hallmark says hypoxia" can be read as the two different gene sets they are.
-#   4. A searched-and-absent proteostasis probe, so the project's central negative
-#      result is a row with a number instead of a silence in the reader's head.
+#      "Hallmark says hypoxia" read as the two different gene sets they are.
+#   4. A searched-and-absent proteostasis probe, so the project's central negative result
+#      lands as a row with a number.
 #
 # Inputs (frozen; read only)
 #   03_results/human_projection/signatures/{WT_heat,KO_heat,Interaction}/*_up.txt
@@ -45,6 +44,7 @@
 #   03_results/objects/17_signature_sets.rds + 03_results/objects/gene_universe.txt
 #   ../human_treg_arthritis/00_data/references/{msigdb_hallmark,temp_hsr_lens}/*.txt
 #   ../sting_positive_control/03_results/06_reference_axis/signatures/*_up.txt
+#     (the two curated interferon reference axes; see go_decomposition.curated_lenses)
 #   org.Hs.eg.db / org.Mm.eg.db / GO.db  (versions recorded in tables/go_provenance.csv)
 #
 # Outputs -> 03_results/15_go_decomposition/tables/_overview/
@@ -54,16 +54,16 @@
 #   go_coverage_summary.csv   go_proteostasis_probe.csv
 #   go_mouse_replicate.csv    go_provenance.csv
 #   plus 03_results/objects/24_go_decomposition.rds for the viz script.
-#   Figures are 25_go_decomposition_viz.R's; this script never plots.
+#   Figures belong to 25_go_decomposition_viz.R.
 #
 # Which GOSemSim build this runs on
-#   simplify() and pairwise_termsim() both call the Wang measure. GOSemSim through
-#   2.36.0 matches its edge weights against GO.db relationship strings without
-#   normalising them: GO.db spells them "isa"/"part of", getSV keys on "is_a"/"part_of",
-#   so every BP edge falls through to the "other" weight and the measure runs on a
-#   uniform 0.7 -- which erases the one distinction the Wang measure is made of. 2.39.2
-#   normalises first. This stage opts in to the project-local library and STOPS rather
-#   than fall back to the system build; the version it used is in go_provenance.csv.
+#   simplify() and pairwise_termsim() both call the Wang measure. GOSemSim through 2.36.0
+#   matches its edge weights against GO.db relationship strings without normalising them:
+#   GO.db spells them "isa"/"part of", getSV keys on "is_a"/"part_of", so every BP edge
+#   falls through to the "other" weight and the measure runs on a uniform 0.7, erasing the
+#   one distinction the Wang measure is made of. 2.39.2 normalises first. This stage opts
+#   in to the project-local library and STOPS when it is unavailable; go_provenance.csv
+#   records the version it used.
 #
 # Run from project root (~10 min):
 #   Rscript 02_analysis/scripts/24_go_decomposition.R
@@ -253,7 +253,7 @@ term2gene <- function(map, ont, variant, universe) {
 ## ---------------------------------------------------------------------------
 ## 3. Over-representation: every arm x ontology x IEA variant
 ##
-## enricher() rather than enrichGO() so both IEA variants run through one code path.
+## enricher(), over enrichGO(), so both IEA variants run through one code path.
 ## The equivalence is not assumed: 3b re-runs the primary arm through enrichGO() and
 ## records the agreement in go_provenance.csv.
 ## ---------------------------------------------------------------------------
@@ -689,7 +689,7 @@ COVERAGE_SUMMARY <- dplyr::left_join(COVERAGE_SUMMARY, cov_null, by = "arm")
 ## 7. GO term versus curated lens, gene block against gene block
 ##
 ## The headline: GO "response to hypoxia" and HALLMARK_HYPOXIA are two different gene
-## sets, and how much of an arm each one claims is a property of the set, not of the
+## sets, and how much of an arm each one claims is a property of the set, upstream of the
 ## word. Reported as three counts and three gene lists for every arm x lens pair.
 ##
 ## Every row also carries WHY it has the test result it has. A GO term can miss the
@@ -850,7 +850,7 @@ probe_one <- function(arm, go_id) {
     term_size_in_universe = K, k_arm = k,
     expected_k = if (NGa > 0L) n * K / NGa else NA_real_,
     pvalue = pv, p_adjust = padj, tested = tested,
-    # A term the hypergeometric never saw carries NA here, never FALSE.
+    # A term the hypergeometric never saw carries NA here, distinct from FALSE.
     enriched = if (tested) nrow(row) > 0L && go_id %in% row$ID else NA,
     p_matched = pm, frac_matched_reaching_q = frq,
     genes_hit = collapse_genes(intersect(qa, tg))))
@@ -912,7 +912,7 @@ IEA_COMPARISON <- dplyr::bind_rows(lapply(ARM_ORDER, function(arm)
 ## 10. Mouse-space replicate (secondary)
 ##
 ## The same question asked BEFORE the ortholog map, so a term that appears only in human
-## space can be attributed to the projection rather than to the biology. Secondary by
+## space can be attributed to the projection. Secondary by
 ## construction: the arms are defined in human projection space.
 ## ---------------------------------------------------------------------------
 
@@ -1018,7 +1018,7 @@ NULL_DESIGN <- dplyr::bind_rows(
   cbind(NULL_SUMMARY, row_kind = "null_summary"))
 
 ## Every replicate of both nulls, so the two summary statistics on the figure can be
-## checked against the distribution they came from rather than taken on trust.
+## checked against the distribution they came from.
 NULL_DRAWS <- dplyr::bind_rows(lapply(names(NULLS), function(nm) {
   ne <- NULLS[[nm]]; if (is.null(ne)) return(NULL)
   parts <- strsplit(nm, "|", fixed = TRUE)[[1]]

@@ -4,36 +4,35 @@
 # Ontology-side composition of the mouse 39 °C-derived up arm (stage 13_semantic_decomp).
 #
 # Purpose
-#   Stage 12 asked how much of WT_heat_up falls inside curated lenses. That is a
-#   binary membership question and it answers 22 of 213 in, 191 out. This stage asks
-#   three different questions of the same 213 genes, using GO BP semantic similarity
-#   (GOSemSim, Wang graph measure, BMA gene-level combiner):
+#   Stage 12 asked how much of WT_heat_up falls inside curated lenses, a binary
+#   membership question answering 22 of 213 in, 191 out. This stage asks three further
+#   questions of the same 213 genes using GO BP semantic similarity (GOSemSim, Wang graph
+#   measure, BMA gene-level combiner):
 #
-#     1. Can the ontology see the set at all? An annotation coverage ladder, naming
-#        the genes it cannot see rather than dropping them silently.
+#     1. Can the ontology see the set at all? An annotation coverage ladder that names
+#        the genes it cannot see.
 #     2. Is the set one coherent process, or many? Mean pairwise semantic similarity
-#        placed against annotation-depth-matched null sets and against single-GO-term
-#        reference sets, all size-matched.
-#     3. Can it be split into modules? A silhouette sweep over linkage and k, run on
-#        every set including reference sets that are coherent by construction, so a
-#        failure to partition can be attributed to the method or to the set.
+#        against annotation-depth-matched nulls and single-GO-term reference sets, all
+#        size-matched.
+#     3. Can it be split into modules? A silhouette sweep over linkage and k, run on every
+#        set including reference sets coherent by construction, so a failure to partition
+#        can be attributed to the method or to the set.
 #
-#   Then, for the genes no lens contains: how close does each one's annotation sit to
-#   each lens, graded rather than binary, against a depth-stratified background.
+#   Then, for the genes no lens contains: how close each one's annotation sits to each
+#   lens, graded, against a depth-stratified background.
 #
-#   Nothing here reads expression. The similarity structure is a property of the gene
-#   set and the ontology, so no partition computed here can be derived from an
-#   enrichment result.
+#   Nothing here reads expression. The similarity structure is a property of the gene set
+#   and the ontology, which keeps every partition computed here independent of enrichment.
 #
 # The confound this stage is built around
 #   The export gate thresholds effect size, which selects well-studied genes. WT_heat_up
-#   members carry a median 11 GO BP terms against the expressed background's 5
-#   (Wilcoxon p 5e-22). A better-annotated gene has more term pairs and therefore more
-#   chances to sit near any reference set, so a uniform-random null would credit the
-#   set with coherence it gets from annotation depth alone. Every null here matches the
-#   query's terms-per-gene distribution band by band, and every percentile is taken
-#   within a gene's own band. The uniform null is computed as well and reported beside
-#   the matched one, to size that confound.
+#   members carry a median 11 GO BP terms against the expressed background's 5 (Wilcoxon
+#   p 5e-22). A better-annotated gene has more term pairs and so more chances to sit near
+#   any reference set, and a uniform-random null would credit the set with coherence it
+#   gets from annotation depth alone. Every null here matches the query's terms-per-gene
+#   distribution band by band, and every percentile is taken within a gene's own band. The
+#   uniform null is computed as well and reported beside the matched one to size the
+#   confound.
 #
 # Inputs (frozen; read only)
 #   03_results/objects/17_signature_sets.rds
@@ -52,31 +51,29 @@
 #   03_results/objects/20_semantic_decomp__GOSemSim-<version>.rds   (engine-stamped copy)
 #
 # Honest ceiling
-#   Semantic proximity to a lens says a gene's GO annotation resembles that of the
-#   lens members. It is not evidence that the gene participates in the process the
-#   lens is named for, and it is not evidence of co-regulation. GO BP coverage is
-#   also uneven in a way that is not independent of the biology here: P4ha2, one of
-#   the seven Lombardi2022_HIF genes in the set, carries CC and MF annotation but no
-#   BP annotation in mouse or in human, so this stage cannot place it at all.
+#   Semantic proximity to a lens says a gene's GO annotation resembles that of the lens
+#   members. Participation in the named process and co-regulation are further claims that
+#   need other evidence. GO BP coverage is also uneven in a way tied to the biology here:
+#   P4ha2, one of the seven Lombardi2022_HIF genes in the set, carries CC and MF
+#   annotation and no BP annotation in either species, so this stage leaves it unplaced.
 #
 # Which GOSemSim build this runs on, and why it is pinned
 #   Wang similarity weights a parent edge by its relationship: is_a 0.8, part_of 0.6,
 #   everything else 0.7. GOSemSim through 2.36.0 matches those weight names against the
 #   relationship strings in its own packaged gotbl without normalising them, and gotbl
-#   spells the same relationships "isa" and "part of". Every edge fails the match and
-#   falls through to "other", so on BP all 66,947 edges run at a uniform 0.7 and none
-#   receives 0.8 or 0.6: the distinction the Wang measure is made of is absent, not
-#   merely weakened. 2.39.2 (Bioconductor devel, upstream issue #51) normalises the
-#   spellings first. This stage runs on 2.39.2 from the project-local R library.
-#   Install it with:
+#   spells the same relationships "isa" and "part of". Every edge falls through to
+#   "other", so on BP all 66,947 edges run at a uniform 0.7 — the distinction the Wang
+#   measure is made of is absent. 2.39.2 (Bioconductor devel, upstream issue #51)
+#   normalises the spellings first. This stage runs on 2.39.2 from the project-local R
+#   library. Install it with:
 #     R CMD INSTALL -l 01_modules/Rlib <GOSemSim source carrying the fix>
 #
-#   Two guards, because a version string is the weaker claim. use_project_rlib() below
-#   stops if GOSemSim resolves outside the project library, and section 0 recovers the
-#   effective is_a weight from the measure and stops if it is not 0.8. The recovered
-#   value goes into semantic_provenance.csv and into the term-matrix cache key, so the
-#   published table shows which weighting produced it rather than naming a package.
-#   The size of the difference is measured in 20b_semantic_engine_validation.R.
+#   Two guards, since a version string is the weaker claim. use_project_rlib() stops if
+#   GOSemSim resolves outside the project library, and section 0 recovers the effective
+#   is_a weight from the measure and stops unless it is 0.8. The recovered value goes into
+#   semantic_provenance.csv and into the term-matrix cache key, so the published table
+#   shows the weighting that produced it. 20b_semantic_engine_validation.R measures how
+#   much the difference is worth.
 #
 # Run from project root (expensive; one shared term matrix, then indexing):
 #   Rscript 02_analysis/scripts/20_semantic_decomposition.R
@@ -377,7 +374,7 @@ if (gb > 24) stop("[20] term matrix would exceed 24 GB; lower bg_sample_size or 
 
 # The term matrix is the one expensive step and depends on (terms, measure, ontology,
 # GO.db version, GOSemSim version). Cache it in the sanctioned throwaway zone so a rerun
-# after a downstream change costs seconds. Any mismatch recomputes rather than reusing.
+# after a downstream change costs seconds. Any mismatch recomputes.
 # The GOSemSim version belongs in both the key and the filename: the 2.36.0 and 2.39.2
 # builds return different Wang values for the same term pair, so a key that omitted the
 # engine would hand a rerun the previous build's matrix without saying so, and stamping
@@ -408,7 +405,7 @@ if (is.null(TS)) {
   if (any(failed)) stop("[20] termSim failed in ", sum(failed), " of ", length(blocks),
                         " chunks: ", paste(utils::head(unlist(blocks[failed]), 2),
                                            collapse = " | "))
-  # NA is preserved, never zero-filled: pair_bma drops all-missing rows and columns
+  # NA is preserved as NA: pair_bma drops all-missing rows and columns
   # the way GOSemSim does, and a zero would instead be treated as a real low score.
   TS <- matrix(NA_real_, length(terms), length(terms), dimnames = list(terms, terms))
   for (b in blocks) TS[rownames(b), colnames(b)] <- b
@@ -429,10 +426,10 @@ gidx <- gidx[vapply(gidx, length, integer(1)) > 0L]
 # Reproduces GOSemSim:::combineScores(..., "BMA") exactly, verified against
 # GOSemSim::mgeneSim to within its 3-digit rounding (max abs difference 4.9e-4 over a
 # 12-gene test). Two details matter and neither is optional. BMA is the term-count
-# WEIGHTED mean of the best matches, sum(rowMax, colMax) / sum(dim), not the average
+# WEIGHTED mean of the best matches, sum(rowMax, colMax) / sum(dim), which differs from the average
 # of the two directional means; the two coincide only when both genes carry the same
 # number of terms, and the whole point of this stage is that they do not. Rows and
-# columns that are entirely missing are dropped before combining rather than treated
+# columns that are entirely missing are dropped before combining, over being treated
 # as zero, or a term the ontology cannot compare would drag the score down.
 pair_bma <- function(ia, ib) {
   M <- TS[ia, ib, drop = FALSE]
@@ -578,7 +575,7 @@ for (ln in names(LENSES)) {
   bv <- do.call(rbind, mclapply(bgg, to_lens, lens_ix = lens_ix, mc.cores = NCORE))
   rownames(qv) <- query; rownames(bv) <- bgg
   qb <- cut(NT[query], BANDS); bb <- cut(NT[bgg], BANDS)
-  # Mid-rank percentile, not ecdf. A gene carrying one or two curated terms either
+  # Mid-rank percentile, over ecdf. A gene carrying one or two curated terms either
   # shares a term with the lens, scoring exactly 1, or does not, so the top of the
   # sparse bands is a pile of ties. An ecdf hands every tied gene the full 1.0 and an
   # exceedance test hands it nothing; the mid-rank splits the tied mass and is the only

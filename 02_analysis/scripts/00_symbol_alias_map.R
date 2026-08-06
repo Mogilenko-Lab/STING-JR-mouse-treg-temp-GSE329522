@@ -3,28 +3,27 @@
 # =============================================================================
 # The collaborators' delivered CPM table was quantified against GRCm38 + GENCODE vM25, so
 # this project's vocabulary is frozen to that build's MGI vintage: 2,341 of the 19,679
-# modelled symbols are no longer current official MGI symbols. Reference gene sets ship
+# modelled symbols have since moved off the official MGI list. Reference gene sets ship
 # current symbols and every match here is an exact string match, so a renamed gene leaves a
-# set silently and the loss reads as biological absence. The worst case is not subtle: the
-# matrix carries the whole legacy ATP-synthase block Atp5a1 Atp5b Atp5c1 Atp5d Atp5e
-# Atp5g1..g3 Atp5h Atp5j Atp5j2 Atp5k Atp5l Atp5o Atpif1 while MitoCarta 3.0 ships
-# Atp5f1a..Atp5po, so MITOPATHWAYS_OXPHOS.Complex_V matched 7 of its 22 genes, fell under
-# gsea_min_size = 15, and had no row in master_gsea_table.csv at all. This script resolves
-# that once and writes the answer down.
+# set silently and the loss reads as biological absence. The worst case is stark: the matrix
+# carries the whole legacy ATP-synthase block Atp5a1 Atp5b Atp5c1 Atp5d Atp5e Atp5g1..g3
+# Atp5h Atp5j Atp5j2 Atp5k Atp5l Atp5o Atpif1 while MitoCarta 3.0 ships Atp5f1a..Atp5po, so
+# MITOPATHWAYS_OXPHOS.Complex_V matched 7 of its 22 genes, fell under gsea_min_size = 15,
+# and had no row in master_gsea_table.csv at all. This script resolves that once and writes
+# the answer down.
 #
-# WHY A COMMITTED CSV RATHER THAN A LIVE LOOKUP. The map is a property of
-# (matrix vocabulary x org.Mm.eg.db release) and of nothing else — not of any one gene set —
-# so it is computed once here. Hardcoding the pairs in config would go stale without a diff;
-# resolving live in every consumer would load the annotation database repeatedly and leave
-# nothing to inspect. A committed CSV is auditable and moves only when someone regenerates
-# it on purpose.
+# WHY A COMMITTED CSV. The map is a property of (matrix vocabulary x org.Mm.eg.db release)
+# and of nothing else, so it is computed once here. Hardcoding the pairs in config would go
+# stale without a diff, and resolving live in every consumer would load the annotation
+# database repeatedly and leave nothing to inspect. A committed CSV is auditable and moves
+# when someone regenerates it on purpose.
 #
-# WHAT THIS SCRIPT DOES NOT COVER. The ortholog query side. babelgene keys on CURRENT MGI
-# symbols, so there the traversal runs the other way — matrix symbol UP to current — and it
-# lives in helpers/ortholog_utils.R::normalise_mouse_query(), applied inside
-# build_ortholog_map() at 18_projection_export.R and published there as its own ledger. One
-# function cannot do both directions; the one-to-one safety condition means something
-# different in each.
+# WHAT THIS SCRIPT COVERS. The reference side alone: reference symbol DOWN into the matrix
+# vocabulary. The ortholog query side runs the other way — matrix symbol UP to current, which
+# is what babelgene keys on — and lives in helpers/ortholog_utils.R::normalise_mouse_query(),
+# applied inside build_ortholog_map() at 18_projection_export.R and published there as its
+# own ledger. The one-to-one safety condition means something different in each direction, so
+# the two stay separate.
 #
 # Reads, read-only:
 #   02_analysis/config/analysis_config.yaml            symbol_alias + databases
@@ -71,7 +70,7 @@ message("=================================================================")
 # ============================================================================
 # gene_universe.txt is the modelled DE background, and in this project it is also exactly
 # the set of symbols the delivered CPM table carries: the duplicate-symbol collapse at
-# 01_mapping_qc.R drops Ensembl ids, never symbols, so 19,679 unique gene_name values
+# 01_mapping_qc.R drops Ensembl ids and keeps every symbol, so 19,679 unique gene_name values
 # survive as 19,679 modelled symbols. That single layer is worth stating, because it means
 # an unmatched reference gene here is either a vocabulary result or genuinely not in the
 # delivered quantification — there is no expression filter in between to blame.
@@ -155,7 +154,7 @@ print(as.data.frame(MAP %>% filter(.data$resolution != "accepted") %>%
 # ============================================================================
 # 4. Provenance — what the map was built from, so a stale map is visible
 # ============================================================================
-# The no-candidate counts live here rather than as rows in the map. A reference symbol with
+# The no-candidate counts live here, outside the map's rows. A reference symbol with
 # no alias in this vocabulary is not a decision about a pair, and carrying thousands of such
 # rows would defeat the one review step this asset most needs: reading the map cold and
 # recognising every accepted pair as a nomenclature update.

@@ -5,19 +5,17 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2: genotype x temperature)
 # Phase:   3b (stage 04_tf)
 #
-# Role:    VISUALIZE half of the "normalize-then-visualize" split.  Reads ONLY
-#          the plot-ready tidy tables emitted by 03b_decoupler_method_comparison.R
-#          and renders ONE single-claim figure per PDF.  Performs NO statistics
-#          (no run_ulm / run_mlm / run_consensus / p.adjust / cor / prcomp /
-#          decouple).  Runs STANDALONE after the compute script.
+# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads the plot-ready
+#          tidy tables emitted by 03b_decoupler_method_comparison.R and renders one
+#          single-claim figure per PDF. Runs STANDALONE after the compute script.
 #
 # Inputs  (03_results/04_tf/tables/):
 #   fig3j_allmethods_topTF_data.csv
 #   fig3k_method_rank_divergence_data.csv
 #   fig3k_method_rank_spearman.csv
 #
-# Outputs (03_results/04_tf/figures/_overview/), dual .print.pdf + .screen.png
-# per stem via the figure-style contract (save_overview):
+# Outputs (03_results/04_tf/figures/_overview/), dual .print.pdf + .screen.png per stem via
+# the figure-style contract (save_overview):
 #   fig3j_topTF_allmethods_WT_heat, fig3j_topTF_allmethods_Interaction,
 #   fig3k_method_rank_divergence  (+ same-stem source tables under tables/_overview/).
 #
@@ -148,7 +146,7 @@ make_fig3j <- function(fig3j_df, chosen_contrast, fig_label, out_fname) {
 # =============================================================================
 # FIG 3j-A -- Faceted top-TF lollipop for WT_heat (6 statistics)
 # CLAIM: shows where HIF1a and IFN-axis TFs sit under every method for the
-#        primary heat-response contrast; rank, not score, is the signal.
+#        primary heat-response contrast; rank is the signal here.
 # =============================================================================
 
 fig3j_df <- rd("fig3j_allmethods_topTF_data.csv")
@@ -177,7 +175,7 @@ make_fig3j(fig3j_df,
 #   That single structural difference reshuffles BOTH axes at once: among the
 #   univariate top set, Rela #3->#350, Nfkb1 #6->#86, Hif1a #12->#142 under MLM.
 #   So HIF1a's "collapse" is one INSTANCE of a general MLM reshuffle, NOT a
-#   HIF-specific quirk -- and the IFN axis is demoted by MLM too, not stable.
+#   HIF-specific quirk -- and MLM demotes the IFN axis as well.
 # =============================================================================
 
 cat("[3k] Building fig3k_method_rank_divergence.pdf ...\n")

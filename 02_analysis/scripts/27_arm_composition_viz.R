@@ -1,52 +1,50 @@
 #!/usr/bin/env Rscript
 # 27_arm_composition_viz.R -- VIZ ONLY (no computing)
 # =============================================================================
-# Draws the two overview figures for 16_arm_composition from the frozen object
-# written by 26_arm_composition.R. Every number on every face is read from that
-# object; nothing here recomputes a share, a p, or a null.
+# Draws the two overview figures for 16_arm_composition from the frozen object written by
+# 26_arm_composition.R. Every number on every face is read from that object.
 #
 #   arm_composition           the composition itself, per arm, both accountings
 #   arm_composition_variants  `unpinned` beside `hypoxia_anchored`, pins marked
 #
-# Two accountings are always drawn together and neither is reduced to the other.
-# `fractional` gives a gene in k selected sets 1/k to each. `winner_take_all`
-# gives each gene to its single best selected set. Both sum to 1.0 over the arm,
-# so where the two disagree the disagreement is the quantity on the page.
+# Two accountings are always drawn together and both are kept. `fractional` gives a gene in
+# k selected sets 1/k to each. `winner_take_all` gives each gene to its single best selected
+# set. Both sum to 1.0 over the arm, so where the two disagree the disagreement is the
+# quantity on the page.
 #
-# Guards, and the silent failures they exist for. Each one fired here for real, and none of
-# them produced an error on its own. Read this before loosening any of them.
+# Guards, and the silent failures they exist for. Each one fired here for real, and each was
+# silent on its own. Read this before loosening any of them.
 #
 #   VARIANTS + the per-frame check     A factor level renamed upstream. A filter on the absent
-#                                      level returns ZERO ROWS, not an error, so the figure
-#                                      renders as a convincing empty panel and a reader
-#                                      filtering the published table gets nothing back. Frames
-#                                      this script draws from hard-stop; the rest warn loudly,
-#                                      because blocking a correct figure over a table this
-#                                      script never touches helps nobody.
+#                                      level returns ZERO ROWS silently, so the figure renders
+#                                      as a convincing empty panel and a reader filtering the
+#                                      published table gets nothing back. Frames this script
+#                                      draws from hard-stop; the rest warn loudly, keeping a
+#                                      correct figure unblocked over a table this script never
+#                                      touches.
 #   dup_free()                         A duplicated key. Every caption number is pulled by a
 #                                      logical mask expecting one row; a duplicate returns
-#                                      length 2, sprintf recycles it in silence, and it
-#                                      surfaces far downstream as a coercion error inside the
-#                                      caption writer.
-#   nz()                               A per-arm subset that comes back empty must stop before
-#                                      it reaches ggplot.
+#                                      length 2, sprintf recycles it silently, and it surfaces
+#                                      far downstream as a coercion error inside the caption
+#                                      writer.
+#   nz()                               An empty per-arm subset stops here, before ggplot.
 #   INPUT carries the object md5       A partial re-run once left figures from a new object
 #                                      beside one from the old, and a README from the new,
-#                                      with no error and a directory that looked complete.
-#                                      Only timestamps disagreed. The stamp makes the check
-#                                      one `md5sum` against the caption.
-#   `%in%` on the null level           `df[NA, ]` returns an all-NA ROW rather than dropping
-#                                      it, which then ships in a sibling table while the geoms
-#                                      quietly drop it from the panel.
-#   row_order()                        Exact ties in the sort key, broken by input order,
-#                                      make vertical position imply a rank the data does not
-#                                      support. There are two such ties in WT_heat_up.
-#   Captions derive, never name        Two hand-written captions went stale within an hour.
-#                                      The leader is computed, and a tied group is reported
-#                                      as a group.
+#                                      silently, in a directory that looked complete. Only
+#                                      timestamps disagreed. The stamp makes the check one
+#                                      `md5sum` against the caption.
+#   `%in%` on the null level           `df[NA, ]` returns an all-NA ROW, which then ships in a
+#                                      sibling table while the geoms drop it from the panel.
+#   row_order()                        Exact ties in the sort key, broken by input order, make
+#                                      vertical position imply a rank the data leaves open.
+#                                      WT_heat_up carries two such ties.
+#   Captions derive from the table    Two hand-written captions went stale within an hour.
+#                                      The leader is computed, and a tied group is reported as
+#                                      a group.
 #
-# A longer write-up of the panel design sits beside the other reasoning notes, in a directory
-# this repository does not track, so this header is the tracked copy of anything load-bearing.
+# A longer write-up of the panel design sits with the other reasoning notes, in a directory
+# this repository leaves untracked, so this header is the tracked copy of anything
+# load-bearing.
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/27_arm_composition_viz.R
@@ -91,12 +89,12 @@ ARM_ORDER   <- names(ARMS)
 
 # The two variant names are the compute stage's vocabulary, held in one place so a rename
 # upstream is a one-line change here. The guard below matters more than the constants: a
-# filter on a renamed level returns ZERO ROWS rather than an error, and a figure drawn from
+# filter on a renamed level returns ZERO ROWS silently, and a figure drawn from
 # an empty frame renders as an empty panel with a clean exit code. Stop instead.
 VARIANT_MAIN <- "unpinned"
 VARIANT_PIN  <- "hypoxia_anchored"
 VARIANTS     <- c(VARIANT_MAIN, VARIANT_PIN)
-# Check EVERY frame in the object that carries a `variant` column, not only the ones drawn
+# Check EVERY frame in the object that carries a `variant` column, past the ones drawn
 # from. A partial rename leaves the published tables disagreeing with each other, and a reader
 # who filters one of them on the other's label gets zero rows and no error. Frames this script
 # consumes are a hard stop. Frames it does not consume are reported loudly and let the run
@@ -113,7 +111,7 @@ for (nm in names(obj)) {
   warning(msg, call. = FALSE, immediate. = TRUE)
 }
 # Same failure mode one level down: a per-arm subset that comes back empty must stop here
-# rather than reach ggplot.
+# before it reaches ggplot.
 nz <- function(df, what) {
   if (!nrow(df)) stop("no rows for ", what, call. = FALSE)
   df
@@ -152,10 +150,10 @@ CONFIG_KV <- sprintf(paste0("arm_composition.collections = %s, p_matched_cutoff 
 ## ---------------------------------------------------------------------------
 
 # Category colour is the collection the set came from. The two book-keeping categories
-# that are never a set (the residue, and the roll-up of the sets below the drawn cap)
-# take greys so they read as book-keeping. KEGG takes the purple rather than the second
+# that stand for book-keeping (the residue, and the roll-up of the sets below the drawn cap)
+# take greys. KEGG takes the purple, over the second
 # orange: Hallmark and KEGG bands sit adjacent in the stacked panel and two oranges
-# there are one glyph, not two.
+# there are one glyph.
 CAT_COL <- c(Hallmark = OI$vermillion, GO_BP = OI$blue, GO_MF = OI$sky_blue,
              KEGG = OI$reddish_purple, Reactome = OI$bluish_green)
 CAT_COL[[RESIDUAL]] <- "grey72"
@@ -171,7 +169,7 @@ arm_strip2 <- function(a) sprintf("%s\n%d genes", a, unname(arm_n[as.character(a
 
 # Wrap a long MSigDB identifier onto several lines WITHOUT dropping any of it. The axis
 # label has to stay the checkable name, so this breaks on the separators the identifier
-# already carries rather than cutting it at a character count.
+# already carries, over a character count.
 #
 # The underscore is KEPT at the end of the broken line. Dropping it renders
 # GOMF_DNA_BINDING_TRANSCRIPTION_ACTIVATOR_ACTIVITY as two lines whose join is a string
@@ -216,7 +214,7 @@ n_cats <- function(arm_id, variant_id, acc)
 ## the roll-up plus the residue plus the drawn rows still sum to 1.0, and the full
 ## per-set list is the sibling table.
 ##
-## The set-level marks are paired points rather than bars because 12 of WT_heat_up's 40
+## The set-level marks are paired points, over bars, because 12 of WT_heat_up's 40
 ## categories take a share of exactly zero under one accounting. A bar of height zero is
 ## an axis label with nothing beside it. A point at zero is a mark a reader can see, and
 ## the segment joining the pair is the disagreement between the two accountings.
@@ -266,7 +264,7 @@ pA <- ggplot(collA, aes(x = .data$share, y = .data$accounting, fill = .data$coll
 # case `peak` is identical to the last bit. Left to `order(-peak)` alone the tie would be
 # broken by whatever order pivot_wider happened to emit, and a reader takes vertical position
 # for rank. The tie-break is therefore stated and reproducible: fractional share, then the
-# identifier. It decides position only, never a share.
+# identifier. It decides position alone.
 row_order <- function(d)
   order(-d$peak, -d$share_fractional, d$ID)
 
@@ -373,7 +371,7 @@ fig1_table <- SET_ROWS %>%
                    n_sets_rolled_up = .data$n_held)
 
 # Which category leads is exactly what the winner-take-all tie-break decides, so it is read
-# off the data rather than named here. A hard-coded leader outlives the re-run that changes it.
+# off the data. A hard-coded leader outlives the re-run that changes it.
 wt_named <- SET_ROWS[SET_ROWS$arm == "WT_heat_up" &
                        !SET_ROWS$ID %in% c(RESIDUAL, ROLLUP_KEY), , drop = FALSE]
 lead_frac <- wt_named[which.max(wt_named$share_fractional), , drop = FALSE]
@@ -381,7 +379,7 @@ top_wta   <- max(wt_named$share_winner_take_all)
 lead_wta  <- wt_named[abs(wt_named$share_winner_take_all - top_wta) < 1e-12, , drop = FALSE]
 lead_wta  <- lead_wta[order(lead_wta$ID), , drop = FALSE]
 # Equal winner-take-all share means equal gene count, because that accounting is a gene count
-# over the arm size. Assert it rather than assume it before quoting one number for the group.
+# over the arm size. Assert it before quoting one number for the group.
 stopifnot(length(unique(lead_wta$n_genes_winner_take_all)) == 1L)
 
 wta_clause <- if (nrow(lead_wta) > 1L) {
@@ -447,7 +445,7 @@ save_overview(
 
 # The pinned sets the engine could actually test. The fifth pin (the HIF1A signalling GO
 # BP set) has 7 background genes, below the 10-gene floor, so it was never testable and
-# is reported by figure 3 panel C as an absence of opportunity rather than as a zero here.
+# is reported by figure 3 panel C as an absence of opportunity, distinct from a zero here.
 PIN_TESTED <- HYP %>%
   dplyr::filter(!is.na(.data$term), grepl("^tested", .data$status)) %>%
   dplyr::distinct(.data$term, .data$collection)
@@ -493,7 +491,7 @@ VAR_ROWS$arm_f <- factor(arm_strip2(VAR_ROWS$arm),
 VAR_ROWS$never_enriched <- VAR_ROWS$status == "tested, not enriched"
 
 # The `_unpinned` / `_anchored` strings below are suffixes of column names this script builds
-# for the pivot, not the compute stage's vocabulary. The variant guard at the top is what
+# for the pivot, downstream of the compute stage's vocabulary. The variant guard at the top is what
 # protects against a rename upstream.
 to_long <- function(df) {
   df %>%

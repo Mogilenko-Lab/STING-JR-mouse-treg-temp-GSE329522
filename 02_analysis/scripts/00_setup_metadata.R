@@ -3,24 +3,24 @@
 # Project: STING-cGAS-GSE329522 (2x2 genotype x temperature iTreg bulk RNA-seq)
 # Inputs:
 #   - 02_analysis/config/analysis_config.yaml (via config.R)
-#   - GSE329522 deposited CPM column order (12630-RS-021 .. 040) [knowledge, not read here]
+#   - GSE329522 deposited CPM column order (12630-RS-021 .. 040) [knowledge; unread here]
 #   - Owner sample sheet (2026-07-22) -- see 00_data/processed/PROVENANCE.md
 # Outputs:
 #   - 03_results/objects/sample_metadata.rds
 #   - 03_results/master/sample_metadata.csv
-# Dependencies: yaml (via config.R). No heavy packages required.
+# Dependencies: yaml (via config.R).
 #
 # ----------------------------------------------------------------------------
 # TWO ORDERINGS (the historical mapping risk, now resolved):
 #
-#  (A) CPM column order = TEMPERATURE-MAJOR (this is what the analysis uses).
+#  (A) CPM column order = TEMPERATURE-MAJOR. This is the ordering the analysis uses.
 #      OWNER-CONFIRMED by the 2026-07-22 sample sheet; the Hspa1b/Hsph1 heat-shock
 #      thermometer + Cgas (WT>KO) inference matched it exactly, 20/20:
 #        021-025 = WT_37     026-030 = cGASKO_37
 #        031-035 = WT_39     036-040 = cGASKO_39
 #
-#  (B) GEO GSM accession order = GENOTYPE-MAJOR (stored only to document the
-#      accession-vs-column discrepancy):
+#  (B) GEO GSM accession order = GENOTYPE-MAJOR, stored to document the
+#      accession-vs-column discrepancy:
 #        GSM9705690..694 = WT 37      GSM9705695..699 = WT 39
 #        GSM9705700..704 = cGAS KO 37 GSM9705705..709 = cGAS KO 39
 #
@@ -30,9 +30,9 @@
 #        WT_39     031-035 -> GSM695-699
 #        cGASKO_39 036-040 -> GSM705-709
 #
-#  gsm_id_positional = the GSM accession list (690..709) lined up POSITIONALLY
-#  to columns 021..040 -- what a naive positional join would (wrongly) produce.
-#  Because (A) and (B) differ, that naive join mislabels libraries 026-035.
+#  gsm_id_positional = the GSM accession list (690..709) lined up POSITIONALLY to columns
+#  021..040, which is what a naive positional join produces. (A) and (B) differ, so that
+#  naive join mislabels libraries 026-035. The column is kept to make the trap visible.
 # ----------------------------------------------------------------------------
 
 source("02_analysis/config/config.R")

@@ -3,25 +3,21 @@
 # 02_de_limma_trend_viz.R  --  Phase 2 VIZ: cGAS-dependence figure + volcanoes
 # =============================================================================
 # Phase:    2 (stage 03_de)
-# Role:     VISUALIZE half of the "normalize-then-visualize" split. Reads the
-#           plot-ready tidy table + the DE checkpoint emitted by
-#           02_de_limma_trend.R and renders figures. Performs NO statistics
-#           (no lmFit/eBayes/topTable/makeContrasts/p.adjust); it only plots
-#           already-computed columns. Runs STANDALONE after the compute script.
+# Role:     VISUALIZE half of the "normalize-then-visualize" split. Reads the plot-ready
+#           tidy table + the DE checkpoint emitted by 02_de_limma_trend.R and renders
+#           figures from already-computed columns. Runs STANDALONE after the compute script.
 #
-#           Plot objects come from the RNAseq-toolkit DE plotters
-#           (create_standard_volcano, create_MD_plot); every save routes through
-#           the figure-style contract (project_theme / save_figure / save_overview).
-#           Contrast display labels come from the contract's VECTORIZED
-#           contrast_label() (figure_style.R) -- never hardcoded here.
+#           Plot objects come from the RNAseq-toolkit DE plotters (create_standard_volcano,
+#           create_MD_plot). Every save routes through the figure-style contract
+#           (project_theme / save_figure / save_overview). Contrast display labels come from
+#           the contract's VECTORIZED contrast_label() (figure_style.R).
 #
-# Inputs:   03_results/03_de/tables/fig2_marker_means.csv   (per-group means +
-#                                           Interaction logFC/adjP, tidy; also the
-#                                           HIGHLIGHT watchlist source for volcano/MD)
-#           03_results/objects/02_de_results.rds             (7 topTables, for
-#                                           volcano + MD -- existing columns only)
-#           03_results/master/master_de_genes.csv            (cross-contrast
-#                                           DE accumulator for overview panel)
+# Inputs:   03_results/03_de/tables/fig2_marker_means.csv   (per-group means + Interaction
+#                                           logFC/adjP, tidy; also the HIGHLIGHT watchlist
+#                                           source for volcano/MD)
+#           03_results/objects/02_de_results.rds             (7 topTables, for volcano + MD)
+#           03_results/master/master_de_genes.csv            (cross-contrast DE accumulator
+#                                           for the overview panel)
 # Outputs:  03_results/03_de/figures/fig2_cgas_dependence_markers.{print.pdf,screen.png}
 #           03_results/03_de/figures/by_contrast/<c>/volcano.{print.pdf,screen.png}  (x7)
 #           03_results/03_de/figures/by_contrast/<c>/md.{print.pdf,screen.png}       (x7)
@@ -30,11 +26,10 @@
 #           03_results/03_de/tables/_overview/de_counts_summary.csv
 #           03_results/03_de/README.md                       (captions, idempotent)
 #
-# NOTE on PCA: the reference DE viz (11_de_viz.R) emits an _overview/pca panel, but
-#           that needs a filtered DGEList / logCPM matrix. Only the 7 topTables
-#           (02_de_results.rds) exist in 03_results/objects/ -- NO DGEList and NO
-#           MArrayLM fit. PCA is therefore SKIPPED (it would force a compute
-#           re-run of 02_de_limma_trend.R, which this VIZ-ONLY script must not do).
+# NOTE on PCA: the reference DE viz (11_de_viz.R) emits an _overview/pca panel, which needs
+#           a filtered DGEList / logCPM matrix. 03_results/objects/ holds the 7 topTables
+#           (02_de_results.rds) alone — no DGEList, no MArrayLM fit — so PCA is SKIPPED here
+#           and stays with the compute stage that owns those objects.
 #
 # Dependencies: ggplot2, dplyr, ggrepel, readr, scales, tidyr
 # =============================================================================
@@ -94,7 +89,7 @@ CFG_KV <- sprintf(
 # -----------------------------------------------------------------------------
 
 #' Contrast-specific interpretive note for caption `finding` strings ONLY
-#' (never a plot title). Preserves the two-arms framing constraint:
+#' (README prose). Preserves the two-arms framing constraint:
 #' a non-significant Interaction gene = "no detectable cGAS-dependence at n=5",
 #' NEVER "cGAS-independent".
 interp_note <- function(co) {
@@ -121,7 +116,7 @@ interp_note <- function(co) {
 #' its closing clause. That clause is the standing constraint on reading a null
 #' interaction, so it is the one clause that must never be cut. Two changes keep it
 #' on the canvas: the title repeat is gone, and the result is hard-wrapped to the
-#' plotting width rather than trusted to fit.
+#' plotting width, so the fit is measured.
 VOLC_W <- 9    # canvas inches; the wrap width and the save call both read it
 VOLC_H <- 8
 
@@ -275,7 +270,7 @@ for (co in CONTRASTS) {
     annotate_counts = TRUE             # toolkit appends the sig ↑/↓ counts as a SECOND
                                        # LEGEND LINE under the top populated sig key --
                                        # panel-corner counts are the MD plot's
-                                       # show_quadrant_counts, not this one
+                                       # show_quadrant_counts owns that
   ) +
     labs(caption = NULL) +
     project_theme(config = FIG_CFG)
@@ -490,9 +485,9 @@ if (!file.exists(master_de_path)) {
         ) %>%
         dplyr::mutate(
           n_signed  = ifelse(arm == "n_down", -n, n),
-          # Label = count + direction glyph. The glyph is keyed on the ARM, never on n,
+          # Label = count + direction glyph. The glyph is keyed on the ARM,
           # so a genuine zero still reads "0 ↓ down" (a measured absence of down genes)
-          # rather than direction_cue(0)'s "n.s." (which would be a different claim).
+          # in place of direction_cue(0)'s "n.s.", which would be a different claim.
           count_lab = sprintf("%s %s", format(n, big.mark = ",", trim = TRUE),
                               ifelse(arm == "n_up", dir_up, dir_down)),
           # vjust is in TEXT-HEIGHT units, so up/down labels stay separated even when
@@ -546,7 +541,7 @@ if (!file.exists(master_de_path)) {
           # Short labels are already two-line wrapped (contrast_labels_short carries
           # an embedded newline); keep them HORIZONTAL so the 7 wrapped ticks do not
           # collide (a 45deg rotation of two-line labels overlaps badly). Font size
-          # stays with project_theme (axis_text_size floor), never overridden here.
+          # stays with project_theme (axis_text_size floor).
           legend.position = "bottom"
         )
 

@@ -1,6 +1,6 @@
 # 07_coresh_search.R — COMPUTE
-## CoReSh (COregulation REgulation SearcH) — rank the public MOUSE (mmu) GEO compendium
-## by how strongly the configured matrix of project signatures is CO-REGULATED in each public
+## CoReSh (COregulation REgulation SearcH) — rank the public MOUSE (mmu) GEO compendium by
+## how strongly the configured matrix of project signatures is CO-REGULATED in each public
 ## dataset (PCA-inspired pctVar score), then derive coregulation gene sets from the top hits
 ## for downstream GSEA (08_coresh_derived_gsea.R).
 ##
@@ -10,7 +10,7 @@
 ##   * derived sets   : build_coresh_gmt()     (CoReSh-to-GSEA bridge; gene loadings on top hits)
 ##   * ID conversion  : sym2ent()/ent2sym(species = "mouse")   (chunk rownames are integer mouse Entrez)
 ##   * data dependency: preprocessed_chunks/mmu/*_full_objects.qs2   (~20 GB Synapse compendium, syn66227307)
-## Skill scripts sourced from the canonical skill dir (NOT 01_modules/.ref — that is the 14839 layout).
+## Skill scripts are sourced from the canonical skill dir; 01_modules/.ref carries the 14839 layout.
 ##
 ## Run from project root:
 ##   Rscript 02_analysis/scripts/07_coresh_search.R
@@ -20,20 +20,19 @@
 ## ----------------------------------------------------------------------------
 ## (A) THE ~20 GB mmu COMPENDIUM.
 ##     The mouse compendium (Synapse syn66227307, ~85 *_full_objects.qs2 chunks) is consumed
-##     read-only from the shared reference cache (resolved from CORESH_CHUNKS / the chunk-dir
-##     convention below). It is NOT downloaded here — that needs a personal Synapse access
-##     token and is done out-of-band. If the chunks are absent the script stops loudly;
-##     NO compendium is fabricated.
+##     read-only from the shared reference cache, resolved from CORESH_CHUNKS or the chunk-dir
+##     convention below. Acquiring it needs a personal Synapse access token and happens
+##     out-of-band. Absent chunks stop the script loudly.
 ##
 ## (B) QUERY CONTRACT.
-##     Queries are coresh.query_signatures in analysis_config.yaml:
-##     each sets entry resolves sets[[contrast]][[direction]][[gate]] from the shared
+##     Queries are coresh.query_signatures in analysis_config.yaml. Each sets entry resolves
+##     sets[[contrast]][[direction]][[gate]] from the shared
 ##     03_results/objects/17_signature_sets.rds object.
 ##
 ## (C) CHUNK PATH ASSUMED.
-##     Default chunk dir = paths.coresh_chunks (if set) else the 14839 convention
-##     00_data/references/coresh/current/preprocessed_chunks/mmu (overridable via the
-##     CORESH_CHUNKS env var, per the skill's path convention). Owner: confirm in-container.
+##     Default chunk dir = paths.coresh_chunks where set, else the 14839 convention
+##     00_data/references/coresh/current/preprocessed_chunks/mmu, overridable via the
+##     CORESH_CHUNKS env var per the skill's path convention. Owner: confirm in-container.
 ##
 ## ============================================================================
 ##
@@ -256,7 +255,7 @@ res_df <- as.data.frame(results, stringsAsFactors = FALSE)
 ## genes, then converts Entrez->mouse symbols, size-filters [MIN_SET, MAX_SET], Jaccard-dedupes.
 ## Returns GMT lines ("name\t-\tgene1\tgene2..."). We parse them into the fgsea `pathways`
 ## named-list format and save as coresh_derived_sets.rds — the contract input for
-## 08_coresh_derived_gsea.R (NOT a .gmt, matching the rest of this project's geneset_*.rds).
+## 08_coresh_derived_gsea.R (an .rds, matching the rest of this project's geneset_*.rds).
 
 top_hits <- results[results$rank <= TOP_N, ]     # top-N GEO datasets per query (data.table)
 message(sprintf("[07_coresh_search] extracting loadings from top-%d hits/query (%d GSEs).",

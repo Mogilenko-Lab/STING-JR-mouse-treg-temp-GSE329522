@@ -5,12 +5,11 @@
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   04_tf
 #
-# Role:    COMPUTE half of the "normalize-then-visualize" split.  Runs ALL six
-#          decoupleR statistics (ulm, mlm, wsum, norm_wsum, corr_wsum,
-#          consensus) on the four key contrasts (WT_heat, KO_heat, Temp_main,
-#          Interaction) using the CACHED CollecTRI network.  Emits three tidy
-#          CSVs and prints a Spearman rank-correlation summary.  Contains NO
-#          ggplot() / ggsave() and NO plotting.
+# Role:    COMPUTE half of the "normalize-then-visualize" split. Runs all six decoupleR
+#          statistics (ulm, mlm, wsum, norm_wsum, corr_wsum, consensus) on the four key
+#          contrasts (WT_heat, KO_heat, Temp_main, Interaction) using the CACHED CollecTRI
+#          network. Emits three tidy CSVs and prints a Spearman rank-correlation summary.
+#          Figures live in the _viz.R sibling.
 #
 # Inputs:
 #   - 03_results/objects/02_de_results.rds        (t-stat per gene, all contrasts)
@@ -21,8 +20,8 @@
 #   - fig3k_method_rank_divergence_data.csv
 #   - fig3k_method_rank_spearman.csv
 #
-# NETWORK NOTE: decoupleR::get_collectri() is BROKEN here (OmnipathR errors).
-#   We load the CACHED net from 00c_prepare_networks.R.
+# NETWORK NOTE: decoupleR::get_collectri() fails here (OmnipathR errors), so this stage
+#   loads the CACHED net from 00c_prepare_networks.R.
 #
 # Dependencies: decoupleR, dplyr, tidyr, readr, tibble, purrr
 # =============================================================================

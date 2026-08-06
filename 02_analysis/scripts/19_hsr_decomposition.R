@@ -4,15 +4,15 @@
 # Mouse three-lens heat-response decomposition (stage 12_hsr_decomp).
 #
 # Purpose
-#   Ask what the thresholded WT_heat response (WT activated iTregs, 39 °C vs 37 °C)
-#   is made of, by measuring it against two curated lenses:
+#   Ask what the thresholded WT_heat response (WT activated iTregs, 39 °C vs 37 °C) is
+#   made of, by measuring it against two curated lenses:
 #     1. WT_heat_up, the empirical up signature produced by the export gate;
 #     2. HSR_core / HSR_sensitivity, curated heat-shock-response lenses;
 #     3. TCR_activation, the activation / IEG pole.
-#   Membership is counted over the WHOLE arm, never over a leading edge: classifying
-#   only leading-edge genes and re-testing those subsets would test genes selected
-#   because they enriched. What the set is made of and what the response enriches for
-#   are two different measurements and this script keeps them apart.
+#   Membership is counted over the WHOLE arm. Classifying only leading-edge genes and
+#   re-testing those subsets would test genes selected because they enriched. What the set
+#   is made of and what the response enriches for are two measurements, and this script
+#   keeps them apart.
 #
 # Inputs (frozen; read only)
 #   03_results/objects/02_de_results.rds
@@ -38,27 +38,26 @@
 #   03_results/objects/19_hsr_decomp_gsea.rds
 #
 # Method
-#   Uses frozen limma topTables only; no DE model is re-fit. Ranked GSEA uses the
+#   Reads frozen limma topTables; the DE model stays as fitted. Ranked GSEA uses the
 #   pipeline-standard signed t statistic (NES/t > 0 = up at 39 °C) with
-#   clusterProfiler::GSEA(by = "fgsea") on symbol-space TERM2GENE and a low
-#   minGSSize floor so the 47-gene HSR_core is scored. RNG is seeded with GSEA_SEED.
-#   Gene-set attribution and overlap are direct set operations.
+#   clusterProfiler::GSEA(by = "fgsea") on symbol-space TERM2GENE and a low minGSSize
+#   floor, so the 47-gene HSR_core is scored. RNG is seeded with GSEA_SEED. Gene-set
+#   attribution and overlap are direct set operations.
 #
 # Honest ceiling
-#   Even the clean HSR core is proteotoxic-stress-general, not fever-specific. The
-#   37/39 experimental contrast makes the HSR lens confirmatory for this temperature
-#   perturbation, but it does NOT make WT_heat_up causal for fever. Use correlative
-#   language only.
+#   The clean HSR core is proteotoxic-stress-general. The 37/39 experimental contrast
+#   makes the HSR lens confirmatory for this temperature perturbation, and fever causality
+#   for WT_heat_up remains a further claim. Keep the language correlative.
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/19_hsr_decomposition.R
 #
 # Coupled re-render order:
-#   1. Re-render the human compartments that publish ranked_*.tsv and the JIA
-#      HSR overlap table consumed below.
+#   1. Re-render the human compartments that publish ranked_*.tsv and the JIA HSR overlap
+#      table consumed below.
 #   2. Review/update 03_results/12_hsr_decomp/tables/source_hash_manifest.csv.
-#   3. Re-run this script, which writes source_reads_observed.csv and stops if a
-#      present sibling artifact differs from its pinned hash.
+#   3. Re-run this script, which writes source_reads_observed.csv and stops if a present
+#      sibling artifact differs from its pinned hash.
 # =============================================================================
 
 source("02_analysis/config/config.R")
@@ -536,9 +535,9 @@ readr::write_csv(round_numeric_cols(membership, sig = 9),
 #
 # The downstream census is a read-only sweep of the sibling compartments and is
 # OPTIONAL: a standalone clone of this repository has no siblings, so the census
-# degrades to zero lists and the panel says so rather than failing. Whatever it
+# degrades to zero lists and the panel says so. Whatever it
 # finds is recorded with its file count and length range, so the number is
-# checkable rather than remembered.
+# checkable from the table.
 # =============================================================================
 human_set_path <- file.path("03_results", "human_projection", "signatures",
                             "WT_heat", "WT_heat_up.txt")
@@ -573,8 +572,8 @@ census_roots <- c(
   sting_positive_control = file.path("..", "sting_positive_control", "03_results",
                                      "03_pseudobulk", "tables")
 )
-# A ranked list shorter than this is a partial write, not a short list; skip it
-# rather than let a half-written file move a published count.
+# A ranked list shorter than this is a partial write; skip it, so a half-written file
+# leaves every published count where it was.
 MIN_RANKED_LEN <- 1000L
 read_ranked <- function(path) {
   con <- tryCatch(readr::read_tsv(path, col_names = FALSE, col_types = readr::cols(.default = "c"),
@@ -690,7 +689,7 @@ bridge <- dplyr::bind_rows(
   if (nrow(census_rows) > 0L) dplyr::bind_rows(lapply(seq_len(nrow(census_rows)), function(i) {
     r <- census_rows[i, ]
     dplyr::bind_rows(
-      # The denominator is read off the frozen arm, never written into the prose. It moved
+      # The denominator is read off the frozen arm on every run. It moved
       # from 199 to 202 when the ortholog step stopped counting stale mouse symbols as having
       # no human ortholog, and a hardcoded number would have gone quietly stale here.
       bridge_row("downstream_min", 5L, "human", r$compartment, r$n_eff_min,

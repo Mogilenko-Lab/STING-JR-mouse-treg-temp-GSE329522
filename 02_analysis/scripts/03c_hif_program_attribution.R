@@ -4,16 +4,14 @@
 #   "HIF program" attribution by curated biological MODULE
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:    COMPUTE half of the "normalize-then-visualize" split for the
-#          attribution CENTREPIECE (fig3l). Contains NO ggplot()/ggsave() and
-#          NO new statistics whatsoever -- it JOINS the already-decomposed
-#          Hif1a regulon (fig3g_target_decomposition_data.csv: source/target/
-#          mor/t_wt/contrib/class) to a curated, literature-grounded
-#          module/isoform lookup. t_wt and contrib are COPIED verbatim from the
-#          fig3g table -- never recomputed. The whole point of the figure is to
-#          re-BUCKET the SAME signed contributions, not to recompute them.
+# Role:    COMPUTE half of the "normalize-then-visualize" split for the attribution
+#          CENTREPIECE (fig3l). It JOINS the already-decomposed Hif1a regulon
+#          (fig3g_target_decomposition_data.csv: source/target/mor/t_wt/contrib/class) to a
+#          curated, literature-grounded module/isoform lookup. t_wt and contrib are COPIED
+#          verbatim from the fig3g table. The figure re-BUCKETS the same signed
+#          contributions.
 #
-# Inputs (no recomputation):
+# Inputs (read only):
 #   - 03_results/04_tf/tables/fig3g_target_decomposition_data.csv
 #       (353 Hif1a regulon members with signed contribution = sign(mor)*t_wt)
 #
@@ -21,17 +19,16 @@
 #   - fig3l_hif_attribution_data.csv   (per-member: module/isoform/direction)
 #   - fig3l_module_summary.csv         (per-module aggregates; no statistics)
 #
-# Object name (HARD GUARDRAIL, design-spec sec 0): the thing this figure
-#   describes is "a heat-induced glycolytic/stress program partially
-#   overlapping HIF targets" -- NEVER "the HIF program" / "HIF1a the TF".
+# Object name (HARD GUARDRAIL, design-spec sec 0): the thing this figure describes is
+#   "a heat-induced glycolytic/stress program partially overlapping HIF targets". Titles
+#   and subtitles keep that object name.
 #
-# Method: this is a JOIN + simple aggregation only. No lmFit/eBayes/run_ulm/
-#   run_mlm/p.adjust/prcomp anywhere. Figures live in the _viz.R partner.
+# Method: a JOIN plus simple aggregation. Figures live in the _viz.R partner.
 #
 # -----------------------------------------------------------------------------
 # THE 5 MODULE BUCKETS (single source of truth; defined ONCE below).
-# Member genes are verbatim from the design spec sec 2 (fig3l block); the
-# literature provenance for the curation:
+# Member genes are verbatim from the design spec sec 2 (fig3l block); the literature
+# provenance for the curation:
 #   - Heat-shock / stress axis at fever-range 39 C in T cells:
 #       Gabai & Calderwood 2007 (PMID 18056375).
 #   - HIF1a-selective hypoxic-survival / mitophagy / acidosis core:
@@ -41,8 +38,8 @@
 #       Kaluz, Kaluzova & Stanbridge 2009 (CA9/Car9 regulation, PMID 19344680).
 #   - Egln3 / PHD3 negative-feedback (HIF-induced brake):
 #       del Peso 2003; Pescador 2005 (PHD3 is a HIF target -> feedback).
-#   - Shared HIF1/HIF2 angiogenic / glucose-transport targets (least
-#       isoform-diagnostic): Hu 2003; Keith 2011.
+#   - Shared HIF1/HIF2 angiogenic / glucose-transport targets (least isoform-diagnostic):
+#       Hu 2003; Keith 2011.
 # =============================================================================
 
 source("02_analysis/config/config.R")
@@ -110,7 +107,7 @@ attr_df <- merge(fig3g[, c("source", "target", "t_wt", "contrib")],
 attr_df$module[is.na(attr_df$module)]                           <- "other_unclassified"
 attr_df$isoform_attribution[is.na(attr_df$isoform_attribution)] <- "unclassified"
 
-# direction = sign(contrib): Up (>=0) vs Down (<0). contrib copied, not recomputed.
+# direction = sign(contrib): Up (>=0) vs Down (<0). contrib copied verbatim.
 attr_df$direction <- ifelse(attr_df$contrib >= 0, "Up", "Down")
 
 # Final column order per the design-spec schema.

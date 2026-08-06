@@ -8,9 +8,11 @@
 ##                                                   produced by 07_coresh_search.R
 ##                                                   SHAPE: named list<character vector of mouse symbols>
 ##                                                     list("CORESH_<query>_<GSE>" = c("Ifit1","Isg15",...), ...)
-##                                                   Names follow build_coresh_gmt() convention:
-##                                                   "CORESH_<query_name>_<GSE_id>" (e.g. CORESH_Q_curated_isg_ifn_GSE12345).
-##                                                   Any non-empty named list of symbol vectors is valid.
+##                                                   Names follow the build_coresh_gmt()
+##                                                   convention "CORESH_<query_name>_<GSE_id>"
+##                                                   (e.g. CORESH_Q_curated_isg_ifn_GSE12345).
+##                                                   Any non-empty named list of symbol
+##                                                   vectors is valid.
 ##
 ## Outputs (compute-only; no plots):
 ##   03_results/08_coresh/tables/by_contrast/<contrast>/coresh_gsea.csv  — per-contrast GSEA (padj-ordered)
@@ -21,8 +23,8 @@
 ## Run from project root:
 ##   Rscript 02_analysis/scripts/08_coresh_derived_gsea.R
 ##
-## GATED: the CoReSh arm requires the ~20 GB mmu Synapse compendium (consumed read-only
-##   from the shared reference cache); if it has not been run this script stops loudly.
+## GATED: the CoReSh arm needs the ~20 GB mmu Synapse compendium, consumed read-only from
+##   the shared reference cache. An unrun arm stops this script loudly.
 
 # ============================================================================
 # 0. Environment setup (config.R FIRST, then de_gsea_helpers.R — per contract)
@@ -303,7 +305,7 @@ message(sprintf("[08_coresh_derived_gsea] summary -> %s.",
                 file.path(overview_dir, "coresh_gsea_summary.csv")))
 
 # ============================================================================
-# 10. Final structural asserts (fail loudly rather than silently skip)
+# 10. Final structural asserts (fail loudly)
 # ============================================================================
 ## Every contracted output file must exist after this script runs.
 

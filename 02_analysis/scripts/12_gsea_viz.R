@@ -1,11 +1,11 @@
 # 12_gsea_viz.R — VIZ
 ## GSEA visualization for the STING-cGAS standard sweep (stage 06_gsea).
 ##
-## Per (contrast x database) cell the four canonical toolkit panels:
-##   running_sum.{print.pdf,screen.png}  — REAL three-panel GSEA enrichment curve
+## Per (contrast x database) cell, the four canonical toolkit panels:
+##   running_sum.{print.pdf,screen.png}  — the three-panel GSEA enrichment curve
 ##                                         (running ES / gene-hit ticks / ranked metric)
 ##                                         via enrichplot::gseaplot2() through the toolkit
-##                                         gsea_running_sum_plot() (NOT a lollipop proxy).
+##                                         gsea_running_sum_plot().
 ##   dotplot.{print.pdf,screen.png}      — gsea_dotplot()        (x = GeneRatio, fill = NES)
 ##   facet.{print.pdf,screen.png}        — gsea_dotplot_facet()  (up/down split)
 ##   barplot.{print.pdf,screen.png}      — gsea_barplot()        (NES bars, significant only)
@@ -14,42 +14,42 @@
 ##   gsea_asymmetry_panel           NES heatmap of the Hallmark sets matching two name
 ##                                  patterns (interferon/inflammatory, hypoxia/metabolic)
 ##                                  across the focal contrasts
+##
 ##   Rscript 02_analysis/scripts/12_gsea_viz.R
 ##
-## VIZ-ONLY. Reads master_gsea_table.csv + cached DE topTables (02_de_results.rds) +
-## cached gene-set lists (geneset_*_<DB>.rds). NEVER re-runs GSEA, never re-fits DE,
-## never writes 03_results/master/.
+## VIZ-ONLY. Reads master_gsea_table.csv + cached DE topTables (02_de_results.rds) + cached
+## gene-set lists (geneset_*_<DB>.rds). GSEA, DE and 03_results/master/ belong to the
+## compute scripts.
 ##
 ## How the toolkit plotters are fed (the headline fix)
 ## ---------------------------------------------------
-## The toolkit GSEA plotters require a clusterProfiler `gseaResult` S4 object whose
-## @result carries ID/Description/NES/p.adjust/setSize/core_enrichment AND whose
-## @geneList (the ranked stat vector) + @geneSets (the gene-set membership lists)
-## drive the running-sum ES curve. The compute master CSV is correct but tidy; it
-## discards the S4 + the ranked vector. We REBUILD the S4 viz-side from inputs that
-## already exist on disk (as_gsearesult()):
-##   * @result   <- the master_gsea_table.csv rows for this (contrast x DB)  -> the
-##                  *quotable* NES/padj are reproduced EXACTLY (zero engine drift).
-##   * @geneList <- build_ranked_vector(02_de_results.rds[[contrast]], "t") -> ranked
-##                  decreasing, gene-symbol named (the exact compute ranking input).
+## The toolkit GSEA plotters require a clusterProfiler `gseaResult` S4 object whose @result
+## carries ID/Description/NES/p.adjust/setSize/core_enrichment, and whose @geneList (the
+## ranked stat vector) + @geneSets (the gene-set membership lists) drive the running-sum ES
+## curve. The compute master CSV is correct and tidy, and it discards the S4 and the ranked
+## vector. So the S4 is REBUILT viz-side from inputs already on disk (as_gsearesult()):
+##   * @result   <- the master_gsea_table.csv rows for this (contrast x DB), so the
+##                  quotable NES/padj reproduce EXACTLY, with zero engine drift.
+##   * @geneList <- build_ranked_vector(02_de_results.rds[[contrast]], "t"), ranked
+##                  decreasing, gene-symbol named — the exact compute ranking input.
 ##   * @geneSets <- the cached geneset_<src>_<DB>.rds list (gs_name -> symbols),
 ##                  restricted to the ranked universe.
-##   * @params$exponent = 1 -> the running ES is computed DETERMINISTICALLY by
-##                  enrichplot::gseaScores(geneList, geneSet, exponent); NO permutation
-##                  re-run, so the curve never disagrees with the master NES.
-## The fgsea(compute) vs clusterProfiler(plot) NES engines were checked to agree on the
-## one cached gseaResult (gsea_msigdb_WT_heat.rds): max |dNES| = 0.04, r = 0.99999,
-## 100%% sign agreement (logged below). Because @result is taken verbatim from the
-## master, the figures carry the master's own statistics regardless.
+##   * @params$exponent = 1, so the running ES is computed DETERMINISTICALLY by
+##                  enrichplot::gseaScores(geneList, geneSet, exponent) and the curve
+##                  agrees with the master NES.
+## The fgsea(compute) and clusterProfiler(plot) NES engines were checked against each other
+## on the one cached gseaResult (gsea_msigdb_WT_heat.rds): max |dNES| = 0.04, r = 0.99999,
+## 100%% sign agreement (logged below). @result comes verbatim from the master, so the
+## figures carry the master's own statistics.
 ##
-## House constraints (non-negotiable in all captions):
-##   * Never "cGAS-independent" -> say "no detectable cGAS-dependence at n=5"
-##   * Never crown HIF1alpha/HIF2alpha as the driver, and never name a block of gene sets after
-##     a mechanism it is hoped to represent. The asymmetry panel's two blocks are NAME-PATTERN
-##     groupings over Hallmark set names, so they are labelled by those patterns, never "the
-##     HIF arm" (no set in that block is a HIF set).
-##   * NO em-dashes, contrastive negation ("X, not Y"), or self-approving vocabulary in any
-##     title, subtitle, axis label, legend or caption. A title states what is DRAWN.
+## House constraints (binding in all captions):
+##   * Say "no detectable cGAS-dependence at n=5" in place of "cGAS-independent".
+##   * Leave HIF1alpha/HIF2alpha uncrowned, and name a block of gene sets by how it was
+##     selected. The asymmetry panel's two blocks are NAME-PATTERN groupings over Hallmark
+##     set names and are labelled by those patterns (no set in that block is a HIF set).
+##   * Keep em-dashes, contrastive negation ("X, not Y") and self-approving vocabulary out
+##     of every title, subtitle, axis label, legend and caption. A title states what is
+##     DRAWN.
 ##   * Claims floor at L3 (DE/enrichment stats); stamp sample_mapping_caption() where relevant
 ##   * NES sign: positive = enriched in NUMERATOR (hot/WT side); negative = denominator
 
@@ -294,7 +294,7 @@ OV_SUB_WRAP   <- 108L
 # Facet row cap, PER DIRECTION. The facet stacks an up block and a down block, so reusing
 # figures.top_pathways (20) put up to 40 wrapped set names on one canvas and the labels
 # collided into illegibility. The craft standard's remedy is "cap to top-N; never truncate
-# axis labels", so we drop rows rather than clip labels or stretch the canvas: a taller canvas
+# axis labels", so this drops rows and leaves labels and canvas intact: a taller canvas
 # fixes the room but fails the journal-column half of the same standard. The cap and the full
 # per-direction count are both printed on the panel so the reduction is visible, and every set
 # stays in the per-contrast table named in the caption.
@@ -320,7 +320,7 @@ CFG_KV <- sprintf(
 
 #' A titled panel whose body is one legible statement, for the case where a panel's own
 #' selection rule leaves it with nothing to draw. Keeps the four-panels-per-cell invariant
-#' while making the emptiness a readable result instead of a blank page.
+#' while making the emptiness a readable result on the page.
 empty_state_panel <- function(ttl, sub, msg) {
   ggplot(data.frame(x = 0, y = 0), aes(x = x, y = y)) +
     geom_blank() +
@@ -380,7 +380,7 @@ emit_cell <- function(co, db_name, src) {
 
   # ---- 2. up/down faceted dotplot (capped at FACET_TOPN per direction) ----
   # The full per-direction counts go on the panel next to the cap, so a reader can see how much
-  # was dropped rather than mistaking the panel for the whole cell.
+  # was dropped, keeping the panel distinct from the whole cell.
   n_up_all <- sum(g@result$NES > 0, na.rm = TRUE)
   n_dn_all <- sum(g@result$NES < 0, na.rm = TRUE)
   fac_src  <- sprintf("tables/by_contrast/%s/gsea_%s.csv", co, src)

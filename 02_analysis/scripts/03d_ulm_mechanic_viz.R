@@ -4,25 +4,23 @@
 #   "How decoupleR-ULM nominates a TF" -- the SCORING MECHANIC, pedagogical.
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads ONLY the
-#          plot-ready tidy tables emitted by 03d_ulm_mechanic.R and renders the
-#          figure. Performs NO statistics (no run_ulm/run_mlm/p.adjust/prcomp/
-#          cor); it only plots already-computed columns with cosmetic reshaping.
-#          Runs STANDALONE after the compute script.
+# Role:    VISUALIZE half of the "normalize-then-visualize" split. Reads the plot-ready tidy
+#          tables emitted by 03d_ulm_mechanic.R and renders the figure, plotting
+#          already-computed columns with cosmetic reshaping. Runs STANDALONE after the
+#          compute script.
 #
-# Design (design-spec sec 2 fig3m): TWO panels SHARING the x-axis = signed/
-#   aligned target contribution (aligned_contrib). The shared axis is what
-#   licenses the side-by-side (one-axis rule).
-#     Panel A = Hif1a (PROMISCUOUS) -- broad regulon; generic stress genes push
-#               the pile RIGHT. Contaminants highlighted in MODULE_COLORS
-#               ["heatshock_stress"] + labelled; HIF-specific members shown in
-#               MODULE_COLORS["hif1a_hypoxic_core"] for continuity with fig3g/3l.
-#     Panel B = Stat2 (SPECIFIC) -- small IFN-restricted regulon; without
-#               coherent movement it does NOT pile up (the foil).
-#   Each TF's aggregate ULM score is drawn as a labelled diamond + vertical rule
-#   at the regulon's WEIGHTED CENTER (mean aligned contribution) -- visually
-#   "the score is the pile-up". One literal annotation states the ULM model:
-#   t_gene ~ mor_TF -> score.
+# Design (design-spec sec 2 fig3m): TWO panels SHARING the x-axis = signed/aligned target
+#   contribution (aligned_contrib). The shared axis is what licenses the side-by-side, per
+#   the one-axis rule.
+#     Panel A = Hif1a (PROMISCUOUS) -- broad regulon; generic stress genes push the pile
+#               RIGHT. Contaminants highlighted in MODULE_COLORS["heatshock_stress"] and
+#               labelled; HIF-specific members shown in MODULE_COLORS["hif1a_hypoxic_core"]
+#               for continuity with fig3g/3l.
+#     Panel B = Stat2 (SPECIFIC) -- small IFN-restricted regulon whose members move
+#               incoherently, so the pile stays flat. The foil.
+#   Each TF's aggregate ULM score is drawn as a labelled diamond plus a vertical rule at the
+#   regulon's WEIGHTED CENTER (mean aligned contribution), so the score reads as the
+#   pile-up. One literal annotation states the ULM model: t_gene ~ mor_TF -> score.
 #
 # Inputs (03_results/04_tf/tables/, written by 03d_ulm_mechanic.R):
 #   fig3m_ulm_mechanic_data.csv      fig3m_ulm_mechanic_summary.csv
@@ -33,11 +31,10 @@
 #   03_results/04_tf/README.md caption (via save_overview)
 #
 # Object name (HARD GUARDRAIL, sec 0): the Hif1a panel describes "a heat-induced
-#   glycolytic/stress program partially overlapping HIF targets" -- NEVER "the
-#   HIF program" / "HIF1a the TF". The comparator NEVER implies HIF2a anything.
-#   This figure is about the SCORING MECHANIC, not a biology claim.
+#   glycolytic/stress program partially overlapping HIF targets", and the comparator stays
+#   clear of HIF2a. This figure covers the SCORING MECHANIC.
 # Dependencies: config.R (palette/label constants); figure_style.R (theme+save);
-#   ggplot2, dplyr, ggrepel (no statistics)
+#   ggplot2, dplyr, ggrepel
 # =============================================================================
 
 source("02_analysis/config/config.R")              # palette/label constants only

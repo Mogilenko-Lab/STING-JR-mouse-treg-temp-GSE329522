@@ -4,30 +4,29 @@
 #   ULM-native heat-MAIN TF activity for the heat-shock / HIF / IFN axes.
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:  COMPUTE half of the "normalize-then-visualize" split for fig3n. Runs
-#        run_ulm (the ONE approved new statistic for this figure) on the
-#        heat-MAIN t-stat matrix {Temp_main, WT_heat, KO_heat} against the cached
-#        CollecTRI net -- the SAME estimator/call as 03_decoupler_tf.R -- so
-#        fig3n sits on the SAME axis as fig3a/fig3c (decoupleR-ULM), not a
-#        GSEA-style NES. Selects the heat-shock / HIF / IFN axis TFs and emits
-#        ONE tidy plot-ready CSV. Contains NO ggplot()/ggsave().
+# Role:  COMPUTE half of the "normalize-then-visualize" split for fig3n. Runs run_ulm (the
+#        one approved new statistic for this figure) on the heat-MAIN t-stat matrix
+#        {Temp_main, WT_heat, KO_heat} against the cached CollecTRI net, using the same
+#        estimator and call as 03_decoupler_tf.R. fig3n therefore sits on the same
+#        decoupleR-ULM axis as fig3a/fig3c. Selects the heat-shock / HIF / IFN axis TFs and
+#        emits one tidy plot-ready CSV.
 #
-# OVERRIDE OF THE DESIGN SPEC (BEAT 5 / fig3n): the spec recommended reusing the
-#   GSEA-NES from master_tf_activities.csv to avoid new statistics. Per Anton's
-#   explicit instruction this figure is built ULM-NATIVE instead, so the deck
-#   does not mix estimators. run_ulm here IS the approved new statistic.
+# WHY ULM-NATIVE HERE (BEAT 5 / fig3n): the design spec recommended reusing the GSEA-NES
+#   from master_tf_activities.csv to avoid a new statistic. Per Anton's instruction the
+#   figure is built ULM-native so the deck stays on one estimator, and run_ulm is the
+#   approved new statistic.
 #
 # Inputs:
 #   - 03_results/objects/02_de_results.rds        (per-gene limma t-stat per contrast)
-#   - 03_results/objects/net_collectri_mouse.rds  (source/target/mor; cached -- do
-#                                                   NOT call get_collectri(), broken here)
+#   - 03_results/objects/net_collectri_mouse.rds  (source/target/mor; cached, since
+#                                                   get_collectri() fails here)
 #
 # Output:
 #   - 03_results/04_tf/tables/fig3n_heat_main_regulators_data.csv
 #       cols: tf, contrast, score, padj, direction, axis
 #
-# Method: t-statistic input (NEVER logFC); run_ulm(.mor="mor", minsize=5);
-#         BH within contrast -- IDENTICAL to 03_decoupler_tf.R's primary call.
+# Method: t-statistic input, per gsea.rank_metric; run_ulm(.mor="mor", minsize=5); BH within
+#         contrast — identical to 03_decoupler_tf.R's primary call.
 #
 # Dependencies: decoupleR, dplyr, tidyr, readr
 # =============================================================================

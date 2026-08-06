@@ -4,39 +4,33 @@
 #   "How decoupleR-ULM nominates a TF" -- the SCORING MECHANIC, pedagogical.
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:    COMPUTE half of the "normalize-then-visualize" split for the
-#          attribution-arc MECHANIC figure (fig3m), matched partner of
-#          fig3g-expanded (landscape) and fig3l (biology). Contains NO ggplot()/
-#          ggsave() and NO new statistics whatsoever. It only
+# Role:    COMPUTE half of the "normalize-then-visualize" split for the attribution-arc
+#          MECHANIC figure (fig3m), matched partner of fig3g-expanded (landscape) and
+#          fig3l (biology). It runs no new statistics and only
 #            (i)  COPIES the already-decomposed Hif1a regulon
-#                 (fig3g_target_decomposition_data.csv: source/target/mor/t_wt/
-#                 contrib/class) -- the promiscuous worked example; and
-#            (ii) DESCRIPTIVELY JOINS one SPECIFIC comparator TF's CollecTRI
-#                 regulon to the EXISTING WT_heat limma t-vector (a lookup, NOT
-#                 a model fit -- no run_ulm). aligned_contrib = sign(mor)*t_wt is
-#                 an arithmetic relabel of existing t-statistics.
+#                 (fig3g_target_decomposition_data.csv: source/target/mor/t_wt/contrib/
+#                 class), the promiscuous worked example; and
+#            (ii) DESCRIPTIVELY JOINS one comparator TF's CollecTRI regulon to the
+#                 EXISTING WT_heat limma t-vector. This is a lookup, and
+#                 aligned_contrib = sign(mor)*t_wt is an arithmetic relabel of existing
+#                 t-statistics.
 #
 # COMPARATOR-REGULON OPTION (design-spec sec 2 fig3m note): OPTION (b) is used.
-#   Rationale: the figure's shared x-axis is the PER-TARGET aligned contribution,
-#   and Panel B must show a beeswarm of the comparator regulon's individual
-#   members on that same axis. Option (a) (reuse fig3j/master aggregate values)
-#   only yields ONE aggregate score per TF -- it has NO per-target distribution,
-#   so it cannot populate the beeswarm and is too thin to make the
-#   specific-vs-promiscuous contrast legible. Option (b) -- a DESCRIPTIVE join of
-#   the existing CollecTRI Stat2 regulon to the existing WT_heat t-vector in
-#   02_de_results.rds -- is therefore used. This is a lookup only; NO run_ulm,
-#   NO run_mlm, NO p.adjust, NO model refit. FLAG FOR ANTON: option (a) was too
-#   thin (aggregate-only) to render the mechanic, so the spec's descriptive
-#   fallback (b) was taken.
+#   The figure's shared x-axis is the PER-TARGET aligned contribution, and Panel B shows a
+#   beeswarm of the comparator regulon's individual members on that same axis. Option (a),
+#   reusing fig3j/master aggregate values, yields one aggregate score per TF with no
+#   per-target distribution, so it cannot populate the beeswarm. Option (b) — a DESCRIPTIVE
+#   join of the existing CollecTRI Stat2 regulon to the existing WT_heat t-vector in
+#   02_de_results.rds — supplies the distribution the panel needs. Lookup only: no run_ulm,
+#   no run_mlm, no p.adjust, no model refit.
 #
-# Comparator TF = Stat2 (SPECIFIC): a small, canonical type-I-IFN-restricted
-#   regulon (n~32 members present in WT_heat). On the WT_heat (fever-heat) main
-#   contrast its members do NOT coherently move, so the regulon does NOT pile up
-#   -- the visual foil to Hif1a's broad regulon that accumulates generic high-|t|
-#   stress genes regardless of HIF biology. This figure is about the SCORING
-#   MECHANIC ONLY -- it makes NO biology claim about Stat2, IFN, HIF1a, or HIF2a.
+# Comparator TF = Stat2 (SPECIFIC): a small, canonical type-I-IFN-restricted regulon (n~32
+#   members present in WT_heat). Its members move incoherently on the WT_heat (fever-heat)
+#   main contrast, so the regulon stays flat — the visual foil to Hif1a's broad regulon,
+#   which accumulates generic high-|t| stress genes across HIF biology. This figure covers
+#   the SCORING MECHANIC and makes no biology claim about Stat2, IFN, HIF1a or HIF2a.
 #
-# Inputs (NO recomputation):
+# Inputs (read only):
 #   - 03_results/04_tf/tables/fig3g_target_decomposition_data.csv  (Hif1a; copy)
 #   - 03_results/objects/net_collectri_mouse.rds                   (Stat2 regulon)
 #   - 03_results/objects/02_de_results.rds  (WT_heat limma t-vector; lookup only)
@@ -46,13 +40,11 @@
 #                                        t_wt/aligned_contrib/is_stress_contaminant)
 #   - fig3m_ulm_mechanic_summary.csv   (per-tf aggregates; no statistics)
 #
-# Object name (HARD GUARDRAIL, design-spec sec 0): the thing the Hif1a panel
-#   describes is "a heat-induced glycolytic/stress program partially overlapping
-#   HIF targets" -- NEVER "the HIF program" / "HIF1a the TF". Titles/subtitles
-#   keep object-name discipline; the comparator NEVER implies HIF2a anything.
+# Object name (HARD GUARDRAIL, design-spec sec 0): the thing the Hif1a panel describes is
+#   "a heat-induced glycolytic/stress program partially overlapping HIF targets". Titles
+#   and subtitles keep that object name, and the comparator stays clear of HIF2a.
 #
-# Method: COPY + descriptive JOIN + simple aggregation only. No lmFit/eBayes/
-#   run_ulm/run_mlm/p.adjust/prcomp anywhere. Figures live in the _viz.R partner.
+# Method: COPY + descriptive JOIN + simple aggregation. Figures live in the _viz.R partner.
 # =============================================================================
 
 source("02_analysis/config/config.R")

@@ -2,9 +2,8 @@
 # 25_go_decomposition_viz.R -- VIZ ONLY (no computing)
 # =============================================================================
 # Draws the five overview panels for the ontology-wide over-representation stage
-# (15_go_decomposition) from the frozen object 24_go_decomposition.R writes. Every
-# number on every face is read from that object; nothing here recomputes a test,
-# a null, or a cluster.
+# (15_go_decomposition) from the frozen object 24_go_decomposition.R writes. Every number on
+# every face is read from that object.
 #
 #   wtheatup_term_blocks        the 35 Wang-similarity blocks the primary arm's
 #                               enriched terms collapse to, sized by term count
@@ -95,7 +94,7 @@ arm_n <- obj$arms[[ARM]]$n_nominal
 # is selected by its representative term and asserted unique, so a re-clustered object either
 # marks the same block or stops the run. The band is the FIRST layer, so it sits under the
 # bar and the segment. The bar fill already carries the block's best adjusted p, so the
-# highlight is a background band plus a bold axis label and never a fourth fill colour.
+# highlight is a background band plus a bold axis label, leaving the fill scale at three.
 HYP_REP <- "response to hypoxia"
 hyp_i   <- which(blocks$cluster_representative == HYP_REP)
 stopifnot(length(hyp_i) == 1L)
@@ -192,7 +191,7 @@ save_overview(
 
 # The three hypoxia and oxygen-level terms are called out by colour and by name so a reader
 # can find them in a cloud of several hundred points. They are a third level of the same
-# factor rather than a second scale, so the panel keeps one legend.
+# factor, in place of a second scale, so the panel keeps one legend.
 HYP_IDS <- c("GO:0001666", "GO:0036293", "GO:0070482")
 KEY_BELOW <- sprintf("p_matched below %.2f", PCUT)
 KEY_ABOVE <- sprintf("p_matched at or above %.2f", PCUT)
@@ -255,7 +254,7 @@ p3a <- ggplot(dn, aes(x = .data$rank, y = .data$frac_matched_reaching_q)) +
     bg.colour = "white", bg.r = 0.12,
     max.overlaps = Inf, show.legend = FALSE) +
   scale_colour_manual(values = REC_COL, name = NULL) +
-  # coord_cartesian rather than scale limits: a scale limit drops the histogram bin whose
+  # coord_cartesian, over scale limits: a scale limit drops the histogram bin whose
   # lower edge stat_bin puts below zero, and ggplot reports that as removed rows.
   scale_y_continuous(labels = scales::percent_format(accuracy = 1),
                      expand = expansion(mult = c(0.02, 0.02))) +
@@ -469,7 +468,7 @@ names(CLS_COL) <- CLASSES
 p5 <- ggplot(ladder, aes(x = .data$n, y = .data$arm, fill = .data$class)) +
   # reverse = TRUE stacks in FACTOR order, which is the order `mid` was accumulated in.
   # Left at the default the drawn stack runs the other way and every in-bar count lands
-  # over the wrong segment, which reads as a mislabelled figure rather than as an error.
+  # over the wrong segment, which reads as a mislabelled figure.
   geom_col(width = 0.62, position = position_stack(reverse = TRUE)) +
   geom_text(data = ladder[ladder$n >= LABEL_FLOOR, ],
             aes(x = .data$mid, label = .data$n), size = LAB * 0.9,

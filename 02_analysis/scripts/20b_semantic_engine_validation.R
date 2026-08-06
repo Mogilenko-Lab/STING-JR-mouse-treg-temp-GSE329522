@@ -5,26 +5,26 @@
 # 13_semantic_decomp).
 #
 # Why the stage was re-run at all
-#   Wang similarity weights each parent edge of the GO DAG by its relationship type:
-#   is_a 0.8, part_of 0.6, anything else 0.7. GOSemSim through 2.36.0 keys that weight
-#   table on the strings "is_a" and "part_of" and matches it against GO.db's own
-#   relationship column without normalising the spelling. GO.db writes those same
-#   relationships as "isa" and "part of". Every edge therefore fails both matches and
-#   is remapped to "other", so the whole DAG is traversed at a uniform 0.7 weight and
-#   the is_a/part_of distinction the Wang measure is built on is absent from the
-#   result. In the GO BP parent table that is 44,495 isa and 4,772 part-of edges
-#   collapsed onto one weight. GOSemSim 2.39.2 normalises the spellings first.
+#   Wang similarity weights each parent edge of the GO DAG by its relationship type: is_a
+#   0.8, part_of 0.6, anything else 0.7. GOSemSim through 2.36.0 keys that weight table on
+#   the strings "is_a" and "part_of" and matches it against GO.db's own relationship column
+#   without normalising the spelling. GO.db writes those same relationships as "isa" and
+#   "part of". Every edge therefore fails both matches and is remapped to "other", so the
+#   whole DAG is traversed at a uniform 0.7 weight and the is_a/part_of distinction the Wang
+#   measure is built on is absent from the result. In the GO BP parent table that is 44,495
+#   isa and 4,772 part-of edges collapsed onto one weight. GOSemSim 2.39.2 normalises the
+#   spellings first.
 #
 # What this script measures
-#   1. Term pairs. Wang similarity for a fixed sample of GO BP term pairs under each
-#      build: correlation, mean shift, how many values move at all.
-#   2. Gene pairs. The same for gene-level BMA over a fixed sample of WT_heat_up
-#      members, which is the combiner stage 20 actually uses.
+#   1. Term pairs. Wang similarity for a fixed sample of GO BP term pairs under each build:
+#      correlation, mean shift, how many values move at all.
+#   2. Gene pairs. The same for gene-level BMA over a fixed sample of WT_heat_up members,
+#      which is the combiner stage 20 uses.
 #   3. The stage's own pairwise matrix. Correlation between the two builds' 196 x 196
 #      WT_heat_up similarity matrices.
 #   4. Every headline number the stage publishes, old beside new.
 #
-# Inputs (both must exist; the driver says how to make either one)
+# Inputs (both must exist; the driver below says how to make either one)
 #   03_results/objects/20_semantic_decomp__GOSemSim-<old>.rds
 #   03_results/objects/20_semantic_decomp__GOSemSim-<new>.rds
 #
@@ -37,10 +37,10 @@
 #   Rscript 02_analysis/scripts/20_semantic_decomposition.R
 #   Rscript 02_analysis/scripts/20b_semantic_engine_validation.R
 #
-# The probe in sections 1-2 needs both builds loaded, which one R session cannot do.
-# The script therefore re-invokes itself once per build as a worker (the
-# SEMANTIC_ENGINE_WORKER environment variable selects that mode) and reads the two
-# probe files back.
+# The probe in sections 1-2 needs both builds loaded, which exceeds what one R session can
+# hold. The script therefore re-invokes itself once per build as a worker (the
+# SEMANTIC_ENGINE_WORKER environment variable selects that mode) and reads the two probe
+# files back.
 # =============================================================================
 
 source("02_analysis/config/config.R")

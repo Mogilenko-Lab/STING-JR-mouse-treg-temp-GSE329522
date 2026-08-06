@@ -1,50 +1,48 @@
 # 06_gsea_custom_run.R — COMPUTE
-## clusterProfiler::GSEA (by="fgsea") over the custom databases (TransportDB,
-## MitoPathways, MitoXplorer, HSR_lens, TCR_activation) × all 7 contrasts. Caches gseaResult
-## S4 objects (consumable by the RNAseq-toolkit GSEA plotters); derives the tidy master
-## rows via normalize_gsea_results().
+## clusterProfiler::GSEA (by="fgsea") over the custom databases (TransportDB, MitoPathways,
+## MitoXplorer, HSR_lens, TCR_activation) × all 7 contrasts. Caches gseaResult S4 objects
+## for the RNAseq-toolkit GSEA plotters, and derives the tidy master rows via
+## normalize_gsea_results().
 ##
-## EACH DATABASE IS RUN SEPARATELY — its own GSEA call, its own `database` tag,
-## its own append key in master_gsea_table.csv — so custom rows coexist with
-## MSigDB rows from 05_gsea_msigdb_run.R without clobbering them.
+## EACH DATABASE RUNS SEPARATELY — its own GSEA call, its own `database` tag, its own append
+## key in master_gsea_table.csv — so custom rows coexist with the MSigDB rows from
+## 05_gsea_msigdb_run.R.
 ##
-## Run from project root (AFTER 04_gsea_set_prep.R, 05_gsea_msigdb_run.R):
+## Run from project root, after 04_gsea_set_prep.R and 05_gsea_msigdb_run.R:
 ##   Rscript 02_analysis/scripts/06_gsea_custom_run.R
 ##
 ## Outputs
 ## -------
 ##   03_results/06_gsea/tables/by_contrast/<contrast>/gsea_custom.csv
-##       One file per contrast containing results from ALL custom DBs present,
-##       combined and sorted by padj. The `database` column identifies the DB.
+##       One file per contrast holding results from every custom DB present, combined and
+##       sorted by padj. The `database` column identifies the DB.
 ##   03_results/06_gsea/tables/_overview/gsea_custom_all.csv
-##       Same rows as all per-contrast files combined, plus the contrast column.
+##       The same rows across all contrasts, plus the contrast column.
 ##   03_results/master/master_gsea_table.csv
-##       Idempotent APPEND, keyed per-database (e.g. "TransportDB"), so MSigDB
-##       rows written by 05 are never touched and each custom DB replaces only
-##       its own rows on re-run.
+##       Idempotent APPEND, keyed per-database (e.g. "TransportDB"), so the MSigDB rows
+##       written by 05 stay put and each custom DB replaces only its own rows on re-run.
 ##   03_results/objects/gsea_custom_<contrast>.rds
 ##       Cached result for the contrast (named list: db_name -> clusterProfiler gseaResult S4,
 ##       with @geneSets patched in so the running-sum viz can walk custom-set membership).
 ##
 ## Idempotency:  load_or_compute() returns cached RDS on re-run.
 ## Byte-stability: round_numeric_cols() (9 sig figs) before every CSV write.
-## Compute-only:  no ggplot/ggsave anywhere in this file.
+## Compute-only:  figures live in the viz siblings.
 ##
 ## ASSUMPTIONS (verify in-container; noted where consequential):
-##   [A1] 02_de_results.rds is a named list of limma-trend topTables, each with
-##        gene-SYMBOL ROWNAMES and a `t` column. Produced by 02_de_limma_trend.R.
-##   [A2] geneset_custom_<Name>.rds files are named-list gene-set objects produced
-##        by 04_gsea_set_prep.R (shape (b) of load_custom_geneset: a named list of
-##        character vectors, already size-filtered to gsea_min/max_size). The RDS
-##        name key uses the `name` field from databases.custom in the YAML config.
-##   [A3] master_gsea_table.csv may or may not pre-exist (05 writes it first; this
-##        script appends). If absent, append_master_table() creates it.
-##   [A4] gene_universe.txt (from 11_emit_universe.R) is advisory background; it is
-##        read and reported but fgsea ranks on the full DE t-vector (no gene-set
-##        subsetting by universe here — fgsea naturally intersects with each pathway).
-##   [A5] Per house rules: results floored at L3; never crown HIF1α/2α; and the
-##        interaction reads as "no detectable cGAS-dependence at n=5", NEVER as
-##        "cGAS-independent".
+##   [A1] 02_de_results.rds is a named list of limma-trend topTables, each with gene-SYMBOL
+##        ROWNAMES and a `t` column. Produced by 02_de_limma_trend.R.
+##   [A2] geneset_custom_<Name>.rds files are named-list gene-set objects produced by
+##        04_gsea_set_prep.R (shape (b) of load_custom_geneset: a named list of character
+##        vectors, already size-filtered to gsea_min/max_size). The RDS name key uses the
+##        `name` field from databases.custom in the YAML config.
+##   [A3] master_gsea_table.csv may pre-exist, since 05 writes it first and this script
+##        appends. append_master_table() creates it when absent.
+##   [A4] gene_universe.txt (from 11_emit_universe.R) is advisory background: read and
+##        reported, while fgsea ranks on the full DE t-vector and intersects each pathway
+##        naturally.
+##   [A5] Per house rules: results floor at L3; leave HIF1α/2α uncrowned; and the
+##        interaction reads as "no detectable cGAS-dependence at n=5".
 
 ## ============================================================================
 ## 0. Setup
@@ -215,7 +213,7 @@ CONTRASTS <- names(de)    # 7 contrasts: WT_heat, KO_heat, Interaction, ...
 message(sprintf("[06] DE results: %d contrasts (%s)", length(CONTRASTS),
                 paste(CONTRASTS, collapse = ", ")))
 
-## Advisory: gene universe from 11_emit_universe.R (read for message, not subsetting)
+## Advisory: gene universe from 11_emit_universe.R (read for the run message)
 universe_txt <- file.path(DIR_OBJECTS, "gene_universe.txt")
 if (file.exists(universe_txt)) {
   universe_genes <- readLines(universe_txt)
@@ -292,7 +290,7 @@ for (co in CONTRASTS) {
     ## Per-contrast output: one combined CSV (all custom DBs, sorted by padj).
     ## Layout: 03_results/06_gsea/tables/by_contrast/<contrast>/gsea_custom.csv
     ## The `database` column in each row identifies which DB it came from.
-    ## Project-wide convention: the contrast names the DIRECTORY, never a filename suffix.
+    ## Project-wide convention: the contrast names the DIRECTORY.
     cdir <- file.path(tbl_dir, "by_contrast", co)
     dir.create(cdir, recursive = TRUE, showWarnings = FALSE)
     out_contrast <- dplyr::arrange(round_numeric_cols(contrast_rows), padj)

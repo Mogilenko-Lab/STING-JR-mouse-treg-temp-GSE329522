@@ -17,8 +17,7 @@
 ##
 ## Viz only. Reads master_gsea_table.csv for the quotable NES and padj, the cached DE
 ## topTables (02_de_results.rds) for the ranked vector, and the cached gene-set lists
-## (geneset_{msigdb,custom}_<DB>.rds). It re-runs no GSEA, re-fits no DE, and writes nothing
-## under 03_results/master/.
+## (geneset_{msigdb,custom}_<DB>.rds).
 ##
 ## Why these panels exist alongside the general ones. The general running sums of this stage
 ## draw the top figures.running_sum_top sets per (contrast x database) cell by |NES|, and
@@ -29,13 +28,13 @@
 ##
 ## Every set earns its curve, including the ones that say nothing.
 ## REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA runs negative and non-significant in all three
-## contrasts, and is drawn at the same weight with its own colour key, because whether two sets
-## that share a word in their names behave alike is something the panel shows rather than
-## assumes. GO BP contributes a nested pair for the same reason in the other direction:
+## contrasts, and is drawn at the same weight with its own colour key, so the panel shows
+## whether two sets sharing a word in their names behave alike. GO BP contributes a nested
+## pair for the same reason in the other direction:
 ## GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS is the cell-intrinsic subset of
 ## GOBP_RESPONSE_TO_OXYGEN_LEVELS, so drawing both asks whether the parent's signal survives
-## when the organism-level branches are dropped. Nesting means the two are not independent
-## evidence, which every caption here states.
+## once the organism-level branches drop out. Nesting makes the two dependent evidence, which
+## every caption here states.
 ##
 ## Run from the compartment root:
 ##   Rscript 02_analysis/scripts/28_hypoxia_focus_viz.R
@@ -92,6 +91,10 @@ OI     <- FIG_CFG$colors$okabe_ito %||% list()
 
 # One colour per drawn set, from the config's colourblind-safe palette. Five separated hues,
 # so the null-running Reactome curve reads as clearly as the rest.
+#
+# These are the only five of the eight dark enough for a thin line on white, so a five-series
+# figure has no other subset to move to and colour cannot be made CVD-safe here. SET_LINETYPE
+# carries the key redundantly instead.
 SET_COLOR <- c(
   HALLMARK_HYPOXIA                                   = OI$vermillion    %||% "#D55E00",
   GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY = OI$blue          %||% "#0072B2",
@@ -102,6 +105,15 @@ SET_COLOR <- c(
   GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS            = OI$black         %||% "#000000",
   REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA              = OI$reddish_purple %||% "#CC79A7")
 
+# The redundant channel, so the five sets separate in greyscale and under any CVD. Hex on/off
+# lengths; the nested GO BP pair takes dashed and dotted, one figure at two densities.
+SET_LINETYPE <- c(
+  HALLMARK_HYPOXIA                                   = "solid",
+  GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY = "73",
+  GOBP_RESPONSE_TO_OXYGEN_LEVELS                     = "44",
+  GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS            = "13",
+  REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA              = "1343")
+
 # The five sets, selected by name, in legend order. `tag` is the in-panel short key.
 #
 # Four databases, five sets: GO BP contributes a NESTED PAIR on purpose. GO:0071453 cellular
@@ -110,13 +122,13 @@ SET_COLOR <- c(
 # independent evidence and the caption says so. The pair is here because it asks the
 # cell-autonomy question directly: the parent pools organism-level response-to-hypoxia
 # branches with the cell-intrinsic ones, the child keeps only the latter, and whether the two
-# behave alike is the thing the panel shows rather than assumes. They are drawn adjacent so
+# behave alike is the thing the panel shows on its face. They are drawn adjacent so
 # the pair reads as a pair.
 PICKS <- tibble::tribble(
   ~pathway_id,                                          ~database,   ~tag,
   "HALLMARK_HYPOXIA",                                   "Hallmark",  "Hallmark",
   "GOMF_2_OXOGLUTARATE_DEPENDENT_DIOXYGENASE_ACTIVITY", "GO_MF",     "GO MF",
-  # "all" / "cell" rather than a bare "GO BP" and a long qualifier: the pair of tags carries the
+  # "all" / "cell", over a bare "GO BP" and a long qualifier: the pair of tags carries the
   # nesting into the in-panel key, and the qualified form overran the facet's width.
   "GOBP_RESPONSE_TO_OXYGEN_LEVELS",                     "GO_BP",     "GO BP all",
   "GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS",            "GO_BP",     "GO BP cell",
@@ -129,10 +141,16 @@ FOCUS_DATABASE <- "Hallmark"
 # One colour per contrast for figure 1, three separated hues from the config's
 # colourblind-safe palette. Figure 1 draws one set in three contrasts, so colour there keys
 # the contrast; figure 2 draws five sets per contrast, so colour there keys the set.
+# Three series can be chosen for separation. Black replaces bluish green, which collapsed onto
+# blue under tritanopia: the worst simulated gap improves ~5x and the three also spread in
+# luminance, so they hold in greyscale.
 CONTRAST_COLOR <- c(
   WT_heat     = OI$vermillion    %||% "#D55E00",
   KO_heat     = OI$blue          %||% "#0072B2",
-  Interaction = OI$bluish_green  %||% "#009E73")
+  Interaction = OI$black         %||% "#000000")
+
+# Above the config's shared weight: these curves must hold at journal-column size.
+CURVEW <- LINEW * 1.3
 
 # ES : tick-rows : metric height proportions, shared with every other running sum here.
 RSHEIGHTS <- as.numeric(unlist(FIG_CFG$figures$running_sum_heights %||% c(2.4, 0.7, 0.9)))
@@ -153,7 +171,7 @@ F2_H <- 9.5
 F1_METRIC_EVERY <- 25L
 
 CFG_KV <- sprintf(
-  "thresholds.gsea_fdr=%.2g; figures.running_sum_ylim=[%.1f,%.1f]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=%d; figures.top_pathways=%d; colors.okabe_ito",
+  "thresholds.gsea_fdr=%.2g; figures.running_sum_ylim=[%.1f,%.1f]; figures.running_sum_heights; running_sum_x=rank/n_ranked; figures.running_sum_top=%d; figures.top_pathways=%d; colors.okabe_ito (white-safe subset only); series keyed by colour AND dash where five are drawn; curve linewidth=figures.line_width*1.3; gene ticks 0.55pt",
   FDR, RSYLIM[1], RSYLIM[2], RSTOP, TOPN)
 
 # ============================================================================
@@ -511,7 +529,7 @@ SIGN_NOTE <- paste0(
 #
 # gsea_running_sum_plot() cannot draw this. It takes ONE gseaResult, and a gseaResult carries
 # one ranked list, so drawing one set against three different rankings needs three objects and
-# a composition here. The toolkit geometry is reproduced rather than called: the ES curves come
+# a composition here. The toolkit geometry is reproduced in place: the ES curves come
 # from es_curve(), which is the stage's existing gseaplot2(subplots = 1) path, so figure 1 and
 # figure 2 still share one running-ES code path.
 
@@ -527,7 +545,7 @@ r1_le   <- n_leading(r1$core_enrichment)
 #   f1_es      the thinned running-ES polyline
 #   f1_hits    the rank each set member occupies, which is what the tick rows draw
 #   f1_metric  the ranked statistic itself
-# The hit ranks are taken from the ranked vector rather than from the plotter's `position`
+# The hit ranks are taken from the ranked vector, upstream of the plotter's `position`
 # column, so a tick row and its curve cannot disagree about which genes are in the set.
 f1_es <- list(); f1_hits <- list(); f1_metric <- list()
 for (co in FOCAL) {
@@ -598,7 +616,7 @@ F1_SUB   <- SIGN_NOTE
 # --- panel 1: the running enrichment score --------------------------------------------------
 f1_p_es <- ggplot(f1_es, aes(x = rank_fraction, y = running_score, colour = contrast_lab)) +
   geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
-  geom_line(linewidth = LINEW) +
+  geom_line(linewidth = CURVEW) +
   scale_colour_manual(values = F1_COL, labels = F1_KEY, name = NULL) +
   coord_cartesian(ylim = RSYLIM) +
   labs(title = F1_TITLE, subtitle = F1_SUB, x = NULL, y = "Running enrichment score") +
@@ -619,10 +637,15 @@ f1_p_rug <- ggplot(f1_hits, aes(x = rank_fraction, colour = contrast_lab)) +
         axis.ticks.x = element_blank(), axis.title.y = element_blank())
 
 # --- panel 3: the ranked metric each curve was computed on ----------------------------------
+# Filled to zero so the up and down halves read as areas, not as three lines crossing an axis.
+# Alpha because the three rankings largely coincide and an opaque fill would hide two of them.
+# Ribbon, not geom_area, whose stacking baseline mishandles the negative half.
 f1_p_met <- ggplot(f1_metric, aes(x = rank_fraction, y = metric, colour = contrast_lab)) +
+  geom_ribbon(aes(ymin = 0, ymax = metric, fill = contrast_lab), alpha = 0.25, colour = NA) +
   geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
   geom_line(linewidth = LINEW * 0.7) +
   scale_colour_manual(values = F1_COL, guide = "none") +
+  scale_fill_manual(values = F1_COL, guide = "none") +
   labs(x = rank_fraction_lab(f1_n), y = metric_axis_lab(FIG_CFG)) +
   project_theme(config = FIG_CFG)
 
@@ -677,7 +700,11 @@ save_overview(
     "Middle panel: one tick per set member at that member's rank, in its own labelled row per ",
     "contrast, so where a contrast places the same genes can be read row against row. Bottom ",
     "panel: the ranked ", RANK_METRIC, "-statistic each curve above was computed on, which shows ",
-    "how much signal each rank carries; it is drawn at every ", F1_METRIC_EVERY,
+    "how much signal each rank carries. Each contrast's curve fills the area between itself and ",
+    "zero in that contrast's colour, so the up half and the down half of a ranking read by area ",
+    "rather than as a thin line crossing an axis; the fills are transparent because the three ",
+    "rankings largely coincide, and an opaque fill would hide two contrasts behind the third. ",
+    "It is sampled at every ", F1_METRIC_EVERY,
     "th rank plus both endpoints, which redraws a sorted vector exactly at this size. The legend ",
     "carries each contrast's NES, adjusted p and genes present in the ranked universe. ",
     SIGN_NOTE, " This set is 6th by |NES| and 4th by adjusted p in its WT_heat cell, so the ",
@@ -693,7 +720,7 @@ save_overview(
 # their geometry is pooled into frames that facet by contrast.
 #
 # Three frames, one per panel row, so this figure carries the same three panels every other
-# running sum in the project does rather than the enrichment curves alone:
+# running sum in the project does, going beyond the enrichment curves alone:
 #   es_df   the running-ES polylines, five sets per contrast
 #   hit_df  the rank each set member occupies, which the tick rows draw
 #   met_df  the ranked statistic, one curve per contrast
@@ -719,7 +746,7 @@ for (co in FOCAL) {
     data.frame(contrast = co, pathway_id = id, rank_fraction = h[!is.na(h)] / n)
   }))
 
-  # One metric curve per contrast, not per set: the five sets share the contrast's ranking.
+  # One metric curve per contrast: the five sets share the contrast's ranking.
   # Sorted by construction, so the F1_METRIC_EVERY stride plus both endpoints redraws it.
   keep <- sort(unique(c(1L, n, seq(1L, n, by = F1_METRIC_EVERY))))
   met_frames[[co]] <- data.frame(contrast = co, rank_fraction = keep / n,
@@ -746,7 +773,7 @@ met_df <- f2_fac(dplyr::bind_rows(met_frames))
 # The tick rows read top-down in PICKS order, matching the legend, so a set's row and its
 # legend key are found in the same place. y increases upward, hence the reversal.
 hit_df$row <- length(SET_LABEL) - as.integer(hit_df$set_label) + 1L
-# Row labels are the short in-panel keys, not the wrapped legend names: the legend spells
+# Row labels are the short in-panel keys: the legend spells
 # those out once, and five wrapped set names would crowd the ticks they label.
 F2_ROWLAB <- PICKS$tag
 
@@ -760,7 +787,7 @@ N_RANKED <- sort(unique(es_df$n_ranked))
 # which the ES range of every drawn curve stays clear of.
 #
 # The block's rows are spaced to FIT nrow(PICKS) between two fixed fractions of the pinned y
-# range rather than at a constant step, so adding a set re-spaces the block instead of pushing
+# range, over a constant step, so adding a set re-spaces the block in place of pushing
 # its last row off the bottom of the panel.
 F2_STAT_TOP  <- 0.42
 F2_STAT_BOT  <- 0.95
@@ -786,18 +813,18 @@ if (min(stat_rows$y) < RSYLIM[1] || max(stat_rows$y) > es_lo)
 F2_TITLE <- "Running enrichment of five hypoxia-named sets by contrast"
 F2_SUB   <- SIGN_NOTE   # the sign convention, and nothing else; the rest is in the caption
 
-# Three faceted rows rather than a 3 x 3 grid of single panels: each row keeps ONE facet
+# Three faceted rows, over a 3 x 3 grid of single panels: each row keeps ONE facet
 # specification over the same three contrasts, so patchwork aligns the columns and the facet
 # strip is drawn once, at the top.
 #
-# project_theme() is applied INSIDE each row, ahead of that row's own chrome, never through the
+# project_theme() is applied INSIDE each row, ahead of that row's own chrome, bypassing the
 # trailing `&`. It is a COMPLETE theme, so a `&` at the end of the chain would reset the blanked
 # x text and strip text each row sets and silently undo the layout. Only additive pieces — the
 # facet, the shared x scale, the set palette, a partial theme — travel on `&`.
 F2_GUTTER <- ggplot2::unit(1.8, "lines")   # one facet's 1.0 tick clears the next facet's 0.0
 f2_chrome <- function() ggplot2::theme(panel.spacing = F2_GUTTER)
 
-# The set palette, declared once and attached PER ROW rather than through the trailing `&`.
+# The set palette, declared once and attached PER ROW, over the trailing `&`.
 # Two rows map colour, and anything colour-related applied with `&` gives BOTH a guide, so the
 # collected legend comes back twice — once with a line key and once with a tick key. That holds
 # for guides() as much as for the scale: a plot-level guides() call overrides a scale's own
@@ -806,26 +833,32 @@ f2_chrome <- function() ggplot2::theme(panel.spacing = F2_GUTTER)
 f2_scale <- function(guide) scale_colour_manual(
   values = unname(SET_COLOR[PICKS$pathway_id]), name = NULL, drop = FALSE, guide = guide)
 
+# Same name, breaks and order as the colour scale, so ggplot merges both into one legend key.
+f2_ltype <- function(guide) scale_linetype_manual(
+  values = unname(SET_LINETYPE[PICKS$pathway_id]), name = NULL, drop = FALSE, guide = guide)
+
 # --- row 1: the running enrichment curves, with the per-facet statistics block --------------
-f2_p_es <- ggplot(es_df, aes(x = rank_fraction, y = running_score, colour = set_label)) +
+f2_p_es <- ggplot(es_df, aes(x = rank_fraction, y = running_score, colour = set_label,
+                             linetype = set_label)) +
   geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
-  geom_line(linewidth = LINEW) +
+  geom_line(linewidth = CURVEW) +
   geom_text(data = stat_rows,
             aes(x = x, y = y, label = label, colour = set_label),
             hjust = 0, vjust = 0.5, size = LBLSZ, fontface = "bold",
             show.legend = FALSE, inherit.aes = FALSE) +
   coord_cartesian(ylim = RSYLIM) +
-  f2_scale("legend") +
-  ggplot2::guides(colour = ggplot2::guide_legend(ncol = 2, byrow = TRUE)) +
+  f2_scale("legend") + f2_ltype("legend") +
+  ggplot2::guides(colour = ggplot2::guide_legend(ncol = 2, byrow = TRUE),
+                  linetype = ggplot2::guide_legend(ncol = 2, byrow = TRUE)) +
   labs(title = F2_TITLE, subtitle = F2_SUB, x = NULL, y = "Running enrichment score") +
   project_theme(config = FIG_CFG) + f2_chrome() +
   theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
 
 # --- row 2: one named tick row per set, inside each contrast's facet ------------------------
-# Thin ticks: five rows inside a facet a third of the canvas wide is well over three times the tick
-# density of a full-width running sum, and the two largest sets fill their row at 0.4pt.
+# 0.2pt renders under one pixel at 300 dpi, so the rows read as a wash. At 0.55pt a tick is a
+# mark and the densest row, GO BP all at ~1.6pt spacing, still reads as a comb rather than a bar.
 f2_p_rug <- ggplot(hit_df, aes(x = rank_fraction, colour = set_label)) +
-  geom_linerange(aes(ymin = row - 0.92, ymax = row - 0.08), linewidth = 0.2) +
+  geom_linerange(aes(ymin = row - 0.92, ymax = row - 0.08), linewidth = 0.55) +
   scale_y_continuous(breaks = seq_along(F2_ROWLAB) - 0.5, labels = rev(F2_ROWLAB),
                      limits = c(0, length(F2_ROWLAB)), expand = c(0, 0)) +
   f2_scale("none") +
@@ -839,9 +872,13 @@ f2_p_rug <- ggplot(hit_df, aes(x = rank_fraction, colour = set_label)) +
 # --- row 3: the ranked statistic each curve above was computed on ---------------------------
 # One curve per facet and no colour mapping: the five sets in a facet share this ranking, so
 # colouring it by set would imply five rankings where there is one.
+#
+# Filled to zero and unoutlined, so what the eye takes is the area either side of the axis; the
+# Interaction facet's much smaller statistics stay visible against the two heat facets at this
+# panel height. Ribbon, not geom_area, whose stacking baseline mishandles the negative half.
 f2_p_met <- ggplot(met_df, aes(x = rank_fraction, y = metric)) +
+  geom_ribbon(aes(ymin = 0, ymax = metric), fill = "grey70", colour = NA) +
   geom_hline(yintercept = 0, colour = "black", linewidth = 0.5) +
-  geom_line(linewidth = LINEW * 0.7, colour = "grey40") +
   labs(y = metric_axis_lab(FIG_CFG),
        x = rank_fraction_lab(
          N_RANKED, of = sprintf("each contrast's ordered %s-statistic", RANK_METRIC))) +
@@ -853,7 +890,7 @@ p2 <- (f2_p_es / f2_p_rug / f2_p_met) +
   facet_wrap(~ contrast_lab, nrow = 1) &
   scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2), expand = c(0, 0))
 
-# The collected guide is placed by the PATCHWORK's theme, not by the rows'. Setting it on the
+# The collected guide is placed by the PATCHWORK's theme. Setting it on the
 # rows leaves it at the default right, which takes a third of the canvas off the facets and
 # clips the in-panel statistics block, so it is set here.
 p2 <- p2 + patchwork::plot_annotation(
@@ -880,9 +917,9 @@ f2_line <- function(co) {
                 collapse = ", "))
 }
 
-# The nested pair, verified against the gene sets as drawn rather than asserted from GO. If a
+# The nested pair, verified against the gene sets as drawn. If a
 # reference build ever breaks the containment, the caption's "every one of its genes" would
-# become false silently, so it is a stop rather than a warning.
+# become false silently, so it stops the run.
 F2_PARENT <- "GOBP_RESPONSE_TO_OXYGEN_LEVELS"
 F2_CHILD  <- "GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS"
 f2_nest_child  <- length(f2_g[["WT_heat"]]@geneSets[[F2_CHILD]])
@@ -926,7 +963,9 @@ save_overview(
     "at 1, so the facets share an axis while each keeps its own ordering. The fraction carries ",
     "across ranked universes of different length, and the axis title carries these rankings' size.",
     "\n\nTop row: five overlaid running-enrichment curves per facet, one per gene set, keyed by ",
-    "colour in the shared legend below. A curve steps up at each gene belonging to its set and ",
+    "colour AND by dash pattern in the shared legend below, the two together so the panel reads ",
+    "under any form of colour blindness and in greyscale. A curve steps up at each gene ",
+    "belonging to its set and ",
     "decays between them, so an early high peak places the members at the numerator end and a ",
     "curve near zero spreads them through the list. The y range is pinned to [", RSYLIM[1], ", ",
     RSYLIM[2], "] so every curve here compares with every other running sum in this GSEA sweep. ",
@@ -936,8 +975,11 @@ save_overview(
     "the second of them the nested cell-intrinsic subset of the first. Middle row: one tick per ",
     "set member at that member's rank, in its own labelled row per set, so where a contrast ",
     "places a set's genes can be read row against row and set against set. Bottom row: the ",
-    "ranked ", RANK_METRIC, "-statistic each curve above was computed on, one grey curve per ",
-    "facet because the five sets in a facet share that one ranking; it is drawn at every ",
+    "ranked ", RANK_METRIC, "-statistic each curve above was computed on, drawn as one grey ",
+    "filled area per facet because the five sets in a facet share that one ranking; it carries ",
+    "no outline, so what the eye takes is the area above and below zero rather than an edge, ",
+    "and the numerator-shifted and denominator-shifted halves of each ranking read by size. It ",
+    "is sampled at every ",
     F1_METRIC_EVERY,
     "th rank plus both endpoints, which redraws a sorted vector exactly at this size. ", SIGN_NOTE,
     "\n\nThe Interaction facet is the cGAS-dependence read-out. A positive significant Interaction ",

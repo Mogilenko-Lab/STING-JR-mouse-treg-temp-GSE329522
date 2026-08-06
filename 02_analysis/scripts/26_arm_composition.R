@@ -5,31 +5,30 @@
 # (stage 16_arm_composition).
 #
 # Why this stage exists
-#   Two decompositions of these arms already exist and neither supports a composition
-#   figure.
+#   Two decompositions of these arms already exist, and each answers a different question
+#   from the one a composition figure asks.
 #
-#   The nine-lens membership decomposition is close to a partition (100 memberships over
-#   67 of WT_heat_up's 199 genes, at most 4 programs per gene) but its panel was picked by
-#   whoever was asking, and 132 genes fall in none of it.
+#   The nine-lens membership decomposition is close to a partition — 100 memberships over
+#   67 of WT_heat_up's 199 genes, at most 4 programs per gene — with a panel picked by
+#   whoever was asking, and 132 genes falling outside all of it.
 #
-#   15_go_decomposition removes the hand-picking but cannot partition. At term level its 386
-#   enriched GO BP terms give 3,621 gene-term memberships over a union of 159 genes, with
-#   only 9 genes in exactly one term. Collapsing to its 35 blocks does not fix it: 972
+#   15_go_decomposition removes the hand-picking and stops short of a partition. At term
+#   level its 386 enriched GO BP terms give 3,621 gene-term memberships over a union of 159
+#   genes, with 9 genes in exactly one term. Collapsing to its 35 blocks gives 972
 #   block-memberships over the same 159 genes, 21 genes in exactly one block, 26 in twelve
-#   or more. And the five terms that would headline a figure are called significant by a
-#   random depth-matched gene set 28% to 63% of the time.
+#   or more. And a random depth-matched gene set calls the five terms that would headline a
+#   figure significant 28% to 63% of the time.
 #
 #   This stage keeps the partition property and drops the hand-picking. Sets come from five
-#   frozen MSigDB collections. Selection is by depth-matched permutation, not by adjusted
-#   p. Redundant sets are pruned on how much of the ARM they share. Attribution is written
-#   two ways so a reader can see whether the composition is determined at all.
+#   frozen MSigDB collections. Selection is by depth-matched permutation. Redundant sets are
+#   pruned on how much of the ARM they share. Attribution is written two ways, so a reader
+#   can see whether the composition is determined at all.
 #
-# What this stage is NOT
-#   It is not a re-run of 15_go_decomposition's GO BP. That stage tests a propagated
-#   gene-to-term map built from org.Hs.eg.db with an explicit IEA switch; MSigDB's C5 GO:BP
-#   is a differently curated and differently filtered product. The two GO_BP results are
-#   different tests of related content, and section 9 reports their concordance rather than
-#   asserting they agree.
+# Its relation to 15_go_decomposition
+#   That stage tests a propagated gene-to-term map built from org.Hs.eg.db with an explicit
+#   IEA switch. MSigDB's C5 GO:BP is a differently curated and differently filtered product.
+#   The two GO_BP results are different tests of related content, and section 9 reports
+#   their concordance.
 #
 # Reads
 #   03_results/human_projection/signatures/... (the four arms + the ranked-list background)
@@ -46,7 +45,7 @@
 #   composition_null_summary.csv    per arm x collection, including the coverage null and
 #                                   a not_tested_reason for any pair with no test
 #   composition_permutation_floor.csv  how many selected sets sit on the p_matched floor,
-#                                   which is the resolution limit of the primary key
+#                                   the resolution limit of the primary key
 #   composition_go_concordance.csv  this stage's GO_BP against 15_go_decomposition's
 #   composition_provenance.csv
 #   plus 03_results/objects/26_arm_composition.rds for the viz script.
@@ -173,7 +172,7 @@ for (cl in COLLECTIONS)
 ## 2. One (term, gene) table per collection, restricted to the background
 ##
 ## Restriction matters: a set's size in the hypergeometric must be its size IN the
-## universe being tested, not its nominal MSigDB size, or every p is computed against
+## universe being tested, which differs from its nominal MSigDB size, or every p is computed against
 ## a universe the genes are not in.
 ## ---------------------------------------------------------------------------
 
@@ -344,12 +343,12 @@ for (arm in ARM_ORDER) {
     NULLS[[key]] <- null_engine(T2G[[cl]], ARMS[[arm]]$genes, N_NULL, SEED)
     if (is.null(NULLS[[key]])) {
       # A silent NULL leaves an arm x collection cell simply absent from the summary,
-      # which reads as an oversight rather than as a measurement. Record which branch.
+      # which reads as an oversight. Record which branch.
       gset <- unique(T2G[[cl]]$gene)
       tb <- table(T2G[[cl]]$term)
       n_ok <- sum(tb >= MIN_GS & tb <= MAX_GS)
       n_q <- length(intersect(ARMS[[arm]]$genes, gset))
-      # `null` carries an explicit level rather than NA. A consumer subscripting with
+      # `null` carries an explicit level, over NA. A consumer subscripting with
       # base-R `df[df$null == "depth_matched", ]` gets an all-NA ROW back for every NA in
       # the comparison, so a single NA here silently lengthens every downstream lookup.
       # That is not hypothetical: it broke a caption in 27_arm_composition_viz.R.
@@ -427,7 +426,7 @@ candidates_for <- function(arm, anchored) {
       sz <- SET_SIZES$size_in_background[SET_SIZES$collection == cl &
                                            SET_SIZES$term == id]
       # A pin outside the tested size window cannot carry a hypergeometric share and is
-      # reported as an absence of opportunity by section 8, not as a zero here.
+      # reported as an absence of opportunity by section 8, distinct from a zero here.
       if (!length(sz) || sz < MIN_GS || sz > MAX_GS) return(NULL)
       g <- intersect(T2G[[cl]]$gene[T2G[[cl]]$term == id], arm_genes)
       if (!length(g)) return(NULL)
@@ -565,7 +564,7 @@ for (key in names(SELECTED)) {
     # Winner-take-all: a pinned set that never enriched must never take a gene from a set
     # that did, so `enriched` leads the ordering before any p-value.
     #
-    # The tie-break AFTER p_matched must be the RAW hypergeometric p, never the adjusted
+    # The tie-break AFTER p_matched must be the RAW hypergeometric p, upstream of the adjusted
     # one. enricher() is called once per collection, so p.adjust is Benjamini-Hochberg
     # within five separate families of very different size (Hallmark 50 testable sets,
     # KEGG 177, GO MF 928, Reactome 1295, GO BP 4449). BH scales with family size, so the

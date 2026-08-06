@@ -1,24 +1,21 @@
 #!/usr/bin/env Rscript
 # =============================================================================
 # 03g_nonidentifiability.R - PHASE 3 (stage 04_tf) COMPUTE: the non-identifiability
-#   triptych. WHY Hif1a's high heat-MAIN "activity" is NOT identifiable.
+#   triptych. Why Hif1a's high heat-MAIN "activity" is unidentifiable.
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 #
-# Role:  COMPUTE half of the "normalize-then-visualize" split for fig3p/3q/3r.
-#        Runs run_ulm (the ONE approved statistic, EXACTLY as 03e_heat_main_
-#        regulators.R does it -- same .mor="mor", minsize=5 call) on the heat-MAIN
-#        t-stat matrix, plus pure set-membership COUNTING over CollecTRI regulons.
-#        Emits THREE tidy plot-ready CSVs. Contains NO ggplot()/ggsave() and NO
-#        statistic beyond run_ulm + counting.
+# Role:  COMPUTE half of the "normalize-then-visualize" split for fig3p/3q/3r. Runs run_ulm
+#        (the one approved statistic, exactly as 03e_heat_main_regulators.R runs it — same
+#        .mor="mor", minsize=5 call) on the heat-MAIN t-stat matrix, plus pure
+#        set-membership COUNTING over CollecTRI regulons. Emits three tidy plot-ready CSVs.
 #
-# The honest message (do NOT crown any co-regulator, do NOT crown HIF2a):
-#   On heat-MAIN, Hif1a's "activity" is non-identifiable. Its target set is
-#   dominated by genes that the network's most PROMISCUOUS TFs also regulate,
-#   so (a) Hif1a ranks only #9 among co-elevated stress/IEG/NF-kB TFs and
-#   (b) those same promiscuous TFs are the ones sharing its targets. The claim
-#   is NON-IDENTIFIABILITY, not a new winner.
+# The honest message (leave every co-regulator and HIF2a uncrowned):
+#   On heat-MAIN, Hif1a's "activity" is non-identifiable. Its target set is dominated by
+#   genes that the network's most PROMISCUOUS TFs also regulate, so (a) Hif1a ranks #9 among
+#   co-elevated stress/IEG/NF-kB TFs and (b) those same promiscuous TFs are the ones sharing
+#   its targets. The claim is NON-IDENTIFIABILITY.
 #
-# Inputs (all cached; NO network calls -- get_collectri() is broken here):
+# Inputs (all cached; get_collectri() is broken here, so no network calls):
 #   - 03_results/objects/02_de_results.rds        (per-contrast limma t-stats)
 #   - 03_results/objects/net_collectri_mouse.rds  (source/target/mor)
 #   - 03_results/04_tf/tables/fig3e_mlm_collinearity_data.csv  (353 Hif1a targets:
@@ -33,10 +30,10 @@
 #   - fig3r_membership_data.csv         (gene, tf, in_regulon, gene_heat_t,
 #                                        tf_heatmain_score, gene_contrib, tf_family)
 #
-# Method: t-statistic input (NEVER logFC); run_ulm(.mor="mor", minsize=5) on the
-#   Temp_main column -- IDENTICAL estimator to 03e/03_decoupler_tf.R so this sits
-#   on the same ULM axis as the rest of the deck. Co-regulation = set-membership
-#   counting over CollecTRI target lists; no correlation, no model.
+# Method: t-statistic input, per gsea.rank_metric; run_ulm(.mor="mor", minsize=5) on the
+#   Temp_main column — the same estimator as 03e/03_decoupler_tf.R, so this sits on the same
+#   ULM axis as the rest of the deck. Co-regulation is set-membership counting over
+#   CollecTRI target lists.
 #
 # Dependencies: decoupleR, dplyr, tidyr, readr
 # =============================================================================
@@ -55,7 +52,7 @@ HEAT_MAIN <- "Temp_main"   # the heat-MAIN contrast (name contains "Temp")
 #   This drives BOTH the family coloring across fig3p/3q/3r AND the fig3q "family"
 #   column. The point of the coloring is to show that Hif1a's co-elevated peers
 #   and target-sharers are the network's generic stress / immediate-early /
-#   NF-kB / housekeeping regulators -- NOT a hypoxia-specific cohort.
+#   NF-kB / housekeeping regulators -- a broad stress cohort.
 # Buckets (anything not listed -> "other"):
 #   housekeeping            : Sp1, Sp3
 #   stress/senescence       : Trp53
