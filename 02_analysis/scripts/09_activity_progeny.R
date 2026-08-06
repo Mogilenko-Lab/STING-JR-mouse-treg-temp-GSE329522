@@ -1,23 +1,23 @@
 # 09_activity_progeny.R — COMPUTE
 # =============================================================================
-# PROGENy pathway activity (14 pathways) via decoupleR MLM on the per-contrast
-# limma-trend t-statistic matrix (7 contrasts).
+# PROGENy pathway activity (14 pathways) via decoupleR MLM on the per-contrast limma-trend
+# t-statistic matrix (7 contrasts).
 #
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
 # Stage:   05_progeny
 #
-# Role: COMPUTE ONLY. No ggplot/ggsave; figures live in 09_activity_progeny_viz.R.
-#       Mirrors the PROGENy-MLM half of 14839/09_activity_progeny_tf.R and
-#       matches the load_or_compute + master-table + tidy-CSV idiom of STING's
-#       own 03_decoupler_tf.R so PROGENy and TF outputs are consistent.
+# Role: COMPUTE ONLY; figures live in 09_activity_progeny_viz.R. Mirrors the PROGENy-MLM
+#       half of 14839/09_activity_progeny_tf.R and matches the load_or_compute +
+#       master-table + tidy-CSV idiom of STING's own 03_decoupler_tf.R, keeping PROGENy and
+#       TF outputs consistent.
 #
 # Key scientific payoff:
 #   PROGENy-Hypoxia expected UP in WT_heat AND KO_heat (flat Interaction)
 #     => the pseudohypoxia/glycolysis program is cGAS-independent.
-#   PROGENy-JAK-STAT expected UP in WT_heat, diminished in KO_heat, positive
-#     Interaction => the IFN program is cGAS-dependent.
-#   This corroborates the two-arms result by a footprint method that uses NO
-#   HIF regulon — the strongest cross-method convergence point.
+#   PROGENy-JAK-STAT expected UP in WT_heat, diminished in KO_heat, positive Interaction
+#     => the IFN program is cGAS-dependent.
+#   This corroborates the two-arms result by a footprint method built on no HIF regulon,
+#   making it the strongest cross-method convergence point.
 #
 # Inputs:
 #   - 03_results/objects/02_de_results.rds       (7 limma topTables; col `t` used)
@@ -33,13 +33,13 @@
 #   - 03_results/master/master_progeny_activities.csv       (master accumulator; schema-pinned)
 #
 # Network shape assumed (verified by 00c_prepare_networks.R + stopifnot below):
-#   net_progeny: data.frame with columns source (pathway name), target (gene symbol,
-#   mouse), weight (continuous float, the PROGENy model coefficient). 14 distinct
-#   source values. Genes are already mouse symbols (Title-case MGI). The `weight`
-#   column is passed to run_mlm(.mor="weight"), NOT "mor" — PROGENy uses a
-#   continuous weight; CollecTRI uses signed ±1 mor. Do NOT swap.
+#   net_progeny: data.frame with columns source (pathway name), target (gene symbol, mouse),
+#   weight (continuous float, the PROGENy model coefficient). 14 distinct source values.
+#   Genes arrive as mouse symbols (Title-case MGI). The `weight` column goes to
+#   run_mlm(.mor="weight"): PROGENy uses a continuous weight where CollecTRI uses a signed
+#   ±1 mor. Keep the two straight.
 #
-# Dependencies: decoupleR (lazy; loaded only when actually needed)
+# Dependencies: decoupleR (lazy; loaded only when needed)
 # =============================================================================
 
 source("02_analysis/config/config.R")
@@ -86,7 +86,7 @@ message("=================================================================")
 
 # ============================================================================
 # 1. LOAD DE RESULTS + BUILD GENE x CONTRAST t-STAT MATRIX
-#    Mirrors 03_decoupler_tf.R §1 exactly: mat is genes x 7 contrasts; NA -> 0;
+#    Mirrors the matrix build in 03_decoupler_tf.R: mat is genes x 7 contrasts; NA -> 0;
 #    rownames are gene symbols (the Symbol-rownames contract from load_de_results).
 # ============================================================================
 

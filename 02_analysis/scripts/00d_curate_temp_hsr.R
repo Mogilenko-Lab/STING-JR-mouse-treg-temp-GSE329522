@@ -15,27 +15,26 @@
 # Dependencies: 02_analysis/config/config.R; msigdbr (offline MSigDB)
 #
 # ===========================================================================================
-# METHOD & RATIONALE (decisions are auditable, not arbitrary)
+# METHOD & RATIONALE
 # ===========================================================================================
 #   (A) HSR CORE DEFINITION
 #       The curated HSR core is the UNION of three public MSigDB v2026.1.Hs sets:
 #       REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS,
-#       REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE, and
-#       GOBP_RESPONSE_TO_HEAT. The shared HSF1 -> HSPA* -> DNAJ* -> BAG* -> HSPB*
-#       proteostasis core is the temperature-specific signal being measured here, NOT a
-#       confound to purge.
+#       REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE, and GOBP_RESPONSE_TO_HEAT.
+#       The shared HSF1 -> HSPA* -> DNAJ* -> BAG* -> HSPB* proteostasis core is the
+#       temperature-specific signal this lens measures, so it is kept in full.
 #
 #   (B) HONEST CEILING
-#       Even this clean core is proteotoxic-stress-general: HSF1 also fires on oxidative,
-#       proteasome, and metal stress, so the lens is not fever-specific. The mouse 37/39
-#       contrast is the only thing that can measure thermal-ness.
+#       This clean core is proteotoxic-stress-general: HSF1 also fires on oxidative,
+#       proteasome and metal stress, so fever specificity is a further claim. The mouse 37/39
+#       contrast is what measures thermal-ness here.
 #
 #   (C) TWO FROZEN TIERS
-#       sensitivity = the full mapped mouse union, without GSE329522 feature filtering.
-#       core        = the anchor's expressed-filtered mouse set, union intersected with genes
-#                     present in the GSE329522 CPM gene_name column.
-#       The human asset is the portable sensitivity union in HUMAN symbols; human compartments
-#       derive their own expressed core from that sensitivity union locally.
+#       sensitivity = the full mapped mouse union, before GSE329522 feature filtering.
+#       core        = the anchor's expressed-filtered mouse set, the union intersected with
+#                     genes present in the GSE329522 CPM gene_name column.
+#       The human asset is the portable sensitivity union in HUMAN symbols, and each human
+#       compartment derives its own expressed core from that union locally.
 #
 #   DETERMINISM: no RNG is used; all symbols are sorted before writing.
 # ===========================================================================================
@@ -231,7 +230,7 @@ component_sets <- data.frame(
   stringsAsFactors = FALSE
 )
 provenance <- list(
-  signature = "Curated HSR thermal proteostasis core",
+  signature = "Curated HSR core (HSF1 + co-chaperone categories)",
   citation = "MSigDB v2026.1.Hs (Reactome, GO:BP)",
   source = "msigdbr",
   msigdbr_version = as.character(utils::packageVersion("msigdbr")),

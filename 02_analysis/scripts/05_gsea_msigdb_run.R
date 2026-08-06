@@ -1,19 +1,19 @@
 # 05_gsea_msigdb_run.R — COMPUTE
 ## clusterProfiler::GSEA (by="fgsea") over the 8 MSigDB collections × all 7 contrasts,
-## ranked by the limma-trend t. Caches gseaResult S4 objects (consumable by the
-## RNAseq-toolkit GSEA plotters); derives the tidy master rows via normalize_gsea_results().
+## ranked by the limma-trend t. Caches gseaResult S4 objects for the RNAseq-toolkit GSEA
+## plotters, and derives the tidy master rows via normalize_gsea_results().
 ## Stage: 06_gsea.  Run from project root AFTER 04_gsea_set_prep.R and 11_emit_universe.R:
 ##   Rscript 02_analysis/scripts/05_gsea_msigdb_run.R
 ##
 ## ASSUMPTIONS
-##   * 04_gsea_set_prep.R has already cached geneset_msigdb_<name>.rds under DIR_OBJECTS.
-##     Any collection whose cache file is absent at run time is WARN-skipped (not an error).
+##   * 04_gsea_set_prep.R has cached geneset_msigdb_<name>.rds under DIR_OBJECTS. A
+##     collection whose cache file is absent at run time is WARN-skipped.
 ##   * 11_emit_universe.R has produced 03_results/objects/gene_universe.txt (background
-##     universe, ~19 679 MGI symbols). Presence is checked at start; absence stops with a
-##     clear message.
-##   * 02_de_limma_trend.R has produced 03_results/objects/02_de_results.rds (named list
-##     of 7 limma topTables, one per design.contrast, Symbol rownames, column `t` present).
-##   * Inputs are READ-ONLY. Only 03_results/{06_gsea,objects,master}/ are written.
+##     universe, ~19 679 MGI symbols). Presence is checked at start, and absence stops the
+##     run with a clear message.
+##   * 02_de_limma_trend.R has produced 03_results/objects/02_de_results.rds (named list of
+##     7 limma topTables, one per design.contrast, Symbol rownames, column `t` present).
+##   * Inputs are READ-ONLY. Writes go to 03_results/{06_gsea,objects,master}/ alone.
 ##
 ## OUTPUTS
 ##   Objects (one per contrast, named list collection -> clusterProfiler gseaResult S4):
@@ -26,12 +26,12 @@
 ##     03_results/master/master_gsea_table.csv
 ##
 ## IDEMPOTENCY
-##   load_or_compute() returns from cache on re-runs (no recompute).
-##   append_master_table() drops existing rows keyed on `database` before re-appending
-##   (so MSigDB rows replace only their own slice, leaving custom/coresh rows untouched).
+##   load_or_compute() returns from cache on re-runs.
+##   append_master_table() drops existing rows keyed on `database` before re-appending, so
+##   MSigDB rows replace their own slice and leave custom/coresh rows in place.
 ##   All numeric columns are rounded to 9 sig figs for byte-stable CSV writes.
 ##
-## COMPUTE ONLY — no ggplot / ggsave / plotting of any kind.
+## COMPUTE ONLY — figures live in the viz siblings.
 
 # ============================================================================
 # 0. Environment setup
@@ -105,14 +105,14 @@ if (file.exists(manifest_path)) {
           " — continuing without manifest (will still attempt to load each cached RDS).")
 }
 
-## (d) GSEA parameters (all from config.R constants / YAML gsea: block, never hardcoded here)
+## (d) GSEA parameters (all from config.R constants / YAML gsea: block)
 MINSZ <- GSEA_MIN_SIZE   # 15    (thresholds.gsea_min_size)
 MAXSZ <- GSEA_MAX_SIZE   # 500   (thresholds.gsea_max_size)
 SEED  <- GSEA_SEED       # 123   (thresholds.gsea_seed)
 NPERM <- GSEA_NPERM      # 1e5   (thresholds.gsea_nperm)  — nPermSimple for clusterProfiler::GSEA
 FDR   <- GSEA_FDR_CUTOFF # 0.05  (thresholds.gsea_fdr)    — display only (not used to filter)
 RM    <- (YAML_CONFIG$gsea$rank_metric %||% RANK_METRIC)  # "t"  (gsea.rank_metric; NEVER logFC)
-## clusterProfiler::GSEA run-time engine settings (gsea: block; §5 of the blast-radius doc)
+## clusterProfiler::GSEA run-time engine settings, read from the gsea: config block
 PCUT  <- YAML_CONFIG$gsea$pvalue_cutoff_run %||% 1      # keep ALL pathways at run time
 PADJM <- YAML_CONFIG$gsea$padj_method       %||% "fdr" # pAdjustMethod
 EPS   <- YAML_CONFIG$gsea$eps                %||% 0     # exact fgsea p-values
@@ -467,7 +467,7 @@ if (file.exists(master_p)) {
 }
 
 # ============================================================================
-# 9. Biology sanity checks (warn, never stop)
+# 9. Biology sanity checks (warn and continue)
 # ============================================================================
 ## These are find-not-crash checks. A failure here means "check the data",
 ## not "the pipeline is broken". For the cGAS-STING / hyperthermia design:

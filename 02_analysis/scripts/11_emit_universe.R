@@ -1,28 +1,28 @@
 #!/usr/bin/env Rscript
 # 11_emit_universe.R — COMPUTE
-## Emit the GSEA background gene universe and candidate-set frame for the STING
-## standard sweep. Stage: 06_gsea. Run from project root AFTER 02_de_limma_trend.R
-## and BEFORE the GSEA producers (04_gsea_set_prep.R, 05_gsea_msigdb_run.R, etc.).
+## Emit the GSEA background gene universe and candidate-set frame for the STING standard
+## sweep. Stage: 06_gsea. Run from project root AFTER 02_de_limma_trend.R and BEFORE the
+## GSEA producers (04_gsea_set_prep.R, 05_gsea_msigdb_run.R, etc.).
 ##
 ## PURPOSE
-##   Writes two outputs that every downstream GSEA arm consumes:
+##   Writes the two outputs every downstream GSEA arm consumes:
 ##     (1) 03_results/objects/gene_universe.txt  — one MGI symbol per line, sorted.
-##         The contrast-invariant enrichment background: the union of all modelled
-##         symbols from 02_de_results.rds (post dup-collapse, ~19,679 symbols).
-##         fgsea / clusterProfiler callers pass this as their `universe` argument.
+##         The contrast-invariant enrichment background: the union of all modelled symbols
+##         from 02_de_results.rds (post dup-collapse, ~19,679 symbols). fgsea /
+##         clusterProfiler callers pass this as their `universe` argument.
 ##     (2) 03_results/master/universe_frame.csv  — gene-level candidate-set frame.
-##         One row per background gene. Mirrors 14839's per-gene attribute semantics:
-##         detected (appears in the modelled DE gene list = always TRUE here, by
+##         One row per background gene, mirroring 14839's per-gene attribute semantics:
+##         detected (appears in the modelled DE gene list, always TRUE here by
 ##         construction), expressed (AveExpr > log2(1 CPM) across >=1 contrast), plus
-##         per-contrast significance and direction flags that downstream arms use to
-##         subset the background or annotate enrichment results.
+##         per-contrast significance and direction flags that downstream arms use to subset
+##         the background or annotate enrichment results.
 ##
-## DEPARTURES FROM 14839's universe_frame.csv (set-level pathway explorer universe)
+## HOW THIS DIFFERS FROM 14839's universe_frame.csv (set-level pathway explorer universe)
 ##   14839/11_emit_universe.R writes a SET-level frame (pathway_id / entity_type /
-##   genes_full_set) that feeds the pathway-explorer embedding.  STING's sweep plan
-##   (00_INDEX §3-4, F3) wants the GENE-level background annotation frame, because
-##   the pathway-explorer embedding is not yet in scope.  The gene-level frame is the
-##   natural "candidate-set frame" for GSEA background annotation (one row per symbol).
+##   genes_full_set) that feeds the pathway-explorer embedding. This compartment needs
+##   the GENE-level background annotation frame instead, since the pathway-explorer
+##   embedding sits outside current scope. The gene-level frame is the
+##   natural "candidate-set frame" for GSEA background annotation, one row per symbol.
 ##   Column-for-column mapping vs 14839:
 ##     gene_symbol   — present (the primary key)
 ##     detected      — present (always TRUE; synonym of being in the modelled universe)
@@ -30,9 +30,8 @@
 ##     in_universe   — present (always TRUE for every row in this file; explicit flag)
 ##     [per-contrast] <contrast>_logFC, <contrast>_t, <contrast>_padj, <contrast>_sig,
 ##                    <contrast>_direction — derived from 02_de_results.rds topTables.
-##   Columns that 14839 records from atlas/entity/set membership (entity_type,
-##   genes_full_set) are NOT replicated here because they are set-level, not gene-level,
-##   and the STING frame is gene-level by design (see above).
+##   The columns 14839 records from atlas/entity/set membership (entity_type,
+##   genes_full_set) are set-level, and this frame is gene-level by design.
 ##
 ## ASSUMED SHAPE OF 02_de_results.rds (verify in-container):
 ##   A named list, names == 7 YAML contrast names

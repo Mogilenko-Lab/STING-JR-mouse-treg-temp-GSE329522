@@ -1,39 +1,37 @@
 # 17_signature_derive.R — COMPUTE
 # =============================================================================
-# Projection-signature derivation (stage 10_signature) — reshape the finished
-# per-contrast DE master into projectable mouse-symbol gene sets + ranked lists.
+# Projection-signature derivation (stage 10_signature) — reshape the finished per-contrast
+# DE master into projectable mouse-symbol gene sets + ranked lists.
 #
 # Project: GSE329522 STING/cGAS Hyperthermia iTreg (2x2 genotype x temperature)
-# Stage:   10_signature   (script 17; stage id != script number, matching 12–16 → 06/07)
+# Stage:   10_signature   (script 17; stage id differs from script number, matching 12–16 → 06/07)
 #
-# ROLE: COMPUTE ONLY. Runs NO new statistics — no DE re-fit, no enrichment, no
-#   permutation. It RESHAPES the already-published master_de_genes.csv into the
-#   projection primitives Phase 0 freezes: per-contrast binary up/down sets (at BOTH
-#   the fdr_only and fdr_logfc gates) and full signed-t ranked lists, all in MOUSE
-#   symbols. It also runs a DISPLAY-ONLY dry-run ortholog-coverage preview (one
-#   babelgene call) so the human can judge mapping loss at BREAKPOINT 10 BEFORE the
-#   contract is frozen in 18. There is NO ggplot/ggsave here; figures live in the
-#   sibling 17_signature_derive_viz.R, which reads only what this script writes.
+# ROLE: COMPUTE ONLY. Reshapes the published master_de_genes.csv into the projection
+#   primitives Phase 0 freezes: per-contrast binary up/down sets (at BOTH the fdr_only and
+#   fdr_logfc gates) and full signed-t ranked lists, all in MOUSE symbols. It also runs a
+#   DISPLAY-ONLY dry-run ortholog-coverage preview (one babelgene call) so the human can
+#   judge mapping loss at BREAKPOINT 10 before stage 18 freezes the contract. Figures live
+#   in the sibling 17_signature_derive_viz.R, which reads only what this script writes.
 #
-# WHY THIS STAGE (see phase-00-mouse-signature-export.md): the human compartments
-#   cannot score against a 7-contrast, mouse-symbol master. They need a single frozen
-#   ortholog-mapped signature artifact. Stage 17 derives the DEFINITIONS (mouse
-#   symbols); the human approves them at BREAKPOINT 10; stage 18 freezes the human
-#   contract. This split is deliberate: derive → approve → freeze.
+# WHY THIS STAGE: the human compartments score
+#   against a single frozen ortholog-mapped signature artifact, in place of a 7-contrast
+#   mouse-symbol master. Stage 17 derives the DEFINITIONS in mouse symbols, the human
+#   approves them at BREAKPOINT 10, and stage 18 freezes the human contract. The split is
+#   deliberate: derive → approve → freeze.
 #
-# SIGN CONVENTION (preserved end to end): up/down split by DE direction (sign of
-#   logFC); the ranked list ranks on the SIGNED limma-trend t-statistic (RANK_METRIC
-#   = "t"; NEVER logFC, per gsea.rank_metric). Correlative framing only — this is the
-#   INPUT the human phases test for presence, never a fever/HIF/STING causal claim.
+# SIGN CONVENTION (preserved end to end): up/down split by DE direction (sign of logFC);
+#   the ranked list ranks on the SIGNED limma-trend t-statistic (RANK_METRIC = "t", per
+#   gsea.rank_metric). Correlative framing throughout — this is the INPUT the human phases
+#   test for presence, and fever/HIF/STING causality is a separate claim.
 #
 # Input (read-only, the SOLE input):
-#   03_results/master/master_de_genes.csv   (7 contrasts x 19,679 genes; cols
-#     gene_symbol, ensembl, logFC, t, P.Value, adj.P.Val, contrast, significant,
-#     direction). We RE-DERIVE the binary sets from the raw columns against the config
-#     thresholds — the master's own `significant` flag is FDR-only and NOT trusted here,
-#     so the logFC gate is explicit and auditable.
+#   03_results/master/master_de_genes.csv   (7 contrasts x 19,679 genes; cols gene_symbol,
+#     ensembl, logFC, t, P.Value, adj.P.Val, contrast, significant, direction). The binary
+#     sets are RE-DERIVED from the raw columns against the config thresholds. The master's
+#     own `significant` flag is FDR-only, so the logFC gate is applied explicitly here and
+#     stays auditable.
 #
-# Params (from config; never hardcoded):
+# Params (from config):
 #   thresholds.de_fdr (0.05), thresholds.de_logfc (1.0); RANK_METRIC = "t".
 #   decisions.projection.role_primary (which contrast is the headline; role column).
 #   decisions.projection.ortholog_ambiguity.min_support (babelgene vote floor; preview only).
@@ -44,8 +42,8 @@
 #   03_results/10_signature/tables/_overview/updown_overlap.csv            (pairwise Jaccard of up- and down-sets)
 #   03_results/10_signature/tables/_overview/ortholog_coverage_preview.csv (contrast x gate x {mapped_1to1, one_to_many, unmapped})
 #
-# IDEMPOTENT + BYTE-STABLE: a pure read->reshape->round->write of a fixed master +
-#   an offline babelgene lookup. Re-running yields the same bytes (round_numeric_cols).
+# IDEMPOTENT + BYTE-STABLE: read -> reshape -> round -> write over a fixed master, plus an
+#   offline babelgene lookup. Re-running yields the same bytes (round_numeric_cols).
 #
 # Run from project root:
 #   Rscript 02_analysis/scripts/17_signature_derive.R
@@ -77,7 +75,7 @@ RANK_MET  <- RANK_METRIC %||% (YAML_CONFIG$gsea$rank_metric %||% "t")   # "t"
 # Contrast display order = config order (WT_heat first — the primary axis).
 CONTRASTS <- vapply(YAML_CONFIG$design$contrasts, function(c) c$name, character(1))
 
-# Role assignment (config-driven; default per runbook §3.1). role=primary is the
+# Role assignment, config-driven. role=primary is the
 # single headline axis; every other contrast is a comparator. This is the manifest
 # `role` column stage 18 inherits — derived here for the display tables.
 ROLE_PRIMARY <- unlist(YAML_CONFIG$decisions$projection$role_primary %||% list("WT_heat"))

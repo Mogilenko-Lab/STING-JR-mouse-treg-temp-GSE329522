@@ -14,26 +14,28 @@
 # Dependencies: 02_analysis/config/config.R; msigdbr (offline MSigDB)
 #
 # ===========================================================================================
-# METHOD & RATIONALE (decisions are auditable, not arbitrary)
+# METHOD & RATIONALE
 # ===========================================================================================
 #   (A) ACTIVATION POLE DEFINITION
-#       The source panel is a tight, literature-grounded HUMAN T-cell activation panel spanning
-#       TCR-proximal signaling, early costimulation, immediate-early transcription factors, and
-#       activation effector genes. The frozen CSV is curated input and is not modified here.
+#       The source panel is a tight, literature-grounded HUMAN T-cell activation panel
+#       spanning TCR-proximal signaling, early costimulation, immediate-early transcription
+#       factors and activation effector genes. The frozen CSV is curated input and is read
+#       verbatim.
 #
 #   (B) MOUSE BASIS
-#       Mouse symbols are derived from msigdbr(species="Mus musculus") using the same native
-#       db_gene_symbol -> gene_symbol convention as the HSR lens. For this panel the validated
-#       map is 1:1: 66 HUMAN symbols -> 66 unique mouse symbols, all present in GSE329522.
+#       Mouse symbols come from msigdbr(species="Mus musculus") on the same native
+#       db_gene_symbol -> gene_symbol convention as the HSR lens. For this panel the
+#       validated map is 1:1: 66 HUMAN symbols -> 66 unique mouse symbols, all present in
+#       GSE329522.
 #
-#   (C) DISJOINT-FROM-HSR BY CONSTRUCTION
-#       This activation pole is built separately from the frozen HSR thermal lens so the
-#       three-lens decomposition can distinguish activation from thermal proteostasis.
+#   (C) DISJOINT FROM HSR BY CONSTRUCTION
+#       This activation pole is built separately from the frozen HSR lens, so the
+#       three-lens decomposition can tell the two memberships apart.
 #
 #   (D) HONEST FRAMING
-#       This is the ACTIVATION pole; overlap of the empirical WT_heat_up with it indicates
-#       activation, overlap with the HSR core indicates thermal proteostasis - neither makes
-#       WT_heat_up causal for fever.
+#       This is the ACTIVATION pole. Overlap of the empirical WT_heat_up with it indicates
+#       activation; overlap with the HSR core indicates HSR-core membership. Fever causality
+#       for WT_heat_up is a further claim in either case.
 #
 #   DETERMINISM: no RNG is used; all symbols and rows are sorted before writing.
 # ===========================================================================================
@@ -56,7 +58,7 @@ EXPECTED_CATEGORIES <- c(
 )
 HONEST_NOTE <- paste(
   "This is the ACTIVATION pole; overlap of the empirical WT_heat_up with it indicates",
-  "activation, overlap with the HSR core indicates thermal proteostasis - neither makes",
+  "activation, overlap with the HSR core indicates HSR-core membership - neither makes",
   "WT_heat_up causal for fever."
 )
 
