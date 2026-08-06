@@ -1,96 +1,69 @@
-# Sample-mapping QC of the iTreg libraries
+# 01_qc — Recovering the design from expression
 
-**Generated:** 2026-08-03 19:20 by `02_analysis/scripts/01_mapping_qc.R`
+The deposited CPM table arrives with twenty libraries and a proposed condition assignment. This
+stage tests that assignment against the data, using two markers whose behaviour is known in
+advance: the heat-shock genes report temperature, and `Cgas` reports genotype. The call is made
+label-blind, from expression alone, and then compared with the assignment under test.
 
-## Verdict (mapping confirmed)
+All twenty libraries agree. The heat-shock thermometer separates the two temperature halves by
++1.12 log2CPM, `Cgas` sits above the knockout in wild-type within both halves, and the
+resulting per-library call matches the owner's sample sheet on 20 of 20 libraries
+(`tables/mapping_verdict.csv`).
 
-The temperature-major mapping under test (021-025 WT_37, 026-030 cGASKO_37, 031-035 WT_39, 036-040 cGASKO_39) is **SUPPORTED (gate PASS)**: **20/20** libraries have a data-derived label (thermometer-predicted temperature + Cgas-predicted genotype) that matches it. No discordant libraries.
+The stage exists because a naive join would get it wrong. The deposited CPM columns run
+temperature-major while the GEO accessions run genotype-major, so joining by position mislabels
+ten libraries. `figures/fig1d_scramble.png` is that demonstration, and it is why every
+downstream label in this compartment is marker-derived.
 
-**Evidence.** The heat-shock thermometer (Hspa1b/Hsph1/Hspa1a/Dnajb1) is monotone with the assigned temperature: mean log2CPM = 4.91 in the hot half (031-040) vs 3.79 in the cool half (021-030), a +1.12 log2 shift. Cgas (Cgas) is higher in WT than cGAS-KO within both temperature halves (37 °C: WT-KO = 1.02; 39 °C: WT-KO = 1.24 log2CPM). PCA on all 19657 genes carrying variance places 57.3%/4.4% of variance on PC1/PC2. PC1 is temperature almost exactly (R2 0.98 against temperature, 0.00 against genotype); genotype sits weakly on PC2 (R2 0.07), so the 2x2 is recoverable from expression but its two factors are recoverable to very different degrees.
+**Compute** writes the four plot-ready tables and the machine-checkable verdict.
+**Visualisation** draws three panels: one per marker family, plus the scramble exhibit.
 
-**Scramble caveat.** The deposited CPM column order is temperature-major; the GEO GSM accessions are genotype-major. A naive positional GSM->column join therefore mislabels **10** libraries (026, 027, 028, 029, 030, 031, 032, 033, 034, 035) -- see `figures/fig1d_scramble.png`. This is why the mapping must be marker-derived, not accession-positional.
+---
 
-**Bottom line:** the label-blind mapping is **SUPPORTED**. Sample-to-condition mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with the label-blind marker call.
+## Figures
 
-See `tables/mapping_verdict.csv` for the per-library machine-checkable verdict.
+### `figures/fig1a_thermometer.png`
 
+**The heat-shock thermometer recovers temperature from expression alone.**
+Per-library log2(CPM+0.5) for four heat-shock genes, one facet per gene. x, library
+(12630-RS-021 through 040, in deposited column order); y, log2(CPM+0.5), free per facet. Fill
+gives the marker-derived temperature call: blue, 37 °C; red, 39 °C. Libraries 031–040 stand
+above 021–030 in every facet, which places the temperature split at the midpoint of the
+deposited column order. Mean log2CPM across the four markers is 4.91 in the hot half against
+3.79 in the cool half.
+*Source* `tables/fig1a_thermometer_data.csv` · `02_analysis/scripts/01_mapping_qc_viz.R`.
 
-## figures/fig1a_thermometer.png
+### `figures/fig1b_cgas.png`
 
-Heat-shock thermometer (label-blind temperature validation):
-per-library log2(CPM+0.5) for the 4 heat-shock marker genes (Hspa1b,
-Hsph1, Hspa1a, Dnajb1), one facet per gene, all 20 libraries
-(12630-RS-021..040) on the x-axis, colored by the label-blind
-temperature call. Libraries 031-040 (39 °C, red) run systematically
-higher than 021-030 (37 °C, blue) in every marker, confirming the
-deposited CPM column order is temperature-major. Label-blind: the
-temperature is data-derived (marker expression), not read off the
-deposited labels. Sample-to-condition mapping confirmed against the
-owner's sample sheet (2026-07-22): 20 of 20 libraries concordant with
-the label-blind marker call.
+**`Cgas` expression recovers genotype within each temperature half.**
+Per-library `Cgas` log2(CPM+0.5), faceted into the 37 °C and 39 °C halves. x, library; y,
+`Cgas` log2(CPM+0.5). Fill gives the marker-derived genotype call: green, wild-type; purple,
+cGAS-knockout. Read within a facet: wild-type sits above knockout in both, by 1.02 log2CPM at
+37 °C and 1.24 at 39 °C. Faceting by temperature keeps the heat effect out of the genotype
+call.
+*Source* `tables/fig1b_cgas_data.csv` · `02_analysis/scripts/01_mapping_qc_viz.R`.
 
-**How to read:** x = library (12630-RS-021..040, temperature-major order); y =
-log2(CPM+0.5). Fill color = the label-blind temperature call: blue =
-37 °C (negative pole of the diverging map), red = 39 °C (positive
-pole). One facet per heat-shock marker (free y). Read: the hot half
-(031-040) bars should tower over the cool half (021-030) in each
-facet. The labels shown were recovered from marker expression alone,
-label-blind.
+### `figures/fig1d_scramble.png`
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/01_mapping_qc_viz.R` | `geom_col + facet_wrap (project_theme + save_figure)` | `figures.width_column=3.5; figures.base_size_column=9; figures.base_size=16` | `03_results/01_qc/tables/fig1a_thermometer_data.csv` |
+**A positional accession join mislabels half the libraries.**
+Two rows of tiles per library, comparing the marker-derived assignment (top) against a naive
+positional GSM-to-column join (bottom). x, library; y, the two label sources. Tile fill gives
+the assigned condition on a four-level scale. A black outline with an × marks a library where
+the two sources disagree; ten do, and they run consecutively from 026 to 035, exactly where the
+temperature-major and genotype-major orderings cross. This compartment uses the marker-derived
+mapping, and this panel is the reason.
+*Source* `tables/fig1d_scramble_data.csv` · `02_analysis/scripts/01_mapping_qc_viz.R`.
 
-## figures/fig1b_cgas.png
+---
 
-Cgas genotype check (label-blind within each temperature half):
-per-library log2(CPM+0.5) of Cgas, all 20 libraries split into the 37
-°C and 39 °C facets, colored by the label-blind genotype call. Within
-EACH temperature half, the WT libraries (green) exceed the cGAS-KO
-libraries (purple), the expected signature of a Cgas knockout --
-confirming the genotype axis is data-recoverable. Label-blind:
-genotype is inferred from Cgas expression, not the deposited labels.
-Sample-to-condition mapping confirmed against the owner's sample
-sheet (2026-07-22): 20 of 20 libraries concordant with the
-label-blind marker call.
+## Tables
 
-**How to read:** x = library (12630-RS-, faceted into the 37 °C | 39 °C halves); y =
-Cgas log2(CPM+0.5). Fill color = the label-blind genotype call: green
-= WT, purple = cGAS-KO. Read WITHIN each facet (each temperature
-half): WT bars should sit above cGAS-KO bars. The comparison is
-intentionally within-temperature so the heat effect does not confound
-the genotype call. Genotype here is read off Cgas expression,
-label-blind.
+| File | What it holds | How to read it |
+|---|---|---|
+| `tables/mapping_verdict.csv` | One row per library: the assignment under test, the marker-derived temperature call, the marker-derived genotype call, and whether the two agree. | `concordant` reads TRUE on all 20 rows. This is the machine-checkable form of the verdict; every other artifact in this stage is its illustration. |
+| `tables/fig1a_thermometer_data.csv` | Long form, one row per library × heat-shock marker, with `log2cpm` and the temperature call. | `temp` is derived from these values, so the column is the panel's conclusion and its colour channel at once. |
+| `tables/fig1b_cgas_data.csv` | One row per library: `Cgas` log2(CPM+0.5), the temperature half it sits in, and the genotype call. | Compare within a `temp` group. The wild-type minus knockout difference is the quantity the panel reports. |
+| `tables/fig1d_scramble_data.csv` | One row per library × label source, with the condition each source assigns and a `discordant` flag. | Filter on `discordant` to list the ten libraries a positional join gets wrong. |
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/01_mapping_qc_viz.R` | `geom_col + facet_grid (project_theme + save_figure)` | `figures.width_column=3.5; figures.base_size_column=9; figures.base_size=16` | `03_results/01_qc/tables/fig1b_cgas_data.csv` |
-
-## figures/fig1d_scramble.png
-
-Scramble exhibit (mapping-competence demonstration): a 2-row tile per
-library comparing the marker-derived condition assignment (top row)
-against a naive positional GSM->column join (bottom row), all 20
-libraries on the x-axis. 10 of the 20 libraries (026-035) disagree
-between the two, marked by a black outline and an x glyph: the
-deposited CPM columns are temperature-major while the GEO GSM
-accessions are genotype-major, so a positional join silently swaps
-KO-37 <-> WT-39 in the middle block. This project uses the
-marker-derived mapping, and this panel is the reason.
-Sample-to-condition mapping confirmed against the owner's sample
-sheet (2026-07-22): 20 of 20 libraries concordant with the
-label-blind marker call.
-
-**How to read:** x = library (12630-RS-021..040); y = the two label sources,
-marker-derived on top and the naive positional GSM->column join
-below. Tile fill = the assigned condition
-(WT_37/cGASKO_37/WT_39/cGASKO_39, on a blue-to-red by-condition map).
-A black tile outline with an x glyph on the strip marks a library
-where the two sources disagree, which is a mislabelled column under
-the naive join. The discordant block (026-035) sits exactly where the
-temperature-major and genotype-major orderings cross.
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/01_mapping_qc_viz.R` | `geom_tile + geom_point (project_theme + save_figure)` | `figures.width_column=3.5; figures.base_size_column=9; figures.base_size=16` | `03_results/01_qc/tables/fig1d_scramble_data.csv` |
-
+Both marker families are ordinary quantities from the delivered CPM matrix, so this stage
+computes no model and carries no test statistic. Its output is an identity check.

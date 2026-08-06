@@ -1,102 +1,63 @@
-# 07_synthesis - capstone synthesis (two-arms panel + reply memo)
+# 07_synthesis — The four evidence arms in one table
 
-This step assembles the cross-arm evidence for the STING-cGAS standard sweep
-into one tidy two-arms table and renders the headline figure. It joins and
-summarises the master tables the earlier arms produced (GSEA, PROGENy,
-decoupleR-TF, DE; GATOM/CoReSh where present), and computes no new statistics.
+Four methods have now read the same seven contrasts: gene-set enrichment, PROGENy footprints,
+CollecTRI factor activity and per-gene differential expression, with GATOM modules where the
+metabolic run returned any. This stage joins them into one tidy evidence table and draws the
+single panel that reads across all four. It computes no new statistics.
 
-Headline result (the publication-relevant payoff): a cGAS-dependence
-ASYMMETRY. The IFN/ISG arm is cGAS-dependent (positive, significant
-Interaction); the HIF/glycolysis arm rises in BOTH heat arms but is flat in
-the Interaction - no detectable cGAS-dependence at n=5. This is an
-asymmetry, NOT proven cGAS-independence (the 1-df interaction is the
-lowest-powered comparison). HIF1a/HIF2a are NOT crowned as drivers; the arm
-names are labels. Figure claims floor at L3 (DE/enrichment statistics);
-mechanism (L7: pseudohypoxia / Complex-I) lives only in the reply memo.
+The panel reports one thing: a **cGAS-dependence asymmetry**. The interferon arm carries the
+interaction — 18 significant method-features in that column — while the HIF and glycolysis arm
+rises in both heat arms and holds 1 significant feature there. That is an asymmetry between two
+arms measured at n = 5. The interaction is the one-degree-of-freedom term and the least-powered
+comparison in the design, so a flat column bounds cGAS-dependence at this sample size.
 
-Sample mapping confirmed against the owner's sample sheet (2026-07-22): 20 of 20
-libraries concordant with the label-blind marker call from the Hspa1b/Hsph1
-thermometer and Cgas. n=5/group.
+The arm names are labels for how each row was grouped. Naming HIF1α or HIF2α as the effector
+would take a separate test, and [`../04_tf/`](../04_tf/) is where that test is made.
 
-Artifacts:
-- figures/_overview/two_arms_panel.pdf + two_arms_panel.png - the headline panel
-- tables/_overview/two_arms_panel.csv - the source table behind the panel
-- tables/two_arms_summary.csv - the full cross-arm evidence table (16_synthesis.R)
+---
 
-The claim-to-evidence reply memo is kept with this compartment's working notes.
+## Figures
 
-## figures/_overview/two_arms_panel.png
+### `figures/_overview/two_arms_panel.png`
 
-Two-arms cGAS-dependence asymmetry, multi-method: the IFN/ISG arm is
-cGAS-dependent (positive, significant Interaction; 18 significant
-method-features in the Interaction column), while the HIF/glycolysis
-arm rises in BOTH WT_heat and KO_heat yet is flat in the Interaction
-(1 significant; no detectable cGAS-dependence at n=5). Convergent
-across GSEA, PROGENy, decoupleR-TF, and per-gene DE (plus
-GATOM/CoReSh where provisioned). n=5/group; NOT proven independence.
+**The interferon arm carries the interaction; the HIF and glycolysis arm carries both heat arms
+and goes flat there.**
+Two stacked tracks: the interferon/ISG arm above, the HIF/glycolysis arm below. Rows within a
+track are method-features — GSEA gene sets, PROGENy pathways, CollecTRI factors, differential-
+expression marker genes, GATOM modules where present — ordered by their interaction score.
+Columns are the four headline contrasts: wild-type heat, cGAS-knockout heat, interaction,
+temperature main effect. Tile fill gives the signed score, orange toward the numerator condition
+and blue away from it, clamped to ±3.2, with the score printed in the tile. A black ring marks
+adjusted p < 0.05.
 
-**How to read:** Two stacked tracks: TOP = IFN/ISG arm (cGAS-dependent), BOTTOM =
-HIF/glycolysis arm (no detectable cGAS-dependence at n=5). Rows
-within a track = method-feature glyph rows (GSEA gene sets, PROGENy
-pathways, decoupleR TFs, DE marker genes; GATOM modules where
-present), ordered by Interaction score. Columns = headline contrasts
-(WT heat | cGAS-KO heat | Interaction | Temp main). Tile fill =
-signed score (orange = up in the numerator condition, blue = down),
-clamped to +/-3.2; the printed number is the score. A BLACK RING
-means padj < 0.05 (significant). READ THE ASYMMETRY DOWN THE
-'Interaction' COLUMN: the IFN/ISG track lights up (positive, ringed)
-= cGAS-dependent; the HIF/glycolysis track goes flat / unringed there
-while staying lit in BOTH heat columns = no detectable
-cGAS-dependence at n=5. The arm names are labels; naming a driver
-such as HIF1a or HIF2a would take a separate test. Claim tier: L3
-(DE/enrichment statistics; n=5/group). A flat Interaction bounds
-cGAS-dependence at this sample size, the 1-df interaction being the
-lowest-powered comparison.
+**Read down the interaction column.** The interferon track lights up positive and ringed. The
+HIF and glycolysis track stays lit in both heat columns and goes unringed there.
+*Source* `tables/_overview/two_arms_panel.csv` · `02_analysis/scripts/16_synthesis_viz.R`.
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.2; colors.diverging; design.contrasts` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
+---
 
-## tables/_overview/two_arms_panel.csv
+## Tables
 
-Source table for the `two_arms_panel` headline figure: one row per
-(arm, method, feature, contrast) combination displayed in the heatmap,
-carrying all columns needed to reproduce or audit every tile.
+### `tables/two_arms_summary.csv`
 
-**How to read:** Each row represents a single tile in the two-arms heatmap.
-Columns: `arm` (IFN_ISG or HIF_glycolysis), `arm_track` (the pretty facet label
-shown in the figure), `method` (source arm: GSEA, PROGENy, TF, DE, GATOM),
-`feature` (gene set / pathway / TF / gene name), `feature_kind` (gene set
-category or analyte type where available), `contrast` (one of: WT_heat |
-KO_heat | Interaction | Temp_main), `score` (raw signed statistic before clamping
-— GSEA NES, PROGENy/TF MLM-ULM score, or limma t-statistic), `pvalue`, `padj`
-(Benjamini-Hochberg corrected), `direction` (up/down/ns character flag),
-`significant` (logical; TRUE when padj < 0.05). The `score` column is the
-unclamped value; the figure shows it clamped to +/-3.5. The cGAS-dependence test
-lives in the `Interaction` contrast rows. Rows are ordered by arm / method /
-feature / contrast. Claim tier: L3 (same as the figure it underlies; provisional,
-n=5/group).
+The full cross-arm evidence table, one row per (arm, method, feature, contrast). Assembled by
+`16_synthesis.R` from the four master tables under [`../master/`](../master/).
 
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/16_synthesis_viz.R` | `build_two_arms_panel` (panel_table transmute) | `thresholds.gsea_fdr=0.05; figures.nes_cap=3.5; design.contrasts` | `03_results/07_synthesis/tables/two_arms_summary.csv; 03_results/objects/16_synthesis.rds` |
+`arm` takes `IFN_ISG`, `HIF_glycolysis` or `heatshock_context` (HSF1, which is carried as
+context rather than as a cGAS arm), with `arm_label` and `arm_hypothesis` naming what each
+grouping was assembled to test. `method` names the source arm — `GSEA:<db>`, `PROGENy`,
+`TF:CollecTRI`, `DE:limma-trend`, `GATOM` — and `feature` the gene set, pathway, factor or gene.
+`score` is that method's own signed statistic: a normalised enrichment score, a linear-model
+activity score, a moderated t, or a GATOM pseudo-NES. `padj` drives `significant` at the
+configured FDR. The cGAS-dependence test lives in the `Interaction` rows.
 
-## tables/two_arms_summary.csv
+Scores from different methods share no scale. Compare within a `method`, and read the panel for
+the pattern across them.
 
-The full cross-arm evidence table: one row per (arm, method, feature,
-contrast). Columns: arm, arm_label, arm_hypothesis, method, feature,
-feature_kind, contrast, score, pvalue, padj, direction, significant.
-Assembled by 16_synthesis.R from the arm masters (no new statistics).
+### `tables/_overview/two_arms_panel.csv`
 
-**How to read:** `arm` in {IFN_ISG (cGAS-dependent hypothesis),
-HIF_glycolysis (no-detectable-cGAS-dependence hypothesis), heatshock_context
-(HSF1; not a cGAS arm)}. `method` names the source arm (GSEA:<db>, PROGENy,
-TF:CollecTRI, DE:limma-trend, GATOM). `score` = the method's signed statistic
-(GSEA NES / PROGENy-TF MLM-ULM score / limma t / GATOM pseudo-NES). `padj`
-drives `significant` (padj < gsea_fdr). The cGAS-dependence test is the
-`Interaction` contrast. Claim tier: L3 (provisional, n=5/group).
-
-| Script | Function | Config | Input |
-|---|---|---|---|
-| `02_analysis/scripts/16_synthesis.R` | `build_*_arm + to_evidence` | `thresholds.gsea_fdr; design.contrasts; schemas.master_gsea_table` | `03_results/master/master_{gsea_table,progeny_activities,tf_activities,de_genes,gatom_modules}.csv` |
-
+The panel's same-stem source: one row per tile, carrying every column needed to audit it.
+`arm`, `arm_track` (the facet label drawn), `method`, `feature`, `feature_kind`, `contrast`,
+`score` (raw and unclamped), `pvalue`, `padj`, `direction` and `significant`. Rows order by arm,
+method, feature, contrast. The figure clamps `score` for display; this file carries the value the
+method returned.
