@@ -92,3 +92,15 @@ wild-type.
 | `tables/_overview/coresh_pctvar_overview.csv` | The plotted bars of the ranking panel. |
 | `tables/_overview/coresh_nes_dotplot.csv` | The plotted points of the module dot plot, with the dataset annotation joined on. |
 | `tables/by_contrast/<contrast>/coresh_gsea.csv` | Per-contrast derived-set enrichment, ordered by adjusted p — the source of that contrast's battery. |
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The compendium | The public mouse GEO compendium distributed on Synapse as **syn66227307** (mmu, roughly 85 chunks, ~20 GB), mounted read-only from the shared reference cache. It stores variance structure and accessions. |
+| The four queries | `WT_heat_up` and `Interaction_up`, each at the `fdr_logfc` and `fdr_only` gates, derived here from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. [`../10_signature/`](../10_signature/) records the gates. |
+| The fourteen `CORESH_<query>_<GSE>` modules | Gene-level loadings projected back from the top-ranked datasets of that sweep. Each module is named for the query that seeded it and the GEO accession it was mined from, and each is unique to this analysis. |
+| The dataset annotation | Researched per accession and frozen in `tables/_overview/coresh_dataset_annotation.{csv,json}`, each row carrying its source URL and PubMed id. Built by `08b_coresh_annotate.R`. It is descriptive and enters no statistic. |
+| The rankings scored against | Moderated-t vectors from the limma-trend fit on the same twenty libraries, made in [`../03_de/`](../03_de/). |

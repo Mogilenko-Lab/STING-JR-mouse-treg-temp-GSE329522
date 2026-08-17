@@ -86,3 +86,16 @@ above and add no statistic.
 | `tables/_overview/tf_heatmap.csv` | Factor × contrast scores with the axis label the left-edge strip draws. | `axis` takes `HIF`, `IFN`, or `other`, assigned from a fixed watchlist and never from the scores. |
 | `tables/_overview/progeny_tf_combined.csv` | Both layers stacked with a `layer` column separating them. | Scores from the two layers share no scale; compare within a `layer`. |
 | `tables/by_contrast/<contrast>/{progeny,tf}_barplot.csv` | Eight files, the same-stem source of each bar panel. | A per-contrast slice of the tables above, carried so each panel is reproducible from one file. |
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The rankings | Moderated-t vectors from the limma-trend fit on **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. Made in [`../03_de/`](../03_de/). |
+| **PROGENy** | The fourteen mouse pathway footprints of `progeny::getModel("Mouse", top = 500)`, cached at `../objects/net_progeny_mouse.rds` and built by `02_analysis/scripts/00c_prepare_networks.R`. Each footprint is a weighted gene vector. |
+| **CollecTRI** | The human TF→target regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse symbols and cached at `../objects/net_collectri_mouse.rds` by the same builder, because `decoupleR::get_collectri()` fails against OmnipathR 3.18.4. |
+| The `axis` labels | A fixed HIF / IFN watchlist held in `02_analysis/config/config.R`, assigned before any score is read. |
+
+The full provenance of every set and network this compartment reads is in [`../README.md`](../).

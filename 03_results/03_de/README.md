@@ -132,3 +132,25 @@ alone. FDR-only counts are `Temp_main` 11,153, `Geno_at_39` 64, `Geno_main` 60, 
 |---|---|---|
 | `tables/fig2_marker_means.csv` | Per-group mean log2(CPM+0.5) for fifteen watchlist genes — seven interferon-arm (Ifit1, Isg15, Irf7, Oasl2, Mx1, Stat1, Cxcl10) and eight HIF/glycolysis-arm (Slc2a1, Vegfa, Egln3, Bnip3, Pgk1, Ldha, Aldoa, Hk2) — across the four design cells, with the interaction logFC and adjusted p carried alongside. | Four rows per gene, one per cell; `inter_adjP` is constant within a gene. **Schema-frozen**: `03_decoupler_tf.R` reads this file by path, so keep the location and column names intact. |
 | `tables/marker_cgas_dependence.csv` | Interaction-contrast statistics for the same watchlist: `logFC`, `AveExpr`, `t`, `P.Value`, `adj.P.Val`. | Positive `logFC` means the induction is larger in wild-type once the shared heat effect is removed. |
+
+---
+
+## Signature provenance
+
+**The counts.** **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from
+primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature
+(37 °C, 39 °C), five biological replicates per group, twenty libraries.
+
+**The Hallmark annotation.** `hallmark_ifn`, `hallmark_ifn_alpha` and `hallmark_ifn_gamma` in
+`cgas_dependence_wide.csv` and `heat_response_wt_vs_ko.csv` are membership in
+`HALLMARK_INTERFERON_ALPHA_RESPONSE` and `HALLMARK_INTERFERON_GAMMA_RESPONSE`. Both come from the
+MSigDB Hallmark collection H, retrieved for *Mus musculus* through msigdbr 26.1.0 and frozen by
+`04_gsea_set_prep.R` as `../objects/geneset_msigdb_Hallmark.rds`. The columns are annotation and
+enter no selection rule.
+
+**The watchlists.** The seven interferon-arm and eight HIF/glycolysis-arm genes labelled on every
+volcano and MD panel are a fixed list held in `02_analysis/config/config.R`, so the same genes are
+findable in each panel.
+
+**Downstream.** The 213 up-genes of `WT_heat` become the frozen arm `WT_heat_up`, named for how it
+was derived. [`../README.md`](../) carries the full provenance of every set this tree reads.

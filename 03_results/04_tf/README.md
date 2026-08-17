@@ -229,3 +229,17 @@ the compute-side outputs those are cut from, plus four files with no panel of th
 
 `deck_assets/` holds a PNG copy of each panel for presentation use; the canonical renders are
 in `figures/_overview/`.
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The rankings | Moderated-t vectors from the limma-trend fit on **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. [`../03_de/`](../03_de/) is where they are made. |
+| **CollecTRI** (primary network) | The human TF→target regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse symbols and cached at `../objects/net_collectri_mouse.rds`. Built locally by `02_analysis/scripts/00c_prepare_networks.R`, because `decoupleR::get_collectri()` fails against OmnipathR 3.18.4. |
+| **DoRothEA A/B/C** (comparator network) | Confidence classes A, B and C of the bundled mouse regulons, cached at `../objects/net_dorothea_mouse_ABC.rds` by the same builder. It is scored on `WT_heat` for the method comparison. |
+| The curated modules on `fig3l` | A literature-grounded module lookup defined in `02_analysis/scripts/03c_hif_program_attribution.R`, partitioning part of the Hif1a regulon into heat-shock/stress, shared angiogenic-glycolytic, autoregulatory feedback and HIF1α-selective hypoxic core. Every member is listed in `tables/_overview/fig3l_hif_attribution.csv`. |
+| `Lombardi2022_HIF` (in `fig3h_lombardi_vs_phylo_data.csv`) | The published conserved pan-cancer HIF signature, re-derived here from that paper's own supplement across 32 TCGA cancer types. Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR. "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved gene signature." *Cell Reports* 2022;41(7):111652, doi:10.1016/j.celrep.2022.111652. Built by `00b_curate_lombardi_hif.R` and frozen at `00_data/references/gene_sets/`. |
+
+The full provenance of every set and network this compartment reads is in [`../README.md`](../).

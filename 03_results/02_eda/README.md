@@ -58,3 +58,12 @@ consumed read-only by the viz script.
 Variance explained per component, twenty rows in descending order. `PC` labels the component,
 `pct_var` is the scree height, and `n_top` records the variable-gene count the decomposition
 ran on. Written by `01_mapping_qc.R`; the viz script reads it and computes nothing.
+
+---
+
+## Data provenance
+
+The decomposition runs on the delivered log2 CPM matrix of **GSE329522** — induced regulatory
+T cells from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) ×
+temperature (37 °C, 39 °C), five libraries per cell of the design. No external gene set enters
+this stage.

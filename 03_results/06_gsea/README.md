@@ -98,13 +98,15 @@ per set. Bottom, the ranked moderated t the curves were computed on.
 
 | Database | Source | Content |
 |---|---|---|
-| `Hallmark` | MSigDB H | 50 curated hallmark sets. |
-| `KEGG` · `Reactome` · `WikiPathways` | MSigDB C2:CP | Pathway collections. |
-| `GO_BP` · `GO_MF` · `GO_CC` | MSigDB C5 | Gene Ontology, three ontologies. |
-| `TF_Targets` | MSigDB C3:TFT | Transcription-factor target sets. |
-| `TransportDB` · `MitoPathways` · `MitoXplorer` | Curated here | Transporter and mitochondrial metabolic sets, carrying no interferon set. |
-| `HSR_lens` | Curated here | Two sets, `HSR_core` and `HSR_sensitivity`, built from msigdbr v2026.1.Hs. |
-| `TCR_activation` | Curated here | One curated TCR / immediate-early activation set. |
+| `Hallmark` | MSigDB H, through msigdbr 26.1.0 | 50 curated hallmark sets. |
+| `KEGG` · `Reactome` · `WikiPathways` | MSigDB C2:CP, through msigdbr 26.1.0 | Pathway collections. |
+| `GO_BP` · `GO_MF` · `GO_CC` | MSigDB C5, through msigdbr 26.1.0 | Gene Ontology, three ontologies. |
+| `TF_Targets` | MSigDB C3:TFT:GTRD, through msigdbr 26.1.0 | Transcription-factor target sets. |
+| `TransportDB` · `MitoPathways` · `MitoXplorer` | Prebuilt mouse objects from the RNAseq-toolkit reference tree; `MitoPathways` is the MitoCarta 3.0 build | Transporter and mitochondrial metabolic sets, carrying no interferon set. |
+| `HSR_lens` | Curated here from three MSigDB v2026.1.Hs sets | Two sets, `HSR_core` and `HSR_sensitivity`, built from msigdbr v2026.1.Hs. |
+| `TCR_activation` | Curated here from a frozen 66-symbol human panel | One curated TCR / immediate-early activation set. |
+
+Full sources, versions and build scripts are in [Signature provenance](#signature-provenance) below.
 
 ---
 
@@ -229,3 +231,22 @@ hypoxia reference, and its content is roughly 92% heat-shock and glycolytic whil
 hypoxia-diagnostic core (Pdk1, Bnip3, Bnip3l, Car9) is repressed. Every gene-set size on a
 figure in this stage is read at run time from the master table, so a size printed on a canvas is
 the size the test used.
+
+---
+
+## Signature provenance
+
+| Database | Provenance |
+|---|---|
+| The rankings | Moderated-t vectors from the limma-trend fit on **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. Made in [`../03_de/`](../03_de/). |
+| Hallmark · KEGG · Reactome · WikiPathways · GO_BP · GO_MF · GO_CC · TF_Targets | MSigDB collections H, C2:CP:KEGG, C2:CP:REACTOME, C2:CP:WIKIPATHWAYS, C5:GO:BP, C5:GO:MF, C5:GO:CC and C3:TFT:GTRD, retrieved through msigdbr 26.1.0 for *Mus musculus* and frozen by `04_gsea_set_prep.R`. |
+| TransportDB | `01_modules/RNAseq-toolkit/data/references/transportdb/processed/Mus_musculus/transportdb_genesets.rds`. |
+| MitoPathways | The MitoCarta 3.0 build at `01_modules/RNAseq-toolkit/data/references/mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds`. |
+| MitoXplorer | `01_modules/RNAseq-toolkit/data/references/mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds`. |
+| HSR_lens | Union of `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE` and `GOBP_RESPONSE_TO_HEAT` from MSigDB v2026.1.Hs, retrieved offline through msigdbr 26.1.0. `HSR_sensitivity` is the full mapped union at 176 human symbols. `HSR_core` is that union intersected with the GSE329522 CPM matrix, 47 mouse symbols. Built by `00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`, frozen under `00_data/references/gene_sets/temp_hsr_lens/`. |
+| TCR_activation | A frozen 66-symbol human T-cell activation panel curated in this repository, spanning TCR-proximal signalling, early costimulation, immediate-early transcription factors and activation effector genes. Mouse symbols through `msigdbr(species = "Mus musculus")`, 66 to 66, all present in GSE329522. Built by `00f_curate_tcr_activation.R`, frozen under `00_data/references/gene_sets/tcr_activation_lens/`. |
+| PROGENy rows in the master table | `progeny::getModel("Mouse", top = 500)`, fourteen footprints, cached by `00c_prepare_networks.R`. [`../05_progeny/`](../05_progeny/) reads them. |
+| `Lombardi2022_HIF`, withdrawn from this stage | The published conserved pan-cancer HIF signature, re-derived here from that paper's own supplement across 32 TCGA cancer types. Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR. "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved gene signature." *Cell Reports* 2022;41(7):111652, doi:10.1016/j.celrep.2022.111652. Built by `00b_curate_lombardi_hif.R`. |
+
+The vocabulary ledger for how each reference symbol met this matrix is in
+[`../objects/README.md`](../objects/).

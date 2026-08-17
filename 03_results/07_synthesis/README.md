@@ -62,3 +62,21 @@ The panel's same-stem source: one row per tile, carrying every column needed to 
 `score` (raw and unclamped), `pvalue`, `padj`, `direction` and `significant`. Rows order by arm,
 method, feature, contrast. The figure clamps `score` for display, and this file carries the
 value the method returned.
+
+---
+
+## Signature provenance
+
+Each row's `method` names where its feature came from, and every source is external to this
+stage.
+
+| `method` | Provenance |
+|---|---|
+| `GSEA:<db>` | MSigDB collections H, C2:CP:KEGG, C2:CP:REACTOME, C2:CP:WIKIPATHWAYS, C5:GO:BP/MF/CC and C3:TFT:GTRD through msigdbr 26.1.0, plus the compartment's own curated collections — TransportDB, the MitoCarta 3.0 MitoPathways build, MitoXplorer, `HSR_lens` and `TCR_activation`. Sources and build scripts per database: [`../06_gsea/`](../06_gsea/). |
+| `PROGENy` | `progeny::getModel("Mouse", top = 500)`, fourteen footprints, cached by `00c_prepare_networks.R`. |
+| `TF:CollecTRI` | The human regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse by the same builder. |
+| `DE:limma-trend` | Per-gene statistics from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. |
+| `GATOM` | Modules found on the KEGG atom-transition network under `00_data/references/gatom/`. |
+
+The `arm` grouping is a label applied to rows from those sources, defined in `16_synthesis.R`,
+with `arm_hypothesis` naming what each grouping was assembled to test.

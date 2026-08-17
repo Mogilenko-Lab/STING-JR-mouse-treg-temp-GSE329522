@@ -67,3 +67,13 @@ mapping, and this panel is the reason.
 
 Both marker families are ordinary quantities from the delivered CPM matrix, so this stage
 computes no model and carries no test statistic. Its output is an identity check.
+
+---
+
+## Data provenance
+
+The twenty libraries are **GSE329522**: bulk RNA-seq of induced regulatory T cells differentiated
+from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature
+(37 °C, 39 °C), five biological replicates per group. The assignment under test is the data
+owner's sample sheet dated 2026-07-22, which is the authoritative mapping. Both markers are read
+from the delivered CPM matrix itself, so this stage consumes no external gene set.

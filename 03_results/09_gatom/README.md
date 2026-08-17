@@ -74,3 +74,13 @@ Blue marks the KEGG network.
 The three-row roll-up of these modules is carried in
 [`../master/master_gatom_modules.csv`](../master/) under `database = GATOM_KEGG`, in the shared
 schema, so they join the enrichment and activity tables.
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The atom-transition networks | Frozen under `00_data/references/gatom/`. This run used the KEGG reaction network (`network.kegg.rds`, `met.kegg.db.rds`) with the mouse annotation `org.Mm.eg.gatom.anno.rds`. The combined KEGG+Rhea network needs `met.combined.db.rds`, which is absent from that directory, so it contributes no bar to any panel. |
+| The gene scores | Per-gene log2 fold changes and p-values from the limma-trend fit on **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell. Made in [`../03_de/`](../03_de/). |
+| Metabolite scores | None. The run carries no metabolomics input, so node size is uniform and every score on the graph is transcriptional. |
