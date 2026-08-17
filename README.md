@@ -77,6 +77,19 @@ record — figures regenerate from the script each caption names, since `.png` a
 repo-wide. Clone with `--recursive` to populate `01_modules/`, which GitHub source tarballs carry as
 empty directories.
 
+## Environment
+
+The analysis runs in `scdock-r-dev:v0.5.10`, pinned on the `dev-core` service in
+`.devcontainer/docker-compose.yml`. That image is defined by
+[scbio-docker](https://github.com/tony-zhelonkin/scbio-docker) at commit
+[`5885cd3`](https://github.com/tony-zhelonkin/scbio-docker/commit/5885cd306ea908cb1949e7238b9186074b938953).
+
+[RNAseq-toolkit](https://github.com/tony-zhelonkin/RNAseq-toolkit) supplies the GSEA plotters and the
+prebuilt mouse gene-set objects — TransportDB, MitoCarta 3.0 and MitoXplorer 3.0 — read from its
+reference tree. This release records it at commit
+[`752481f`](https://github.com/tony-zhelonkin/RNAseq-toolkit/commit/752481fd13542ccb81d2b9b92ba57305cf13d6fc)
+(`v0.2.0-9-g752481f`, on `dev`) under `01_modules/`.
+
 ## License
 
 **MIT** for code — `02_analysis/`, `.devcontainer/`, and scripts anywhere in the tree
