@@ -177,3 +177,18 @@ and records the downstream recovery census. Read its `block` column first to sel
 the lens rows or the per-compartment brackets. The four membership tables — the
 `hsr_lens_membership_*` set plus `hsr_lens_provenance_euler` — carry the fitted areas, their
 residuals and the unassigned remainder for each drawing.
+
+---
+
+## Signature provenance
+
+Three lenses and one derived arm meet on every panel in this stage. Each is external to the
+others.
+
+| Lens or set | Provenance |
+|---|---|
+| `HSR_core` · `HSR_sensitivity` | Union of three MSigDB v2026.1.Hs sets — `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE`, `GOBP_RESPONSE_TO_HEAT` — retrieved offline through msigdbr 26.1.0. `HSR_sensitivity` is the full mapped union, 176 human symbols. `HSR_core` is the taxonomy-refined cytosolic subset at 56 human symbols, whose mouse orthologs present in the GSE329522 CPM matrix number 47. Built by `02_analysis/scripts/00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`, frozen at `00_data/references/gene_sets/temp_hsr_lens/`. Its honest ceiling is proteotoxic-stress-general: HSF1 also fires on oxidative, proteasome and metal stress. |
+| `TCR_activation` | A frozen 66-symbol human T-cell activation panel curated in this repository, spanning TCR-proximal signalling, early costimulation, immediate-early transcription factors and activation effector genes. Mouse symbols through `msigdbr(species = "Mus musculus")`, a strictly one-to-one 66 to 66, all present in GSE329522. Built by `00f_curate_tcr_activation.R`, frozen at `00_data/references/gene_sets/tcr_activation_lens/`. |
+| `Lombardi2022_HIF` | The published conserved pan-cancer HIF signature, re-derived here from that paper's own supplement across 32 TCGA cancer types (the source carries no GEO accession), giving 112 human consensus genes and 100 mouse symbols present in GSE329522. Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR. "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved gene signature." *Cell Reports* 2022;41(7):111652, doi:10.1016/j.celrep.2022.111652. Built by `00b_curate_lombardi_hif.R`, frozen at `00_data/references/gene_sets/`. |
+| `WT_heat_up` · `Interaction_up` | Derived in this compartment from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group. Each arm is named for its contrast, direction and gate. The human side of the bridge is the same arm mapped through babelgene 22.9, frozen at [`../human_projection/`](../human_projection/). |
+| The external files the bridge census reads | The ranked lists published by the human compartments that consume the projected arm, plus the sorted-T-cell overlap table that supplies `human_wt_hsr_intersect` — the JIA compartment built on **GSE160097**, sorted synovial-fluid and paired-blood Treg, Tcon and CD8. Each file this stage may read is pinned by SHA-256 in `tables/source_hash_manifest.csv`, and what it actually read is recorded in `tables/source_reads_observed.csv`. |

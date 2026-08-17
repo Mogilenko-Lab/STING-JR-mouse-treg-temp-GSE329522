@@ -142,3 +142,15 @@ draws in no panel, and each is cited by name where its numbers are quoted above.
 | `composition_provenance.csv` | Package versions, the gene-set object md5, every threshold, the seed, the tie-break rule, the permutation floor, and the seam check between the matrix recomputation and `clusterProfiler::enricher`. | `seam_max_abs_dk` and `seam_max_abs_dq` are both 0, so the permutation engine and the ORA call agree set by set. Any change to `genesets_md5` invalidates every share here. |
 | `arm_composition.csv` | 36 rows, the composition figure as drawn: the ten named sets per arm, the roll-up with its set count, and the residue. | `n_sets_rolled_up` is filled on the roll-up row alone. The full per-set list behind it is `composition_shares.csv`. |
 | `arm_composition_variants.csv` | 96 rows, every category of the three arms carrying a composition, under both variants, with the two deltas. | `delta_fractional` and `delta_winner_take_all` are anchored minus unpinned. A row with `pinned` TRUE and `status` `tested, not enriched` gained its share by configuration and carries no significance. |
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The arms partitioned | `WT_heat_up`, `KO_heat_up` and `Interaction_fdrOnly_up`, derived in this compartment from **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group. Each is named for its contrast, direction and gate, and is read here in human symbols after the babelgene 22.9 projection frozen at [`../human_projection/`](../human_projection/). |
+| The five collections | MSigDB **v2026.1.Hs** Hallmark (H), GO:BP and GO:MF (C5), KEGG and Reactome (C2:CP), for *Homo sapiens*, retrieved through **msigdbr 26.1.0**. The gene-set object carries md5 `c6ec92f75aa6062f511309493822f04b`, and any change to it invalidates every share in this directory. |
+| The background | 12,986 human symbols from `WT_heat_ranked.rnk`, the ranked list frozen in [`../human_projection/`](../human_projection/). |
+| The hypoxia pins | `HALLMARK_HYPOXIA`, `GOBP_RESPONSE_TO_OXYGEN_LEVELS`, `GOBP_CELLULAR_RESPONSE_TO_OXYGEN_LEVELS`, `GOBP_HYPOXIA_INDUCIBLE_FACTOR_1ALPHA_SIGNALING_PATHWAY` and `REACTOME_CELLULAR_RESPONSE_TO_HYPOXIA`, named in the configuration and drawn from the same five collections. Every pin's status per arm is spelled out in `composition_hypoxia_sources.csv`. |
+| The engine | clusterProfiler 4.18.4, seed 20260731, run 2026-07-31, with every threshold and the seam check recorded in `composition_provenance.csv`. |

@@ -100,3 +100,14 @@ lifted to its current form before the source was asked.
 `median_abs_t` reads 10.8 and 10.3 for the heat arms against 6.7 and 5.8 for the interaction
 arms, which is the power gap between a 10-versus-10 contrast and a 1-df interaction term.
 `n_genes_plotted` records the figure's cap.
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The four up arms | `WT_heat_up`, `KO_heat_up`, `Interaction_up` and `Interaction_up_fdrOnly`, derived in this compartment from **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group, twenty libraries. Each arm is named for its contrast, direction and gate. |
+| The expression the genes are placed back on | The same twenty libraries, as group mean log2 CPM over the four design cells. |
+| The DE statistics | Read verbatim from the limma-trend fit in [`../03_de/`](../03_de/), cross-checked between `../objects/02_de_results.rds` and `../master/master_de_genes.csv`. |
+| `mapped_to_human`, `human_symbol`, `mapping_type` | The frozen applied ortholog map at [`../human_projection/ortholog_map.tsv`](../human_projection/), from pinned offline babelgene 22.9 at `min_support = 3`. |

@@ -175,7 +175,7 @@ cheap to enrich. A term wants both small.
 | `go_null_draws.csv` | All 2,000 replicates of both nulls for all four arms, 16,000 rows: terms reaching significance and genes covered, per replicate. | The substrate behind every null number above. `n_signif_obs` and `n_covered_obs` repeat the arm's own values on every row, so a permutation p recomputes from this file alone. |
 | `go_term_clusters.csv` | Every enriched term's block assignment, with the block's size, representative and best adjusted p. | `cluster_representative` is the block's most significant term. Block ids are numbered per arm × ontology × IEA variant and do not carry across. |
 | `go_iea_comparison.csv` | Per arm × ontology, what the evidence filter changes: annotated sizes, term counts each way, overlap, Jaccard, and both top-10 lists. | `n_top10_shared` is the number that matters: 4 of 10 for `WT_heat_up` BP, which is why both variants are reported everywhere. |
-| `go_vs_curated_lenses.csv` | Per arm × curated lens, the GO term whose name means the same thing, how many arm genes each claims, the shared count, the Jaccard and all three gene lists. Both IEA variants sit on one row. | `go_term_status` says why a row reads as it does: `tested`, `above_max_gs_size`, `below_min_gs_size`, `no_arm_gene_in_term`, `term_absent_from_universe`, `ontology_not_run`, `absent_from_GO.db`. `go_term_enriched` is TRUE or FALSE only where `go_term_status` is `tested`, so an untested term never reads as a negative result. |
+| `go_vs_curated_lenses.csv` | Per arm × curated lens, the GO term whose name means the same thing, how many arm genes each claims, the shared count, the Jaccard and all three gene lists. Both IEA variants sit on one row. Every lens is sourced in [Signature provenance](#signature-provenance) below. | `go_term_status` says why a row reads as it does: `tested`, `above_max_gs_size`, `below_min_gs_size`, `no_arm_gene_in_term`, `term_absent_from_universe`, `ontology_not_run`, `absent_from_GO.db`. `go_term_enriched` is TRUE or FALSE only where `go_term_status` is `tested`, so an untested term never reads as a negative result. |
 | `go_gene_coverage.csv` | One row per arm × gene: whether the background holds it, how many BP and MF terms it carries, how many enriched terms hold it, its coverage class, and whether the other ontology can see it. | `coverage_class` is the three-way split the coverage ladder draws. `visible_in_other_ontology` is why MF rides alongside BP: `P4HA2` carries no BP term at all and a BP-only read would call it unannotated. |
 | `go_coverage_summary.csv` | That split aggregated per arm, with the coverage null beside it. | Read `n_in_enriched_term` against `null_median_covered` and `p_covered_matched`. The null draws sets of the arm's **annotated** size while the split is out of the **nominal** size, which is why the two denominators differ. |
 | `go_proteostasis_probe.csv` | Every configured probe id for every arm plus whatever the name sweep found, with the term's size in the universe, the arm genes it holds, the expected count, raw and adjusted p, `p_matched`, recurrence and a status. | `status` and `tested` carry the lens table's vocabulary; `enriched` is NA for any row that never entered. A row appearing twice for one arm was found both by id and by the name sweep. Read `genes_hit` before the term name. |
@@ -190,3 +190,29 @@ across its 36 rows against the arm's 202. In the
 recurrence table `rank` 1 is the strongest hypergeometric result, and
 `frac_matched_reaching_q` is the column to scan down the first twenty rows before quoting any of
 them.
+
+---
+
+## Signature provenance
+
+**The arms.** `WT_heat_up`, `KO_heat_up` and the two `Interaction` arms are derived in this
+compartment from **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from
+primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature
+(37 °C, 39 °C), five biological replicates per group. Each arm is named for its contrast,
+direction and gate, and is read here in human symbols after the babelgene 22.9 projection frozen
+at [`../human_projection/`](../human_projection/).
+
+**The ontology.** GO Biological Process and Molecular Function through `org.Hs.eg.db` 3.22.0,
+GO.db 3.22.0, clusterProfiler 4.18.4 and GOSemSim 2.39.2, seed 20260730, with every version and
+cutoff recorded per run in `go_provenance.csv`.
+
+**The nine curated lenses in `go_vs_curated_lenses.csv`.** Each is a frozen gene list produced
+outside this stage. Their files are staged in the sibling compartments of the parent project, so
+a reader of this repository alone should take the provenance below as the record.
+
+| Lens | Provenance |
+|---|---|
+| `HALLMARK_HYPOXIA` (200) · `HALLMARK_TNFA_SIGNALING_VIA_NFKB` (200) · `HALLMARK_INFLAMMATORY_RESPONSE` (200) · `HALLMARK_IL2_STAT5_SIGNALING` (199) · `HALLMARK_INTERFERON_ALPHA_RESPONSE` (97) · `HALLMARK_UNFOLDED_PROTEIN_RESPONSE` (113) | The MSigDB Hallmark collection "H" for *Homo sapiens*, release **v2026.1.Hs**, retrieved through **msigdbr 26.1.0** and frozen one symbol per line with a validated expected size per set. |
+| `HSR_core` | The human-symbol arm of this compartment's curated heat-shock lens: the union of `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE` and `GOBP_RESPONSE_TO_HEAT` from MSigDB v2026.1.Hs through msigdbr 26.1.0, taxonomy-refined to the cytosolic subset. Built by `00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`. |
+| `deCevins_STING_IFN_independent` | The published IFN-independent STING-activation signature, 21 genes: those most specific to the SAVI disease-associated monocyte cluster after every type-I interferon transcript and every IFN-β-inducible gene is removed, so it is IFN-independent by construction. de Cevins et al. 2023, *Cell Reports Medicine*, **PMID 38118407**, **PMC10772457**, Table S6 of the supplement (`mmc7.xlsx`, sheet "SAVI signature"). Underlying cohort: SAVI PBMC **GSE226598**, under superseries GSE226601. SAVI is monogenic and PBMC-derived, so it reads as a positive-control reference and overlap with it is *consistent with* STING activation. |
+| `IFN_axis_generic` | The generic type-I interferon program, 200 up genes derived from the `IFNb_vs_0h` donor-pseudobulk contrast over three healthy donors, paired within donor, called at FDR < 0.05 and \|log2FC\| ≥ 1.0. Accession **GSE226572** (interferon-β time course), same study family as the STING axis above (de Cevins et al. 2023, *Cell Reports Medicine*, PMID 38118407). The gene list itself is derived in that compartment. |

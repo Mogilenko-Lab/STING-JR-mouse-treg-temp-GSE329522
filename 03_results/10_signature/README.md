@@ -63,3 +63,14 @@ one.
 The frozen sets themselves are written by the export step into
 [`../human_projection/signatures/`](../human_projection/), and the mouse-side set objects are
 cached at `../objects/17_signature_sets.rds`.
+
+---
+
+## Signature provenance
+
+Every candidate set here is derived in this compartment. Nothing external is read.
+
+| Resource | Provenance |
+|---|---|
+| The candidate sets | Cut from the limma-trend statistics on **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group, twenty libraries. A set is named for its contrast, direction and gate, so `WT_heat_up` is the genes higher at 39 °C than at 37 °C in wild-type cells at the `fdr_logfc` gate. |
+| The ortholog preview | Pinned offline babelgene at `min_support = 3`, mouse to human. The authoritative applied map is [`../human_projection/ortholog_map.tsv`](../human_projection/), reported in [`../11_projection/`](../11_projection/). |

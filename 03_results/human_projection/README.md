@@ -5,6 +5,14 @@ the mouse 39 °C signatures in human HGNC symbols, the ortholog map that produce
 manifest recording every size and every loss. A human compartment scores against these files and
 recomputes nothing.
 
+**Where these signatures come from.** Every set here is derived in this compartment from
+**GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine
+splenic CD4⁺ T cells, in a 2×2 design of genotype (wild-type, cGAS-knockout) × temperature
+(37 °C, 39 °C), five biological replicates per group, twenty libraries. Nothing here is imported
+from a published gene list. Each set is named for how it was derived, so `WT_heat_up` is the
+genes higher at 39 °C than at 37 °C in wild-type cells at the gate below, carried into human
+symbols. That accession and this derivation are the whole of the reference record.
+
 It is a reshape and an ortholog map of the finished differential expression. The biology is in
 [`../03_de/`](../03_de/), and the mapping arithmetic is reported in
 [`../11_projection/`](../11_projection/).

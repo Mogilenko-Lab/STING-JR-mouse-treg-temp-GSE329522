@@ -121,3 +121,13 @@ support level, which is an orthology result.
 The frozen lists themselves, the applied ortholog map and the manifest of sizes and gates are in
 [`../human_projection/`](../human_projection/), which is the contract the human compartments
 read.
+
+---
+
+## Signature provenance
+
+| Resource | Provenance |
+|---|---|
+| The mouse sets crossing over | `WT_heat_up/down`, `KO_heat_up/down`, `Interaction_up` and `Interaction_fdrOnly_up`, derived in this compartment from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group. Each is named for its contrast, direction and gate. |
+| The orthology source | Pinned offline **babelgene 22.9**, queried mouse to human at `min_support = 3`. The applied edges are frozen at [`../human_projection/ortholog_map.tsv`](../human_projection/). |
+| The symbol vocabulary | The count matrix was quantified against GENCODE vM25, and babelgene keys on current MGI symbols. Symbols babelgene could not key are re-asked under their current name through `org.Mm.eg.db` 3.22.0, with every candidate — accepted or withheld — recorded in `tables/_overview/query_normalisation_ledger.csv`. |

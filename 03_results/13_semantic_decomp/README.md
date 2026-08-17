@@ -113,3 +113,15 @@ All eight are written by `20_semantic_decomposition.R`, except `semantic_engine_
 | `semantic_provenance.csv` | Package versions, ontology, measure, combiner, evidence filter, seed, and every set size the run used. | `GOSemSim` records which build produced the numbers here, and `wang_isa_weight_measured` carries the weight the run measured for itself. |
 | `semantic_engine_validation.csv` | Every number this stage publishes under GOSemSim 2.36.0 and 2.39.2 side by side, plus probe comparisons on 4,000 GO BP term pairs, 780 `WT_heat_up` gene pairs, and the full 196 × 196 matrix. | `old_value` / `new_value` are the two builds and `changed` is TRUE beyond 1e-9. Rows whose `reading` says so hold one between-build statistic and repeat it in both columns, so `delta` is 0 there by construction. |
 | `_overview/wtheatup_lens_proximity.csv` | Per-lens summary of the figure, for the two lenses it draws: members in the set, genes scorable, genes above the depth-matched 95th percentile, the chance count, and the saturated-band exclusions. | `n_above_p95` against `n_expected_by_chance` is the whole read — `TCR_activation` 23 against 7.7, `HSR_core` 11 against 7.7. `Lombardi2022_HIF` is scored by the stage and absent here; it sits in `lens_proximity_per_gene.csv`. |
+
+---
+
+## Signature provenance
+
+| Lens or set | Provenance |
+|---|---|
+| `HSR_core` | Union of three MSigDB v2026.1.Hs sets — `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE`, `GOBP_RESPONSE_TO_HEAT` — retrieved offline through msigdbr 26.1.0, then taxonomy-refined to the cytosolic subset. Built by `00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`, frozen at `00_data/references/gene_sets/temp_hsr_lens/`. |
+| `TCR_activation` | A frozen 66-symbol human T-cell activation panel curated in this repository, spanning TCR-proximal signalling, early costimulation, immediate-early transcription factors and activation effector genes. Built by `00f_curate_tcr_activation.R`, frozen at `00_data/references/gene_sets/tcr_activation_lens/`. |
+| `Lombardi2022_HIF` | The published conserved pan-cancer HIF signature, re-derived here from that paper's own supplement across 32 TCGA cancer types. Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR. "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved gene signature." *Cell Reports* 2022;41(7):111652, doi:10.1016/j.celrep.2022.111652. Built by `00b_curate_lombardi_hif.R`. |
+| `WT_heat_up` · `KO_heat_up` | Derived in this compartment from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell of the design. Each arm is named for its contrast, direction and gate. |
+| The ontology | GO Biological Process through GOSemSim 2.39.2 and GO.db, with the package versions, measure, combiner, evidence filter and seed recorded per run in `semantic_provenance.csv`. |
