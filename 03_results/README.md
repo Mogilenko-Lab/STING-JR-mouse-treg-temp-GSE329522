@@ -65,6 +65,24 @@ symbols at the FDR + |log2FC| ≥ 1 gate and arrives in human as 202
 Each ships as an up list, a down list and a signed ranked list, with a manifest recording sizes
 and gates.
 
+## Signature provenance
+
+Every dataset, gene set, lens and network this tree reads, with where it came from. Where a row
+gives an accession and a derivation and stops there, that is the whole of the reference record.
+
+| Set, lens or network | Provenance |
+|---|---|
+| The anchor libraries | **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine splenic CD4⁺ T cells. Genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group, twenty libraries. |
+| `WT_heat_*` · `KO_heat_*` · `Interaction_*` | Derived here from the GSE329522 contrasts at the gates [`10_signature`](10_signature/) records. Human symbols come from pinned offline babelgene 22.9, and the applied map is [`human_projection/ortholog_map.tsv`](human_projection/). |
+| `HSR_core` · `HSR_sensitivity` | Union of three MSigDB v2026.1.Hs sets — `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE`, `GOBP_RESPONSE_TO_HEAT` — retrieved offline through msigdbr 26.1.0. `HSR_sensitivity` is the full mapped union at 176 human symbols. `HSR_core` is that union intersected with the GSE329522 CPM matrix, 47 mouse symbols. Built by `02_analysis/scripts/00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`. |
+| `TCR_activation` | A frozen 66-symbol human T-cell activation panel curated in this repository, spanning TCR-proximal signalling, early costimulation, immediate-early transcription factors and activation effector genes. Mouse symbols through `msigdbr(species = "Mus musculus")`, 66 to 66, all present in GSE329522. Built by `00f_curate_tcr_activation.R`. |
+| `Lombardi2022_HIF` | The published conserved pan-cancer HIF signature, re-derived here from that paper's own supplement across 32 TCGA cancer types. Lombardi O, Li R, Halim S, Choudhry H, Ratcliffe PJ, Mole DR. "Pan-cancer analysis of tissue and single-cell HIF-pathway activation using a conserved gene signature." *Cell Reports* 2022;41(7):111652, doi:10.1016/j.celrep.2022.111652. Built by `00b_curate_lombardi_hif.R`. |
+| Hallmark · KEGG · Reactome · WikiPathways · GO_BP · GO_MF · GO_CC · TF_Targets | MSigDB collections H, C2:CP:KEGG, C2:CP:REACTOME, C2:CP:WIKIPATHWAYS, C5:GO:BP, C5:GO:MF, C5:GO:CC and C3:TFT:GTRD, retrieved through msigdbr 26.1.0 for *Mus musculus*. |
+| TransportDB · MitoPathways · MitoXplorer | Prebuilt mouse gene-set objects from the RNAseq-toolkit reference tree: `transportdb/processed/Mus_musculus/transportdb_genesets.rds`, the MitoCarta 3.0 build at `mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds`, and `mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds`. |
+| CollecTRI · DoRothEA A/B/C · PROGENy | CollecTRI comes from the human regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse symbols. DoRothEA carries confidence classes A, B and C from the bundled mouse regulons. PROGENy is `progeny::getModel("Mouse", top = 500)`, fourteen footprints. All three are built locally by `00c_prepare_networks.R` and cached under [`objects/`](objects/), because `decoupleR::get_collectri()` fails against OmnipathR 3.18.4. |
+| CoReSh compendium | The public mouse GEO compendium on Synapse, **syn66227307** (mmu, roughly 85 chunks), read from the shared read-only reference cache. |
+| GATOM networks | The KEGG and combined atom-transition networks under `00_data/references/gatom/`. |
+
 ## Two conventions that hold everywhere in this tree
 
 **Signs.** A positive statistic points to the numerator of its contrast: 39 °C for a heat

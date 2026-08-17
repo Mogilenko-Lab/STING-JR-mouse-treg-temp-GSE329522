@@ -98,3 +98,19 @@ All three are written by `04_gsea_set_prep.R` through
 `00_data/references/symbol_alias/symbol_alias_map.csv` and `gene_universe.txt`, under
 `thresholds.gsea_min_size = 15` and `gsea_max_size = 500`.
 
+---
+
+## Signature provenance
+
+The checkpoints cache resources built elsewhere. Each one's source:
+
+| Checkpoint | Provenance |
+|---|---|
+| `geneset_msigdb_*.rds` (8) | MSigDB collections H, C2:CP:KEGG, C2:CP:REACTOME, C2:CP:WIKIPATHWAYS, C5:GO:BP, C5:GO:MF, C5:GO:CC and C3:TFT:GTRD, retrieved through msigdbr 26.1.0 for *Mus musculus*. |
+| `geneset_custom_*.rds` (5) | TransportDB, the MitoCarta 3.0 MitoPathways build and MitoXplorer, all prebuilt mouse objects from the RNAseq-toolkit reference tree under `01_modules/RNAseq-toolkit/data/references/`, plus this compartment's own `HSR_lens` and `TCR_activation`, frozen under `00_data/references/gene_sets/`. `geneset_manifest.csv` carries the exact source path of each. |
+| `net_collectri_mouse.rds` | The human TF→target regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse symbols. Built locally because `decoupleR::get_collectri()` fails against OmnipathR 3.18.4. |
+| `net_dorothea_mouse_ABC.rds` | The bundled mouse DoRothEA regulons at confidence classes A, B and C. |
+| `net_progeny_mouse.rds` | `progeny::getModel("Mouse", top = 500)`, fourteen pathway footprints. |
+| `coresh_*.rds` | Sweeps and derived sets over the public mouse GEO compendium on Synapse, **syn66227307** (mmu), read from the shared read-only reference cache. |
+| `10_gatom_*.rds` | Modules found on the KEGG atom-transition network under `00_data/references/gatom/`. |
+| Everything else | Derived in this compartment from **GSE329522** — induced regulatory T cells from primary murine splenic CD4⁺ T cells, genotype × temperature, five libraries per cell of the design. |

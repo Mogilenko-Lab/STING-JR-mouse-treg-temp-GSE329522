@@ -61,3 +61,14 @@ interaction signal is a property of a ranked list and attributes to no single tr
 factor on its own — [`../04_tf/`](../04_tf/) is where that attribution is tested, and `fig3p`,
 `fig3q` and `fig3r` are the three panels that bound it.
 
+---
+
+## Signature provenance
+
+Every pathway drawn here is a row of [`../master/master_gsea_table.csv`](../master/), so its gene
+set comes from one of that table's databases: the eight MSigDB collections retrieved through
+msigdbr 26.1.0, the curated TransportDB, MitoPathways (MitoCarta 3.0), MitoXplorer, `HSR_lens`
+and `TCR_activation` sets, the fourteen PROGENy footprints, and the CoReSh-derived modules mined
+from the public mouse GEO compendium on Synapse, syn66227307. Each is sourced in
+[`../master/README.md`](../master/). The scores themselves are computed on the GSE329522
+rankings made in [`../03_de/`](../03_de/).

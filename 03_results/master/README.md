@@ -142,3 +142,20 @@ the accessions run genotype-major. **Join on `gsm_id`.**
 thermometer for temperature, `Cgas` expression for genotype — agrees with the owner's sample
 sheet. [`../01_qc/`](../01_qc/) carries that check.
 
+---
+
+## Signature provenance
+
+Every row in these tables keys to one of the sources below.
+
+| Source | Provenance |
+|---|---|
+| The libraries and every DE row | **GSE329522** — bulk RNA-seq of induced regulatory T cells differentiated from primary murine splenic CD4⁺ T cells, genotype (wild-type, cGAS-knockout) × temperature (37 °C, 39 °C), five biological replicates per group, twenty libraries. The owner's sample sheet dated 2026-07-22 is the authoritative library-to-condition mapping. |
+| `database` = Hallmark · KEGG · Reactome · WikiPathways · GO_BP · GO_MF · GO_CC · TF_Targets | MSigDB collections H, C2:CP:KEGG, C2:CP:REACTOME, C2:CP:WIKIPATHWAYS, C5:GO:BP, C5:GO:MF, C5:GO:CC and C3:TFT:GTRD, retrieved through msigdbr 26.1.0 for *Mus musculus* and frozen by `04_gsea_set_prep.R`. |
+| `database` = TransportDB · MitoPathways · MitoXplorer | Prebuilt mouse gene-set objects from the RNAseq-toolkit reference tree: `transportdb/processed/Mus_musculus/transportdb_genesets.rds`, the MitoCarta 3.0 build `mitocarta3.0/processed/Mus_musculus/mito_mitopathways.rds`, and `mitoxplorer3.0/processed/Mus_musculus/mito_mitoxplorer.rds`. |
+| `database` = HSR_lens | `HSR_core` and `HSR_sensitivity`, the union of `REACTOME_CELLULAR_RESPONSE_TO_HEAT_STRESS`, `REACTOME_REGULATION_OF_HSF1_MEDIATED_HEAT_SHOCK_RESPONSE` and `GOBP_RESPONSE_TO_HEAT` from MSigDB v2026.1.Hs through msigdbr 26.1.0, built by `00d_curate_temp_hsr.R` and `00e_curate_temp_hsr_lens.R`. |
+| `database` = TCR_activation | A frozen 66-symbol human T-cell activation panel curated in this repository, mouse symbols through `msigdbr(species = "Mus musculus")`, built by `00f_curate_tcr_activation.R`. |
+| `database` = CoReSh_derived | Modules mined from the public mouse GEO compendium on Synapse, **syn66227307** (mmu), read from the shared read-only reference cache. [`../08_coresh/`](../08_coresh/) names the seeding query and the source accession of each module. |
+| `database` = PROGENy | `progeny::getModel("Mouse", top = 500)`, fourteen footprints, cached by `00c_prepare_networks.R`. |
+| `database` = CollecTRI · DoRothEA_ABC | CollecTRI from the human regulon table pinned at `00_data/references/networks/CollecTRI_regulons_human.csv`, mapped to mouse. DoRothEA from the bundled mouse regulons at confidence A, B and C. Both built by `00c_prepare_networks.R`, because `decoupleR::get_collectri()` fails against OmnipathR 3.18.4. |
+| `database` = GATOM_KEGG | Modules found on the KEGG atom-transition network under `00_data/references/gatom/`. |
