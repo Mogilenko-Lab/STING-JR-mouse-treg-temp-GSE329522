@@ -10,7 +10,7 @@ accounting: a reader has to be able to check them without re-running anything.
 |---|---|---|
 | Expression and design | `01_eda.rds`, `sample_metadata.rds`, `gene_universe.txt`, `gene_universe_vec.rds`, `universe_frame_obj.rds` | `01_mapping_qc.R`, `00_setup_metadata.R`, `11_emit_universe.R` |
 | Differential expression | `02_de_results.rds` | `02_de_limma_trend.R` |
-| Networks and activity | `net_collectri_mouse.rds`, `net_dorothea_mouse_ABC.rds`, `net_progeny_mouse.rds`, `03_tf_collectri.rds`, `03_tf_forensics.rds`, `09_progeny_activity.rds`, `networks_prep_log.txt` | `00_networks_prep.R`, `03_decoupler_tf.R`, `09_activity_progeny.R` |
+| Networks and activity | `net_collectri_mouse.rds`, `net_dorothea_mouse_ABC.rds`, `net_progeny_mouse.rds`, `03_tf_collectri.rds`, `03_tf_forensics.rds`, `09_progeny_activity.rds`, `networks_prep_log.txt` | `00c_prepare_networks.R`, `03_decoupler_tf.R`, `09_activity_progeny.R` |
 | Gene-set collections | `geneset_msigdb_*.rds` (8), `geneset_custom_*.rds` (5) | `04_gsea_set_prep.R` |
 | Enrichment results | `gsea_msigdb_*.rds`, `gsea_custom_*.rds`, `gsea_coresh_*.rds` (7 contrasts each) | `05_gsea_msigdb_run.R`, `06_gsea_custom_run.R`, `08_coresh_derived_gsea.R` |
 | CoReSh | `coresh_ranked.rds`, `coresh_derived_sets.rds`, `coresh_gmt_lines.rds`, `coresh_query_entrez.rds` | `07_coresh_search.R`, `08_coresh_derived_gsea.R` |
@@ -97,3 +97,4 @@ All three are written by `04_gsea_set_prep.R` through
 `helpers/symbol_alias.R::{resolve_sets, symbol_ledger}`, against
 `00_data/references/symbol_alias/symbol_alias_map.csv` and `gene_universe.txt`, under
 `thresholds.gsea_min_size = 15` and `gsea_max_size = 500`.
+
