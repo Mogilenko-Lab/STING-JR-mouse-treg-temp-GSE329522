@@ -5,7 +5,7 @@
 
 Stack (in order, last-wins on name collisions):
 1. **base** — `roles/base.yaml` — Default bioinformatics analysis role with full agent suite
-2. **pathway-signature** — `roles/pathway-signature.yaml` — Pathway/TF/signature functional interpretation — GSEA + decoupleR + CoReSh + pathway-explorer  *(overlay)*
+2. **pathway-signature** — `roles/pathway-signature.yaml` — Pathway/TF/signature functional interpretation — GSEA + decoupleR + CoReSh  *(overlay)*
 
 ## Skills (effective)
 - `anndata` — (pathway-signature) [shadows base]
@@ -14,7 +14,6 @@ Stack (in order, last-wins on name collisions):
 - `anndatar-seurat-scanpy-conversion` — (pathway-signature) [shadows base]
 - `bulk-rnaseq-gsea` — (pathway-signature) [shadows base]
 - `bulk-rnaseq-activity-inference` — (pathway-signature) [shadows base]
-- `bulk-rnaseq-pathway-explorer` — (pathway-signature) [shadows base]
 - `gatom-metabolomic-predictions` — (pathway-signature) [shadows base]
 - `coresh-signature-search` — (pathway-signature) [shadows base]
 - `starsolo-spliced-unspliced` — (base)
