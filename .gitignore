@@ -20,17 +20,14 @@
 03_results/objects/*.rdata
 03_results/objects/*.parquet
 
-# Pathway-explorer render outputs + heavy consolidated bundle tables — all
-# regenerable from 02_analysis/scripts/pathway_explorer_adapter/run_pathway_explorer.sh
-# (18 MB/contrast HTML x7, plus 23 MB master_unified / 13 MB master_de_table).
-# Track the reproducer + tiny explorer_manifest.json provenance + README captions instead.
+# Heavy render outputs and consolidated tables, all regenerable from the committed
+# scripts (23 MB master_unified / 13 MB master_de_table, plus large HTML renders).
+# The tracked record is the reproducer script and the README captions.
 03_results/interactive/index.html
-03_results/interactive/pathway_explorer_*.html
 03_results/interactive/reference_embedding.parquet
 03_results/interactive/leiden_identity_badges.json
 03_results/master/master_unified.csv
 03_results/master/master_de_table.csv
-03_results/master/explorer_universe.csv
 03_results/master/atlas_gene_universe.txt
 
 # Ignore data artifacts within phase dirs at any depth, keep the skeleton.

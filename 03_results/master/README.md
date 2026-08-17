@@ -7,9 +7,7 @@ Twelve files in three groups. **Differential expression** (`master_de_genes.csv`
 `master_de_table.csv`, `universe_frame.csv`, `atlas_gene_universe.txt`) is per gene.
 **Enrichment and activity** (`master_gsea_table.csv`, `master_tf_activities.csv`,
 `master_progeny_activities.csv`, `master_gatom_modules.csv`) is per gene set, and the four share
-one schema so they stack. **Explorer substrate** (`master_unified.csv`, `explorer_universe.csv`,
-`explorer_manifest.json`) is that stack plus gene membership, built for
-[`../interactive/`](../interactive/). `sample_metadata.csv` sits on its own and keys the design.
+one schema so they stack. `sample_metadata.csv` sits on its own and keys the design.
 
 Seven contrasts run through every table: `WT_heat` and `KO_heat` (39 versus 37 °C within a
 genotype), `Temp_main` and `Geno_main` (the two marginal effects), `Geno_at_37` and `Geno_at_39`
@@ -44,9 +42,9 @@ cutoff.
 | `contrast` | One of the seven. |
 | `significant`, `direction` | The FDR call and its sign. |
 
-`master_de_table.csv` holds the same 137,753 rows under the name the pathway explorer expects.
-It is written through a rounding pass, so the two carry the same numbers to nine significant
-digits and differ in bytes. Read `master_de_genes.csv`.
+`master_de_table.csv` holds the same 137,753 rows under an alternate name kept for a
+downstream consumer. It is written through a rounding pass, so the two carry the same numbers to
+nine significant digits and differ in bytes. Read `master_de_genes.csv`.
 
 ### `universe_frame.csv`
 
@@ -64,8 +62,7 @@ which makes this frame the compartment's background list.
 
 The symbol universe every enrichment test in this compartment ran against. A gene absent from
 this file was never in the denominator, so its absence from a gene set's matched count is a
-vocabulary fact. `explorer_manifest.json` records this file's SHA-256, so a bundle can be checked
-against the universe it was built on.
+vocabulary fact.
 
 ---
 
@@ -129,38 +126,6 @@ shared schema so they join the rest. Three rows is the whole result; the module 
 
 ---
 
-## Explorer substrate
-
-### `master_unified.csv`
-
-**38,307 rows — the four enrichment and activity tables stacked, plus gene membership.**
-
-The shared schema with two columns added: `entity_type` names which table a row came from
-(33,600 `Pathway`, 4,606 `TF`, 98 `PROGENy`, 3 `GATOM`) and `genes_full_set` carries the set's
-membership intersected with `atlas_gene_universe.txt`. Row counts run below the source tables
-because a row with no members inside the universe cannot be embedded. This is the pathway
-explorer's input. Read the source tables for analysis.
-
-### `explorer_universe.csv`
-
-**6,427 rows — one per distinct gene set, contrast collapsed away.**
-
-`master_unified.csv` de-duplicated to (`pathway_id`, `entity_type`, `genes_full_set`), which is
-what the explorer's Jaccard neighbour graph and gene-set UMAP are fitted on: 5,304 pathways,
-1,108 factors, 14 PROGENy pathways, 1 GATOM module. The table carries membership, so it has no
-`nes` or `padj` column.
-
-### `explorer_manifest.json`
-
-The provenance record for the explorer bundle. `produced_by`, `produced_at` and `git_commit` say
-which run built it. `atlas_file`, `atlas_sha256` and `atlas_size` pin the gene universe it was
-built against. `namespace` is `mouse_symbol_GRCm39` and `genes_full_set_basis` is
-`atlas_intersected`, so a reader knows the membership lists were cut to the universe. `n_rows`,
-`contrasts` and `entity_types` restate the bundle's shape. Check `atlas_sha256` against
-`atlas_gene_universe.txt` before trusting a stale bundle.
-
----
-
 ## The design
 
 ### `sample_metadata.csv`
@@ -176,3 +141,4 @@ the accessions run genotype-major. **Join on `gsm_id`.**
 `mapping_status` reads `CONFIRMED` for all 20: each library's data-derived label — the heat-shock
 thermometer for temperature, `Cgas` expression for genotype — agrees with the owner's sample
 sheet. [`../01_qc/`](../01_qc/) carries that check.
+

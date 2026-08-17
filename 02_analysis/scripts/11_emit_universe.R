@@ -17,12 +17,11 @@
 ##         per-contrast significance and direction flags that downstream arms use to subset
 ##         the background or annotate enrichment results.
 ##
-## HOW THIS DIFFERS FROM 14839's universe_frame.csv (set-level pathway explorer universe)
+## HOW THIS DIFFERS FROM 14839's universe_frame.csv (a set-level frame)
 ##   14839/11_emit_universe.R writes a SET-level frame (pathway_id / entity_type /
-##   genes_full_set) that feeds the pathway-explorer embedding. This compartment needs
-##   the GENE-level background annotation frame instead, since the pathway-explorer
-##   embedding sits outside current scope. The gene-level frame is the
-##   natural "candidate-set frame" for GSEA background annotation, one row per symbol.
+##   genes_full_set) that feeds a set-level embedding. This compartment needs the
+##   GENE-level background annotation frame, which is the natural "candidate-set frame"
+##   for GSEA background annotation, one row per symbol.
 ##   Column-for-column mapping vs 14839:
 ##     gene_symbol   — present (the primary key)
 ##     detected      — present (always TRUE; synonym of being in the modelled universe)

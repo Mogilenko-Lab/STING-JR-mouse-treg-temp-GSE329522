@@ -2,32 +2,12 @@
 
 Standalone HTML dashboards built from [`../master/`](../master/). They exist for exploration:
 every number a dashboard shows is a number in a committed table, and each view names the table
-it reads. Open `index.html` to reach all of them.
+it reads.
 
-Eleven files: one landing page, seven per-contrast pathway explorers, one bump-chart dashboard
-with its companion CSV, one reference embedding, and one badge lookup.
+Three files: one bump-chart dashboard with its companion CSV, one reference embedding, and one
+badge lookup.
 
 ---
-
-## `index.html`
-
-The landing page, linking every per-contrast pathway explorer. Built by
-`02_analysis/scripts/pathway_explorer_adapter/run_pathway_explorer.sh::generate_index_page()`
-from `../master/master_unified.csv`.
-
-## `pathway_explorer_<contrast>.html` — seven dashboards
-
-**One interactive map of gene sets, transcription factors and pathway footprints per contrast.**
-A UMAP of gene sets laid out on Jaccard similarity of their membership, with points coloured by
-enrichment score and filterable by FDR, joined to a running-sum panel driven by that contrast's
-moderated-t ranking. Enrichment sets, CollecTRI factor activities and PROGENy activities sit in
-one space, so a factor and the pathways its targets populate read against each other.
-
-Contrasts: `WT_heat`, `KO_heat`, `Interaction`, `Geno_at_37`, `Geno_at_39`, `Temp_main`,
-`Geno_main`.
-
-*Built by* `pathway_explorer_adapter/run_pathway_explorer.sh::generate_all_dashboards()` *from*
-`../master/master_unified.csv` and `../master/master_de_table.csv`.
 
 ## `gsea_bump_interaction.html`
 
@@ -69,8 +49,8 @@ response-pattern category the colour modes use.
 
 ## `reference_embedding.parquet` · `leiden_identity_badges.json`
 
-Supporting substrate for the explorer views: the stored gene-set layout coordinates, and the
-cluster identity labels the badges draw.
+Supporting substrate: the stored gene-set layout coordinates, and the cluster identity labels
+the badges draw.
 
 ---
 
@@ -80,3 +60,4 @@ Every panel here draws enrichment and activity statistics from the master tables
 interaction signal is a property of a ranked list and attributes to no single transcription
 factor on its own — [`../04_tf/`](../04_tf/) is where that attribution is tested, and `fig3p`,
 `fig3q` and `fig3r` are the three panels that bound it.
+
