@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
                       # crisper + more compact figures: 150 dpi (sharp on GitHub/preview),
                       # capped display width so plots don't span the whole page. ragg_png is a
                       # headless raster device (no X11) so this renders on the container and
-                      # commits real PNGs instead of silently falling back to svg.
+                      # commits real PNGs, keeping the svg fallback out of the render.
                       fig.align = "center", dpi = 150, out.width = "80%", dev = "ragg_png")
 options(bitmapType = "cairo")   # any bare png()/ggsave() in a chunk also stays headless-safe
 # This notebook only READS what stage 17 wrote — it never computes anything a later stage
@@ -172,10 +172,10 @@ Refresher: 2x2 factorial: genotype {WT, cGASKO} x temperature {37, 39}, n=5/grou
     - "cGASKO_39"
 
 **Contrasts**
-    - "WT_heat" = "WT_39" - "WT_37"; # heat effect in WT
-    - "KO_heat" = "cGASKO_39" - "cGASKO_37"; # heat effect in cGAS-KO samples
-    - "Temp_main" = "0.5*(WT_39 + cGASKO_39) - 0.5*(WT_37 + cGASKO_37)"; # aggregated/pooled temperature effect across genotypes
-    - "Interaction" = "(WT_39 - cGASKO_39) - (WT_37 - cGASKO_37)"; # cGAS-dependent heat effect
+    - "WT_heat" = "WT_39" - "WT_37" — heat effect in WT
+    - "KO_heat" = "cGASKO_39" - "cGASKO_37" — heat effect in cGAS-KO samples
+    - "Temp_main" = "0.5*(WT_39 + cGASKO_39) - 0.5*(WT_37 + cGASKO_37)" — pooled temperature effect across genotypes
+    - "Interaction" = "(WT_39 - cGASKO_39) - (WT_37 - cGASKO_37)" — cGAS-dependent heat effect
 (see `02_analysis/config/analysis_config.yaml`)
 
 At `fdr_logfc` gate, WT_heat and KO_heat are largely overlapping sets,
@@ -302,7 +302,7 @@ Seems like a general stress-protective response with some migratory hints:
 * Dot1l epigenetic reponse, changing methylation behaviour
 * interesting retinoic pattern with Crabp2 (trasport vit A/retinoic acid to the nucleus) + Rorc (nuclear receptor transcription factor, master TF of Th17's) - might be a differentiation switch into more pro-inflammatory, more Th17-like state. Though we know that Th17 are more protected from heat than other Th's. There's a wet lab expectation that Tregs are potentially more hypoxia-sensitive under 39 degrees, and might be more prone to death under 39. Don't know for now just got to keep an eye on it
 
-## 5. Where are we?
+## Decision
 
 Pulling it together.
 
@@ -311,8 +311,9 @@ Pulling it together.
    * `KO_heat`
    * and `Interaction`
 2. **Gate** → `fdr_logfc`.
-3. **Ortholog ambiguity** keeping the defaults (one→many = union / `t` to each; many→one = max|`t`|;
-   no ortholog = drop and log;). Every dropped gene stays auditable in `ortholog_map.tsv`.
+3. **Ortholog ambiguity** keeping the defaults. One→many takes the union and gives `t` to each,
+   many→one keeps max|`t`|, and no ortholog drops and logs. Every dropped gene stays auditable
+   in `ortholog_map.tsv`.
 
 **Downstream:** Later Phases 1–4 load these from `03_results/human_projection/`
 * the `.rnk` files feed fgsea/decoupleR on donor-level human *pseudobulk* (the primary evidence), and
